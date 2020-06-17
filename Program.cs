@@ -14,11 +14,7 @@ namespace ShipWeb
     public class Program
     {
         public static void Main(string[] args)
-        {
-            Task.Factory.StartNew(state =>
-            {
-               
-            }, TaskCreationOptions.LongRunning);
+        {           
             CreateHostBuilder(args).Build().Run();
         }
 
