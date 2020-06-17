@@ -20,6 +20,10 @@ namespace ShipWeb.Controllers
         public IActionResult Index()
         {
            var ship= _context.Ship.FirstOrDefault();
+            ViewBag.Id = ship.Id;
+            ViewBag.Name = ship.Name;
+            ViewBag.Type = ship.Type;
+            ViewBag.Flag = ship.Flag;
            return View(ship);
         }
         /// <summary>
@@ -27,26 +31,40 @@ namespace ShipWeb.Controllers
         /// </summary>
         /// <param name="ship"></param>
         /// <returns></returns>
-        public IActionResult Save(Ship ship)
+        public IActionResult Save(string id,string name,int type,string status)
         {
-            if (ModelState.IsValid)
+            try
             {
-                ProtoManager manager = new ProtoManager();
-                ShipWeb.ProtoBuffer.Models.StatusRequest sr = new ShipWeb.ProtoBuffer.Models.StatusRequest()
+                if (ModelState.IsValid)
                 {
-                    flag = ship.Flag,
-                    name = ship.Name,
-                    type = (ShipWeb.ProtoBuffer.Models.StatusRequest.Type)ship.Type
-                };
+                    Ship ship = new Ship()
+                    {
+                        Flag = status == "1" ? true : false,
+                        Id = id,
+                        Name = name,
+                        Type = type
+                    };
+                    ProtoManager manager = new ProtoManager();
+                    ShipWeb.ProtoBuffer.Models.StatusRequest sr = new ShipWeb.ProtoBuffer.Models.StatusRequest()
+                    {
+                        flag = ship.Flag,
+                        name = ship.Name,
+                        type = (ShipWeb.ProtoBuffer.Models.StatusRequest.Type)ship.Type
+                    };
 
-                int result=manager.StatesSet(sr, ship.Id);
-                if (result==0)
-                {
-                    _context.Ship.Update(ship);
-                    _context.SaveChanges();
+                    int result = manager.StatesSet(sr, ship.Id);
+                    if (result == 0)
+                    {
+                        _context.Ship.Update(ship);
+                        _context.SaveChanges();
+                    }
                 }
+                return new JsonResult(new { code = 0 });
             }
-            return RedirectToAction(nameof(Index));
+            catch (Exception ex)
+            {
+                return new JsonResult(new { code = 0 ,msg="数据保存失败"+ex.Message}) ;
+            }
         }
     }
 }

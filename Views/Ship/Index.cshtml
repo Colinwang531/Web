@@ -2,38 +2,74 @@
 @{
     ViewData["Title"] = "Index";
 }
+<script src="~/lib/jquery/dist/jquery.js"></script>
 <h1>修改船信息</h1>
+<script type="text/javascript">
+    $(function () {
+        $("input[type=radio][name=rdoType]").change(function () {
+            var v = $(this).val();
+            if (v == "1") {
+                $("#slStatus").attr("disabled", "disabled").css("background-color", "#EEEEEE");
+            } else {
+                $("#slStatus").removeAttr("disabled").removeClass("background-color");
+            }
+        });
+        $("input[type=submit]").click(function () {
+            var name = $("#txtName").val();
+            if (name == undefined || name == "") {
+                alert("船名称不能为空");
+                return;
+            }
+            var type = $(':radio[name="rdoType"]:checked').val();
+            var status = "";
+            if (type == 2) {
+                status = $("#slStatus").val();
+            }
+            var data = {
+                id: $("#hidId").val(),
+                name: name,
+                type: parseInt(type),
+                status: status
+            }
+            $.ajax({
+                url: "/Ship/Save",
+                data: data,
+                type: "get",
+                dataType: "json",
+                contentType: "application/json;charset=utf-8",
+                success: function (res) {
+                    if (res.code == 0) {
+                        alert("保存成功");
+                    }
+                }
+            });
+        });
+    });
+
+</script>
 <div class="row">
     <div class="col-md-4">
-        <form asp-controller="Save">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input asp-for="Id" type="hidden" />
-            <div class="form-group">
-                <label class="control-label">船名称</label>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label class="control-label">航行类型</label>
-                <select asp-for="Type">
-                    <option value="1" selected="selected">SAIL</option>
-                    <option value="2" selected="selected">AUTO</option>
-                    <option value="3" selected="selected">NAME</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label class="control-label">航行状态</label>
-                <input type="checkbox" checked="@Model.Flag" />
-            </div>
-            <div class="form-group">
-                <input type="submit" value="保存" class="btn btn-primary" />
-            </div>
-        </form>
+        <input type="hidden" id="hidId" value="@ViewBag.Id" />
+        <div class="form-group">
+            <label class="control-label">船名称</label>
+            <input id="txtName" value="@ViewBag.Name" />
+        </div>
+        <div class="form-group">
+            <input type="radio" name="rdoType" value="1" @(ViewBag.Type==1?"checked='checked'":"") />自动航行设置
+        </div>
+        <div class="form-group">
+            <input type="radio" name="rdoType" value="2" @(ViewBag.Type==2?"checked='checked'":"") />手动航行设置
+        </div>
+        <div class="form-group">
+            <label class="control-label">航行状态</label>
+            <select id="slStatus" @(ViewBag.Type==1?"disabled='disabled'":"")>
+                <option value="1" selected="@ViewBag.Flag">SAIL</option>
+                <option value="2" selected="@ViewBag.Flag">STOP</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <input type="submit" value="保存" class="btn btn-primary" />
+        </div>
     </div>
 </div>
-<script type="text/javascript">
-    var success = function (context) {
-        alert(context);
-    }
-</script>
 
