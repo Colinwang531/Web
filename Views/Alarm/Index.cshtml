@@ -210,6 +210,38 @@
             $("#btnNext").addClass("layui-btn");
         }
     }
+    //选择当前显示的页数
+    function ChosePageCount() {
+        var pageSize = $("##slChose").val();
+        var cid = $("#hidCid").val();
+        var type = $("#hidType").val();
+        var data = {
+            cid: cid,
+            type: type,
+            pageIndex: pageIndex,
+            pageSize: pageSize,
+            pageTotal: 1
+        }
+        $.ajax({
+            url: "/Alarm/Query",
+            type: "get",
+            data: data,
+            dataType: "json",
+            contentType: "application/json;charset=utf-8",
+            success: function (res) {
+                if (res.code == 0) {
+                    $("#hidType").val(type);
+                    $("#divPage").show();
+                    var imgs = res.data;
+                    var div = TabChoseDiv(type);
+                    LoadImg(imgs, div.id)
+                    $("#labFirst").text(res.pageTotal == 0 ? 0 : res.pageIndex);
+                    $("#labLast").text(res.pageTotal);
+                    AddBtnClass(res.pageIndex, res.pageTotal);
+                }
+            }
+        });
+    }
     //加载图片及其区域
     function LoadImg(imgs, divId) {
         //加载图片
@@ -266,7 +298,7 @@
             <label id="labLast"></label>
             <button class="layui-btn" type="button" id="btnNext" onclick="btnNext()">下一页</button>
             <select id="slChose">
-                <option value="1">1 条/页</option>
+                <option value="1" selected="selected">1 条/页</option>
                 <option value="10">10 条/页</option>
                 <option value="20">20 条/页</option>
             </select>
