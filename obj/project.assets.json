@@ -3095,21 +3095,6 @@
         "runtime": {
           "lib/netstandard1.3/Microsoft.WindowsAzure.Storage.dll": {}
         }
-      },
-      "ProtoBuf/1.0.0": {
-        "type": "project",
-        "framework": ".NETCoreApp,Version=v3.1",
-        "dependencies": {
-          "NetMQ": "4.0.0.207",
-          "System.Drawing.Common": "4.7.0",
-          "protobuf-net": "2.4.6"
-        },
-        "compile": {
-          "bin/placeholder/ProtoBuf.dll": {}
-        },
-        "runtime": {
-          "bin/placeholder/ProtoBuf.dll": {}
-        }
       }
     }
   },
@@ -9955,11 +9940,6 @@
         "windowsazure.storage.9.3.3.nupkg.sha512",
         "windowsazure.storage.nuspec"
       ]
-    },
-    "ProtoBuf/1.0.0": {
-      "type": "project",
-      "path": "../ProtoBuf/ProtoBuf.csproj",
-      "msbuildProject": "../ProtoBuf/ProtoBuf.csproj"
     }
   },
   "projectFileDependencyGroups": {
@@ -9976,7 +9956,6 @@
       "Microsoft.VisualStudio.Web.CodeGeneration.Design >= 3.1.3",
       "NetMQ >= 4.0.0.207",
       "Pomelo.EntityFrameworkCore.MySql >= 3.1.1",
-      "ProtoBuf >= 1.0.0",
       "SixLabors.ImageSharp >= 1.0.0-beta0007",
       "System.Drawing.Common >= 4.7.0",
       "protobuf-net >= 2.4.6"
@@ -10007,11 +9986,7 @@
       },
       "frameworks": {
         "netcoreapp3.1": {
-          "projectReferences": {
-            "E:\\ProtoBuf\\ProtoBuf.csproj": {
-              "projectPath": "E:\\ProtoBuf\\ProtoBuf.csproj"
-            }
-          }
+          "projectReferences": {}
         }
       },
       "warningProperties": {

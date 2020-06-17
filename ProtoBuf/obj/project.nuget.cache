@@ -1,0 +1,19 @@
+{
+  "version": 2,
+  "dgSpecHash": "kfqtTEWF14FN6qQdX1BzmIipIrqnwsKu7LmJqungdOvsNYecmvUB4B2de1x4nCgyKM1U19DTRDrQJfbe3SGpNw==",
+  "success": true,
+  "projectFilePath": "E:\\SmartWeb\\ProtoBuf\\ProtoBuf.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Dell\\.nuget\\packages\\asyncio\\0.1.69\\asyncio.0.1.69.nupkg.sha512",
+    "C:\\Users\\Dell\\.nuget\\packages\\microsoft.netcore.platforms\\3.1.0\\microsoft.netcore.platforms.3.1.0.nupkg.sha512",
+    "C:\\Users\\Dell\\.nuget\\packages\\microsoft.win32.systemevents\\4.7.0\\microsoft.win32.systemevents.4.7.0.nupkg.sha512",
+    "C:\\Users\\Dell\\.nuget\\packages\\netmq\\4.0.0.207\\netmq.4.0.0.207.nupkg.sha512",
+    "C:\\Users\\Dell\\.nuget\\packages\\protobuf-net\\2.4.6\\protobuf-net.2.4.6.nupkg.sha512",
+    "C:\\Users\\Dell\\.nuget\\packages\\system.drawing.common\\4.7.0\\system.drawing.common.4.7.0.nupkg.sha512",
+    "C:\\Users\\Dell\\.nuget\\packages\\system.private.servicemodel\\4.5.3\\system.private.servicemodel.4.5.3.nupkg.sha512",
+    "C:\\Users\\Dell\\.nuget\\packages\\system.reflection.dispatchproxy\\4.5.0\\system.reflection.dispatchproxy.4.5.0.nupkg.sha512",
+    "C:\\Users\\Dell\\.nuget\\packages\\system.security.principal.windows\\4.5.0\\system.security.principal.windows.4.5.0.nupkg.sha512",
+    "C:\\Users\\Dell\\.nuget\\packages\\system.servicemodel.primitives\\4.5.3\\system.servicemodel.primitives.4.5.3.nupkg.sha512"
+  ],
+  "logs": []
+}
