@@ -176,7 +176,7 @@
         $("#labFirst").text(pageIndex)
         var type = $("#hidType").val();
         TabChose(type, pageIndex);
-    }
+    };
     //跳转页确认
     function btnSure() {
         var number = $("#txtNumber").val();
@@ -184,7 +184,7 @@
         $("#labFirst").text(number);
         var type = $("#hidType").val();
         TabChose(type, number);
-    }
+    };
     //上一页，下一页，确定按钮是否能点击
     function AddBtnClass(pageIndex, pageTotal) {
         $("#btnUp").removeClass();
@@ -212,9 +212,12 @@
     }
     //选择当前显示的页数
     function ChosePageCount() {
-        var pageSize = $("##slChose").val();
+        var pageSize = $("#slChose").val();
+        alert(pageSize);
         var cid = $("#hidCid").val();
+        alert(cid);
         var type = $("#hidType").val();
+        alert(type);
         var data = {
             cid: cid,
             type: type,
@@ -230,6 +233,7 @@
             contentType: "application/json;charset=utf-8",
             success: function (res) {
                 if (res.code == 0) {
+                    alert("sdfa");
                     $("#hidType").val(type);
                     $("#divPage").show();
                     var imgs = res.data;
@@ -297,10 +301,10 @@
             <label id="labFirst">1</label>/
             <label id="labLast"></label>
             <button class="layui-btn" type="button" id="btnNext" onclick="btnNext()">下一页</button>
-            <select id="slChose">
+            <select id="slChose" onchange="ChosePageCount()" >
                 <option value="1" selected="selected">1 条/页</option>
                 <option value="10">10 条/页</option>
-                <option value="20">20 条/页</option>
+                <option value="20">20 条/页</option>s
             </select>
             <label>跳转到</label>
             <input type="number" id="txtNumber" style="width:50px" min="1" />
