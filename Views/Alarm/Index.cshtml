@@ -78,12 +78,12 @@
             });
         }
     }
-    function TabChose(type) {
+    function TabChose(type,pageIndex) {
         var cid = $("#hidCid").val();
         var data = {
             cid: cid,
             type: type,
-            pageIndex:1,
+            pageIndex: pageIndex,
             pageSize: $("#slChose").val(),
             pageTotal: 1
         }
@@ -160,9 +160,10 @@
         if (parseInt(first) - 1 == 1) {
             $("#labFirst").text(parseInt(first) - 1);
         }
-        $("#labFirst").text(parseInt(first) - 1)
+        var pageIndex = parseInt(first) - 1;
+        $("#labFirst").text(pageIndex)
         var type = $("#hidType").val();
-        TabChose(type);
+        TabChose(type, pageIndex);
     }
     //下一页
     function btnNext() {
@@ -171,7 +172,8 @@
         if (parseInt(first) + 1 == parseInt(last)) {
             $("#labFirst").text(parseInt(first) + 1);
         }
-        $("#labFirst").text(parseInt(first) + 1)
+        var pageIndex = parseInt(first) + 1
+        $("#labFirst").text(pageIndex)
         var type = $("#hidType").val();
         TabChose(type);
     }
