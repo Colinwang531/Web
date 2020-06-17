@@ -6,9 +6,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ProtoBuf;
-using ProtoBuf.Models;
 using ShipWeb.DB;
 using ShipWeb.Models;
+using ShipWeb.ProtoBuffer;
+using ShipWeb.ProtoBuffer.Models;
 using ShipWeb.Tool;
 
 namespace ShipWeb.Controllers
@@ -55,7 +56,7 @@ namespace ShipWeb.Controllers
                 Password = pwd,
                 Uid = uid
             };
-            //ProtoBuf.Models.Person person = ConvertModel(users);
+            //Person person = ConvertModel(users);
             //int result=manager.UserUpdate(person, uid, id);
             //if (result==0)
             //{
@@ -80,7 +81,7 @@ namespace ShipWeb.Controllers
                 users.Uid = "11111";
                 users.Id = identity;
                 Person person= ConvertModel(users);
-                ProtoBuf.Models.UserResponse response = manager.UserAdd(person, identity);
+                UserResponse response = manager.UserAdd(person, identity);
                 if (response.result == 0)
                 {
                     users.Uid = response.uid;                    
@@ -96,15 +97,15 @@ namespace ShipWeb.Controllers
         /// </summary>
         /// <param name="users"></param>
         /// <returns></returns>
-        private ProtoBuf.Models.Person  ConvertModel(Users users)
+        private Person  ConvertModel(Users users)
         {
             string md5pwd = MD5Help.MD5Encrypt(users.Password);
             users.Password = md5pwd;
-            ProtoBuf.Models.Person person = new ProtoBuf.Models.Person()
+            Person person = new Person()
             {
                 name = users.Name,
                 password = users.Password,
-                author = new ProtoBuf.Models.Author()
+                author = new Author()
                 {
                     enableconfigure = users.EnableConfigure,
                     enablequery = users.Enablequery

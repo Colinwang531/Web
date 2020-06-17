@@ -175,7 +175,7 @@
         var pageIndex = parseInt(first) + 1
         $("#labFirst").text(pageIndex)
         var type = $("#hidType").val();
-        TabChose(type);
+        TabChose(type, pageIndex);
     }
     //跳转页确认
     function btnSure() {
@@ -183,7 +183,7 @@
         var pageTotal = $("#labLast").text();
         $("#labFirst").text(number);
         var type = $("#hidType").val();
-        TabChose(type);
+        TabChose(type, number);
     }
     //上一页，下一页，确定按钮是否能点击
     function AddBtnClass(pageIndex, pageTotal) {
@@ -245,11 +245,11 @@
         <input type="hidden" id="hidType" />
         <div id="divtop" class="layui-tab">
             <ul class="layui-tab-title" id="ulType">
-                <li class="layui-this" onclick="TabChose('1')">睡觉</li>
-                <li onclick="TabChose('2')">打架</li>
-                <li onclick="TabChose('3')">安全帽</li>
-                <li onclick="TabChose('4')">手机</li>
-                <li onclick="TabChose('5')">人脸</li>
+                <li class="layui-this" onclick="TabChose('1','1')">睡觉</li>
+                <li onclick="TabChose('2','1')">打架</li>
+                <li onclick="TabChose('3','1')">安全帽</li>
+                <li onclick="TabChose('4','1')">手机</li>
+                <li onclick="TabChose('5','1')">人脸</li>
             </ul>
         </div>
         <div id="divContent" class="layui-tab-content">

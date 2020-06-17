@@ -80,11 +80,11 @@ namespace ShipWeb.Controllers
                    var embModel=_context.Embedded.FirstOrDefault(e => e.Id == camera.EmbeddedId);
                     if (embModel!=null)
                     {
-                        ProtoManager manager = new ProtoManager();
-                        ProtoBuf.Models.Embedded emb = new ProtoBuf.Models.Embedded()
+                        ProtoBuffer.ProtoManager manager = new ProtoBuffer.ProtoManager();
+                        ProtoBuffer.Models.Embedded emb = new ProtoBuffer.Models.Embedded()
                         {
-                            cameras = new List<ProtoBuf.Models.Camera>() {
-                            new ProtoBuf.Models.Camera(){
+                            cameras = new List<ProtoBuffer.Models.Camera>() {
+                            new ProtoBuffer.Models.Camera(){
                                  cid=camera.Cid,
                                  index=camera.Index,
                                  enable=camera.Enalbe,

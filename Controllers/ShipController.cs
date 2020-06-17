@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using ProtoBuf;
 using ShipWeb.DB;
 using ShipWeb.Models;
+using ShipWeb.ProtoBuffer;
 
 namespace ShipWeb.Controllers
 {
@@ -31,11 +32,11 @@ namespace ShipWeb.Controllers
             if (ModelState.IsValid)
             {
                 ProtoManager manager = new ProtoManager();
-                ProtoBuf.Models.StatusRequest sr = new ProtoBuf.Models.StatusRequest()
+                ShipWeb.ProtoBuffer.Models.StatusRequest sr = new ShipWeb.ProtoBuffer.Models.StatusRequest()
                 {
                     flag = ship.Flag,
                     name = ship.Name,
-                    type = (ProtoBuf.Models.StatusRequest.Type)ship.Type
+                    type = (ShipWeb.ProtoBuffer.Models.StatusRequest.Type)ship.Type
                 };
 
                 int result=manager.StatesSet(sr, ship.Id);

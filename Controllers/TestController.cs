@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using ShipWeb.DB;
 using ShipWeb.Models;
 using ProtoBuf;
+using ShipWeb.ProtoBuffer;
+
 namespace ShipWeb.Controllers
 {
     public class TestController : Controller

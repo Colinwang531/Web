@@ -18,6 +18,7 @@ using Microsoft.WindowsAzure.Storage.Blob;
 using ProtoBuf;
 using ShipWeb.DB;
 using ShipWeb.Models;
+using ShipWeb.ProtoBuffer;
 using ShipWeb.Tool;
 
 namespace ShipWeb.Controllers
@@ -84,7 +85,7 @@ namespace ShipWeb.Controllers
             if (ModelState.IsValid)
             {
                 string identity = Guid.NewGuid().ToString();
-                ProtoBuf.Models.Employee emp = new ProtoBuf.Models.Employee()
+               ShipWeb.ProtoBuffer.Models.Employee emp = new ShipWeb.ProtoBuffer.Models.Employee()
                 {
                      job=employee.Job,
                       name=employee.Name
@@ -166,8 +167,8 @@ namespace ShipWeb.Controllers
             if (ModelState.IsValid)
             {
                 try
-                {                 
-                    ProtoBuf.Models.Employee emp = new ProtoBuf.Models.Employee()
+                {
+                    ShipWeb.ProtoBuffer.Models.Employee emp = new ShipWeb.ProtoBuffer.Models.Employee()
                     {
                         job = employee.Job,
                         name = employee.Name

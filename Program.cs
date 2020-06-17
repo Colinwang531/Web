@@ -17,8 +17,7 @@ namespace ShipWeb
         {
             Task.Factory.StartNew(state =>
             {
-                ProtoManager manager = new ProtoManager();
-                manager.ComponentStart("22");
+               
             }, TaskCreationOptions.LongRunning);
             CreateHostBuilder(args).Build().Run();
         }

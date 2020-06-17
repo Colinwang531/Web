@@ -1,7 +1,6 @@
 ﻿
 using Microsoft.AspNetCore.Http;
 using ProtoBuf;
-using ProtoBuf.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +10,8 @@ using ShipWeb.Models;
 using ShipWeb.Tool;
 using System.Text;
 using System.IO;
+using ShipWeb.ProtoBuffer;
+using ShipWeb.ProtoBuffer.Models;
 
 namespace ShipWeb
 {
@@ -116,7 +117,7 @@ namespace ShipWeb
             #endregion
 
             #region 获取报警信息并入库
-            //ProtoBuf.Models.Alarm alarm = manager.AlarmStart(identity);
+            //Alarm alarm = manager.AlarmStart(identity);
             //if (alarm != null)
             //{
             //    ShipWeb.Models.Alarm model = new ShipWeb.Models.Alarm()

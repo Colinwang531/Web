@@ -7,8 +7,9 @@ using ShipWeb.DB;
 using ShipWeb.Models;
 using Microsoft.AspNetCore.Http;
 using ProtoBuf;
-using ProtoBuf.Models;
 using ShipWeb.Tool;
+using ShipWeb.ProtoBuffer;
+using ShipWeb.ProtoBuffer.Models;
 
 namespace ShipWeb.Controllers
 {

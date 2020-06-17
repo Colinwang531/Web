@@ -7,8 +7,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
-using ProtoBuf;
-using ProtoBuf.Models;
 using ShipWeb.DB;
 using ShipWeb.Models;
 using ShipWeb.Tool;
@@ -52,10 +50,10 @@ namespace ShipWeb.Controllers
         {
             if (ModelState.IsValid)
             {
-                ProtoManager manager = new ProtoManager();               
+                ProtoBuffer.ProtoManager manager = new ProtoBuffer.ProtoManager();             
                 string shipId = ManagerHelp.ShipId; //船ID              
                 string iditity = Guid.NewGuid().ToString();
-                ProtoBuf.Models.Embedded emb = new ProtoBuf.Models.Embedded()
+                ProtoBuffer.Models.Embedded emb = new ProtoBuffer.Models.Embedded()
                 {
                     ip = Embedded.IP,
                     name = Embedded.Name,
@@ -159,8 +157,8 @@ namespace ShipWeb.Controllers
                 {
                     if (Embedded != null)
                     {
-                        ProtoManager manager = new ProtoManager();
-                        ProtoBuf.Models.Embedded emb = new ProtoBuf.Models.Embedded()
+                        ProtoBuffer.ProtoManager manager = new ProtoBuffer.ProtoManager();
+                        ProtoBuffer.Models.Embedded emb = new ProtoBuffer.Models.Embedded()
                         {
                             ip = Embedded.IP,
                             name = Embedded.Name,
@@ -206,7 +204,7 @@ namespace ShipWeb.Controllers
             {
                 return NotFound();
             }
-            ProtoManager manager = new ProtoManager();
+            ProtoBuffer.ProtoManager manager = new ProtoBuffer.ProtoManager();
             int resutl= manager.DeveiceDelete(Embedded.Did, Embedded.Id);
             if (resutl==0)
             {

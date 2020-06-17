@@ -11,6 +11,8 @@ using Newtonsoft.Json;
 using ProtoBuf;
 using ShipWeb.DB;
 using ShipWeb.Models;
+using ShipWeb.ProtoBuffer;
+using ShipWeb.ProtoBuffer.Models;
 using ShipWeb.Tool;
 
 namespace ShipWeb.Controllers
@@ -65,11 +67,11 @@ namespace ShipWeb.Controllers
                 {
                     ProtoManager manager = new ProtoManager();
                     string identity = Guid.NewGuid().ToString();
-                    List<ProtoBuf.Models.Configure> list = new List<ProtoBuf.Models.Configure>();
+                    List<Configure> list = new List<Configure>();
                     foreach (var item in modelList)
                     {
 
-                        ProtoBuf.Models.Configure mqModel = new ProtoBuf.Models.Configure()
+                        Configure mqModel = new Configure()
                         {
                             cid = item.Cid,
                             enableattendancein = item.EnableAttendanceIn,
