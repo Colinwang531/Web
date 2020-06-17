@@ -213,12 +213,15 @@
     //选择当前显示的页数
     function ChosePageCount() {
         var pageSize = $("#slChose").val();
+        alert(pageSize);
         var cid = $("#hidCid").val();
+        alert(cid);
         var type = $("#hidType").val();
+        alert(type);
         var data = {
             cid: cid,
             type: type,
-            pageIndex: 1,
+            pageIndex: pageIndex,
             pageSize: pageSize,
             pageTotal: 1
         }
@@ -230,6 +233,7 @@
             contentType: "application/json;charset=utf-8",
             success: function (res) {
                 if (res.code == 0) {
+                    alert("sdfa");
                     $("#hidType").val(type);
                     $("#divPage").show();
                     var imgs = res.data;
@@ -248,11 +252,7 @@
         var imgHtml = "";
        
         for (var i = 0; i < imgs.length; i++) {
-            if (imgs.length==1) {
-                imgHtml += '<div style="position:relative;">';
-            } else {
-                imgHtml += '<div style="position:relative;float:left">';
-            }
+            imgHtml = '<div style="position:relative;">';
             imgHtml += '<img src="data:image/jpeg;base64,' + imgs[i].picture + '" style="width:200px;height:260px"/>';
             imgHtml += '<div style="position:absolute;z-index:2; border:1px solid red; left:' + imgs[i].x + 'px;top:' + imgs[i].y + 'px;width:' + imgs[i].w + 'px;height:' + imgs[i].h + 'px"></div>';
             imgHtml += '</div>';
