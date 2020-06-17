@@ -1,0 +1,95 @@
+﻿
+@{
+    ViewData["Title"] = "Test";
+}
+
+    <script type="text/javascript">
+    function Save() {
+        var dbpwd = $("#hidDbpwd").val();
+        var xpwd = "";
+        if ($("#ckChose").prop("checked")) {
+            var ypwd = $("#txtypwd").val();
+            xpwd= $("#txtxpwd").val();
+            var spwd = $("#txtspwd").val();
+            if (ypwd == undefined || ypwd == "") {
+                layer.alert("原始密码不为空");
+                return false;
+            }
+            if (xpwd == undefined || xpwd == "") {
+                alert("新密码不为空");
+                return false;
+            }
+            if (xpwd != spwd) {
+                alert("前后两次输入的密码不一致");
+                return false;
+            }
+        }
+
+        var data = {
+            id: $("#hidId").val(),
+            name: $("#txtName").val(),
+            uid: $("#hidUid").val(),
+            enableConfigure: $("#ck1").prop("checked"),
+            enablequery: $("#ck2").prop("checked"),
+            pwd: dbpwd,
+            newPwd: xpwd
+        }
+        $.ajax({
+            url: "/Users/Save",
+            data: data,
+            type: "get",
+            dataType: "json",
+            contentType: "application/json;charset=utf-8",
+            success: function (res) {
+                if (res.code == 1) {
+                    alert("密码输入错误，请重新输入");
+                    return false;
+                } else {
+                    window.location.href = "@Url.Action("Index", "Users")";//可以跳转.
+                }
+            }
+        });
+    }
+    function Chose() {
+        if ($("#ckChose").prop("checked")) {
+            $("#txtypwd").val("");
+            $("#txtxpwd").val("");
+            $("#txtspwd").val("");
+            $("#divShow").show();
+        } else {
+            $("#divShow").hide();
+        }
+    }
+    </script>
+<input type="hidden" id="hidId" value="@ViewBag.Id" />
+<input type="hidden" id="hidDbpwd" value="@ViewBag.Password" />
+<input type="hidden" id="hidUid" value="@ViewBag.Uid"/>
+<div class="form-group">
+    <label  class="control-label">用户名称</label>
+    <input type="text" id="txtName" value="@ViewBag.Name" />
+</div>
+<div class="form-group">
+    <label  class="control-label">配置权限许可标识</label>
+    <input type="checkbox" id="ck1" checked="@ViewBag.EnableConfigure" />
+</div>
+<div class="form-group">
+    <label>查询权限许可标识</label>
+    <input type="checkbox" id="ck2" checked="@ViewBag.Enablequery" />
+</div>
+<div class="form-group">
+    <input type="checkbox" id="ckChose" onclick="Chose()" />
+    <label class="control-label">是否修改登陆密码</label>
+    <div class="form-group" style="display:none" id="divShow">
+        <label>请输入原始密码</label>
+        <input type="password" id="txtypwd" /><br/>
+        <label>请输入新密码</label>
+        <input id="txtxpwd" type="password" /><br />
+        <label>请输入确认密码</label>
+        <input type="password" id="txtspwd" />
+    </div>
+</div>
+<input type="submit" value="保存" class="btn btn-primary" onclick="Save()" />
+
+<p>
+    <a asp-action="Index">返回列表</a>
+</p>

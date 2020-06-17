@@ -1,0 +1,50 @@
+﻿@model IEnumerable<ShipWeb.Models.Employee>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<p>
+    <a asp-action="Create">添加船员</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                船员编号
+            </th>
+            <th>
+               船员名称
+            </th>
+            <th>
+                工作内容
+            </th>
+            @*<th>
+                @Html.DisplayNameFor(model => model.ShipId)
+            </th>*@
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Uid)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Job)
+            </td>
+            @*<td>
+                @Html.DisplayFor(modelItem => item.ShipId)
+            </td>*@
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.Id">编辑</a> |
+                <a asp-action="Delete" asp-route-id="@item.Id">删除</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

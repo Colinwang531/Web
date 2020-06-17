@@ -1,0 +1,48 @@
+﻿@model ShipWeb.Models.Camera
+
+@{
+    ViewData["Title"] = "Edit";
+}
+
+
+<h4>修改摄像机</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="Cid" />
+            <input type="hidden" asp-for="EmbeddedId" />
+            <input type="hidden" asp-for="ShipId" />        
+            <div class="form-group">
+                <label class="control-label">摄像机序号</label>
+                <input asp-for="Index" class="form-control" />
+                <span asp-validation-for="Index" class="text-danger"></span>
+            </div>
+            <div class="form-group form-check">
+                <label class="control-label">摄像机状态</label>
+                @Html.RadioButtonFor(model => model.Enalbe, true) 开启
+                @Html.RadioButtonFor(model => model.Enalbe, false) 关闭
+            </div>
+            <div class="form-group">
+                <label class="control-label">摄像机别名</label>
+                <input asp-for="NickName" class="form-control" />
+                <span asp-validation-for="NickName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label class="control-label">摄像机IP</label>
+                <input asp-for="IP" class="form-control" />
+                <span asp-validation-for="IP" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="保存" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">返回列表</a>
+</div>
+

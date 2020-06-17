@@ -1,0 +1,117 @@
+﻿@model ShipWeb.Models.Employee
+@{
+    ViewData["Title"] = "Edit";
+}
+
+<h1>Edit</h1>
+
+<script src="~/layui/layui.js"></script>
+<link href="~/layui/css/layui.css" rel="stylesheet" />
+<script src="~/lib/jquery/dist/jquery.js"></script>
+<h4>编辑船员信息</h4>
+<hr />
+
+<script type="text/javascript">
+    function Check() {
+        if ($("#txtName").val() == undefined || $("#txtName").val() == "") {
+            layer.alert("船员名称不能为空");
+            return false
+        }
+        if ($("#txtJob").val() == undefined || $("#txtJob").val() == "") {
+            layer.alert("工作内容不能为空");
+            return false;
+        }
+    }
+</script>
+<div class="row">
+    <div class="col-11">
+        <form asp-action="Edit" onsubmit="return Check()">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <input type="hidden" asp-for="Id" class="form-control" />
+                <input type="hidden" asp-for="Uid" class="form-control" />
+                <input type="hidden" asp-for="ShipId" class="form-control" />
+                <input type="hidden" name="hidbyte" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label class="control-label">船员名称</label>
+                <input asp-for="Name" id="txtName" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label class="control-label">工作内容</label>
+                <input asp-for="Job" id="txtJob" class="form-control" />
+                <span asp-validation-for="Job" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <div class="layui-upload">
+                    <button class="layui-btn" id="test2" type="button">多图片上传</button>
+                    <button type="button" class="layui-btn layui-btn-danger" onclick="clearAll()">删除</button>
+                    <blockquote class="layui-elem-quote layui-quote-nm" style="margin-top: 10px;">
+                        预览图：
+                        <div class="layui-upload-list" id="demo2">
+                            @if (Model.employeePictures.Count > 0)
+                            {
+                                foreach (var item in Model.employeePictures)
+                                {
+                                    <img style="width:200px; height:300px" src="data:image/jpeg;base64,@Convert.ToBase64String(item.Picture)" class="layui-upload-img">
+                                }
+                            }
+                        </div>
+                    </blockquote>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <input type="submit" value="保存" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">返回列表</a>
+</div>
+
+<script type="text/javascript">
+    $(function () {
+        layui.use('upload', function () {
+            var $ = layui.jquery;
+            var upload = layui.upload;
+            //多图片上传
+            upload.render({
+                elem: '#test2',
+                url: '/Employees/UpFile/',
+                multiple: true,
+                before: function (obj) {
+                    //预读本地文件示例，不支持ie8
+                    obj.preview(function (index, file, result) {
+                        $('#demo2').append('<img width="200px" height="300px" src="' + result + '" alt="' + file.name + '" class="layui-upload-img">&nbsp;&nbsp;&nbsp')
+                    });
+                },
+                done: function (res) {
+                    //上传成功
+                }
+            });
+        });
+    });
+    //清空所有图片
+    function clearAll() {
+        layer.confirm("确定要全部清空吗？", {
+            icon: 3,
+            btn: ["确定", "取消"],
+            yes: function (index) {
+                $.ajax({
+                    url: "/Employees/DeleteImg/",
+                    success: function (res) {
+                        if (res.code == 0) {
+                            $("#demo2").html("");
+                            layer.close(index);
+                        }
+                    }
+                });
+            }
+        });
+    }
+</script>
+

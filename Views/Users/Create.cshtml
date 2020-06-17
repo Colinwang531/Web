@@ -1,0 +1,59 @@
+﻿@model ShipWeb.Models.Users
+
+@{
+    ViewData["Title"] = "Create";
+}
+<script type="text/javascript">
+    function Save() {
+        if ($("#txtuser").val() == "" || $("#txtuser").val() == undefined) {
+            layer.alert("用户名不能为空");
+            return false;
+        }
+        if ($("#txtpwd").val() == "" || $("#txtpwd").val() == undefined) {
+            layer.alert("密码不能为空");
+            return false;
+        }
+        if ($("#txtpwd").val() != $("#btnPwdSure").val()) {
+            layer.alert("前后两次输入的密码不正确");
+            return false;
+        }
+        return true;
+    }
+</script>
+<h4>创建用户信息</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Create" onsubmit="return Save()" >
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label class="control-label">用户名</label>
+                <input id="txtuser" asp-for="Name" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label class="control-label">密码</label>
+                <input id="txtpwd" asp-for="Password" class="form-control" type="password" />
+            </div>
+            <div class="form-group">
+                <label class="control-label">确认密码</label>
+                <input id="btnPwdSure" class="form-control" type="password" />
+            </div>
+            <div class="form-group">
+                <label class="control-label">配置权限许可标识</label>
+                <input type="checkbox" asp-for="EnableConfigure" checked="@(Model==null?false:Model.EnableConfigure)" />
+            </div>
+            <div class="form-group">
+                <label class="control-label">查询权限许可标识</label>
+                <input type="checkbox" asp-for="Enablequery" checked="@(Model==null?false:Model.Enablequery)" />
+            </div>
+            <div class="form-group">
+                <input type="submit" value="保存" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">返回列表</a>
+</div>
+

@@ -1,0 +1,99 @@
+﻿@model IEnumerable<ShipWeb.Models.Embedded>
+
+@{
+    ViewData["Title"] = "Index";
+}
+<script type="text/javascript">
+    function ShowDetail(id) {
+        $.ajax({
+            url: "Embedded/Details",
+            success: function (result) {
+                console.log(result);
+                $("#partial").html(result);
+
+            }
+    }
+
+</script>
+
+<h1>设备列表</h1>
+
+<p>
+    <a asp-action="Create">添加设备</a>
+</p>
+<!--设备-->
+<div>
+    <table class="table">
+        <thead>
+            <tr>
+                @*<th>
+
+                    </th>*@
+                <th>
+                    设备厂商
+                </th>
+                <th>
+                    设备类型
+                </th>
+                <th>
+                    设备登陆名称
+                </th>
+                <th>
+                    设备登陆密码
+                </th>
+                <th>
+                    设备登陆IP
+                </th>
+                <th>
+                    设备登陆端口
+                </th>
+                <th>
+                    设备别名
+                </th>
+                @*<th>
+                        @Html.DisplayNameFor(model => model.ShipId)
+                    </th>*@
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    @*<td>
+                            @Html.DisplayFor(modelItem => item.Did)
+                        </td>*@
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Factory)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Type)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Name)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Password)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.IP)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Port)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Nickname)
+                    </td>
+                    @*<td>
+                           @Html.DisplayFor(modelItem => item.ShipId)
+                        </td>*@
+                <td>
+                    <a href="Cameras/Index/@item.Id">详情</a> |
+                    <a asp-action="Edit" asp-route-id="@item.Id">修改</a> |
+                    <a asp-action="Delete" asp-route-id="@item.Id">删除</a>
+                </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

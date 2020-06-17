@@ -1,0 +1,72 @@
+﻿@model IEnumerable<ShipWeb.Models.Camera>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>摄像机列表</h1>
+
+@*<p>
+        <a asp-action="Create">Create New</a>
+    </p>*@
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                摄像机序号
+            </th>
+            <th>
+                是否启用设备
+            </th>
+            <th>
+                摄像机别名
+            </th>
+            <th>
+                摄像机ip地址
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                @*<td>
+                        @Html.DisplayFor(modelItem => item.Cid)
+                    </td>*@
+                <td>
+                    @Html.DisplayFor(modelItem => item.Index)
+                </td>
+                <td>
+                    @if (item.Enalbe)
+                    {
+                        <label>开启</label>
+                    }
+                    else
+                    {
+                        <label>停用</label>
+                    }
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.NickName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.IP)
+                </td>
+                @*<td>
+                        @Html.DisplayFor(modelItem => item.ShipId)
+                    </td>*@
+                <td>
+                    
+                    <a asp-action="Edit" asp-route-id="@item.Id">修改</a> |
+                    <a asp-action="Delete" asp-route-id="@item.Id">删除</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div>
+    @*<a href="Embedded/Index">返回设备列表</a>*@
+    <a href="@Url.Action("Index","Embedded")">返回设备列表</a>
+</div>

@@ -1,0 +1,176 @@
+﻿@model List<ShipWeb.Models.CameraConfig>
+
+@{
+    ViewData["Title"] = "Index";
+}
+<script src="~/lib/jquery/dist/jquery.js"></script>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $.ajax({
+            url: "CameraConfigs/Load",
+            type: "get",
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (data) {
+                if (data != undefined) {
+                    var str = "";//定义用于拼接的字符串
+                    for (var i = 0; i < data.length; i++) {
+                        str += "<tr><td>" + data[i].nickName + "</td>";
+                        str += "<td><input type=\"hidden\" value='" + data[i].cid + "' /></td>"
+                        str += "<td><input type=\"hidden\" value='" + (data[i].id == null ? '' : data[i].id) + "' /></td>"
+                        str += "<td><input type=\"text\" value='" + (data[i].gpu == null ? 0 : data[i].gpu) + "' class=\"form - control\" /></td>";
+                        str += "<td><input type = \"checkbox\" name = \"chk\" " + (data[i].enableSleep ? "checked=true" : "") + " /></td>";
+                        str += "<td><input type = \"checkbox\" name = \"chk\" " + (data[i].enableFight ? "checked=true" : "") + " /></td>";
+                        str += "<td><input type = \"checkbox\" name = \"chk\" " + (data[i].enableHelmet ? "checked=true" : "") + " /></td>";
+                        str += "<td><input type = \"checkbox\" name = \"chk\" " + (data[i].enablePhone ? "checked=true" : "") + " /></td>";
+                        str += "<td><input type = \"checkbox\" name = \"chk\" " + (data[i].enableAttendanceIn ? "checked=true" : "") + " /></td>";
+                        str += "<td><input type = \"checkbox\" name = \"chk\" " + (data[i].enableAttendanceOut ? "checked=true" : "") + " /></td>";
+                        str += "<td><input type=\"text\" value='" + (data[i].similar == null ? 0 : data[i].similar) + "' class=\"form - control\" /></td>";
+                        str += "</tr>";
+                    }
+                    $("#tbo").append(str);
+                }
+            }
+        })
+    })
+    function Save() {
+        var k; var att = {};
+        var Array = [];//一个空的数组
+        $('#tb1 tbody tr').each(function () {
+            //遍历每一个tr
+            var str = [];
+            //空数组，用于存放每一个tr里td的值
+            var chil = $(this).children('td');
+            var tdcount = chil.length;
+            var txt;
+            for (k = 1; k < tdcount; k++) {
+                //循环得到td的四项内容值
+                if (chil.eq(k).children('input').attr("name") == "chk") {
+                    txt = chil.eq(k).children('input')[0].checked;
+                } else {
+                    txt = chil.eq(k).children('input').val();
+                }
+                str.push(txt);
+            }
+            att = {
+                Cid: str[0],
+                Id: str[1],
+                GPU: str[2],
+                EnableSleep: str[3],
+                EnableFight: str[4],
+                EnableHelmet: str[5],
+                EnablePhone: str[6],
+                EnableAttendanceIn: str[7],
+                EnableAttendanceOut: str[8],
+                Similar: str[9]
+            };
+            //把每一个tr的数据写成一个json数据
+            Array.push(att);
+        });
+        console.log(Array);
+        $.ajax({
+            url: "CameraConfigs/Create",
+            data: {
+                mList: JSON.stringify(Array)
+            },
+            type: "get",
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (data) {
+
+            }
+        })
+    }
+
+</script>
+<p>
+    算法配置
+</p>
+<table class="table" id="tb1">
+    <thead>
+        <tr>
+            <th>
+                摄像机名称
+            </th>
+            <th></th>
+            <th></th>
+            <th>
+                GPU
+            </th>
+            <th>
+                是否睡觉
+            </th>
+            <th>
+                是否启用打架
+            </th>
+            <th>
+                是否启用安全帽
+            </th>
+            <th>
+                是否启用打电话
+            </th>
+            <th>
+                是否请求考勤入
+            </th>
+            <th>
+                是否请求考勤出
+            </th>
+            <th>
+                人脸相似度
+            </th>
+            @*<th>
+            @Html.DisplayNameFor(model => model.ShipId)
+        </th>*@
+            <th></th>
+        </tr>
+    </thead>
+    <tbody id="tbo">
+        @*@foreach (var item in Model)
+            {
+            <tr>
+
+                <td>
+                    @Html.DisplayFor(modelItem => item.NickName)
+                </td>
+                <td>
+                    <input type="hidden" value="@item.Cid" />
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.GPU)
+                    <input type="text" value="@Html.DisplayFor(modelItem => item.GPU)" class="form-control" />
+                </td>
+                <td>
+                    @Html.CheckBoxFor(modelItem => item.EnableSleep)
+                </td>
+                <td>
+                    @Html.CheckBoxFor(modelItem => item.EnableFight)
+                </td>
+                <td>
+                    @Html.CheckBoxFor(modelItem => item.EnableHelmet)
+                </td>
+                <td>
+                    @Html.CheckBoxFor(modelItem => item.EnablePhone)
+                </td>
+                <td>
+                    @Html.CheckBoxFor(modelItem => item.EnableAttendanceIn)
+                </td>
+                <td>
+                    @Html.CheckBoxFor(modelItem => item.EnableAttendanceOut)
+                </td>
+                <td>
+                    <input type="text" value="@item.Similar" />
+                </td>
+                <td>
+                @Html.DisplayFor(modelItem => item.ShipId)
+            </td>
+                <td>
+
+                    <a asp-action="Create">配置</a> |
+                <a asp-action="Edit" asp-route-id="@item.Id">修改</a> |
+                </td>
+            </tr>
+            }*@
+    </tbody>
+</table>
+<input type="submit" value="保存配置" onclick="Save()" />

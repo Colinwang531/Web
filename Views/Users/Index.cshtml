@@ -1,0 +1,58 @@
+﻿@model IEnumerable<ShipWeb.Models.Users>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">添加用户</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+               用户编号
+            </th>
+            <th>
+               用户名
+            </th>
+            <th>
+               登陆密码
+            </th>
+            <th>
+               配置权限许可标识
+            </th>
+            <th>
+               查询权限许可标识
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Uid)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Name)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Password)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.EnableConfigure)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Enablequery)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.Id">修改</a> |
+                <a asp-action="Delete" asp-route-id="@item.Id">删除</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
