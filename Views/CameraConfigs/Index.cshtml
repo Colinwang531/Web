@@ -24,8 +24,8 @@
                         str += "<td><input type = \"checkbox\" name = \"chk\" " + (data[i].enableFight ? "checked=true" : "") + " /></td>";
                         str += "<td><input type = \"checkbox\" name = \"chk\" " + (data[i].enableHelmet ? "checked=true" : "") + " /></td>";
                         str += "<td><input type = \"checkbox\" name = \"chk\" " + (data[i].enablePhone ? "checked=true" : "") + " /></td>";
-                        str += "<td><input type = \"checkbox\" name = \"chk\" " + (data[i].enableAttendanceIn ? "checked=true" : "") + " /></td>";
-                        str += "<td><input type = \"checkbox\" name = \"chk\" " + (data[i].enableAttendanceOut ? "checked=true" : "") + " /></td>";
+                        str += "<td><input type = \"radio\" name = \"rdo"+i+"\" " + (data[i].enableAttendanceIn ? "checked=true" : "") + " /></td>";
+                        str += "<td><input type = \"radio\" name = \"rdo"+i+"\" " + (data[i].enableAttendanceOut ? "checked=true" : "") + " /></td>";
                         str += "<td><input type=\"text\" value='" + (data[i].similar == null ? 0 : data[i].similar) + "' class=\"form - control\" /></td>";
                         str += "</tr>";
                     }
@@ -48,7 +48,10 @@
                 //循环得到td的四项内容值
                 if (chil.eq(k).children('input').attr("name") == "chk") {
                     txt = chil.eq(k).children('input')[0].checked;
-                } else {
+                } else if (chil.eq(k).children('input').attr("type") =="radio") {
+                    txt = chil.eq(k).children('input')[0].checked;
+                }
+                else {
                     txt = chil.eq(k).children('input').val();
                 }
                 str.push(txt);
