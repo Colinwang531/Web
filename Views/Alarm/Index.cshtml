@@ -5,312 +5,200 @@
 <link href="~/layui/css/layui.css" rel="stylesheet" />
 <script src="~/lib/jquery/dist/jquery.js"></script>
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/layui/layui.js"></script>
 <script type="text/javascript">
+    var page = 1; //设置首页页码
+    var limit = 1; //设置一页显示的条数
+    var total; //总条数
     $(document).ready(function () {
-        Init();
+        loadData(1);
+        getdate();
     });
     //初使化
-    function Init() {
+    function loadData(type) {
         $.ajax({
             url: "/Alarm/Load",
             type: "get",
+            data: {
+                pageIndex: page,
+                pageSize: limit
+            },
             dataType: "json",
             contentType: "application/json;charset=utf-8",
             success: function (res) {
                 if (res.code == 0) {
-                    //加载左边菜单
-                    var alarms = res.data;
-                    var strHtml = "";
-                    for (var i = 0; i < alarms.length; i++) {
-                        if (i == 0) {
-                            $("#hidCid").val(alarms[i].cid);
-                            strHtml += "<li class=\"layui-nav-item layui-nav-itemed\">" + alarms[i].time;
-                        } else {
-                            strHtml += "<li class=\"layui-nav-item\">" + alarms[i].time;
-                        }
-                        strHtml += " <a  class=\"layui-nav-child\"  href=\"javascript: \" onclick=\"NavClick('" + alarms[i].cid + "')\">" + alarms[i].nickName + "</a>";
-                        strHtml += "</li>";
+                    var tb = res.data;
+                    total = res.count;
+                    LoadHtml(tb);
+                    if (type == 1) {
+                        getPage();
                     }
-                    $("#leftul").append(strHtml);
-                } else {
-                    //数据加载失败
                 }
             }
         });
     }
-    //左边树的点击
-    function NavClick(cid) {
-        if (cid != undefined && cid != "") {
-            var data = {
-                cid: cid,
-                type: 1,
-                pageIndex: 1,
-                pageSize: $("#slChose").val(),
-                pageTotal: 1
+    function LoadHtml(tb) {
+        var html = "";
+        if (tb.length > 0) {
+            for (var i = 0; i < tb.length; i++) {
+                html += '<tr>';
+                html += '<td>' + tb[i].time + '</td>';
+                html += '<td>' + tb[i].cid + '</td>';
+                html += '<td>' + tb[i].nickName + '</td>';
+                if (tb[i].type == 1) {
+                    html += '<td><img style="width:800px;height:30px" ondblclick="showBigImage(this)"  src="data:image/jpeg;base64,' + tb[i].picture + '"/></td>';
+                    html += '<td></td>';
+                    html += '<td></td>';
+                    html += '<td></td>';
+                }
+                else if (tb[i].type == 2) {
+                    html += '<td></td>';
+                    html += '<td><img style="width:800px;height:30px"  ondblclick="showBigImage(this)"  src="data:image/jpeg;base64,' + tb[i].picture + '"/></td>';
+                    html += '<td></td>';
+                    html += '<td></td>';
+                } else if (tb[i].type == 3) {
+                    html += '<td></td>';
+                    html += '<td></td>';
+                    html += '<td><img style="width:800px;height:30px" ondblclick="showBigImage(this)"  src="data:image/jpeg;base64,' + tb[i].picture + '"/></td>';
+                    html += '<td></td>';
+                } else {
+                    html += '<td></td>';
+                    html += '<td></td>';
+                    html += '<td></td>';
+                    html += '<td><img style="width:800px;height:30px"  ondblclick="showBigImage(this)" src="data:image/jpeg;base64,' + tb[i].picture + '"/></td>';
+                }
             }
-            $.ajax({
-                url: "/Alarm/Query",
-                type: "get",
-                data: data,
-                dataType: "json",
-                contentType: "application/json;charset=utf-8",
-                success: function (res) {
-                    if (res.code == 0) {
-                        $("#hidType").val(1);
-                        $("#hidCid").val(cid);
-                        var imgs = res.data;
-                        TabChoseDiv(1);
-                        LoadImg(imgs, "divSleep");
-                        $("#divPage").show();
-                        $("#labFirst").text(res.pageIndex);
-                        $("#labLast").text(res.pageTotal);
-                        $("#txtNumber").attr("max", res.pageTotal);
-                        AddBtnClass(res.pageIndex, res.pageTotal);
+        }
 
-                        //$('.group').maphilight({
-                        //    strokeColor: "0000ff",
-                        //    strokeWidth: 5,
-                        //    fillColor: "ff0000",
-                        //    fillOpacity: 0.6
-                        //});
+        $("#tblist").html(html);
+    }
+    function showBigImage(e) {
+        layui.use('layer', function () { //独立版的layer无需执行这一句
+            var $ = layui.jquery, layer = layui.layer; //独立版的layer无需执行这一句
+            layer.open({
+                type: 1,
+                title: false,
+                closeBtn: false,
+                id: 'LAY_layuipro',
+                shadeClose: true, //点击阴影关闭
+                area: [$(e).width + 'px', $(e).height + 'px'], //宽高
+                content: "<img src=" + $(e).attr('src') + " />"
+            });
+        });
+    }
+    function Query() {
+        var cid = $("#txtUid").val();
+        var name = $("#txtName").val();
+        var type = $("#slType").val();
+        var startTime = $("#dtStartTime").val();
+        var endTime = $("#dtEndTime").val();
+        var data = {
+            cid: cid,
+            name: name,
+            type: parseInt(type),
+            startTime: startTime,
+            endTime: endTime,
+            pageIndex: page,
+            pageSize: limit
+        }
+        $.ajax({
+            url: "/Alarm/QueryPage",
+            data: data,
+            type: "get",
+            dataType: "json",
+            contentType: "application/json;chartset=utf-8",
+            success: function (res) {
+                if (res.code == 0) {
+                    total = res.count;
+                    var tb = res.data;
+                    LoadHtml(tb);
+                    getPage();
+                }
+            }
+        })
+    }
+    //时间控件
+    function getdate() {
+        layui.use('laydate', function () {
+            var laydate = layui.laydate;
+            var layer = layui.layer;
+            laydate.render({
+                elem: '#dtStartTime',
+                type: 'date'
+            });
+        });
+        layui.use('laydate', function () {
+            var laydate = layui.laydate;
+            var layer = layui.layer;
+            laydate.render({
+                elem: '#dtEndTime',
+                type: 'date'
+            });
+        })
+    };
+    //分页处理
+    function getPage() {
+        layui.use('laypage', function () {
+            var laypage = layui.laypage;
+            var layer = layui.layer;
+            laypage.render({
+                elem: 'pages',
+                count: total, //数据总数，从服务端得到
+                limit: limit,
+                jump: function (obj, first) {
+                    page = obj.curr; //改变当前页码
+                    limit = obj.limit;
+                    if (!first) {
+                        loadData(2);
                     }
                 }
             });
-        }
-    }
-    function TabChose(type,pageIndex) {
-        var cid = $("#hidCid").val();
-        var data = {
-            cid: cid,
-            type: type,
-            pageIndex: pageIndex,
-            pageSize: $("#slChose").val(),
-            pageTotal: 1
-        }
-        $.ajax({
-            url: "/Alarm/Query",
-            type: "get",
-            data: data,
-            dataType: "json",
-            contentType: "application/json;charset=utf-8",
-            success: function (res) {
-                if (res.code == 0) {
-                    $("#hidType").val(type);
-                    $("#divPage").show();
-                    var imgs = res.data;
-                    var div = TabChoseDiv(type);
-                    LoadImg(imgs, div.id)
-                    $("#labFirst").text(res.pageTotal == 0 ? 0 : res.pageIndex);
-                    $("#labLast").text(res.pageTotal);
-                    AddBtnClass(res.pageIndex, res.pageTotal);
-                }
-            }
         });
-    }
-    //右边选项卡点击
-    function TabChoseDiv(type) {
-        //先清空数据
-        $("#divSleep").html("");
-        $("#divFight").html("");
-        $("#divHelmet").html("");
-        $("#divPhone").html("");
-        $("#divFace").html("");
-        //隐藏Div
-        $("#divSleep").hide();
-        $("#divFight").hide();
-        $("#divHelmet").hide();
-        $("#divPhone").hide();
-        $("#divFace").hide();
-        //删除样式
-
-        $("#ulType li").each(function () {
-            $(this).removeClass();
-        });
-
-        if (type == 1) {
-            $("#divSleep").show();
-            $("#ulType li").eq(0).addClass("layui-this");
-            return divSleep;
-        }
-        if (type == 2) {
-            $("#divFight").show();
-            $("#ulType li").eq(1).addClass("layui-this");
-            return divFight;
-        }
-        if (type == 3) {
-            $("#divHelmet").show();
-            $("#ulType li").eq(2).addClass("layui-this");
-            return divHelmet;
-        }
-        if (type == 4) {
-            $("#divPhone").show();
-            $("#ulType li").eq(3).addClass("layui-this");
-            return divPhone;
-        }
-        if (type == 5) {
-            $("#divFace").show();
-            $("#ulType li").eq(4).addClass("layui-this");
-            return divFace;
-        }
-
-    }
-    //上一页
-    function btnUp() {
-        var first = $("#labFirst").text();
-        if (parseInt(first) - 1 == 1) {
-            $("#labFirst").text(parseInt(first) - 1);
-        }
-        var pageIndex = parseInt(first) - 1;
-        $("#labFirst").text(pageIndex)
-        var type = $("#hidType").val();
-        TabChose(type, pageIndex);
-    }
-    //下一页
-    function btnNext() {
-        var first = $("#labFirst").text();
-        var last = $("#labLast").text();
-        if (parseInt(first) + 1 == parseInt(last)) {
-            $("#labFirst").text(parseInt(first) + 1);
-        }
-        var pageIndex = parseInt(first) + 1
-        $("#labFirst").text(pageIndex)
-        var type = $("#hidType").val();
-        TabChose(type, pageIndex);
-    };
-    //跳转页确认
-    function btnSure() {
-        var number = $("#txtNumber").val();
-        var pageTotal = $("#labLast").text();
-        $("#labFirst").text(number);
-        var type = $("#hidType").val();
-        TabChose(type, number);
-    };
-    //上一页，下一页，确定按钮是否能点击
-    function AddBtnClass(pageIndex, pageTotal) {
-        $("#btnUp").removeClass();
-        $("#btnNext").removeClass();
-        $("#btnSure").removeClass();
-        if (pageTotal == 0 || pageTotal == 1) {
-            $("#btnUp").addClass("layui-btn layui-btn-disabled");
-            $("#btnNext").addClass("layui-btn layui-btn-disabled");
-            $("#btnSure").addClass("layui-btn layui-btn-disabled");
-        }
-        else if (pageIndex == 1) {
-            $("#btnUp").addClass("layui-btn layui-btn-disabled");
-            $("#btnNext").addClass("layui-btn");
-            $("#btnSure").addClass("layui-btn");
-        }
-        else if (pageIndex == pageTotal) {
-            $("#btnUp").addClass("layui-btn");
-            $("#btnSure").addClass("layui-btn");
-            $("#btnNext").addClass("layui-btn layui-btn-disabled");
-        } else {
-            $("#btnUp").addClass("layui-btn");
-            $("#btnSure").addClass("layui-btn");
-            $("#btnNext").addClass("layui-btn");
-        }
-    }
-    //选择当前显示的页数
-    function ChosePageCount() {
-        var pageSize = $("#slChose").val();
-        var cid = $("#hidCid").val();
-        var type = $("#hidType").val();
-        var data = {
-            cid: cid,
-            type: type,
-            pageIndex: 1,
-            pageSize: pageSize,
-            pageTotal: 1
-        }
-        $.ajax({
-            url: "/Alarm/Query",
-            type: "get",
-            data: data,
-            dataType: "json",
-            contentType: "application/json;charset=utf-8",
-            success: function (res) {
-                if (res.code == 0) {
-                    $("#hidType").val(type);
-                    $("#divPage").show();
-                    var imgs = res.data;
-                    var div = TabChoseDiv(type);
-                    LoadImg(imgs, div.id)
-                    $("#labFirst").text(res.pageTotal == 0 ? 0 : res.pageIndex);
-                    $("#labLast").text(res.pageTotal);
-                    AddBtnClass(res.pageIndex, res.pageTotal);
-                }
-            }
-        });
-    }
-    //加载图片及其区域
-    function LoadImg(imgs, divId) {
-        //加载图片
-        var imgHtml = "";
-       
-        for (var i = 0; i < imgs.length; i++) {
-            if (imgs.length==1) {
-                imgHtml += '<div style="position:relative;">';
-            } else {
-                imgHtml += '<div style="position:relative;float:left">';
-            }
-            imgHtml += '<img src="data:image/jpeg;base64,' + imgs[i].picture + '" style="width:200px;height:260px"/>';
-            imgHtml += '<div style="position:absolute;z-index:2; border:1px solid red; left:' + imgs[i].x + 'px;top:' + imgs[i].y + 'px;width:' + imgs[i].w + 'px;height:' + imgs[i].h + 'px"></div>';
-            imgHtml += '</div>';
-        }
-
-        
-        //for (var i = 0; i < imgs.length; i++) {
-        //    imgHtml += "<img style=\"width:150px; height:200px\" src=\"data:image/jpeg;base64," + imgs[i].picture + "\" usemap=\"#planetmap\" />";
-        //    imgHtml += "<map name=\"planetmap\" id=\"planetmap\">";
-        //    imgHtml += '<area shape="rect" coords="' + imgs[i].x + ',' + imgs[i].y + ',' + imgs[i].w + ',' + imgs[i].h + '" href="javascript:void(0);" alt="Venus" />';
-        //    imgHtml += "</map>";
-        //}
-
-        $("#" + divId).html(imgHtml);
     }
 </script>
 
-
-<h1>报警消息</h1>
-<div>
-    <div style="float:left">
-        <ul id="leftul" class="layui-nav layui-nav-tree"></ul>
+<div style="margin-top:20px">
+    <div class="layui-form-item">
+        <label class="layui-form-label">编号</label>
+        <div class="layui-input-inline" style="width:100px">
+            <input id="txtUid" class="layui-input" type="text" placeholder="请输入" autocomplete="off" lay-verify="required">
+        </div>
+        <label class="layui-form-label">名称</label>
+        <div class="layui-input-inline" style="width:100px">
+            <input id="txtName" class="layui-input" type="text" placeholder="请输入" autocomplete="off" lay-verify="required">
+        </div>
+        <label class="layui-form-label">类型</label>
+        <select id="slType" class="layui-form-label" style="width:100px">
+            <option value="0">请选择</option>
+            <option value="1">睡觉</option>
+            <option value="2">打架</option>
+            <option value="3">安全帽</option>
+            <option value="4">手机</option>
+        </select>
+        <label class="layui-form-label">时间起</label>
+        <div class="layui-input-inline" style="width:100px">
+            <input name="date" class="layui-input" id="dtStartTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off">
+        </div>
+        <label class="layui-form-label">时间止</label>
+        <div class="layui-input-inline" style="width:100px">
+            <input name="date" class="layui-input" id="dtEndTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off">
+        </div>
+        <button class="layui-btn" type="submit" onclick="Query()">查询</button>
     </div>
-    <div style="float:left;margin-left:30px">
-        <input type="hidden" id="hidCid" />
-        <input type="hidden" id="hidType" />
-        <div id="divtop" class="layui-tab">
-            <ul class="layui-tab-title" id="ulType">
-                <li class="layui-this" onclick="TabChose('1','1')">睡觉</li>
-                <li onclick="TabChose('2','1')">打架</li>
-                <li onclick="TabChose('3','1')">安全帽</li>
-                <li onclick="TabChose('4','1')">手机</li>
-                <li onclick="TabChose('5','1')">人脸</li>
-            </ul>
-        </div>
-        <div id="divContent" class="layui-tab-content">
-            <div id="divSleep" class="layui-tab-item layui-show">
-            </div>
-            <div id="divFight"></div>
-            <div id="divHelmet"></div>
-            <div id="divPhone"></div>
-            <div id="divFace"></div>
-        </div>
-        <div id="divPage" style="display:none">
-            <button class="layui-btn layui-btn-disabled" type="button" id="btnUp" onclick="btnUp()">上一页</button>
-            <label id="labFirst">1</label>/
-            <label id="labLast"></label>
-            <button class="layui-btn" type="button" id="btnNext" onclick="btnNext()">下一页</button>
-            <select id="slChose" onchange="ChosePageCount()" >
-                <option value="1" selected="selected">1 条/页</option>
-                <option value="10">10 条/页</option>
-                <option value="20">20 条/页</option>s
-            </select>
-            <label>跳转到</label>
-            <input type="number" id="txtNumber" style="width:50px" min="1" />
-            <button class="layui-btn" type="button" id="btnSure" onclick="return btnSure()">确定</button>
-        </div>
-        <div>
-        </div>
-    </div>
+    <table class="layui-table">
+        <thead>
+            <tr>
+                <th style="width:180px">报警时间</th>
+                <th style="width:120px">摄像机编号</th>
+                <th style="width:150px">摄像机名称</th>
+                <th>睡觉</th>
+                <th>打架</th>
+                <th>安全帽</th>
+                <th>手机</th>
+            </tr>
+        </thead>
+        <tbody id="tblist">
+        </tbody>
+    </table>
+    <div id="pages" class="center"></div>
 </div>

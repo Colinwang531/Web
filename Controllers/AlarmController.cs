@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -29,41 +30,50 @@ namespace ShipWeb.Controllers
         {
             return View();
         }
-        public IActionResult Load(int type = 1)
+        public IActionResult Load(int pageIndex,int pageSize)
         {
-            var data = from a in _context.Alarm
-                       join b in _context.AlarmInformation on a.Id equals b.AlarmId
-                       join c in _context.Camera on b.Cid equals c.Cid
-                       into d
-                       from ss in d.DefaultIfEmpty()
-                       where b.Type == type
-                       select new
-                       {
-                           a.Picture,
-                           a.Time,
-                           b.Cid,
-                           ss.NickName,
-                           b.Id,
-                           b.Type
-                       };
-            return new JsonResult(new { code = 0, data =data.ToList()});
-            //if (data.ToList().Count>0)
-            //{
-            //    string id = data.ToList()[0].Id;
-            //    string pic = Convert.ToBase64String(Convert.FromBase64String(Encoding.UTF8.GetString(data.ToList()[0].Picture)));
-            //    var podata=_context.AlarmInformationPosition.Where(c => c.AlarmInformationId==id);
-            //    var position = from a in podata
-            //                   select new
-            //                   {
-            //                       a.W,
-            //                       a.H,
-            //                       a.X,
-            //                       a.Y,
-            //                       Picture = pic
-            //                   };
-            //    return new JsonResult(new { code = 0, data = new { alarms = data.ToList(), position = position.ToList() } });
-            //}
-            return new JsonResult(new { code = 1, msg = "查询失败" });
+            try
+            {
+                //查询摄像机名称及其报警类型
+                var data = from a in _context.Alarm
+                           join b in _context.AlarmInformation on a.Id equals b.AlarmId
+                           join c in _context.Camera on b.Cid equals c.Cid
+                           select new
+                           {
+                               a.Time,
+                               Picture= Convert.FromBase64String(Encoding.UTF8.GetString(a.Picture)),
+                               b.Cid,
+                               b.Type,
+                               c.NickName,
+                               a.Id,
+                               b.AlarmId
+                           };
+
+                var datalist = data.ToList();
+                var dataPage = datalist.Skip((pageIndex - 1) * pageSize).Take(pageSize);
+                //查询图片是座标位置
+                string ids = string.Join(",", datalist.Select(c => c.Id));
+                //var positions= _context.AlarmInformationPosition.Where(c => ids.Contains(c.AlarmInformationId));
+                //if (positions!=null)
+                //{
+
+                //}
+                int count = datalist.Count;
+                var result = new
+                {
+                    code = 0,
+                    data = dataPage,
+                    pageIndex = pageIndex,
+                    pageSize = pageSize,
+                    count = count
+                };
+                return new JsonResult(result);
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { code = 1, msg = "查询失败!"+ex.Message });
+            }
+           
         }
         /// <summary>
         /// 分页获取图片座标位置
@@ -73,44 +83,61 @@ namespace ShipWeb.Controllers
         /// <param name="pageIndex"></param>
         /// <param name="pageSize"></param>
         /// <param name="pageCount"></param>
-        public IActionResult Query(string cid, int type, int pageIndex, int pageSize, int pageTotal) 
+        public IActionResult QueryPage(string cid,string name, int type,string startTime,string endTime, int pageIndex, int pageSize) 
         {
             try
             {
-                var aa = from a in _context.AlarmInformationPosition
-                         join b in _context.AlarmInformation on a.AlarmInformationId equals b.Id
-                         join c in _context.Alarm on b.AlarmId equals c.Id
-                         into ss
-                         from su in ss.DefaultIfEmpty()
-                         where b.Type == type && b.Cid == cid                         
-                         select new
-                         {
-                             a.H,
-                             a.W,
-                             a.X,
-                             a.Y,
-                             su.Picture
-                         };
-                int count = aa.ToList().Count;
-                var dataPage = aa.ToList().Skip((pageIndex - 1) * pageSize).Take(pageSize);
-                pageTotal = count % pageSize == 0 ? count / pageSize : (count / pageSize) + 1;
-
-                var position = from a in dataPage
-                               select new
-                               {
-                                   w=ImgZoom(a.Picture,a.W,0),
-                                   h= ImgZoom(a.Picture,0,a.H),
-                                   a.X,
-                                   a.Y,
-                                   Picture =  Convert.ToBase64String(Convert.FromBase64String(Encoding.UTF8.GetString(a.Picture)))
-                               };
+                var data = from a in _context.Alarm
+                           join b in _context.AlarmInformation on a.Id equals b.AlarmId
+                           join c in _context.Camera on b.Cid equals c.Cid
+                           select new
+                           {
+                               a.Time,
+                               Picture = Convert.FromBase64String(Encoding.UTF8.GetString(a.Picture)),
+                               b.Cid,
+                               b.Type,
+                               c.NickName,
+                               a.Id,
+                               b.AlarmId
+                           };
+                if (!string.IsNullOrEmpty(cid))
+                {
+                    data = data.Where(c => c.Cid == cid);
+                }
+                if (!string.IsNullOrEmpty(name))
+                {
+                    data = data.Where(c => c.NickName.Contains(name));
+                }
+                if (type>0)
+                {
+                    data = data.Where(c => c.Type==type);
+                }
+                if (!(string.IsNullOrEmpty(startTime)) && !(string.IsNullOrEmpty(endTime)))
+                {
+                    DateTime dtStart = DateTime.Parse(startTime);
+                    DateTime dtEnd = DateTime.Parse(endTime);
+                    data = data.Where(c => c.Time >= dtStart && c.Time <= dtEnd);
+                }
+                else if (!(string.IsNullOrEmpty(startTime)))
+                {
+                    DateTime dtStart = DateTime.Parse(startTime);
+                    data = data.Where(c => c.Time >= dtStart);
+                }
+                else if (!(string.IsNullOrEmpty(endTime)))
+                {
+                    DateTime dtEnd = DateTime.Parse(endTime);
+                    data = data.Where(c => c.Time <= dtEnd);
+                }
+                var list = data.ToList();
+                int count = list.Count();
+                var pageList = list.Skip((pageIndex - 1) * pageSize).Take(pageSize);
                 var result = new
                 {
                     code = 0,
-                    data= position.ToList(),
+                    data= pageList,
                     pageIndex=pageIndex,
                     pageSize=pageSize,
-                    pageTotal=pageTotal==0?1: pageTotal
+                    count=count
                 };
                 return new JsonResult(result);
             }
@@ -122,9 +149,15 @@ namespace ShipWeb.Controllers
         }
         public int ImgZoom(byte[] bytes,int width,int height)
         {
-            byte[] imageBytes = Convert.FromBase64String(Encoding.UTF8.GetString(bytes));
-            //  转成图片
-            Image<Rgba32> image = Image.Load(imageBytes);
+            //byte[] imageBytes = Convert.FromBase64String(Encoding.UTF8.GetString(bytes));
+            
+            Image<Rgba32> image = SixLabors.ImageSharp.Image.Load(bytes);
+
+            using (var stream = new MemoryStream(bytes, 0, bytes.Length, false, true))
+            {
+                System.Drawing.Image img = System.Drawing.Image.FromStream(stream);
+            }
+
             if (width>0)
             {
                 double percent = (double)200 / image.Width;

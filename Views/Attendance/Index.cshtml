@@ -4,6 +4,7 @@
 }
 
 <link href="~/layui/css/layui.css" rel="stylesheet" />
+<script src="~/layui/layui.js"></script>
 <script src="~/lib/jquery/dist/jquery.js"></script>
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script type="text/javascript">
@@ -66,16 +67,30 @@
                 html += '<td>' + tb[i].time + '</td>';
                 html += '<td><input type="checkbox" disabled="disabled" ' + (tb[i].enableAttendanceIn ? 'checked = "checked"' : "") + ' /></td>';
                 html += '<td><input type="checkbox" disabled="disabled" ' + (tb[i].enableAttendanceOut ? 'checked = "checked"' : "") + ' /></td>';
-                html += '<td><img style="width:800px;height:30px"  src="data:image/jpeg;base64,' + tb[i].picture + '"/></td>';
+                html += '<td><img style="width:800px;height:30px"  ondblclick="showBigImage(this)"  src="data:image/jpeg;base64,' + tb[i].picture + '"/></td>';
             }
         }
         $("#tblist").html(html);
-    }    
+    }
+    function showBigImage(e) {
+        layui.use('layer', function () { //独立版的layer无需执行这一句
+            var $ = layui.jquery, layer = layui.layer; //独立版的layer无需执行这一句
+            layer.open({
+                type: 1,
+                title: false,
+                closeBtn: false,
+                id: 'LAY_layuipro',
+                shadeClose: true, //点击阴影关闭
+                area: [$(e).width + 'px', $(e).height + 'px'], //宽高
+                content: "<img src=" + $(e).attr('src') + " />"
+            });
+        });
+    }
     //分页处理
     function getPage() {
         layui.use('laypage', function () {
             var laypage = layui.laypage;
-            var layer = layui.layer;           
+            var layer = layui.layer;
             laypage.render({
                 elem: 'pages',
                 count: total, //数据总数，从服务端得到
@@ -131,15 +146,15 @@
             <input id="txtUid" class="layui-input" type="text" placeholder="请输入" autocomplete="off" lay-verify="required">
         </div>
         <label class="layui-form-label">名称</label>
-        <div class="layui-input-inline"style="width:100px">
+        <div class="layui-input-inline" style="width:100px">
             <input id="txtName" class="layui-input" type="text" placeholder="请输入" autocomplete="off" lay-verify="required">
         </div>
-        <label class="layui-form-label">时间</label>
-        <div class="layui-input-inline"style="width:100px">
+        <label class="layui-form-label">时间起</label>
+        <div class="layui-input-inline" style="width:100px">
             <input name="date" class="layui-input" id="dtStartTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off">
         </div>
-        <label class="layui-form-label">时间</label>
-        <div class="layui-input-inline"style="width:100px">
+        <label class="layui-form-label">时间止</label>
+        <div class="layui-input-inline" style="width:100px">
             <input name="date" class="layui-input" id="dtEndTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off">
         </div>
         <button class="layui-btn" type="submit" onclick="Query()">查询</button>
