@@ -1,0 +1,93 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="renderer" content="webkit|ie-comp|ie-stand" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="bookmark" href="/favicon.ico" />
+    <title>@ViewData["Title"] - Ship</title>
+    <link href="/css/main.css" rel="stylesheet" />
+    <link href="/scripts/layui/css/layui.css" rel="stylesheet" />
+    <link href="/fontawesome/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="/fontmoduleicon/FontIcon.css" rel="stylesheet" />
+
+</head>
+<body class="layui-layout-body">
+    <div class="layui-layout layui-layout-admin">
+        <div class="layui-header">
+            <div class="layui-logo">logo</div>
+            <ul class="layui-nav layui-layout-left">
+            </ul>
+            <ul class="layui-nav layui-layout-right">
+                <li class="layui-nav-item">
+                    <a href="javascript:;">
+                        <img src="~/images/head/user.png" class="layui-nav-img">
+                        小福泥
+                    </a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="">基本资料</a></dd>
+                        <dd><a href="">安全设置</a></dd>
+                    </dl>
+                </li>
+                <li class="layui-nav-item"><a href="">退了</a></li>
+            </ul>
+        </div>
+
+        <div class="layui-side layui-bg-black">
+            <div class="layui-side-scroll">
+                <!-- 左侧导航区域 -->
+                <ul class="layui-nav layui-nav-tree" lay-filter="test">
+                    <li class="layui-nav-item layui-nav-itemed">
+                        <a class="" href="javascript:;">当前菜单</a>
+                        <dl class="layui-nav-child">
+                            <dd><a nav="0" data-href="/Alarm/Index" data-text="报警信息" data-id="d15f41a23bb54b76a24fda6150ef7181">报警信息</a></dd>
+                            <dd><a nav="0" data-href="/CameraConfigs/Index" data-text="算法配置" data-id="d15f41a23bb54b76a24fda6150ef7181">算法配置</a></dd>
+                            <dd><a href="javascript:;">列表三</a></dd>
+                            <dd><a href="">超链接</a></dd>
+                        </dl>
+                    </li>
+                    <li class="layui-nav-item">
+                        <a href="javascript:;">解决方案</a>
+                        <dl class="layui-nav-child">
+                            <dd><a href="javascript:;">列表一</a></dd>
+                            <dd><a href="javascript:;">列表二</a></dd>
+                            <dd><a href="">超链接</a></dd>
+                        </dl>
+                    </li>
+                    <li class="layui-nav-item"><a href="">云市场</a></li>
+                    <li class="layui-nav-item"><a href="">发布商品</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="layui-body" id="AHRI_body">
+            <!-- 内容主体区域 -->
+            @RenderBody()
+        </div>
+
+        <div class="layui-footer"></div>
+    </div>
+    <script src="/scripts/layui/layui.js" type="text/javascript"></script>
+    <script src="/scripts/layui/global.js" type="text/javascript"></script>
+    <script>
+        layui.use(['element', 'layer', 'jquery', 'form', 'common'], function () {
+            var $ = layui.$, element = layui.element, layer = layui.layer, form = layui.form, common = layui.common;
+
+            $('.layui-nav-item a[nav]').click(function () {
+
+                var url = $(this).attr('data-href');
+                if (!common.isNull(url)) {
+                    var tabId = 'ahri-' + $(this).attr('data-id');
+                    var sHtml = '<div id="' + tabId + '" class="ahri-tabsbody-item layui-show"><iframe id="frame-' + tabId + '" src="' + url + '" frameborder="0" class="ahri-iframe" scrolling="no"></iframe></div>';
+                    //$("#AHRI_body").find(".ahri-tabsbody-item").removeClass("layui-show");
+                    $("#AHRI_body").html(sHtml);
+
+                }
+            });
+            form.render();
+        });
+    </script>
+</body>
+</html>

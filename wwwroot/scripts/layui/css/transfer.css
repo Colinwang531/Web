@@ -1,0 +1,27 @@
+﻿/*穿梭框*/
+.layui-form-item .layui-form-checkbox[lay-skin=primary] { margin: 0; }
+.clear-btn { position: absolute; right: 20px; top: 13px; font-weight: bold; font-size: 5px; color: #c2c2c2; }
+    .clear-btn:hover { color: #1e9fff; cursor: pointer; }
+.transfer-panel { border: 1px solid #ddd; background-color: white; margin: 5px; /*display: none;*/ width: 234px; }
+.transfer-panel-left { float: left; }
+.transfer-panel-right { float: right; }
+.transfer-content { position: relative;width: 549px; height: auto; }
+.transfer-div { width: 100%; height: 280px; overflow: auto; }
+    .transfer-div dd { padding: 0 10px; line-height: 30px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.transfer-div dd:hover { background-color: #ddd; }
+
+.transfer-btn { position: absolute; left: 252px; }
+.transfer-to-right { top: 120px; }
+.transfer-to-left { top: 180px; }
+.drop-search-btn { position: absolute; top: 12px; left: 32px; }
+.transfer-search-div { position: relative; padding: 5px 5px; border-bottom: 1px solid #ddd;}
+    .transfer-search-div input { height: 28px; padding-left: 45px; padding-right: 20px; }
+    .transfer-search-div .clear-btn { right: 10px; }
+.transfer-title { height: 26px; line-height: 26px; margin-left: 50px; text-align: center; }
+.layui-form-checkbox[lay-skin=primary] span { color: #333; }
+.layui-checkbox-disbaled[lay-skin=primary] span { color:#c2c2c2;}
+.checkall-right {
+    top: 9px;
+    left:10px;
+    position: absolute;
+}

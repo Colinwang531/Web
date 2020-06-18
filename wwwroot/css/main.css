@@ -1,0 +1,196 @@
+﻿::-webkit-input-placeholder {
+    color: #ccc;
+}
+html {
+    background-color: #f2f2f2;
+    color: #666;
+}
+
+.fa-refresh {
+    margin-left: 12px;
+    color: #c2c2c2;
+}
+
+    .fa-refresh:hover {
+        color: #1e9fff;
+    }
+
+.layui-layout-admin .layui-logo {
+    color: #fff;
+}
+
+.layui-layout-admin .layui-body .ahri-tabsbody-item {
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    overflow: hidden;
+}
+
+.layui-layout-admin .layui-body {
+    top: 100px;
+    bottom: 0;
+}
+
+.ahri-pagetabs {
+    height: 40px;
+    line-height: 40px;
+    padding: 0 80px 0 40px;
+    background-color: #fff;
+    box-sizing: border-box;
+    box-shadow: 0 1px 2px 0 rgba(0,0,0,.1);
+}
+
+.ahri-pagetabs {
+    position: fixed;
+    top: 60px;
+    right: 0;
+    z-index: 999;
+}
+
+    .ahri-pagetabs .layui-icon-prev {
+        left: 0;
+        border-left: none;
+        border-right: 1px solid #f6f6f6;
+    }
+
+    .ahri-pagetabs .ahri-tabs-control {
+        position: absolute;
+        top: 0;
+        width: 40px;
+        height: 100%;
+        cursor: pointer;
+        text-align: center;
+        transition: all .3s;
+        -webkit-transition: all .3s;
+        box-sizing: border-box;
+        box-shadow: 0 1px 2px 0 rgba(0,0,0,.1);
+    }
+
+    .ahri-pagetabs .layui-icon-next {
+        right: 40px;
+    }
+
+    .ahri-pagetabs .layui-icon-down {
+        right: 0;
+    }
+
+    .ahri-pagetabs .layui-tab {
+        margin: 0;
+        overflow: hidden;
+    }
+
+    .ahri-pagetabs .layui-tab-title {
+        height: 40px;
+        border: none;
+    }
+
+.ahri-tabs-select.layui-nav {
+    position: absolute;
+    left: -40px;
+    top: 0;
+    height: 100%;
+    padding: 0;
+    background: 0 0;
+}
+
+    .ahri-tabs-select.layui-nav .layui-nav-item {
+        line-height: 40px;
+    }
+
+        .ahri-tabs-select.layui-nav .layui-nav-item a {
+            color: #666;
+        }
+
+        .ahri-tabs-select.layui-nav .layui-nav-item > a {
+            height: 40px;
+        }
+
+        .ahri-tabs-select.layui-nav .layui-nav-item .layui-nav-child {
+            left: -100px;
+            right: 0;
+            top: 40px;
+        }
+
+.ahri-pagetabs .layui-tab-title li {
+    min-width: 0;
+    line-height: 40px;
+    max-width: 160px;
+    text-overflow: ellipsis;
+    padding-right: 25px;
+    overflow: hidden;
+    border-right: 1px solid #f6f6f6;
+    vertical-align: top;
+}
+
+    .ahri-pagetabs .layui-tab-title li:after {
+        content: ' ';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 0;
+        height: 2px;
+        border-radius: 0;
+        background-color: #1e9fff;
+        transition: all .3s;
+        -webkit-transition: all .3s;
+    }
+
+    .ahri-pagetabs .layui-tab-title li.layui-this:after {
+        width: 100%;
+        border: none;
+        height: 2px;
+        background-color: #1e9fff;
+    }
+
+    .ahri-pagetabs .layui-tab-title li .layui-tab-close {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        margin: -7px 0 0;
+        width: 16px;
+        height: 16px;
+        line-height: 16px;
+        border-radius: 50%;
+        font-size: 12px;
+    }
+
+    .ahri-pagetabs .layui-tab-title li.layui-this, .ahri-pagetabs .layui-tab-title li:hover {
+        background: #f6f6f6;
+    }
+
+    .ahri-pagetabs .layui-tab-title li:first-child {
+        padding-right: 15px;
+    }
+
+        .ahri-pagetabs .layui-tab-title li:first-child .layui-tab-close, .ahri-tabs-select.layui-nav .layui-nav-bar, .ahri-tabs-select.layui-nav .layui-nav-more {
+            display: none;
+        }
+
+.ahri-pagetabs, .layui-layout-admin .layui-body {
+    transition: all .3s;
+    -webkit-transition: all .3s;
+}
+
+.ahri-pagetabs, .layui-layout-admin .layui-body {
+    left: 200px;
+}
+
+.ahri-tabsbody-item, [template] {
+    display: none;
+}
+
+.ahri-iframe {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.layui-nav .layui-this::after, .layui-nav-bar, .layui-nav-tree .layui-nav-itemed::after {
+    background-color: #1e9fff !important;
+}
