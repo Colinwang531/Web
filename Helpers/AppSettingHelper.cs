@@ -14,9 +14,9 @@ namespace ShipWeb.Helpers
         static AppSettingHelper()
         {
             Configuration = new ConfigurationBuilder()
-                //1. 设置当前目录为基础目录(后面则可以用相对路径)
+                //1. 设置当前目录为基础目录
                 .SetBasePath(Directory.GetCurrentDirectory())
-                //2. 加载json文件 (配置后面两个参数为true，当配置文件发生变化的时候，会自动更新加载，而不必重启整个项目)
+                //2. 加载json文件 
                 .Add(new JsonConfigurationSource { Path = "appsettings.json", ReloadOnChange = true, Optional = true })
                 .Build();
         }

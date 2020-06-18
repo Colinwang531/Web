@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ShipWeb.Models;
+using ShipWeb.Helpers;
 
 namespace ShipWeb.DB
 {
@@ -38,9 +39,7 @@ namespace ShipWeb.DB
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
-            {
-                optionsBuilder.UseMySql("Server=192.168.0.17;Database=DBTest;Port=3306;charset=utf8;uid=root;pwd=root;");
-            }
+                optionsBuilder.UseMySql(AppSettingHelper.GetConnectionString("dbconn"));
         }
 
         public DbSet<TestModel> Test { get; set; }

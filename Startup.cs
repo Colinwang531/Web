@@ -20,24 +20,19 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.FileProviders;
 using System.IO;
 using Microsoft.AspNetCore.Mvc;
+using ShipWeb.Helpers;
 
 namespace ShipWeb
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
-        {
-            Configuration = configuration;
-        }
-        public IConfiguration Configuration { get; }
-
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews();           
             services.AddDistributedMemoryCache();
             services.AddSession();
-            services.AddDbContext<MyContext>(options => options.UseMySql(Configuration.GetConnectionString("dbconn")));
+            services.AddDbContext<MyContext>(options => options.UseMySql(AppSettingHelper.GetConnectionString("dbconn")));
             services.Configure<CookiePolicyOptions>(options =>
             {
                 options.CheckConsentNeeded = context => true;
