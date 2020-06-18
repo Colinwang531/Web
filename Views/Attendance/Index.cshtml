@@ -7,21 +7,156 @@
 <script src="~/lib/jquery/dist/jquery.js"></script>
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script type="text/javascript">
+    var page = 1; //设置首页页码
+    var limit = 1; //设置一页显示的条数
+    var total; //总条数
     $(function () {
+        loadData(1);
+        getdate();
+    });
+    function loadData(type) {
         $.ajax({
             url: "Attendance/Load",
             type: "get",
             dataType: "json",
+            data: {
+                pageIndex: page,
+                pageSize: limit
+            },
             contentType: "application/json;chartset=utf-8",
             success: function (res) {
-                if (res.code==0) {
-
+                if (res.code == 0) {
+                    total = res.count;
+                    var tb = res.data;
+                    SpliHtml(tb);
+                    if (type == 1) {
+                        getPage();
+                    }
                 }
             }
         });
-    });
+    }
+    //时间控件
+    function getdate() {
+        layui.use('laydate', function () {
+            var laydate = layui.laydate;
+            var layer = layui.layer;
+            laydate.render({
+                elem: '#dtStartTime',
+                type: 'date'
+            });
+        });
+        layui.use('laydate', function () {
+            var laydate = layui.laydate;
+            var layer = layui.layer;
+            laydate.render({
+                elem: '#dtEndTime',
+                type: 'date'
+            });
+        })
+    };
+    //拼接数据
+    function SpliHtml(tb) {
+        var html = "";
+        if (tb.length > 0) {
+            for (var i = 0; i < tb.length; i++) {
+                html += '<tr>';
+                html += '<td>' + tb[i].uid + '</td>';
+                html += '<td>' + tb[i].name + '</td>';
+                html += '<td>' + tb[i].time + '</td>';
+                html += '<td><input type="checkbox" disabled="disabled" ' + (tb[i].enableAttendanceIn ? 'checked = "checked"' : "") + ' /></td>';
+                html += '<td><input type="checkbox" disabled="disabled" ' + (tb[i].enableAttendanceOut ? 'checked = "checked"' : "") + ' /></td>';
+                html += '<td><img style="width:800px;height:30px"  src="data:image/jpeg;base64,' + tb[i].picture + '"/></td>';
+            }
+        }
+        $("#tblist").html(html);
+    }    
+    //分页处理
+    function getPage() {
+        layui.use('laypage', function () {
+            var laypage = layui.laypage;
+            var layer = layui.layer;           
+            laypage.render({
+                elem: 'pages',
+                count: total, //数据总数，从服务端得到
+                limit: limit,
+                jump: function (obj, first) {
+                    page = obj.curr; //改变当前页码
+                    limit = obj.limit;
+                    if (!first) {
+                        loadData(2);
+                    }
+                }
+            });
+        });
+    }
+    //查询
+    function Query() {
+        var uid = $("#txtUid").val();
+        var name = $("#txtName").val();
+        var startTime = $("#dtStartTime").val();
+        var endTime = $("#dtEndTime").val();
+        var data = {
+            uid: uid,
+            name: name,
+            startTime: startTime,
+            endTime: endTime,
+            pageIndex: 1,
+            pageSize: limit
+        }
+        $.ajax({
+            url: "Attendance/QueryPage",
+            data: data,
+            type: "get",
+            dataType: "json",
+            contentType: "application/json;chartset=utf-8",
+            success: function (res) {
+                if (res.code == 0) {
+                    total = res.count;
+                    page = res.pageIndex;
+                    var tb = res.data;
+                    SpliHtml(tb);
+                    getPage();
+                }
+            }
+
+        });
+
+    }
 </script>
-<h1>考勤查询</h1>
-<div>
-   
+<div style="margin-top:20px">
+    <div class="layui-form-item">
+        <label class="layui-form-label">编号</label>
+        <div class="layui-input-inline" style="width:100px">
+            <input id="txtUid" class="layui-input" type="text" placeholder="请输入" autocomplete="off" lay-verify="required">
+        </div>
+        <label class="layui-form-label">名称</label>
+        <div class="layui-input-inline"style="width:100px">
+            <input id="txtName" class="layui-input" type="text" placeholder="请输入" autocomplete="off" lay-verify="required">
+        </div>
+        <label class="layui-form-label">时间</label>
+        <div class="layui-input-inline"style="width:100px">
+            <input name="date" class="layui-input" id="dtStartTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off">
+        </div>
+        <label class="layui-form-label">时间</label>
+        <div class="layui-input-inline"style="width:100px">
+            <input name="date" class="layui-input" id="dtEndTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off">
+        </div>
+        <button class="layui-btn" type="submit" onclick="Query()">查询</button>
+    </div>
+    <table class="layui-table">
+        <thead>
+            <tr>
+                <th>船员编号</th>
+                <th>船员名称</th>
+                <th>打卡时间</th>
+                <th>考勤入</th>
+                <th>考勤出</th>
+                <th>略缩图</th>
+            </tr>
+        </thead>
+        <tbody id="tblist">
+        </tbody>
+    </table>
+    <div id="pages" class="center"></div>
 </div>
