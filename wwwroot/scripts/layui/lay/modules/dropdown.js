@@ -1,4 +1,4 @@
-﻿/*通用Dropdown下拉按钮封装 @author Ahri 2018.7.21*/
+﻿/*通用Dropdown下拉按钮封装 @author Ahri 2020.6.25*/
 ; layui.define(['jquery'], function (exports) {
     "use strict";
     var that, $ = layui.$, device = layui.device(),

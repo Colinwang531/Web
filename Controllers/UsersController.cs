@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using ProtoBuf;
+using ShipWeb.Common;
 using ShipWeb.DB;
 using ShipWeb.Models;
 using ShipWeb.ProtoBuffer;
@@ -26,7 +27,7 @@ namespace ShipWeb.Controllers
         // GET: Users
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Users.Where(c=>c.Name!="admin").ToListAsync());
+            return View(await _context.Users.Where(c => c.Name != "admin").ToListAsync());
         }
         public IActionResult Create()
         {
@@ -80,11 +81,11 @@ namespace ShipWeb.Controllers
                 ProtoManager manager = new ProtoManager();
                 users.Uid = "11111";
                 users.Id = identity;
-                Person person= ConvertModel(users);
+                Person person = ConvertModel(users);
                 UserResponse response = manager.UserAdd(person, identity);
                 if (response.result == 0)
                 {
-                    users.Uid = response.uid;                    
+                    users.Uid = response.uid;
                 }
                 _context.Add(users);
                 await _context.SaveChangesAsync();
@@ -97,7 +98,7 @@ namespace ShipWeb.Controllers
         /// </summary>
         /// <param name="users"></param>
         /// <returns></returns>
-        private Person  ConvertModel(Users users)
+        private Person ConvertModel(Users users)
         {
             string md5pwd = MD5Help.MD5Encrypt(users.Password);
             users.Password = md5pwd;
@@ -117,7 +118,7 @@ namespace ShipWeb.Controllers
         {
             ViewBag.Id = id;
             var users = _context.Users.Find(id);
-            if (users!=null)
+            if (users != null)
             {
                 ViewBag.Name = users.Name;
                 ViewBag.Password = users.Password;
@@ -127,7 +128,7 @@ namespace ShipWeb.Controllers
             }
             return View();
         }
-       
+
         ///// <summary>
         ///// 修改用户
         ///// </summary>
@@ -177,14 +178,14 @@ namespace ShipWeb.Controllers
                 return NotFound();
             }
 
-            var users =  _context.Users.FirstOrDefault(m => m.Id == id);
+            var users = _context.Users.FirstOrDefault(m => m.Id == id);
             if (users == null)
             {
                 return NotFound();
             }
             ProtoManager manager = new ProtoManager();
-            int result=manager.UserDelete(users.Uid, users.Id);
-            if (result==0)
+            int result = manager.UserDelete(users.Uid, users.Id);
+            if (result == 0)
             {
                 _context.Users.Remove(users);
                 _context.SaveChanges();
@@ -197,5 +198,26 @@ namespace ShipWeb.Controllers
         {
             return _context.Users.Any(e => e.Id == id);
         }
+
+
+
+        #region Ahri 2020-06-18 
+
+        /// <summary>
+        /// 获取列表
+        /// </summary>
+        /// <param name="courseExampleId"></param>
+        /// <param name="pageIndex"></param>
+        /// <param name="pageSize"></param>
+        /// <returns></returns>
+        //[HttpGet]
+        //public async Task<IActionResult> List(int page, int limit)
+        //{
+        //    var users = await _context.Users.Where(c => c.Name != "admin").ToListAsync();
+        //    return Content(JsonHelper.SerializePageResult(CodeResult.SUCCESS, users.Skip((page - 1) * limit).Take(limit).ToList(), users.Count));
+        //}
+
+
+        #endregion
     }
 }

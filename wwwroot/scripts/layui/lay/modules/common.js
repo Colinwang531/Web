@@ -1,4 +1,4 @@
-﻿/*通用JS封装 @author Ahri 2018.7.17*/
+﻿/*通用JS封装 @author Ahri 2020.6.23*/
 ; layui.define(['jquery', 'layer'], function (exports) {
     "use strict";
     var $ = layui.$, layer = layui.layer, msgIndex = 0;
@@ -125,7 +125,7 @@
         },
         /**
          * remark 封装的ajax.post请求
-         * @author Ahri 2018.6.4
+         * @author Ahri 2020.6.24
          * @param {String} url                 请求地址(必要)
          * @param {Object} data                请求参数(必要)
          * @param {Boolean} async              同步异步(必要)(true:异步，false：同步)
@@ -177,7 +177,7 @@
         },
         /**
          * remark 封装的ajax.post请求
-         * @author Ahri 2018.6.4
+         * @author Ahri 2020.6.24
          * @param {String} url                 请求地址(必要)
          * @param {Object} data                请求参数(必要)
          * @param {Boolean} async              同步异步(必要)(true:异步，false：同步)
@@ -237,97 +237,6 @@
                 }
             });
         },
-
-        /**
-         * 封装的ajax.post请求
-         * @author huangchuan 2017.7.10
-         * @param {String} url               请求地址
-         * @param {Object} postData          请求参数（JSON对象）
-         * @param {Function} successCallback 成功回调（函数）
-         * @param {Function} errorCallBack   错误回调（函数）
-         * @param {String} layerMsg          ajax请求自定义提示信息，默认为：努力加载中...
-         * @param {Boolean} loadAsync        同步异步（布尔值），默认为：false
-         * @param {Boolean} isShowLayer      是否显示ajax请求提示信息，默认为：true
-         * @param {Boolean} tipType          提示方式（Bool），默认为：false
-         */
-        PostArrange: function (url, postData, successCallback, errorCallBack, layerMsg, loadAsync, isShowLayer, tipType, btnName) {
-
-
-            var disableCtrlS = function (e) {
-                //屏蔽ctrl+s快捷键;可以判断是不是mac，如果是mac,ctrl变为花键
-                if (e.keyCode == 83 && (navigator.platform.match("Mac") ? e.metaKey : e.ctrlKey)) {
-                    e.preventDefault();
-                }
-            };
-
-            //屏蔽ctrl+s,不然排课窗口会被关闭
-            document.addEventListener("keydown", disableCtrlS, false);
-            parent.document.addEventListener("keydown", disableCtrlS, false);
-
-            if (btnName === undefined || btnName === "") {
-                btnName = "正在排课中： ";
-            }
-            var intertime;
-            var whentime = 1;
-            var dataType = "json";
-            loadAsync = loadAsync || false;
-            tipType = tipType || false;
-            isShowLayer = isShowLayer == undefined ? true : isShowLayer;
-            $.ajax({
-                url: url,
-                type: "post",
-                data: postData,
-                async: loadAsync,
-                dataType: dataType,
-                beforeSend: function (xhr) {
-                    layui.use(['layer'], function () {
-                        if (tipType) {
-                            $(".returntime").html(btnName + whentime + ' s');
-                            intertime = setInterval(function () {
-                                whentime++;
-                                $(".returntime").html(btnName + whentime + ' s');
-                            }, 1000);
-                        }
-                        else {
-                            Utility.Config.msgIndex = layer.msg('<span class="returntime">' + layerMsg + btnName + whentime + ' 秒</span>', { icon: 16, time: false, shade: 0.5 });
-                            intertime = setInterval(function () {
-                                whentime++;
-                                $(".returntime").html(layerMsg + btnName + whentime + " 秒");
-                            }, 1000);
-                        }
-                    });
-                },
-                success: function (data) {
-                    if (!data.Success && data.Status == "2002") {
-                        //ajax请求发现登录状态丢失
-                        layer.msg(data.Message, {
-                            icon: 7,
-                            time: 2000
-                        }, function () {
-                            window.opener = null;
-                            window.top.location.href = data.Result.Url;
-                        });
-                    }
-                    else {
-                        if (typeof (successCallback) !== 'undefined') { successCallback(data); }
-                    }
-                },
-                error: function (e) {
-                    clearInterval(intertime);
-                    var data = { Success: false, Status: "-1", Message: "请求错误" };
-                    if (typeof (errorCallBack) !== 'undefined') { errorCallBack(data); }
-                },
-                complete: function (xhr, status) {
-                    clearInterval(intertime);
-                    $(".returntime").html("已完成,用时 " + whentime + " 秒");
-
-                    //移除屏蔽
-                    document.removeEventListener("keydown", disableCtrlS, false);
-                    parent.document.removeEventListener("keydown", disableCtrlS, false);
-                }
-            });
-
-        }
     };
 
     exports('common', common);

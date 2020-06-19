@@ -1,4 +1,4 @@
-﻿/*通用Combobox封装 @author Ahri 2018.7.19*/
+﻿/*通用Combobox封装 @author Ahri 2020.6.23*/
 ; layui.define(['jquery', 'form', 'common'], function (exports) {
     "use strict";
     var $ = layui.$, form = layui.form, common = layui.common;
