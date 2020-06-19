@@ -67,7 +67,7 @@
                 <option value="2" selected="@ViewBag.Flag">STOP</option>
             </select>
         </div>
-        <div class="form-group">
+        <div class="form-group"  @(ViewBag.isSet?"":"style=display:none")>
             <input type="submit" value="保存" class="btn btn-primary" />
         </div>
     </div>

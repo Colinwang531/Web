@@ -51,8 +51,14 @@ namespace ShipWeb.Controllers
                          d.ShipId,
                          d.Similar,
                      };
-            var list = aa.ToList();           
-            return Json(list);
+            var list = aa.ToList();
+            var result = new
+            {
+                code = 0,
+                data = list,
+                isSet = ManagerHelp.IsSet
+            };
+            return new JsonResult(result);
 
         }
        
@@ -62,6 +68,10 @@ namespace ShipWeb.Controllers
             List<CameraConfig> modelList = JsonConvert.DeserializeObject<List<CameraConfig>>(mList);
             if (ModelState.IsValid)
             {
+                if (ManagerHelp.IsSet)
+                {
+                    return new JsonResult(new { code = 1, msg = "您没有权限修改数据" });
+                }
                 //发送消息
                 Task.Factory.StartNew(state =>
                 {
@@ -103,9 +113,8 @@ namespace ShipWeb.Controllers
                     }
                 }
                 _context.SaveChanges();
-                return RedirectToAction(nameof(Index));
             }
-            return View();
+            return new JsonResult(new { code = 0 });
         }
     }
 }

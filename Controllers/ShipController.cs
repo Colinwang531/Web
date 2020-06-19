@@ -37,6 +37,10 @@ namespace ShipWeb.Controllers
         {
             try
             {
+                if (ManagerHelp.IsSet)
+                {
+                    new JsonResult(new { code =1, msg = "您没有权限修改数据!" });
+                }
                 if (ModelState.IsValid)
                 {
                     Ship ship = new Ship()
