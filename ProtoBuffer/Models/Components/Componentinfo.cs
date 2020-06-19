@@ -6,53 +6,31 @@ using System.Threading.Tasks;
 
 namespace ShipWeb.ProtoBuffer.Models
 {
-	/// <summary>
-	/// 组件类
-	/// </summary>
 	[ProtoContract]
-    public class Componentinfo
+	public class ComponentInfo
     {
-		public enum Command
+		public enum Type
 		{
-			/// <summary>
-			/// 组件注册请求
-			/// </summary>
-			SIGNIN_REQ = 1,
-			/// <summary>
-			/// 组件注册响应
-			/// </summary>
-			SIGNIN_REP = 2,
-			/// <summary>
-			/// 组件退出请求
-			/// </summary>
-			SIGNOUT_REQ = 3,
-			/// <summary>
-			/// 组件退出响应
-			/// </summary>
-			SIGNOUT_REP = 4,
-			/// <summary>
-			/// 组件查询请求
-			/// </summary>
-			QUERY_REQ=5,
-			/// <summary>
-			/// 组件查询响应
-			/// </summary>
-			QUERY_REP = 6
+			XMQ = 1,
+			WEB = 2,
+			HKD = 3,
+			DHD = 4,
+			ALM = 5
 		}
 		/// <summary>
-		/// 组件命令
+		/// 注册类型
 		/// </summary>
 		[ProtoMember(1)]
-		public Command command = Command.SIGNIN_REP;
+		public Type type = Type.WEB;
 		/// <summary>
-		/// 组件请求
+		/// 组件ID
 		/// </summary>
 		[ProtoMember(2)]
-		public ComponentRequest componentrequest { get; set; }
+		public string cid { get; set; }
 		/// <summary>
-		/// 组件响应
+		/// 组件名称
 		/// </summary>
 		[ProtoMember(3)]
-		public ComponentResponse componentresponse { get; set; }
-    }
+		public string cname { get; set; }
+	}
 }

@@ -36,10 +36,25 @@ namespace ShipWeb.Controllers
         }
 
         // GET: Employees
-        public async Task<IActionResult> Index()
+        public IActionResult Index()
         {
             bylist = new List<byte[]>();
-            return View(await _context.Employee.ToListAsync());
+            return View();
+        }
+        /// <summary>
+        /// 加载船员列表
+        /// </summary>
+        /// <returns></returns>
+        public IActionResult Load()
+        {
+            var data = _context.Employee.ToList();
+            var result = new
+            {
+                code = 0,
+                data = data,
+                isSet = ManagerHelp.IsSet
+            };
+            return new JsonResult(result);
         }
         /// <summary>
         /// 上传图片
@@ -80,7 +95,7 @@ namespace ShipWeb.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Employee employee)
+        public async Task<IActionResult> Save(Employee employee)
         {
             if (ModelState.IsValid)
             {
@@ -158,7 +173,7 @@ namespace ShipWeb.Controllers
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string id,Employee employee)
+        public async Task<IActionResult> EditSave(string id,Employee employee)
         {
             if (id != employee.Id)
             {
@@ -230,31 +245,38 @@ namespace ShipWeb.Controllers
         /// <returns></returns>
         public  IActionResult Delete(string id)
         {
-            if (id == null)
+            try
             {
-                return NotFound();
-            }
-
-            var employee =  _context.Employee.Find(id);
-            if (employee == null)
-            {
-                return NotFound();
-            }
-            ProtoManager manager = new ProtoManager();
-            int result=manager.CrewDelete(employee.Uid, employee.Id);
-            if (result==0)
-            {
-               var employeePictures= _context.EmployeePicture.Where(e => e.EmployeeId == employee.Id).ToList();
-                foreach (var item in employeePictures)
+                if (id == null)
                 {
-                    //删除船员图片
-                    _context.EmployeePicture.Remove(item);
+                    return NotFound();
                 }
-                //删除船员
-                _context.Employee.Remove(employee);
-                _context.SaveChanges();
+
+                var employee = _context.Employee.Find(id);
+                if (employee == null)
+                {
+                    return NotFound();
+                }
+                ProtoManager manager = new ProtoManager();
+                int result = manager.CrewDelete(employee.Uid, employee.Id);
+                if (result == 0)
+                {
+                    var employeePictures = _context.EmployeePicture.Where(e => e.EmployeeId == employee.Id).ToList();
+                    foreach (var item in employeePictures)
+                    {
+                        //删除船员图片
+                        _context.EmployeePicture.Remove(item);
+                    }
+                    //删除船员
+                    _context.Employee.Remove(employee);
+                    _context.SaveChanges();
+                }
+                return new JsonResult(new { code = 0, msg = "删除成功!" });
             }
-            return RedirectToAction(nameof(Index));
+            catch (Exception ex)
+            {
+                return new JsonResult(new { code = 1, msg = "删除失败!" + ex.Message });
+            }
         }
 
 

@@ -23,11 +23,9 @@
                 dataType: "json",
                 type: "get",
                 success: function (res) {
-                    if (res == "suscess") {
-                        window.location.href = "@Url.Action("Index","Home")";//可以跳转.
-                    } else {
-                        alert(res);
-                    }
+                    if (res.code==1) {
+                       alert(res);
+                    } 
                 }
             })
         }

@@ -39,17 +39,18 @@ namespace ShipWeb.Controllers
             var usersModel = _context.Users.FirstOrDefault(u => u.Name == name);
             if (usersModel==null)
             {
-                return Json("用户名或密码不正确");
+                return new JsonResult(new { code=1,msg= "用户名或密码不正确" });
             }
             else 
             {
                 if (usersModel.Password!= MD5Help.MD5Encrypt(password))
                 {
-                    return Json("用户名或密码不正确");
+                    return new JsonResult(new { code = 1, msg = "用户名或密码不正确" });
                 }
                 //保存登陆的用户ID
                 HttpContext.Session.SetString("uid", usersModel.Uid);
-                return Json("suscess");
+                //登陆成功后跳转组件页面
+                return Redirect("/Component/index");
             }
         }
 

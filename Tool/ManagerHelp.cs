@@ -9,7 +9,12 @@ namespace ShipWeb.Tool
     {
         private static ManagerHelp _manager = null;
         public static string ShipId = "";
-        public static string Cid = "5555";       
+        public static string Cid = "5555";
+        /// <summary>
+        /// 是否有设置权限
+        /// </summary>
+        public static bool IsSet = true;
+        public static Dictionary<int, string> components;
         private static object ShipId_Lock = new object(); //锁同步
         private static object Cid_Lock = new object(); //锁同步
         //int aa;

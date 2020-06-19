@@ -3,9 +3,72 @@
 @{
     ViewData["Title"] = "Index";
 }
+<link href="~/layui/css/layui.css" rel="stylesheet" />
+<script src="~/lib/jquery/dist/jquery.js"></script>
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script type="text/javascript">
+    $(document).ready(function () {
+        Load()
+    });
+    function Load() {
+        $.ajax({
+            url: "/Employees/Load",
+            type: "get",
+            dataType: "json",
+            data: {},
+            contentType: "application/json;chartset=utf-8",
+            success: function (res) {
+                if (res.code == 0) {
+                    var tb = res.data;
+                    if (res.isSet == true) {
+                        var create = '<a class="layui-btn" href="Employees/Create/">添加船员</a>';
+                        $("#divCreate").html(create);
+                    }
+                    if (tb.length > 0) {
+                        var html = "";
+                        for (var i = 0; i < tb.length; i++) {
+                            html += '<tr>';
+                            html += '<td>' + tb[i].uid + '</td>';
+                            html += '<td>' + tb[i].name + '</td>';
+                            html += '<td>' + tb[i].job + '</td>';
+                            html += '<td>';
+                            if (res.isSet == true) {
+                                html += '<a class="layui-btn layui-btn-xs"  href="Employees/Edit/' + tb[i].id + '">修改</a>';
+                                html += "<a class=\"layui-btn layui-btn-danger layui-btn-xs\"  href=\"javascript: \" onclick=\"Del('" + tb[i].id + "')\">删除</a>";
+                            }
+                            html += '<td>'
+                            html += '</tr>';
+                        }
+                        $("#tbList").html(html);
+                    }
+                }
+            }
+        });
+    }
+    function Del(id) {
+        var r = confirm("是否确定要删除吗？");
+        if (r == true) {
+            $.ajax({
+                url: "/Employees/Delete",
+                type: "get",
+                dataType: "json",
+                data: { id: id },
+                contentType: "application/json;chartset=utf-8",
+                success: function (res) {
+                    if (res.code == 1) {
+                        alert(res.msg);
+                    } else {
+                        Load();
+                    }
+                }
+            });
+        }
+    }
+
+</script>
 <h1>船员信息</h1>
 <p>
-    <a asp-action="Create">添加船员</a>
+    <div id="divCreate"></div>
 </p>
 <table class="table">
     <thead>
@@ -14,37 +77,14 @@
                 船员编号
             </th>
             <th>
-               船员名称
+                船员名称
             </th>
             <th>
                 工作内容
             </th>
-            @*<th>
-                @Html.DisplayNameFor(model => model.ShipId)
-            </th>*@
             <th></th>
         </tr>
     </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Uid)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Job)
-            </td>
-            @*<td>
-                @Html.DisplayFor(modelItem => item.ShipId)
-            </td>*@
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.Id">编辑</a> |
-                <a asp-action="Delete" asp-route-id="@item.Id">删除</a>
-            </td>
-        </tr>
-}
+    <tbody id="tbList">
     </tbody>
 </table>

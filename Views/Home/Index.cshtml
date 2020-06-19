@@ -3,6 +3,39 @@
 }
 <script src="~/lib/jquery/dist/jquery.js"></script>
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
+<script type="text/javascript">
+    $(function () {
+        $.ajax({
+            url: "Component/Load",
+            success: function (res) {
+                if (res.code == 0) {
+                    var list = res.data;
+                    if (list.length > 0) {
+                        var strHtml = "";
+                        for (var i = 0; i < list.length; i++) {
+                            if (i == 0) {
+                                strHtml += "<li class=\"layui-nav-item layui-nav-itemed\">" + list[i].cname;
+                            } else {
+                                strHtml += "<li class=\"layui-nav-item\">" + list[i].cname;
+                            }
+                            var name = "ALM";
+                            if (list[i].type == 1) name = "XMQ";
+                            if (list[i].type == 2) name = "WEB";
+                            if (list[i].type == 3) name = "HKD";
+                            if (list[i].type == 4) name = "DHD";
+                            strHtml += ' <a href="#' + name + '</a>';
+                            strHtml += "</li>";
+                        }
+                        $("#leftul").append(strHtml);
+                    }
+                }
+            }
+        });
+    });
+</script>
+<div class="text-center">   
+    <div>
+        <ul id="leftul" class="layui-nav layui-nav-tree">
+        </ul>
+    </div>
 </div>

@@ -76,7 +76,7 @@ namespace ShipWeb.ProtoBuffer.Models
 		/// 组件
 		/// </summary>
 		[ProtoMember(6)]
-		public Componentinfo component { get; set; }
+		public Component component { get; set; }
 		/// <summary>
 		/// 船员
 		/// </summary>

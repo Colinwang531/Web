@@ -12,9 +12,9 @@ namespace ShipWeb.ProtoBuffer
 {
     public class ProtoManager
     {
-        private static ProtoManager _protoManager = null;
         private static DealerSocket dealer = null;
         private static object dealer_Lock = new object(); //锁同步
+        public static string IP = "tcp://192.168.0.2:61001";//接收从main入口过来的url
         //int aa;
         //单例控制dealer只有一个。
         public  ProtoManager()
@@ -23,9 +23,7 @@ namespace ShipWeb.ProtoBuffer
             {
                 if (dealer == null)
                 {
-                    dealer = new DealerSocket("tcp://192.168.0.2:61001");
-                    //aa = rm.Next();
-                    _protoManager = new ProtoManager();
+                    dealer = new DealerSocket(IP);
                 }
             }
         }
@@ -46,26 +44,29 @@ namespace ShipWeb.ProtoBuffer
                 type = MSG.Type.COMPONENT,
                 timestamp = ProtoBufHelp.TimeSpan(),
                 sequence = 3,
-                component = new Componentinfo()
+                component = new Component()
                 {
-                    command = Componentinfo.Command.SIGNIN_REQ,
+                    command = Component.Command.SIGNIN_REQ,
                     componentrequest = new ComponentRequest()
                     {
-                        type = ComponentRequest.Type.WEB
+                         componentinfo=new ComponentInfo()
+                         {
+                             type = ComponentInfo.Type.WEB
+                         }
                     }
                 }
             };
-            if (type == 1) msg.component.componentrequest.type = ComponentRequest.Type.XMQ;
-            if (type == 3) msg.component.componentrequest.type = ComponentRequest.Type.HKD;
-            if (type == 4) msg.component.componentrequest.type = ComponentRequest.Type.DHD;
-            if (type == 5) msg.component.componentrequest.type = ComponentRequest.Type.ALM;
+            if (type == 1) msg.component.componentrequest.componentinfo.type = ComponentInfo.Type.XMQ;
+            if (type == 3) msg.component.componentrequest.componentinfo.type = ComponentInfo.Type.HKD;
+            if (type == 4) msg.component.componentrequest.componentinfo.type = ComponentInfo.Type.DHD;
+            if (type == 5) msg.component.componentrequest.componentinfo.type = ComponentInfo.Type.ALM;
             //把成实转成字节流
             SendMessage(msg);
             MSG revMsg = ReceiveMessage(dealer);
             if (revMsg.type == MSG.Type.COMPONENT)
             {
-                Componentinfo compMsg = revMsg.component;
-                if (compMsg.command == Componentinfo.Command.SIGNIN_REP)
+                Component compMsg = revMsg.component;
+                if (compMsg.command == Component.Command.SIGNIN_REP)
                 {
                     if (compMsg.componentresponse != null)
                     {
@@ -92,13 +93,15 @@ namespace ShipWeb.ProtoBuffer
                 type = MSG.Type.COMPONENT,
                 timestamp = ProtoBufHelp.TimeSpan(),
                 sequence = 3,
-                component = new Componentinfo()
+                component = new Component()
                 {
-                    command = Componentinfo.Command.SIGNOUT_REQ,
+                    command = Component.Command.SIGNOUT_REQ,
                     componentrequest = new ComponentRequest()
                     {
-                        cid = cid,
-                        type = ComponentRequest.Type.WEB
+                         componentinfo=new ComponentInfo()
+                         { 
+                             cid=cid
+                         }
                     }
                 }
             };
@@ -111,9 +114,9 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="cid"></param>
         /// <param name="identity"></param>
-        public List<Componentinfo> ComponentQuery(string cid, string identity)
+        public ComponentResponse ComponentQuery(string identity)
         {
-            List<Componentinfo> list = new List<Componentinfo>();
+            ComponentResponse result = new ComponentResponse();
             dealer.Options.Identity = Encoding.Unicode.GetBytes(identity);
             //组件注册消息整理
             MSG msg = new MSG()
@@ -121,29 +124,25 @@ namespace ShipWeb.ProtoBuffer
                 type = MSG.Type.COMPONENT,
                 timestamp = ProtoBufHelp.TimeSpan(),
                 sequence = 3,
-                component = new Componentinfo()
+                component = new Component()
                 {
-                    command = Componentinfo.Command.QUERY_REP,
-                    componentrequest = new ComponentRequest()
-                    {
-                        cid = cid
-                    }
+                    command = Component.Command.QUERY_REP
                 }
             };
             SendMessage(msg);
             MSG revMsg = ReceiveMessage(dealer);
             if (revMsg != null && revMsg.type == MSG.Type.COMPONENT)
             {
-                Componentinfo compMsg = revMsg.component;
-                if (compMsg.command == Componentinfo.Command.QUERY_REQ)
+                Component compMsg = revMsg.component;
+                if (compMsg.command == Component.Command.QUERY_REQ)
                 {
                     if (compMsg.componentresponse.result==0)
                     {
-                        list = compMsg.componentresponse.componentinfos;
+                        result = compMsg.componentresponse;
                     }
                 }
             }
-            return list;
+            return result;
         }
         #endregion
 

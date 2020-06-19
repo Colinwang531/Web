@@ -7,6 +7,7 @@ using ProtoBuf;
 using ShipWeb.DB;
 using ShipWeb.Models;
 using ShipWeb.ProtoBuffer;
+using ShipWeb.Tool;
 
 namespace ShipWeb.Controllers
 {
@@ -24,6 +25,7 @@ namespace ShipWeb.Controllers
             ViewBag.Name = ship.Name;
             ViewBag.Type = ship.Type;
             ViewBag.Flag = ship.Flag;
+            ViewBag.isSet = ManagerHelp.IsSet;
            return View(ship);
         }
         /// <summary>

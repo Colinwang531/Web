@@ -22,31 +22,27 @@ namespace ShipWeb.Controllers
             _context = context;
         }
 
-        // GET: Embedded
-        public async Task<IActionResult> Index()
+       
+        public IActionResult Index()
         {
-            //if (ManagerHelp.Cid==""|| ManagerHelp.ShipId=="")
-            //{
-            //    return View("Login/Index");
-            //}
-           
-            return View(await _context.Embedded.ToListAsync());
+            return View();
         }
-
-        public IActionResult Details(string id)
+        public IActionResult Load()
         {
-            var list = _context.Camera.ToList();
-            return View(list);
+            var data = _context.Embedded.ToList();
+            var result = new {
+                code = 0,
+                data = data,
+                isSet = ManagerHelp.IsSet
+            };
+            return new JsonResult(result);
         }
         public IActionResult Create()
         {
             return View();
         }
 
-       
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Models.Embedded Embedded)
+        public async Task<IActionResult> Save(Models.Embedded Embedded)
         {
             if (ModelState.IsValid)
             {
@@ -141,10 +137,7 @@ namespace ShipWeb.Controllers
             return View(Embedded);
         }
 
-     
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string id, Models.Embedded Embedded)
+        public async Task<IActionResult> EditSave(string id, Models.Embedded Embedded)
         {
             if (id != Embedded.Id)
             {
@@ -194,34 +187,42 @@ namespace ShipWeb.Controllers
         /// <returns></returns>
         public IActionResult Delete(string id)
         {
-            if (id == null)
+            try
             {
-                return NotFound();
-            }
-
-            var Embedded = _context.Embedded.Find(id);
-            if (Embedded == null)
-            {
-                return NotFound();
-            }
-            ProtoBuffer.ProtoManager manager = new ProtoBuffer.ProtoManager();
-            int resutl= manager.DeveiceDelete(Embedded.Did, Embedded.Id);
-            if (resutl==0)
-            {
-               var cameras= _context.Camera.Where(c => c.EmbeddedId == Embedded.Id).ToList();
-                foreach (var item in cameras)
+                if (id == null)
                 {
-                    var cameraConfig=_context.CameraConfig.FirstOrDefault(c => c.Cid == item.Cid);
-                    //删除摄像机配置表
-                    _context.CameraConfig.Remove(cameraConfig);
-                    //删除摄像机表
-                    _context.Camera.Remove(item);
+                    return NotFound();
                 }
-                //删除设备表
-                _context.Embedded.Remove(Embedded);
-                _context.SaveChanges();
+
+                var Embedded = _context.Embedded.Find(id);
+                if (Embedded == null)
+                {
+                    return NotFound();
+                }
+                ProtoBuffer.ProtoManager manager = new ProtoBuffer.ProtoManager();
+                int resutl = manager.DeveiceDelete(Embedded.Did, Embedded.Id);
+                if (resutl == 0)
+                {
+                    var cameras = _context.Camera.Where(c => c.EmbeddedId == Embedded.Id).ToList();
+                    foreach (var item in cameras)
+                    {
+                        var cameraConfig = _context.CameraConfig.FirstOrDefault(c => c.Cid == item.Cid);
+                        //删除摄像机配置表
+                        _context.CameraConfig.Remove(cameraConfig);
+                        //删除摄像机表
+                        _context.Camera.Remove(item);
+                    }
+                    //删除设备表
+                    _context.Embedded.Remove(Embedded);
+                    _context.SaveChanges();
+                }
+                return new JsonResult(new { code = 0, msg = "删除成功!" });
             }
-            return new JsonResult("数据删除成功");
+            catch (Exception ex)
+            {
+                return new JsonResult(new { code=1,msg="删除失败!"+ex.Message});
+            }
+           
         }
         private bool EmbeddedExists(string id)
         {

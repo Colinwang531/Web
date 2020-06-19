@@ -9,18 +9,8 @@
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <form asp-action="Create">
+        <form asp-action="Save">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            @*<div class="form-group">
-            <label asp-for="Id" class="control-label"></label>
-            <input asp-for="Id" class="form-control" />
-            <span asp-validation-for="Id" class="text-danger"></span>
-        </div>*@
-            @*<div class="form-group">
-            <label asp-for="Did" class="control-label"></label>
-            <input asp-for="Did" class="form-control" />
-            <span asp-validation-for="Did" class="text-danger"></span>
-        </div>*@
             <div class="form-group">
                 <label class="control-label">设备厂商</label>
                 <select asp-for="Factory" class="form-control">
@@ -64,11 +54,6 @@
                 <input asp-for="Nickname" class="form-control" />
                 <span asp-validation-for="Nickname" class="text-danger"></span>
             </div>
-            @*<div class="form-group">
-            <label asp-for="ShipId" class="control-label"></label>
-            <input asp-for="ShipId" class="form-control" />
-            <span asp-validation-for="ShipId" class="text-danger"></span>
-        </div>*@
             <div class="form-group">
                 <input type="submit" value="保存" class="btn btn-primary" />
             </div>

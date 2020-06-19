@@ -24,9 +24,20 @@ namespace ShipWeb.Controllers
         }
 
         // GET: Users
-        public async Task<IActionResult> Index()
+        public ActionResult Index()
         {
-            return View(await _context.Users.Where(c => c.Name != "admin").ToListAsync());
+            return View();
+        }
+        public IActionResult Load()
+        {
+            var data = _context.Users.Where(c => c.Name != "admin").ToList();
+            var result = new
+            {
+                code = 0,
+                data = data,
+                isSet = ManagerHelp.IsSet
+            };
+            return new JsonResult(result);
         }
         public IActionResult Create()
         {
@@ -37,33 +48,47 @@ namespace ShipWeb.Controllers
         /// </summary>
         /// <param name="pwd">原密码</param>
         /// <param name="newPwd">新密码</param>
-        public IActionResult Save(string id, string name, string uid, bool enableConfigure, bool enablequery, string pwd, string newPwd)
+        public IActionResult Save(string id, string name, bool enableConfigure, bool enablequery, string pwd, string newPwd)
         {
-            if (!string.IsNullOrEmpty(newPwd))
+            try
             {
-                string md5pwd = MD5Help.MD5Encrypt(newPwd);
-                if (pwd != md5pwd)
+                //获取数据库中的数据，查出密码
+                var users = _context.Users.FirstOrDefault(c => c.Id == id);
+                if (users == null)
                 {
-                    return new JsonResult(new { code = 1, msg = "原始密码输入有误" });
+                    return new JsonResult(new { code = 1, msg = "数据库中不存在条数" });
                 }
+                //是否做了密码修改
+                if (!string.IsNullOrEmpty(pwd))
+                {
+                    string md5pwd = MD5Help.MD5Encrypt(pwd);
+                    if (users.Password != md5pwd)
+                    {
+                        return new JsonResult(new { code = 1, msg = "原始密码输入有误" });
+                    }
+                }
+                if (!string.IsNullOrEmpty(newPwd))
+                {
+                    //将新密码加密
+                    users.Password = MD5Help.MD5Encrypt(newPwd);
+                }
+                users.Name = name;
+                users.EnableConfigure = enableConfigure;
+                users.Enablequery = enablequery;
+
+                Person person = ConvertModel(users);
+                int result = manager.UserUpdate(person, users.Uid, id);
+                if (result == 0)
+                {
+                    _context.Users.Update(users);
+                    _context.SaveChanges();
+                }
+                return new JsonResult(new { code = 0 });
             }
-            Users users = new Users()
+            catch (Exception ex)
             {
-                EnableConfigure = enableConfigure,
-                Enablequery = enablequery,
-                Id = id,
-                Name = name,
-                Password = pwd,
-                Uid = uid
-            };
-            //Person person = ConvertModel(users);
-            //int result=manager.UserUpdate(person, uid, id);
-            //if (result==0)
-            //{
-            _context.Users.Update(users);
-            _context.SaveChanges();
-            //}
-            return new JsonResult(new { code = 1 });
+                return new JsonResult(new { code = 1,msg="数据修改失败!"+ex.Message });
+            }
         }
         /// <summary>
         /// 添加用户
@@ -72,7 +97,7 @@ namespace ShipWeb.Controllers
         /// <returns></returns>
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(Users users)
+        public async Task<IActionResult> CreateSave(Users users)
         {
             if (ModelState.IsValid)
             {
@@ -127,69 +152,34 @@ namespace ShipWeb.Controllers
             }
             return View();
         }
-
-        ///// <summary>
-        ///// 修改用户
-        ///// </summary>
-        ///// <param name="id"></param>
-        ///// <param name="users"></param>
-        ///// <returns></returns>
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Edit(string id, Users users)
-        //{
-        //    if (id != users.Id)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    if (ModelState.IsValid)
-        //    {
-        //        try
-        //        {
-        //            ProtoManager manager = new ProtoManager();
-        //            Person person = ConvertModel(users);
-        //            manager.UserUpdate(person, users.Uid, users.Id);
-        //            _context.Update(users);
-        //            await _context.SaveChangesAsync();
-        //        }
-        //        catch (DbUpdateConcurrencyException)
-        //        {
-        //            if (!UsersExists(users.Id))
-        //            {
-        //                return NotFound();
-        //            }
-        //            else
-        //            {
-        //                throw;
-        //            }
-        //        }
-        //        return RedirectToAction(nameof(Index));
-        //    }
-        //    return View(users);
-        //}
-
-        // GET: Users/Delete/5
         public IActionResult Delete(string id)
         {
-            if (id == null)
+            try
             {
-                return NotFound();
-            }
+                if (id == null)
+                {
+                    return NotFound();
+                }
 
-            var users = _context.Users.FirstOrDefault(m => m.Id == id);
-            if (users == null)
-            {
-                return NotFound();
+                var users = _context.Users.FirstOrDefault(m => m.Id == id);
+                if (users == null)
+                {
+                    return NotFound();
+                }
+                ProtoManager manager = new ProtoManager();
+                int result = manager.UserDelete(users.Uid, users.Id);
+                if (result == 0)
+                {
+                    _context.Users.Remove(users);
+                    _context.SaveChanges();
+                }
+
+                return Json(new { code = 0, msg = "删除成功"});
             }
-            ProtoManager manager = new ProtoManager();
-            int result = manager.UserDelete(users.Uid, users.Id);
-            if (result == 0)
+            catch (Exception ex)
             {
-                _context.Users.Remove(users);
-                _context.SaveChanges();
+                return Json(new { code = 1, msg = "删除失败" + ex.Message });
             }
-            return RedirectToAction(nameof(Index));
         }
 
 

@@ -20,35 +20,11 @@ namespace ShipWeb
 
         static  ProtoManager manager = new ProtoManager();
         static MyContext _context = new MyContext();
-        private static string shipId = "";
         /// <summary>
         /// 初使化
         /// </summary>
         public static void Init()
         {
-
-            var _context = new MyContext();
-            //是否有般存在
-            var ship = _context.Ship.FirstOrDefault();
-            if (ship == null)
-            {
-                shipId = Guid.NewGuid().ToString();
-                Models.Ship sm = new Models.Ship()
-                {
-                    Flag = false,
-                    Id = shipId,
-                    Name = "船1",
-                    Type = 1
-                };
-                _context.Ship.Add(sm);
-                _context.SaveChanges();
-            }
-            else
-            {
-                shipId = ship.Id;
-            }
-            //HttpContext.Session.SetString("shipId", shipId); 
-            ManagerHelp.ShipId = shipId;
             Task.Factory.StartNew(state => {
                 //发送组件注册
                 string iditity = Guid.NewGuid().ToString();
@@ -87,13 +63,13 @@ namespace ShipWeb
                 Id = identity,
                 Picture = Encoding.UTF8.GetBytes(pics),//alarm.picture
                 Time = DateTime.Now, 
-                ShipId = shipId,
+                ShipId =ManagerHelp.ShipId,
                 alarmInformation = new AlarmInformation()
                 {
                     AlarmId = identity,
                     Cid = "2222", //alarm.cid,
                     Id = Guid.NewGuid().ToString(),
-                    Shipid = shipId,
+                    Shipid = ManagerHelp.ShipId,
                     Type = 1,
                     Uid = "",
                     alarmInformationPositions = new List<AlarmInformationPosition>()
@@ -102,7 +78,7 @@ namespace ShipWeb
             AlarmInformationPosition position = new AlarmInformationPosition()
             {
                 AlarmInformationId = model.alarmInformation.Id,
-                ShipId = shipId,
+                ShipId = ManagerHelp.ShipId,
                 Id = Guid.NewGuid().ToString(),
                 H = 200,
                 W = 150,
@@ -131,7 +107,7 @@ namespace ShipWeb
             //            AlarmId = identity,
             //            Cid = alarm.cid,
             //            Id = Guid.NewGuid().ToString(),
-            //            Shipid = shipId,
+            //            Shipid = ManagerHelp.ShipId,
             //            Type = (int)alarm.information.type,
             //            Uid = alarm.information.uid,
             //            alarmInformationPositions = new List<AlarmInformationPosition>()
@@ -145,7 +121,7 @@ namespace ShipWeb
             //            AlarmInformationPosition position = new AlarmInformationPosition()
             //            {
             //                AlarmInformationId = model.alarmInformation.Id,
-            //                ShipId = shipId,
+            //                ShipId = ManagerHelp.ShipId,
             //                Id = Guid.NewGuid().ToString(),
             //                H = item.h,
             //                W = item.w,

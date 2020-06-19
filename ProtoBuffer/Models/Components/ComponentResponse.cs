@@ -22,6 +22,6 @@ namespace ShipWeb.ProtoBuffer.Models
         /// <summary>
         /// 组件信息
         /// </summary>
-        public List<Componentinfo> componentinfos { get; set; }
+        public List<ComponentInfo> componentinfos { get; set; }
     }
 }

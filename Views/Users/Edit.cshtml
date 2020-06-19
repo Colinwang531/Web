@@ -5,10 +5,10 @@
 
     <script type="text/javascript">
     function Save() {
-        var dbpwd = $("#hidDbpwd").val();
+        var ypwd = "";
         var xpwd = "";
         if ($("#ckChose").prop("checked")) {
-            var ypwd = $("#txtypwd").val();
+            ypwd = $("#txtypwd").val();
             xpwd= $("#txtxpwd").val();
             var spwd = $("#txtspwd").val();
             if (ypwd == undefined || ypwd == "") {
@@ -28,10 +28,9 @@
         var data = {
             id: $("#hidId").val(),
             name: $("#txtName").val(),
-            uid: $("#hidUid").val(),
             enableConfigure: $("#ck1").prop("checked"),
             enablequery: $("#ck2").prop("checked"),
-            pwd: dbpwd,
+            pwd: ypwd,
             newPwd: xpwd
         }
         $.ajax({
@@ -42,10 +41,9 @@
             contentType: "application/json;charset=utf-8",
             success: function (res) {
                 if (res.code == 1) {
-                    alert("密码输入错误，请重新输入");
-                    return false;
+                    alert(res.msg);
                 } else {
-                    window.location.href = "@Url.Action("Index", "Users")";//可以跳转.
+                    alert("数据修改成功");
                 }
             }
         });
@@ -63,8 +61,6 @@
     </script>
 <h1>修改用户信息</h1>
 <input type="hidden" id="hidId" value="@ViewBag.Id" />
-<input type="hidden" id="hidDbpwd" value="@ViewBag.Password" />
-<input type="hidden" id="hidUid" value="@ViewBag.Uid"/>
 <div class="form-group">
     <label  class="control-label">用户名称</label>
     <input type="text" id="txtName" value="@ViewBag.Name" />
