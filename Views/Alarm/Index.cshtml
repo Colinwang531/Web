@@ -27,6 +27,7 @@
             contentType: "application/json;charset=utf-8",
             success: function (res) {
                 if (res.code == 0) {
+                    $("#drawAlarm").attr("src", "data:image/png;base64," + res.da);
                     var tb = res.data;
                     total = res.count;
                     LoadHtml(tb);
@@ -201,4 +202,5 @@
         </tbody>
     </table>
     <div id="pages" class="center"></div>
+    <img id="drawAlarm" />
 </div>

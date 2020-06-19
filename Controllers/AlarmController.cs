@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -11,11 +12,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ShipWeb.DB;
 using ShipWeb.Models;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.Formats;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
-using SixLabors.Primitives;
 
 namespace ShipWeb.Controllers
 {
@@ -45,25 +41,21 @@ namespace ShipWeb.Controllers
                                b.Cid,
                                b.Type,
                                c.NickName,
-                               a.Id,
+                               b.Id,
                                b.AlarmId
                            };
 
                 var datalist = data.ToList();
-                var alarm = datalist.FirstOrDefault();
-                if (alarm != null) { DrawAlarm(alarm.Picture, alarm.Id); }
-
                 var dataPage = datalist.Skip((pageIndex - 1) * pageSize).Take(pageSize);
                 //查询图片是座标位置
                 string ids = string.Join(",", datalist.Select(c => c.Id));
-                var positions = _context.AlarmInformationPosition.Where(c => ids.Contains(c.AlarmInformationId));
-                if (positions != null)
-                {
-
-                }
+                var position = _context.AlarmInformationPosition.Where(c => ids.Contains(c.AlarmInformationId)).FirstOrDefault();
+                var da = DrawAlarm(datalist.FirstOrDefault(d => d.Id == position.AlarmInformationId)?.Picture, position);
+                
                 int count = datalist.Count;
                 var result = new
                 {
+                    da,
                     code = 0,
                     data = dataPage,
                     pageIndex = pageIndex,
@@ -150,58 +142,16 @@ namespace ShipWeb.Controllers
             }
 
         }
-        public int ImgZoom(byte[] bytes, int width, int height)
+
+        public byte[] DrawAlarm(byte[] bytes, AlarmInformationPosition position)
         {
-            //byte[] imageBytes = Convert.FromBase64String(Encoding.UTF8.GetString(bytes));
-
-            Image<Rgba32> image = SixLabors.ImageSharp.Image.Load(bytes);
-
             using (var stream = new MemoryStream(bytes, 0, bytes.Length, false, true))
             {
-                System.Drawing.Image img = System.Drawing.Image.FromStream(stream);
-            }
-
-            if (width > 0)
-            {
-                double percent = (double)200 / image.Width;
-                int w1 = Convert.ToInt32(width * percent);
-                return w1;
-            }
-            else
-            {
-                double percent = (double)260 / image.Height;
-                int y1 = Convert.ToInt32((double)height * percent);
-                return y1;
-            }
-        }
-
-        public int DrawAlarm(byte[] bytes, string alarmId)
-        {
-            var position = _context.AlarmInformationPosition.FirstOrDefault(c => c.AlarmInformationId == alarmId);
-            if (position != null)
-            {
-
-            }
-            //byte[] imageBytes = Convert.FromBase64String(Encoding.UTF8.GetString(bytes));
-
-            Image<Rgba32> image = SixLabors.ImageSharp.Image.Load(bytes);
-
-            using (var stream = new MemoryStream(bytes, 0, bytes.Length, false, true))
-            {
-                System.Drawing.Image img = System.Drawing.Image.FromStream(stream);
-            }
-
-            if (position.W > 0)
-            {
-                double percent = (double)200 / image.Width;
-                int w1 = Convert.ToInt32(position.W * percent);
-                return w1;
-            }
-            else
-            {
-                double percent = (double)260 / image.Height;
-                int y1 = Convert.ToInt32((double)position.H * percent);
-                return y1;
+                Image image = Image.FromStream(stream);
+                Graphics.FromImage(image).DrawRectangle(new Pen(Brushes.Red,5), position.X, position.Y, position.W, position.H);
+                var ms = new MemoryStream();
+                image.Save(ms, ImageFormat.Png);
+                return ms.GetBuffer();
             }
         }
 
