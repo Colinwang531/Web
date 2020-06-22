@@ -12,7 +12,7 @@ using ShipWeb.Models;
 
 namespace ShipWeb.Controllers
 {
-    public class CamerasController : Controller
+    public class CamerasController : BaseController
     {
         private readonly MyContext _context;
 

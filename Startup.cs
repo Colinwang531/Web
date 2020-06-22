@@ -31,13 +31,15 @@ namespace ShipWeb
         {
             services.AddControllersWithViews();           
             services.AddDistributedMemoryCache();
-            services.AddSession();
-            services.AddDbContext<MyContext>(options => options.UseMySql(AppSettingHelper.GetConnectionString("dbconn")));
-            services.Configure<CookiePolicyOptions>(options =>
+            //获取配置的session丢失时间
+            var timeSpan = AppSettingHelper.GetSectionValue("IdleTimeout");
+            services.AddSession(options =>
             {
-                options.CheckConsentNeeded = context => true;
-                options.MinimumSameSitePolicy = SameSiteMode.None;
+                options.IdleTimeout = TimeSpan.FromSeconds(Convert.ToDouble(timeSpan));
+                options.Cookie.HttpOnly = true;
+                options.Cookie.IsEssential = true;
             });
+            services.AddDbContext<MyContext>(options => options.UseMySql(AppSettingHelper.GetConnectionString("dbconn")));
             services.AddRazorPages(options =>
             {
                 //options.Conventions.Add(new DefaultRouteRemovalPageRouteModelConvention(String.Empty));
@@ -68,9 +70,9 @@ namespace ShipWeb
             app.UseStaticFiles();
 
             app.UseRouting();
-            app.UseSession();
             app.UseAuthorization();
 
+            app.UseSession();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(

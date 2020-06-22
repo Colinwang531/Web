@@ -14,7 +14,7 @@ using ShipWeb.Tool;
 
 namespace ShipWeb.Controllers
 {
-    public class UsersController : Controller
+    public class UsersController : BaseController
     {
         private readonly MyContext _context;
         private ProtoManager manager = new ProtoManager();

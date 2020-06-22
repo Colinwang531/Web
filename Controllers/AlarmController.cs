@@ -17,7 +17,7 @@ using ShipWeb.Tool;
 
 namespace ShipWeb.Controllers
 {
-    public class AlarmController : Controller
+    public class AlarmController : BaseController
     {
         private MyContext _context;
         public AlarmController(MyContext context)

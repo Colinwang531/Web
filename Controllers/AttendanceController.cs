@@ -11,7 +11,7 @@ using ShipWeb.Tool;
 
 namespace ShipWeb.Controllers
 {
-    public class AttendanceController : Controller
+    public class AttendanceController : BaseController
     {
         private MyContext _context;
         public AttendanceController(MyContext context)

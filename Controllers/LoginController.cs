@@ -10,13 +10,14 @@ using ProtoBuf;
 using ShipWeb.Tool;
 using ShipWeb.ProtoBuffer;
 using ShipWeb.ProtoBuffer.Models;
+using System.Text;
+using Microsoft.AspNetCore.Identity;
 
 namespace ShipWeb.Controllers
 {
     public class LoginController : Controller
     {
         private readonly MyContext _context;
-
         public LoginController(MyContext context)
         {
             _context = context;
@@ -29,8 +30,9 @@ namespace ShipWeb.Controllers
         {
             return View();
         }
+
         /// <summary>
-        /// 登陆注册
+        /// 登陆
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
@@ -47,48 +49,15 @@ namespace ShipWeb.Controllers
                 {
                     return new JsonResult(new { code = 1, msg = "用户名或密码不正确" });
                 }
-                //保存登陆的用户ID
-                HttpContext.Session.SetString("uid", usersModel.Uid);
-                //登陆成功后跳转组件页面
-                return Redirect("/Component/index");
-            }
-        }
 
-        public IActionResult Register()
-        {
-            return View();
-        }
-        [HttpPost]
-        /// <summary>
-        /// 注册
-        /// </summary>
-        /// <returns></returns>
-        public JsonResult Save([FromBody] Users user)
-        {
-           
-            if (user!=null)
-            {
-                string identity = Guid.NewGuid().ToString();
-                ProtoManager manager = new ProtoManager();
-                Person per = new Person() { 
-                    name=user.Name,
-                     password=user.Password
-                };
-                UserResponse rep= manager.UserAdd(per, identity);
-                if (rep!=null&&rep.result==0)
-                {
-                    user.Id = identity;
-                    user.Uid = rep.uid;
-                    if (rep.persons.Count==1)
-                    {
-                        //user.EnableConfigure = rep.persons[0].author.enableconfigure;
-                        //user.Enablequery = rep.persons[0].author.enablequery;
-                    }                    
-                }
-                _context.Add(user);
-                return new JsonResult("注册成功");
+                //保存登陆的用户ID
+                HttpContext.Session.Set("uid", Encoding.UTF8.GetBytes(usersModel.Uid));
+                //保存用户可操作的权限
+                ManagerHelp.IsSet = usersModel.EnableConfigure;
+                //登陆成功后跳转组件页面
+                //return RedirectToAction("Index", "Home"); 
+                return new JsonResult(new { code = 0 });
             }
-            return new JsonResult("注册失败");
         }
     }
 }

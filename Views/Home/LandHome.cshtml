@@ -1,0 +1,48 @@
+﻿
+@{
+    Layout = null;
+    ViewData["Title"] = "LandHome";
+}
+
+<link href="~/layui/css/layui.css" rel="stylesheet" />
+<script src="~/lib/jquery/dist/jquery.js"></script>
+<script type="text/javascript">
+    $(function () {
+        $.ajax({
+            url: "/Home/LandLoad",
+            data: {},
+            type: "get",
+            dataType: "json",
+            contentType: "application/json;chartset=utf-8",
+            success: function (res) {
+                if (res.code == 0) {
+                    var html = "";
+                    var tb = res.data;
+                    if (tb.length > 0) {
+                        for (var i = 0; i < tb.length; i++) {
+                            html += '<tr>';
+                            html += '<td>' + tb[i].name + '</td>';
+                            html += '<td>' + (tb[i].flag ? "航行" : "停港") + '</td>';
+                            html += '<td><a class="layui-btn layui-btn-primary layui-btn-xs" href="/Home/Index/' + tb[i].id + '">详情</a></td>';
+                            html += '</tr>';
+                        }
+                    }
+                    $("#tbList").html(html);
+                }
+            }
+        });
+    })
+</script>
+<div style="width:60%">
+    <table class="layui-table" style="margin-left:50px">
+        <thead>
+            <tr>
+                <th>船名称</th>
+                <th>船状态</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody id="tbList">
+        </tbody>
+    </table>
+</div>

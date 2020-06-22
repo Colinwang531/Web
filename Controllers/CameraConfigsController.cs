@@ -17,7 +17,7 @@ using ShipWeb.Tool;
 
 namespace ShipWeb.Controllers
 {
-    public class CameraConfigsController : Controller
+    public class CameraConfigsController : BaseController
     {
         private readonly MyContext _context;
 

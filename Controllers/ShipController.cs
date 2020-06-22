@@ -11,7 +11,7 @@ using ShipWeb.Tool;
 
 namespace ShipWeb.Controllers
 {
-    public class ShipController : Controller
+    public class ShipController : BaseController
     {
         private readonly MyContext _context;
         public ShipController(MyContext context)

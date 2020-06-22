@@ -23,7 +23,7 @@ using ShipWeb.Tool;
 
 namespace ShipWeb.Controllers
 {
-    public class EmployeesController : Controller
+    public class EmployeesController : BaseController
     {
 
         private readonly MyContext _context;

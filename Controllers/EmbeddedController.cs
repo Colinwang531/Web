@@ -13,7 +13,7 @@ using ShipWeb.Tool;
 
 namespace ShipWeb.Controllers
 {
-    public class EmbeddedController : Controller
+    public class EmbeddedController : BaseController
     {
         private readonly MyContext _context;
 

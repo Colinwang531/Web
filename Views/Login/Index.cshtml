@@ -1,48 +1,52 @@
-﻿@model ShipWeb.Models.Users
+﻿
+
+@model ShipWeb.Models.Users
 @{
-    ViewData["Title"] = "Index";
+    Layout = null;
 }
-    <script type="text/javascript">
-        function Login() {
-            var name = $("#txtName").val();
-            var pwd = $("#txtPwd").val();
-            if (name == undefined || name == "" || name == null) {
-                alert("用户名不能为空");
-            }
-            if (pwd == undefined || pwd == "" || pwd == null) {
-                alert("密码不能为空");
-            }
-            //var data = {
-            //    Name=name,
-            //    Password=pwd
-            //}
-            $.ajax({
-                url: "Login/UserLogin",
-                data: { name: name, password: pwd },
-                contentType: "application/json; charset=utf-8",
-                dataType: "json",
-                type: "get",
-                success: function (res) {
-                    if (res.code==1) {
-                       alert(res);
-                    } 
-                }
-            })
+<link href="~/layui/css/layui.css" rel="stylesheet" />
+<script src="~/lib/jquery/dist/jquery.js"></script>
+<script type="text/javascript">
+    function Login() {
+        var name = $("#txtName").val();
+        var pwd = $("#txtPwd").val();
+        if (name == undefined || name == "" || name == null) {
+            alert("用户名不能为空");
         }
-    </script>
+        if (pwd == undefined || pwd == "" || pwd == null) {
+            alert("密码不能为空");
+        }
+        $.ajax({
+            url: "Login/UserLogin",
+            data: { name: name, password: pwd },
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            type: "get",
+            success: function (res) {
+                if (res.code == 1) {
+                    alert(res.msg);
+                } else {
+                    window.location.href = "/Home/Index";
+                }
+            }
+        })
+    }
+</script>
 <h1>Login</h1>
-<div class="row">
-    <div class="col-md-4">      
-            <div class="form-group">
-                <label class="control-label">用户名</label>
-                <input  class="form-control" id="txtName" />              
-            </div>
-            <div class="form-group">
-                <label class="control-label">密码</label>
-                <input type="password" class="form-control" id="txtPwd" />
-            </div>
-            <div class="form-group">
-                <input type="submit" value="登陆" class="btn btn-primary" onclick="Login()" />
-            </div>      
+<div class="layui-form" style="width:60%;">
+    <div class="layui-form-item">
+        <label class="layui-form-label">用户名</label>
+        <div class="layui-input-inline">
+            <input type="text" name="username" id="txtName" lay-verify="required" placeholder="请输入" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item">
+        <label class="layui-form-label">密码</label>
+        <div class="layui-input-inline">
+            <input type="password" name="password" lay-verify="pass" placeholder="请输入密码" id="txtPwd" autocomplete="off" class="layui-input">
+        </div>
+    </div>
+    <div class="layui-form-item" style="margin-left:150px">
+        <input type="submit" value="登陆" class="layui-btn" onclick="Login()" />
     </div>
 </div>
