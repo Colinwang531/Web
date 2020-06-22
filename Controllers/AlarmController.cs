@@ -32,25 +32,27 @@ namespace ShipWeb.Controllers
         {
             try
             {
+                string time=DateTime.Now.ToString();
                 //查询摄像机名称及其报警类型
                 var data = from a in _context.Alarm
-                           join b in _context.AlarmInformation on a.Id equals b.AlarmId
-                           join c in _context.Camera on b.Cid equals c.Cid
-                           join d in _context.AlarmInformationPosition on b.Id equals d.AlarmInformationId
-                           where b.Type!=5                           
-                           select new
-                           {
-                               a.Time,
-                               Picture = ManagerHelp.DrawAlarm(a.Picture,d.X,d.Y,d.W,d.H),
-                               b.Cid,
-                               b.Type,
-                               c.NickName,
-                               b.Id,
-                               b.AlarmId
-                           };
-                var datalist = data.ToList();
-                var dataPage = datalist.Skip((pageIndex - 1) * pageSize).Take(pageSize);
-                int count = datalist.Count;
+                            join b in _context.AlarmInformation on a.Id equals b.AlarmId
+                            join c in _context.Camera on b.Cid equals c.Cid
+                            join d in _context.AlarmInformationPosition on b.Id equals d.AlarmInformationId
+                            where a.ShipId==b.Shipid&&b.Shipid==c.ShipId&&c.ShipId==d.ShipId
+                            where b.Type != 5 && a.ShipId==ManagerHelp.ShipId
+                            select new
+                            {
+                                a.Time,
+                                Picture = ManagerHelp.DrawAlarm(a.Picture, d.X, d.Y, d.W, d.H),
+                                b.Cid,
+                                b.Type,
+                                c.NickName,
+                                b.Id,
+                                b.AlarmId
+                            };
+                string endtime = DateTime.Now.ToString();
+                int count = data.ToList().Count;
+                var dataPage = data.Skip((pageIndex - 1) * pageSize).Take(pageSize);
                 var result = new
                 {
                     code = 0,
@@ -83,7 +85,8 @@ namespace ShipWeb.Controllers
                            join b in _context.AlarmInformation on a.Id equals b.AlarmId
                            join c in _context.Camera on b.Cid equals c.Cid
                            join d in _context.AlarmInformationPosition on b.Id equals d.AlarmInformationId
-                           where b.Type!=5
+                           where a.ShipId == b.Shipid && b.Shipid == c.ShipId && c.ShipId == d.ShipId
+                           where b.Type!=5 && a.ShipId==ManagerHelp.ShipId
                            select new
                            {
                                a.Time,
@@ -122,9 +125,8 @@ namespace ShipWeb.Controllers
                     DateTime dtEnd = DateTime.Parse(endTime);
                     data = data.Where(c => c.Time <= dtEnd);
                 }
-                var list = data.ToList();
-                int count = list.Count();
-                var pageList = list.Skip((pageIndex - 1) * pageSize).Take(pageSize);
+                int count = data.ToList().Count();
+                var pageList = data.Skip((pageIndex - 1) * pageSize).Take(pageSize);
                 var result = new
                 {
                     code = 0,

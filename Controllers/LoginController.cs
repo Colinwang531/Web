@@ -55,7 +55,8 @@ namespace ShipWeb.Controllers
                 //保存用户可操作的权限
                 ManagerHelp.IsSet = usersModel.EnableConfigure;
                 //登陆成功后跳转组件页面
-                //return RedirectToAction("Index", "Home"); 
+               //return RedirectToAction(nameof(Index), "Home");
+                 
                 return new JsonResult(new { code = 0 });
             }
         }

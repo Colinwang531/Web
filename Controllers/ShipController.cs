@@ -20,7 +20,7 @@ namespace ShipWeb.Controllers
         }
         public IActionResult Index()
         {
-           var ship= _context.Ship.FirstOrDefault();
+           var ship= _context.Ship.FirstOrDefault(c=>c.Id==ManagerHelp.ShipId);
             ViewBag.Id = ship.Id;
             ViewBag.Name = ship.Name;
             ViewBag.Type = ship.Type;

@@ -29,7 +29,7 @@ namespace ShipWeb.Controllers
         }
         public IActionResult Load()
         {
-            var data = _context.Embedded.ToList();
+            var data = _context.Embedded.Where(c=>c.ShipId==ManagerHelp.ShipId).ToList();
             var result = new {
                 code = 0,
                 data = data,

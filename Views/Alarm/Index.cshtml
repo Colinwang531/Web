@@ -8,14 +8,14 @@
 <script src="~/layui/layui.js"></script>
 <script type="text/javascript">
     var page = 1; //设置首页页码
-    var limit = 1; //设置一页显示的条数
+    var limit = 5; //设置一页显示的条数
     var total; //总条数
     $(document).ready(function () {
-        loadData(1);
+        loadData();
         getdate();
     });
     //初使化
-    function loadData(type) {
+    function loadData() {
         $.ajax({
             url: "/Alarm/Load",
             type: "get",
@@ -26,13 +26,11 @@
             dataType: "json",
             contentType: "application/json;charset=utf-8",
             success: function (res) {
-                if (res.code == 0) {                  
+                if (res.code == 0) {
                     var tb = res.data;
                     total = res.count;
                     LoadHtml(tb);
-                    if (type == 1) {
-                        getPage();
-                    }
+                    getPage();
                 }
             }
         });
@@ -86,7 +84,7 @@
             });
         });
     }
-    function Query() {
+    function Query(pageIndex, isRefresh = true) {
         var cid = $("#txtUid").val();
         var name = $("#txtName").val();
         var type = $("#slType").val();
@@ -98,7 +96,7 @@
             type: parseInt(type),
             startTime: startTime,
             endTime: endTime,
-            pageIndex: page,
+            pageIndex: pageIndex,
             pageSize: limit
         }
         $.ajax({
@@ -112,7 +110,9 @@
                     total = res.count;
                     var tb = res.data;
                     LoadHtml(tb);
-                    getPage();
+                    if (isRefresh) {
+                        getPage();
+                    }
                 }
             }
         })
@@ -149,7 +149,7 @@
                     page = obj.curr; //改变当前页码
                     limit = obj.limit;
                     if (!first) {
-                        loadData(2);
+                        Query(page, false);
                     }
                 }
             });
@@ -183,7 +183,7 @@
         <div class="layui-input-inline" style="width:100px">
             <input name="date" class="layui-input" id="dtEndTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off">
         </div>
-        <button class="layui-btn" type="submit" onclick="Query()">查询</button>
+        <button class="layui-btn" type="submit" onclick="Query(1)">查询</button>
     </div>
     <table class="layui-table">
         <thead>

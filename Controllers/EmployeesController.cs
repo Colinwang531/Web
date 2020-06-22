@@ -47,7 +47,7 @@ namespace ShipWeb.Controllers
         /// <returns></returns>
         public IActionResult Load()
         {
-            var data = _context.Employee.ToList();
+            var data = _context.Employee.Where(c=>c.ShipId==ManagerHelp.ShipId).ToList();
             var result = new
             {
                 code = 0,

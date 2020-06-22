@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using ProtoBuf;
 using ShipWeb.DB;
 using ShipWeb.Models;
+using ShipWeb.Tool;
 
 namespace ShipWeb.Controllers
 {
@@ -24,7 +25,7 @@ namespace ShipWeb.Controllers
         // GET: Cameras
         public async Task<IActionResult> Index(string id)
         {
-            var list = _context.Camera.Where(c => c.EmbeddedId == id).ToListAsync();
+            var list = _context.Camera.Where(c => c.EmbeddedId == id && c.ShipId== ManagerHelp.ShipId).ToListAsync();
             return View(await list);
         }
 

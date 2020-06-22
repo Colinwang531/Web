@@ -9,13 +9,13 @@
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script type="text/javascript">
     var page = 1; //设置首页页码
-    var limit = 1; //设置一页显示的条数
+    var limit = 2; //设置一页显示的条数
     var total; //总条数
     $(function () {
-        loadData(1);
+        loadData();
         getdate();
     });
-    function loadData(type) {
+    function loadData() {
         $.ajax({
             url: "Attendance/Load",
             type: "get",
@@ -30,9 +30,7 @@
                     total = res.count;
                     var tb = res.data;
                     SpliHtml(tb);
-                    if (type == 1) {
-                        getPage();
-                    }
+                    getPage();
                 }
             }
         });
@@ -99,14 +97,14 @@
                     page = obj.curr; //改变当前页码
                     limit = obj.limit;
                     if (!first) {
-                        loadData(2);
+                        Query(page, false);
                     }
                 }
             });
         });
     }
     //查询
-    function Query() {
+    function Query(pageIndex, isRefresh = true) {
         var uid = $("#txtUid").val();
         var name = $("#txtName").val();
         var startTime = $("#dtStartTime").val();
@@ -116,7 +114,7 @@
             name: name,
             startTime: startTime,
             endTime: endTime,
-            pageIndex: 1,
+            pageIndex: pageIndex,
             pageSize: limit
         }
         $.ajax({
@@ -131,7 +129,9 @@
                     page = res.pageIndex;
                     var tb = res.data;
                     SpliHtml(tb);
-                    getPage();
+                    if (isRefresh) {
+                        getPage();
+                    }
                 }
             }
 

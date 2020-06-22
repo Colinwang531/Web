@@ -30,19 +30,19 @@ namespace ShipWeb.Controllers
                 ProtoManager manager = new ProtoManager();
                 string identity = Guid.NewGuid().ToString();
                 //查询组件
-                var rep = manager.ComponentQuery(identity);
+                //var rep = manager.ComponentQuery(identity);
 
                 //测试赋值
-                //var rep = new ProtoBuffer.Models.ComponentResponse()
-                //{
-                //    componentinfos = new List<ProtoBuffer.Models.ComponentInfo>() {
-                //  new ProtoBuffer.Models.ComponentInfo(){
-                //     type= ProtoBuffer.Models.ComponentInfo.Type.WEB,
-                //     cid="001",
-                //     cname="测试"
-                //  }
-                //}
-                //};
+                var rep = new ProtoBuffer.Models.ComponentResponse()
+                {
+                    componentinfos = new List<ProtoBuffer.Models.ComponentInfo>() {
+                    new ProtoBuffer.Models.ComponentInfo(){
+                     type= ProtoBuffer.Models.ComponentInfo.Type.WEB,
+                     cid="001",
+                     cname="测试"
+                    }
+                  }
+                };
                 string cid = rep.cid;
                 var data = rep.componentinfos;
                 //如果查询的组件中有web标识，那么就是陆地端
@@ -56,7 +56,6 @@ namespace ShipWeb.Controllers
             }
 
             ViewBag.shipId = id;
-            ManagerHelp.ShipId = id;
             return View();
         }
         public IActionResult LandHome()
@@ -94,8 +93,11 @@ namespace ShipWeb.Controllers
         {
             try
             {
+                //是否显示返回陆地端主页面
+                bool flag = true;
                 if (string.IsNullOrEmpty(shipId))
                 {
+                    flag = false;
                     //是否有般存在
                     var ship = _context.Ship.FirstOrDefault();
                     if (ship == null)
@@ -120,7 +122,8 @@ namespace ShipWeb.Controllers
 
                 var result = new
                 {
-                    code = 0
+                    code = 0,
+                    isReturn= flag
                 };
                 return new JsonResult(result);
             }

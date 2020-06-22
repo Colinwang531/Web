@@ -14,7 +14,10 @@
             contentType:"application/json;chartset=utf-8",
             success: function (res) {
                 if (res.code == 0) {
-                   
+                    if (res.isReturn) {
+                        var html = '<a href="@Url.Action("LandHome","Home")">返回</a>';
+                        $("#divReturn").html(html);
+                    }
                 }
             }
         });
@@ -24,8 +27,7 @@
     <div>
         <input type="hidden" id="hidShipId" value="@ViewBag.shipId" />
     </div>
-    <div>       
-        <a href="@Url.Action("LandHome","Home")">返回</a>
+    <div id="divReturn">      
     </div>
 
 </div>

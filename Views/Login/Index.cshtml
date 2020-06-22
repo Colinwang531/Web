@@ -17,7 +17,7 @@
             alert("密码不能为空");
         }
         $.ajax({
-            url: "Login/UserLogin",
+            url: "/Login/UserLogin",
             data: { name: name, password: pwd },
             contentType: "application/json; charset=utf-8",
             dataType: "json",

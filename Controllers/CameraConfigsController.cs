@@ -34,22 +34,21 @@ namespace ShipWeb.Controllers
         {
             var aa = from a in _context.Camera
                      join b in _context.CameraConfig on a.Cid equals b.Cid
-                     into c
-                     from d in c.DefaultIfEmpty()
+                     where a.ShipId==b.ShipId && a.ShipId==ManagerHelp.ShipId
                      select new
                      {
                          a.NickName,
                          a.Cid,
-                         d.EnableAttendanceIn,
-                         d.EnableAttendanceOut,
-                         d.EnableFight,
-                         d.EnableHelmet,
-                         d.EnablePhone,
-                         d.EnableSleep,
-                         d.GPU,
-                         d.Id,
-                         d.ShipId,
-                         d.Similar,
+                         b.EnableAttendanceIn,
+                         b.EnableAttendanceOut,
+                         b.EnableFight,
+                         b.EnableHelmet,
+                         b.EnablePhone,
+                         b.EnableSleep,
+                         b.GPU,
+                         b.Id,
+                         b.ShipId,
+                         b.Similar,
                      };
             var list = aa.ToList();
             var result = new

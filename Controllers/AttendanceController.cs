@@ -37,7 +37,8 @@ namespace ShipWeb.Controllers
                            join c in _context.CameraConfig on b.Cid equals c.Cid
                            join d in _context.Employee on b.Uid equals d.Uid
                            join e in _context.AlarmInformationPosition on b.Id equals e.AlarmInformationId
-                           where b.Type==5
+                           where a.ShipId==b.Shipid&&b.Shipid==c.ShipId&&c.ShipId==d.ShipId&&d.ShipId==e.ShipId
+                           where b.Type==5 && a.ShipId==ManagerHelp.ShipId
                            select new
                            {
                                d.Uid,
@@ -83,7 +84,8 @@ namespace ShipWeb.Controllers
                            join c in _context.CameraConfig on b.Cid equals c.Cid
                            join d in _context.Employee on b.Uid equals d.Uid
                            join e in _context.AlarmInformationPosition on b.Id equals e.AlarmInformationId
-                           where b.Type==5
+                           where a.ShipId == b.Shipid && b.Shipid == c.ShipId && c.ShipId == d.ShipId && d.ShipId == e.ShipId
+                           where b.Type == 5 && a.ShipId == ManagerHelp.ShipId
                            select new
                            {
                                d.Uid,
