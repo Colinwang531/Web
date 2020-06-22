@@ -45,6 +45,13 @@ namespace ShipWeb
             }, TaskCreationOptions.LongRunning);
         }
         /// <summary>
+        /// 组件退出
+        /// </summary>
+        public static void Exit()
+        {
+            manager.ComponentExit(ManagerHelp.Cid, Guid.NewGuid().ToString());
+        }
+        /// <summary>
         /// 获取报警信息
         /// </summary>
         public static void Alarm()

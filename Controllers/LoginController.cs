@@ -60,5 +60,16 @@ namespace ShipWeb.Controllers
                 return new JsonResult(new { code = 0 });
             }
         }
+        /// <summary>
+        /// 退出
+        /// </summary>
+        /// <returns></returns>
+        public IActionResult SignOut()
+        {
+            //消除缓存
+            HttpContext.Session.Remove("uid");
+            InitManger.Exit();
+            return RedirectToAction(nameof(Index));
+        }
     }
 }

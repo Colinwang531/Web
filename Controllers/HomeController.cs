@@ -43,7 +43,8 @@ namespace ShipWeb.Controllers
                     }
                   }
                 };
-                string cid = rep.cid;
+                //保存组件ID
+                ManagerHelp.Cid= rep.cid;
                 var data = rep.componentinfos;
                 //如果查询的组件中有web标识，那么就是陆地端
                 var type = data.FirstOrDefault(c => c.type == ProtoBuffer.Models.ComponentInfo.Type.WEB);
