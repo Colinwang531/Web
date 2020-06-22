@@ -7,6 +7,7 @@ using Amazon.Util;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.CodeStyle;
 using ShipWeb.DB;
+using ShipWeb.Tool;
 
 namespace ShipWeb.Controllers
 {
@@ -35,6 +36,8 @@ namespace ShipWeb.Controllers
                            join b in _context.AlarmInformation on a.Id equals b.AlarmId
                            join c in _context.CameraConfig on b.Cid equals c.Cid
                            join d in _context.Employee on b.Uid equals d.Uid
+                           join e in _context.AlarmInformationPosition on b.Id equals e.AlarmInformationId
+                           where b.Type==5
                            select new
                            {
                                d.Uid,
@@ -42,7 +45,7 @@ namespace ShipWeb.Controllers
                                a.Time,
                                c.EnableAttendanceIn,
                                c.EnableAttendanceOut,
-                               Picture = Convert.ToBase64String(Convert.FromBase64String(Encoding.UTF8.GetString(a.Picture))),
+                               Picture =ManagerHelp.DrawAlarm(a.Picture,e.X,e.Y,e.W,e.H),
                            };
                 var list = data.ToList();
                 int count = list.Count;
@@ -79,6 +82,8 @@ namespace ShipWeb.Controllers
                            join b in _context.AlarmInformation on a.Id equals b.AlarmId
                            join c in _context.CameraConfig on b.Cid equals c.Cid
                            join d in _context.Employee on b.Uid equals d.Uid
+                           join e in _context.AlarmInformationPosition on b.Id equals e.AlarmInformationId
+                           where b.Type==5
                            select new
                            {
                                d.Uid,
@@ -86,7 +91,7 @@ namespace ShipWeb.Controllers
                                a.Time,
                                c.EnableAttendanceIn,
                                c.EnableAttendanceOut,
-                               Picture = Convert.ToBase64String(Convert.FromBase64String(Encoding.UTF8.GetString(a.Picture))),
+                               Picture = ManagerHelp.DrawAlarm(a.Picture, e.X, e.Y, e.W, e.H),
                            };
                 if (!string.IsNullOrEmpty(uid))
                 {
