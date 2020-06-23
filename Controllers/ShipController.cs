@@ -18,7 +18,7 @@ namespace ShipWeb.Controllers
         {
             _context = context;
         }
-        public IActionResult Index()
+        public IActionResult Edit()
         {
            var ship= _context.Ship.FirstOrDefault(c=>c.Id==ManagerHelp.ShipId);
             ViewBag.Id = ship.Id;
@@ -27,6 +27,27 @@ namespace ShipWeb.Controllers
             ViewBag.Flag = ship.Flag;
             ViewBag.isSet = ManagerHelp.IsSet;
            return View(ship);
+        }
+        public IActionResult Index()
+        {
+            return View();
+        }
+        public IActionResult Load()
+        {
+            try
+            {
+                var data = _context.Ship.ToList();
+                var result = new
+                {
+                    code = 0,
+                    data = data
+                };
+                return new JsonResult(result);
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { code = 1, msg = "获取数据失败!" + ex.Message });
+            }
         }
         /// <summary>
         /// 保存船状态

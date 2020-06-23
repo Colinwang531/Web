@@ -50,6 +50,8 @@ namespace ShipWeb
                 o.Conventions.ConfigureFilter(new IgnoreAntiforgeryTokenAttribute());
             });
             services.AddAntiforgery(o => o.HeaderName = "XSRF-TOKEN");
+            //注册定时服务
+            services.AddSingleton<IHostedService, AlarmDataService>();
             services.AddCors();
         }
 

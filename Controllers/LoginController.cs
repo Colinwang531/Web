@@ -38,22 +38,17 @@ namespace ShipWeb.Controllers
         /// <returns></returns>
         public IActionResult UserLogin(string name,string password)
         {
-            var usersModel = _context.Users.FirstOrDefault(u => u.Name == name);
+            var usersModel = _context.Users.FirstOrDefault(u => u.Name == name && u.Password == MD5Help.MD5Encrypt(password));
             if (usersModel==null)
             {
                 return new JsonResult(new { code=1,msg= "用户名或密码不正确" });
             }
             else 
             {
-                if (usersModel.Password!= MD5Help.MD5Encrypt(password))
-                {
-                    return new JsonResult(new { code = 1, msg = "用户名或密码不正确" });
-                }
-
                 //保存登陆的用户ID
                 HttpContext.Session.Set("uid", Encoding.UTF8.GetBytes(usersModel.Uid));
-                //保存用户可操作的权限
-                ManagerHelp.IsSet = usersModel.EnableConfigure;
+                //保存用户可操作的权限 admin 最高权限
+                ManagerHelp.IsSet =name.ToLower()=="admin"?true:usersModel.EnableConfigure;
                 //登陆成功后跳转组件页面
                //return RedirectToAction(nameof(Index), "Home");
                  

@@ -59,7 +59,7 @@ namespace ShipWeb
             string identity = Guid.NewGuid().ToString();
 
             #region 测试数据
-            string path = AppContext.BaseDirectory + "/images/1591355250.png";
+            string path = AppContext.BaseDirectory + "/images/26ada481d97ec17810439688534b4fc.jpg";
             FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read);
             byte[] byt = new byte[fs.Length];
             fs.Read(byt, 0,Convert.ToInt32(fs.Length));
@@ -74,11 +74,11 @@ namespace ShipWeb
                 alarmInformation = new AlarmInformation()
                 {
                     AlarmId = identity,
-                    Cid = "2222", //alarm.cid,
+                    Cid = "111", //alarm.cid,
                     Id = Guid.NewGuid().ToString(),
                     Shipid = ManagerHelp.ShipId,
-                    Type = 1,
-                    Uid = "",
+                    Type = 5,
+                    Uid = "002",
                     alarmInformationPositions = new List<AlarmInformationPosition>()
                 }
             };

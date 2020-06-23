@@ -4,10 +4,12 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Amazon.Util;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using ShipWeb.DB;
 using ShipWeb.Models;
 using ShipWeb.ProtoBuffer;
@@ -23,67 +25,133 @@ namespace ShipWeb.Controllers
             _context = context;
         }
 
-        public IActionResult Index(string id="")
+        public IActionResult Index(string id = "")
         {
-            if (string.IsNullOrEmpty(id)&&ManagerHelp.ShipId=="")
-            {
-                ProtoManager manager = new ProtoManager();
-                string identity = Guid.NewGuid().ToString();
-                //查询组件
-                //var rep = manager.ComponentQuery(identity);
-
-                //测试赋值
-                var rep = new ProtoBuffer.Models.ComponentResponse()
-                {
-                    componentinfos = new List<ProtoBuffer.Models.ComponentInfo>() {
-                    new ProtoBuffer.Models.ComponentInfo(){
-                     type= ProtoBuffer.Models.ComponentInfo.Type.WEB,
-                     cid="001",
-                     cname="测试"
-                    }
-                  }
-                };
-                //保存组件ID
-                ManagerHelp.Cid= rep.cid;
-                var data = rep.componentinfos;
-                //如果查询的组件中有web标识，那么就是陆地端
-                var type = data.FirstOrDefault(c => c.type == ProtoBuffer.Models.ComponentInfo.Type.WEB);
-                if (type != null)
-                {
-                    //陆地端是没有修改权限。只能查看
-                    ManagerHelp.IsSet = false;
-                    return RedirectToAction(nameof(LandHome));
-                }
-            }
-
             ViewBag.shipId = id;
             return View();
         }
         public IActionResult LandHome()
         {
+            byte[] byt = HttpContext.Session.Get("uid");
+            string uid = Encoding.UTF8.GetString(byt);
+            var data = _context.Ship.ToList();
+            ViewBag.isAdmin =  uid.ToLower() == "admin" ? true : false;
             ManagerHelp.ShipId = "";
-            return View();
+            return View(data);
         }
-        /// <summary>
-        /// 加载陆地端信息
-        /// </summary>
-        /// <returns></returns>
-        public IActionResult LandLoad()
+        public IActionResult LoadAlarm(int pageIndex,int pageSize)
         {
             try
             {
-                var data = _context.Ship.ToList();
+                SearchAlarmViewModel model = new SearchAlarmViewModel()
+                {
+                    PageIndex = pageIndex,
+                    PageSize = pageSize
+                };
+                int count = 0;
+                var pageList=Search(model,out count);
+                var ship=_context.Ship.ToList();
                 var result = new
                 {
                     code = 0,
-                    data = data
+                    data = pageList,
+                    ship=ship,
+                    pageIndex = model.PageIndex,
+                    pageSize = model.PageSize,
+                    count = count
                 };
                 return new JsonResult(result);
             }
             catch (Exception ex)
             {
-                return new JsonResult(new { code = 1, msg = "获取数据失败!"+ex.Message });
+                return new JsonResult(new { code = 1, msg = "查询失败"+ex.Message });
             }
+        }
+        public IActionResult SearchAlarm(string searchModel)
+        {
+            var model=JsonConvert.DeserializeObject<SearchAlarmViewModel>(searchModel);
+            int count = 0;
+            var pageList = Search(model, out count);
+            var result = new
+            {
+                code = 0,
+                data = pageList,
+                pageIndex = model.PageIndex,
+                pageSize = model.PageSize,
+                count = count
+            };
+            return new JsonResult(result);
+        }
+        private List<AlarmViewModel> Search(SearchAlarmViewModel model,out int count)
+        {
+            var data = from a in _context.Alarm
+                       join b in _context.AlarmInformation on a.Id equals b.AlarmId
+                       join c in _context.Camera on b.Cid equals c.Cid
+                       join d in _context.AlarmInformationPosition on b.Id equals d.AlarmInformationId
+                       join e in _context.Ship on a.ShipId equals e.Id
+                       where a.ShipId == b.Shipid && b.Shipid == c.ShipId && c.ShipId == d.ShipId &&e.Id==a.ShipId && b.Type != 5
+                       select new
+                       {
+                           e.Name,
+                           a.ShipId,
+                           a.Time,
+                           Picture = ManagerHelp.DrawAlarm(a.Picture, d.X, d.Y, d.W, d.H),
+                           b.Cid,
+                           b.Type,
+                           c.NickName,
+                       };
+            if (model != null)
+            {
+                if (!string.IsNullOrEmpty(model.Cid))
+                {
+                    data = data.Where(c => c.Cid == model.Cid);
+                }
+                if (!string.IsNullOrEmpty(model.ShipId))
+                {
+                    data = data.Where(c => c.ShipId == model.ShipId);
+                }
+                if (!string.IsNullOrEmpty(model.Name))
+                {
+                    data = data.Where(c => c.NickName.Contains(model.Name));
+                }
+                if (model.Type > 0)
+                {
+                    data = data.Where(c => c.Type == model.Type);
+                }
+                if (!(string.IsNullOrEmpty(model.StartTime)) && !(string.IsNullOrEmpty(model.EndTime)))
+                {
+                    DateTime dtStart = DateTime.Parse(model.StartTime);
+                    DateTime dtEnd = DateTime.Parse(model.EndTime);
+                    data = data.Where(c => c.Time >= dtStart && c.Time <= dtEnd);
+                }
+                else if (!(string.IsNullOrEmpty(model.StartTime)))
+                {
+                    DateTime dtStart = DateTime.Parse(model.StartTime);
+                    data = data.Where(c => c.Time >= dtStart);
+                }
+                else if (!(string.IsNullOrEmpty(model.EndTime)))
+                {
+                    DateTime dtEnd = DateTime.Parse(model.EndTime);
+                    data = data.Where(c => c.Time <= dtEnd);
+                }
+            }
+            count = data.ToList().Count();
+            var queryList = data.Skip((model.PageIndex - 1) * model.PageSize).Take(model.PageSize);
+            List<AlarmViewModel> list = new List<AlarmViewModel>();
+            foreach (var item in queryList)
+            {
+                AlarmViewModel vmodel = new AlarmViewModel()
+                {
+                    Name = item.Name,
+                    NickName = item.NickName,
+                    Picture = item.Picture,
+                    Time = item.Time,
+                    Cid = item.Cid,
+                    Type = item.Type
+                };
+                list.Add(vmodel);
+            }
+            return list;
         }
         /// <summary>
         /// 加载单个船的主页面
@@ -124,7 +192,7 @@ namespace ShipWeb.Controllers
                 var result = new
                 {
                     code = 0,
-                    isReturn= flag
+                    isReturn = flag
                 };
                 return new JsonResult(result);
             }

@@ -62,9 +62,12 @@
                 html += '<tr>';
                 html += '<td>' + tb[i].uid + '</td>';
                 html += '<td>' + tb[i].name + '</td>';
-                html += '<td>' + tb[i].time + '</td>';
-                html += '<td><input type="checkbox" disabled="disabled" ' + (tb[i].enableAttendanceIn ? 'checked = "checked"' : "") + ' /></td>';
-                html += '<td><input type="checkbox" disabled="disabled" ' + (tb[i].enableAttendanceOut ? 'checked = "checked"' : "") + ' /></td>';
+                html += '<td>' + tb[i].time + '</td>';               
+                if (tb[i].enableAttendanceIn) {
+                    html += '<td>入</td>';
+                } if (true) {
+                    html += '<td>出</td>';
+                }
                 html += '<td><img style="width:800px;height:30px"  ondblclick="showBigImage(this)"  src="data:image/jpeg;base64,' + tb[i].picture + '"/></td>';
             }
         }
@@ -165,8 +168,7 @@
                 <th>船员编号</th>
                 <th>船员名称</th>
                 <th>打卡时间</th>
-                <th>考勤入</th>
-                <th>考勤出</th>
+                <th>考勤</th>
                 <th>略缩图</th>
             </tr>
         </thead>

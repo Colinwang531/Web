@@ -22,7 +22,6 @@ namespace ShipWeb.DB
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<TestModel>();
             modelBuilder.Entity<Users>();
             modelBuilder.Entity<Ship>();
             modelBuilder.Entity<Component>();
@@ -42,7 +41,6 @@ namespace ShipWeb.DB
                 optionsBuilder.UseMySql(AppSettingHelper.GetConnectionString("dbconn"));
         }
 
-        public DbSet<TestModel> Test { get; set; }
         /// <summary>
         /// 用户
         /// </summary>
