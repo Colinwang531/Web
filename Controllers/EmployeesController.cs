@@ -209,6 +209,11 @@ namespace ShipWeb.Controllers
                             _context.EmployeePicture.Add(pic);
                         }
                     }
+                    else
+                    {
+                       var picList= _context.EmployeePicture.Where(c => c.EmployeeId == id);
+                        _context.EmployeePicture.RemoveRange(picList);
+                    }
                     
                    // manager.CrewUpdate(emp, employee.Uid, employee.Id);
                     _context.Employee.Update(employee);

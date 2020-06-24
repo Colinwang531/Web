@@ -136,7 +136,7 @@ namespace ShipWeb.Controllers
             }
             return View(Embedded);
         }
-
+        [HttpPost]
         public async Task<IActionResult> EditSave(string id, Models.Embedded Embedded)
         {
             if (id != Embedded.Id)

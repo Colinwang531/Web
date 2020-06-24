@@ -124,8 +124,7 @@ namespace ShipWeb.Controllers
         /// <returns></returns>
         private Person ConvertModel(Users users)
         {
-            string md5pwd = MD5Help.MD5Encrypt(users.Password);
-            users.Password = md5pwd;
+            users.Password = MD5Help.MD5Encrypt(users.Password); 
             Person person = new Person()
             {
                 name = users.Name,

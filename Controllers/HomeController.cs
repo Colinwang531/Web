@@ -48,14 +48,40 @@ namespace ShipWeb.Controllers
                     PageIndex = pageIndex,
                     PageSize = pageSize
                 };
-                int count = 0;
-                var pageList=Search(model,out count);
-                var ship=_context.Ship.ToList();
+                DateTime dts = DateTime.Now;
+                //取出报警表中指定条数的数据
+                var alarm = _context.Alarm.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToList();
+                var alarmIds = string.Join(',', alarm.Select(c => c.Id));
+                var alarmInfo = _context.AlarmInformation.Where(c => alarmIds.Contains(c.AlarmId)).ToList();
+                var infoIds = string.Join(',', alarmInfo.Select(c => c.Id));
+                var cids = string.Join(',', alarmInfo.Select(c => c.Cid));
+                var shipIds = string.Join(',', alarmInfo.Select(c => c.Shipid));
+                var alarmInfoPos = _context.AlarmInformationPosition.Where(c => infoIds.Contains(c.AlarmInformationId)).ToList();
+                var camera = _context.Camera.Where(c => cids.Contains(c.Cid)).ToList();
+                var ship = _context.Ship.Where(c => shipIds.Contains(c.Id)).ToList();
+                var data = (from a in alarm
+                           join b in alarmInfo on a.Id equals b.AlarmId
+                           join c in alarmInfoPos on b.Id equals c.AlarmInformationId
+                           join d in camera on b.Cid equals d.Cid
+                           join e in ship on a.ShipId equals e.Id
+                           select new
+                           {
+                               e.Name,
+                               a.ShipId,
+                               a.Time,
+                               Picture = ManagerHelp.DrawAlarm(a.Picture, c.X, c.Y, c.W, c.H),
+                               b.Cid,
+                               b.Type,
+                               d.NickName,
+                           }).AsEnumerable();
+                int count = _context.Alarm.Count();
+                var pageList= data.Skip((pageIndex-1)*pageSize).Take(pageSize);
+                DateTime dte = DateTime.Now;
                 var result = new
                 {
                     code = 0,
                     data = pageList,
-                    ship=ship,
+                    ship = _context.Ship.ToList(),
                     pageIndex = model.PageIndex,
                     pageSize = model.PageSize,
                     count = count
@@ -89,13 +115,13 @@ namespace ShipWeb.Controllers
                        join c in _context.Camera on b.Cid equals c.Cid
                        join d in _context.AlarmInformationPosition on b.Id equals d.AlarmInformationId
                        join e in _context.Ship on a.ShipId equals e.Id
-                       where a.ShipId == b.Shipid && b.Shipid == c.ShipId && c.ShipId == d.ShipId &&e.Id==a.ShipId && b.Type != 5
+                       where a.ShipId == b.Shipid && b.Shipid == c.ShipId && c.ShipId == d.ShipId && e.Id == a.ShipId && b.Type != 5
                        select new
                        {
                            e.Name,
                            a.ShipId,
                            a.Time,
-                           Picture = ManagerHelp.DrawAlarm(a.Picture, d.X, d.Y, d.W, d.H),
+                           Picture =ManagerHelp.DrawAlarm(a.Picture, d.X, d.Y, d.W, d.H),
                            b.Cid,
                            b.Type,
                            c.NickName,
@@ -135,8 +161,8 @@ namespace ShipWeb.Controllers
                     data = data.Where(c => c.Time <= dtEnd);
                 }
             }
-            count = data.ToList().Count();
-            var queryList = data.Skip((model.PageIndex - 1) * model.PageSize).Take(model.PageSize);
+            count = data.Count();
+            var queryList = data.Skip((model.PageIndex - 1) * model.PageSize).Take(model.PageSize).ToList();
             List<AlarmViewModel> list = new List<AlarmViewModel>();
             foreach (var item in queryList)
             {

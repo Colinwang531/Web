@@ -17,7 +17,7 @@
                 if (res.code == 0) {
                     var tb = res.data;
                     if (res.isSet == true) {
-                        var create = '<a  class="layui-btn" href="Users/Create/">添加设备</a>';
+                        var create = '<a  class="layui-btn" href="Users/Create/">添加用户</a>';
                         $("#divCreate").html(create);
                     }
                     if (tb.length > 0) {
@@ -66,7 +66,7 @@
 <p>
     <div id="divCreate"></div>
 </p>
-<table class="table">
+<table class="layui-table">
     <thead>
         <tr>
             <th>

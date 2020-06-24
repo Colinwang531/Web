@@ -13,6 +13,7 @@
     var total; //总条数
     $(function () {
         LoadAlarm();
+        getdate();
     });
     function LoadAlarm() {
         $("#divAlarm").show();
@@ -30,9 +31,9 @@
             success: function (res) {
                 if (res.code == 0) {
                     var tb = res.data;
-                    var sl = res.ship;                   
+                    var sl = res.ship;
                     if (sl.length > 0) {
-                        var slHtml = '<option value="0">请选择</option>';
+                        var slHtml = '<option value="">请选择</option>';
                         for (var i = 0; i < sl.length; i++) {
                             slHtml += '<option value="' + sl[i].id + '">' + sl[i].name + '</option>'
                         }
@@ -198,27 +199,35 @@
         });
     }
 </script>
-<div>
-    <div style="text-align:right">
-        <a href="/Login/SignOut" style="margin-right:50px;">退出</a>
+<div class="layui-layout layui-layout-admin">
+    <div class="layui-header" style="background-color:#393D49">
+        <div class="layui-logo">禹创智能科技</div>
+        <ul class="layui-nav layui-layout-right">
+            <li class="layui-nav-item"><a href="/Login/SignOut">退了</a></li>
+        </ul>
     </div>
-    <div style="margin-top:50px;width:200px;float:left">
-        <div>
-            <!-- 左侧导航区域 -->
-            <ul class="layui-nav layui-nav-tree" lay-filter="test">
-                <li class="layui-nav-item layui-nav-itemed" onclick="LoadAlarm()">
-                    报警信息
-                </li>
-                @if(ViewBag.isAdmin){
-                <li class="layui-nav-item" onclick="ShowShip()">
-                    船舶信息
-                </li>
-                }
-            </ul>
+
+    <div style="margin-top:10px;width:200px;float:left">
+        <div class="layui-side layui-bg-black">
+            <div class="layui-side-scroll">
+                <!-- 左侧导航区域 -->
+                <ul class="layui-nav layui-nav-tree" lay-filter="test">
+                    <li class="layui-nav-item layui-this" onclick="LoadAlarm()">
+                        报警信息
+                    </li>
+                    @if (ViewBag.isAdmin)
+                    {
+                        <li class="layui-nav-item" onclick="ShowShip()">
+                            船舶信息
+                        </li>
+                    }
+                </ul>
+            </div>
         </div>
+
     </div>
-    <div style="float:left;margin-top:50px">
-        <div id="divAlarm" style="margin-left:10px;margin-top:50px;">
+    <div style="float:left;margin-top:10px">
+        <div id="divAlarm" style="margin-left:10px;">
             <div class="layui-form-item">
                 <label class="layui-form-label">编号</label>
                 <div class="layui-input-inline" style="width:100px">
@@ -267,8 +276,8 @@
             </table>
             <div id="pages" class="center"></div>
         </div>
-        <div id="divShip" style="display:none;margin-left:10px;margin-top:50px;">
-            <table class="layui-table" >
+        <div id="divShip" style="display:none;margin-left:10px;">
+            <table class="layui-table">
                 <thead>
                     <tr>
                         <th style="width:200px">船名称</th>

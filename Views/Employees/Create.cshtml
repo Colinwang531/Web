@@ -20,16 +20,25 @@
     }
 </script>
 <hr />
+<div>
+    <a asp-action="Index">返回列表</a>
+</div>
+<style>
+    .control-label::before {
+        content: '* ';
+        color: red;
+    }
+</style>
 <div class="row">
     <div class="col-11">
         <form asp-action="Save" onsubmit="return Check()">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
+            <div class="form-group" style="width:200px">
                 <input type="hidden" asp-for="Id" class="form-control" />
                 <input type="hidden" asp-for="Uid" class="form-control" />
                 <input type="hidden" asp-for="ShipId" class="form-control" />
             </div>
-            <div class="form-group">
+            <div class="form-group" style="width:200px">
                 <label class="control-label">船员名称</label>
                 <input asp-for="Name" id="txtName" class="form-control" />
                 <span asp-validation-for="Name" class="text-danger"></span>
@@ -39,8 +48,8 @@
                 <input asp-for="Job" id="txtJob" class="form-control" />
                 <span asp-validation-for="Job" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <div class="layui-upload">
+            <div>
+                <div class="layui-upload" style="width:1200px">
                     <input type="hidden" name="ScrollingGraph" id="ScrollingGraph" />
                     <button class="layui-btn" id="test2" type="button">多图片上传</button>
                     <button type="button" class="layui-btn layui-btn-danger" onclick="clearAll()">删除</button>
@@ -58,11 +67,7 @@
         </form>
     </div>
 </div>
-<div>
-    <div>
-        <a asp-action="Index">返回列表</a>
-    </div>
-</div>
+
 
 <script type="text/javascript">
     $(function () {
@@ -73,7 +78,8 @@
             upload.render({
                 elem: '#test2',
                 url: '/Employees/UpFile/',
-                accept: "images",
+                acceptMime: 'image/*',
+                ext: 'jpg|png|gif|bmp|jpeg',
                 multiple: true,
                 before: function (obj) {
                     //预读本地文件示例，不支持ie8
@@ -82,7 +88,7 @@
                     });
                 },
                 done: function (res) {
-                  
+
                     //上传完毕
                 }
             });
@@ -97,13 +103,13 @@
                 $.ajax({
                     url: "/Employees/DeleteImg/",
                     success: function (res) {
-                        if (res.code==0) {
+                        if (res.code == 0) {
                             $("#demo2").html("");
                             layer.close(index);
                         }
                     }
                 });
-               
+
             }
         });
     }

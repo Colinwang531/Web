@@ -14,13 +14,15 @@
         }
     });
     function Login() {
-        var name = $("#txtName").val();
-        var pwd = $("#txtPwd").val();
+        var name = $("#txtName").val().trim();
+        var pwd = $("#txtPwd").val().trim();
         if (name == undefined || name == "" || name == null) {
             alert("用户名不能为空");
+            return;
         }
         if (pwd == undefined || pwd == "" || pwd == null) {
             alert("密码不能为空");
+            return;
         }
         $.ajax({
             url: "/Login/UserLogin",

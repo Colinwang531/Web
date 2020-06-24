@@ -30,44 +30,50 @@ namespace ShipWeb.Controllers
         {
             return View();
         }
+        public IActionResult Edit()
+        {
+            return View();
+        }
         public IActionResult Load()
         {
             var aa = from a in _context.Camera
                      join b in _context.CameraConfig on a.Cid equals b.Cid
-                     where a.ShipId==b.ShipId && a.ShipId==ManagerHelp.ShipId
+                     into c
+                     from d in c.DefaultIfEmpty()
+                     where a.ShipId==ManagerHelp.ShipId
                      select new
                      {
                          a.NickName,
                          a.Cid,
-                         b.EnableAttendanceIn,
-                         b.EnableAttendanceOut,
-                         b.EnableFight,
-                         b.EnableHelmet,
-                         b.EnablePhone,
-                         b.EnableSleep,
-                         b.GPU,
-                         b.Id,
-                         b.ShipId,
-                         b.Similar,
+                         d.EnableAttendanceIn,
+                         d.EnableAttendanceOut,
+                         d.EnableFight,
+                         d.EnableHelmet,
+                         d.EnablePhone,
+                         d.EnableSleep,
+                         d.GPU,
+                         d.Id,
+                         d.ShipId,
+                         d.Similar,
                      };
             var list = aa.ToList();
             var result = new
             {
                 code = 0,
                 data = list,
+                msg="",
                 isSet = ManagerHelp.IsSet
             };
             return new JsonResult(result);
 
         }
-       
         public IActionResult Create(string mList)
         {
             
             List<CameraConfig> modelList = JsonConvert.DeserializeObject<List<CameraConfig>>(mList);
             if (ModelState.IsValid)
             {
-                if (ManagerHelp.IsSet)
+                if (!ManagerHelp.IsSet)
                 {
                     return new JsonResult(new { code = 1, msg = "您没有权限修改数据" });
                 }

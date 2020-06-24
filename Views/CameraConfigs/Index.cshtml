@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Index";
 }
+<link href="~/layui/css/layui.css" rel="stylesheet" />
 <script src="~/lib/jquery/dist/jquery.js"></script>
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script type="text/javascript">
@@ -16,30 +17,85 @@
                 if (res.code == 0) {
                     var data = res.data;
                     if (res.isSet) {
-                        var option = '<input type="submit" value="保存配置" class="btn btn-primary" onclick="Save()" />';
+                        var option = '<input type="submit" value="批量保存" class="btn btn-primary" onclick="SaveAll()" />';
                         $("#divOption").html(option);
                     }
                     var str = "";//定义用于拼接的字符串
                     for (var i = 0; i < data.length; i++) {
-                        str += "<tr><td>" + data[i].nickName + "</td>";
-                        str += "<td><input type=\"hidden\" value='" + data[i].cid + "' /></td>"
-                        str += "<td><input type=\"hidden\" value='" + (data[i].id == null ? '' : data[i].id) + "' /></td>"
-                        str += "<td><input type=\"text\" value='" + (data[i].gpu == null ? 0 : data[i].gpu) + "' class=\"form - control\" /></td>";
-                        str += "<td><input type = \"checkbox\" name = \"chk\" " + (data[i].enableSleep ? "checked=true" : "") + " /></td>";
-                        str += "<td><input type = \"checkbox\" name = \"chk\" " + (data[i].enableFight ? "checked=true" : "") + " /></td>";
-                        str += "<td><input type = \"checkbox\" name = \"chk\" " + (data[i].enableHelmet ? "checked=true" : "") + " /></td>";
-                        str += "<td><input type = \"checkbox\" name = \"chk\" " + (data[i].enablePhone ? "checked=true" : "") + " /></td>";
-                        str += "<td><input type = \"radio\" name = \"rdo"+i+"\" " + (data[i].enableAttendanceIn ? "checked=true" : "") + " /></td>";
-                        str += "<td><input type = \"radio\" name = \"rdo"+i+"\" " + (data[i].enableAttendanceOut ? "checked=true" : "") + " /></td>";
-                        str += "<td><input type=\"text\" value='" + (data[i].similar == null ? 0 : data[i].similar) + "' class=\"form - control\" /></td>";
-                        str += "</tr>";
+                        str += '<tr><td><input type = "checkbox" name = "ck" />';
+                        str += '<td>' + data[i].nickName + '<input type="hidden" value="' + data[i].cid + '" />';
+                        str += '<input type="hidden" value="' + (data[i].id == null ? "" : data[i].id) + '" /></td>';
+                        str += '<td><input type="text" value="' + (data[i].gpu == null ? 0 : data[i].gpu) + '" /></td>';
+                        str += '<td><input type = "checkbox" name = "chk"' + (data[i].enableSleep ? "checked=true" : "") + '/></td>';
+                        str += '<td><input type = "checkbox" name = "chk"' + (data[i].enableFight ? "checked=true" : "") + '/></td>';
+                        str += '<td><input type = "checkbox" name = "chk"' + (data[i].enableHelmet ? "checked=true" : "") + ' /></td>';
+                        str += '<td><input type = "checkbox" name = "chk"' + (data[i].enablePhone ? "checked=true" : "") + '/></td>';
+                        str += '<td><input type = "radio" name = "rdo' + i + '"' + (data[i].enableAttendanceIn ? "checked=true" : "") + ' /></td>';
+                        str += '<td><input type = "radio" name = "rdo' + i + '"' + (data[i].enableAttendanceOut ? "checked=true" : "") + ' /></td>';
+                        str += '<td><input type="text" value="' + (data[i].similar == null ? 0 : data[i].similar) + '"/></td>';
+                        str += '<td>'
+                        if (res.isSet) {
+                            str += "<a class=\"layui-btn layui-btn-xs\"  href=\"javascript: \" onclick=\"TbSave('" + i + "','" + data[i].id + "','" + data[i].cid + "')\">修改</a>";
+                        }
+                        str += "</td>";
+                        str += '</tr>';
                     }
                     $("#tbo").append(str);
                 }
             }
-        })
-    })
-    function Save() {
+        });
+        $("#ckAll").click(function () {
+            $('input[name="ck"]').prop("checked", this.checked);
+        });
+    });
+    //单个保存
+    function TbSave(index, id, cid) {
+        var att = {};
+        var Array = [];//一个空的数组
+        //遍历每一个tr
+        var str = [];
+        var tds = $("#tb1 tbody").find("tr").eq(index).find("td");
+        for (var i = 2; i < tds.length - 1; i++) {
+            var txt;
+            if (tds[i].children[0].type == "checkbox") {
+                txt = tds[i].children[0].checked;
+            } else if (tds[i].children[0].type == "radio") {
+                txt = tds[i].children[0].checked;
+            } else {
+                txt = tds[i].children[0].value;
+            }
+            str.push(txt);
+        }
+        var att = {
+            Cid: cid,
+            Id: id,
+            GPU: parseInt(str[0]),
+            EnableSleep: str[1],
+            EnableFight: str[2],
+            EnableHelmet: str[3],
+            EnablePhone: str[4],
+            EnableAttendanceIn: str[5],
+            EnableAttendanceOut: str[6],
+            Similar: parseFloat(str[7])
+        };
+        Array.push(att);
+        $.ajax({
+            url: "/CameraConfigs/Create",
+            data: {
+                mList: JSON.stringify(Array)
+            },
+            type: "get",
+            contentType: "application/json; charset=utf-8",
+            dataType: "json",
+            success: function (res) {
+                if (res.code == 1) {
+                    alert(res.msg);
+                }
+            }
+        });
+    }
+    //批量保存
+    function SaveAll() {
         var k; var att = {};
         var Array = [];//一个空的数组
         $('#tb1 tbody tr').each(function () {
@@ -47,13 +103,23 @@
             var str = [];
             //空数组，用于存放每一个tr里td的值
             var chil = $(this).children('td');
-            var tdcount = chil.length;
+            if (!chil.eq(0).children('input')[0].checked) {
+                return true;
+            }
+            var tdcount = chil.length - 1;
             var txt;
             for (k = 1; k < tdcount; k++) {
                 //循环得到td的四项内容值
-                if (chil.eq(k).children('input').attr("name") == "chk") {
+                if (chil.eq(k).children('input').attr("type") == "hidden") {
+                    chil.eq(k).children('input[type="hidden"]').each(function (res) {
+                        txt = $(this).val();
+                        str.push(txt);
+                    })
+                    continue;
+                }
+                else if (chil.eq(k).children('input').attr("name") == "chk") {
                     txt = chil.eq(k).children('input')[0].checked;
-                } else if (chil.eq(k).children('input').attr("type") =="radio") {
+                } else if (chil.eq(k).children('input').attr("type") == "radio") {
                     txt = chil.eq(k).children('input')[0].checked;
                 }
                 else {
@@ -76,9 +142,12 @@
             //把每一个tr的数据写成一个json数据
             Array.push(att);
         });
-        console.log(Array);
+        if (Array.length == 0) {
+            alert("请选择你要保存的数据");
+            return;
+        }
         $.ajax({
-            url: "CameraConfigs/Create",
+            url: "/CameraConfigs/Create",
             data: {
                 mList: JSON.stringify(Array)
             },
@@ -91,53 +160,56 @@
                 }
             }
         })
-    }
+    };
 
+    //$("#ckAll").click(function () {
+    //    $('input[name="ck"]').prop("checked", $(this).checked);
+    //});
 </script>
 <h1>
     算法配置
 </h1>
-<table class="table" id="tb1">
+
+<div id="divOption">
+
+</div>
+<table class="layui-table" id="tb1">
     <thead>
         <tr>
+            <th><input type="checkbox" id="ckAll" /></th>
             <th>
                 摄像机名称
             </th>
-            <th></th>
-            <th></th>
             <th>
                 GPU
             </th>
             <th>
-                是否睡觉
+                睡觉
             </th>
             <th>
-                是否启用打架
+                启用打架
             </th>
             <th>
-                是否启用安全帽
+                启用安全帽
             </th>
             <th>
-                是否启用打电话
+                启用打电话
             </th>
             <th>
-                是否请求考勤入
+                请求考勤入
             </th>
             <th>
-                是否请求考勤出
+                请求考勤出
             </th>
             <th>
                 人脸相似度
             </th>
             @*<th>
-            @Html.DisplayNameFor(model => model.ShipId)
-        </th>*@
+                    @Html.DisplayNameFor(model => model.ShipId)
+                </th>*@
             <th></th>
         </tr>
     </thead>
-    <tbody id="tbo">       
+    <tbody id="tbo">
     </tbody>
 </table>
-<div id="divOption">
-
-</div>

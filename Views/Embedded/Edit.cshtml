@@ -4,15 +4,53 @@
     ViewData["Title"] = "Edit";
 }
 
-
+<script type="text/javascript">
+    function CheckNull() {
+        var name = $("#txtName").val();
+        var pwd = $("#txtPwd").val();
+        var ip = $("#txtIp").val();
+        var port = $("#txtPort").val();
+        var nickName = $("#txtNickName").val();
+        if (name == undefined || name == "") {
+            alert("设备名称不能为空");
+            return false;
+        }
+        if (pwd == undefined || pwd == "") {
+            alert("设备登陆密码不能为空");
+            return false;
+        }
+        if (ip == undefined || ip == "") {
+            alert("设备IP不能为空");
+            return false;
+        }
+        if (port == undefined || port == "") {
+            alert("设备端口不能为空");
+            return false;
+        }
+        if (nickName == undefined || nickName == "") {
+            alert("设备别名不能为空");
+            return false;
+        }
+        return true;
+    }
+</script>
+<style>
+    .control-label::before {
+        content: '* ';
+        color: red;
+    }
+</style>
 <h1>修改设备信息</h1>
 <hr />
+<div>
+    <a asp-action="Index">返回列表</a>
+</div>
 <div class="row">
     <div>
-        <form asp-action="EditSave">
+        <form asp-action="EditSave" onsubmit="return CheckNull()">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
-            <div class="form-group" style="display:none" >
+            <div class="form-group" style="display:none">
                 <label asp-for="Did" class="control-label"></label>
                 <input asp-for="Did" class="form-control" />
                 <span asp-validation-for="Did" class="text-danger"></span>
@@ -37,27 +75,27 @@
             </div>
             <div class="form-group">
                 <label class="control-label">设备登陆名称</label>
-                <input asp-for="Name" class="form-control" />
+                <input asp-for="Name" id="txtName" class="form-control" />
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label class="control-label">设备登录密码</label>
-                <input asp-for="Password" class="form-control" />
+                <input asp-for="Password" id="txtPwd" class="form-control" />
                 <span asp-validation-for="Password" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label class="control-label">设备IP地址</label>
-                <input asp-for="IP" class="form-control" />
+                <input asp-for="IP" id="txtIp" class="form-control" />
                 <span asp-validation-for="IP" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label class="control-label">设备端口号</label>
-                <input asp-for="Port" class="form-control" />
+                <input asp-for="Port" id="txtPort" class="form-control" />
                 <span asp-validation-for="Port" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label class="control-label">设备别名</label>
-                <input asp-for="Nickname" class="form-control" />
+                <input asp-for="Nickname" id="txtNickName" class="form-control" />
                 <span asp-validation-for="Nickname" class="text-danger"></span>
             </div>
             <div class="form-group" style="display:none">
@@ -72,7 +110,4 @@
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">返回列表</a>
-</div>
 
