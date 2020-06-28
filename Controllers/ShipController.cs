@@ -21,12 +21,22 @@ namespace ShipWeb.Controllers
         public IActionResult Edit()
         {
            var ship= _context.Ship.FirstOrDefault(c=>c.Id==ManagerHelp.ShipId);
-            ViewBag.Id = ship.Id;
-            ViewBag.Name = ship.Name;
-            ViewBag.Type = ship.Type;
-            ViewBag.Flag = ship.Flag;
+            if (ship!=null)
+            {
+                ViewBag.Id = ship.Id;
+                ViewBag.Name = ship.Name;
+                ViewBag.Type = ship.Type;
+                ViewBag.Flag = ship.Flag;
+            }
+            else
+            {
+                ViewBag.Id = "";
+                ViewBag.Name = "";
+                ViewBag.Type = 1;
+                ViewBag.Flag = false;
+            }
             ViewBag.isSet = ManagerHelp.IsSet;
-           return View(ship);
+           return View();
         }
         public IActionResult Index()
         {
@@ -58,7 +68,7 @@ namespace ShipWeb.Controllers
         {
             try
             {
-                if (ManagerHelp.IsSet)
+                if (!ManagerHelp.IsSet)
                 {
                     new JsonResult(new { code =1, msg = "您没有权限修改数据!" });
                 }
@@ -79,12 +89,21 @@ namespace ShipWeb.Controllers
                         type = (ShipWeb.ProtoBuffer.Models.StatusRequest.Type)ship.Type
                     };
 
-                    int result = manager.StatesSet(sr, ship.Id);
-                    if (result == 0)
+                    //int result = manager.StatesSet(sr, ship.Id);
+                    //if (result == 0)
+                    //{
+                    if (!string.IsNullOrEmpty(id))
                     {
                         _context.Ship.Update(ship);
-                        _context.SaveChanges();
                     }
+                    else
+                    {
+                        ship.Id = Guid.NewGuid().ToString();
+                        ManagerHelp.ShipId = ship.Id;
+                        _context.Ship.Add(ship);
+                    }
+                        _context.SaveChanges();
+                    //}
                 }
                 return new JsonResult(new { code = 0 });
             }

@@ -67,7 +67,7 @@
 <input type="hidden" id="hidId" value="@ViewBag.Id" />
 <div class="form-group">
     <label  class="control-label">用户名称</label>
-    <input type="text" id="txtName" value="@ViewBag.Name" />
+    <input type="text" id="txtName" maxlength="20" value="@ViewBag.Name" />
 </div>
 <div class="form-group">
     <label  class="control-label">配置权限标识</label>
@@ -82,11 +82,11 @@
     <label class="control-label">是否修改登陆密码</label>
     <div class="form-group" style="display:none" id="divShow">
         <label>请输入原始密码</label>
-        <input type="password" id="txtypwd" /><br/>
+        <input type="password" maxlength="32" id="txtypwd" /><br/>
         <label>请输入新密码</label>
-        <input id="txtxpwd" type="password" /><br />
+        <input id="txtxpwd" maxlength="32" type="password" /><br />
         <label>请输入确认密码</label>
-        <input type="password" id="txtspwd" />
+        <input type="password" maxlength="32" id="txtspwd" />
     </div>
 </div>
 <input type="submit" value="保存" class="btn btn-primary" onclick="Save()" />

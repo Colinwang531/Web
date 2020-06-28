@@ -38,12 +38,12 @@
             </div>
             <div class="form-group" style="width:200px">
                 <label class="control-label">船员名称</label>
-                <input asp-for="Name" id="txtName" class="form-control" />
+                <input asp-for="Name" id="txtName" maxlength="20" class="form-control" />
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label class="control-label">工作内容</label>
-                <input asp-for="Job" id="txtJob" class="form-control" />
+                <input asp-for="Job" id="txtJob" maxlength="50" class="form-control" />
                 <span asp-validation-for="Job" class="text-danger"></span>
             </div>
             <div>

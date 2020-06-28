@@ -22,7 +22,7 @@ namespace ShipWeb
                 {
                     //LogHelper.Error(ex.Message);
                 }
-                await Task.Delay(5000, stoppingToken);//等待1秒
+                await Task.Delay(50000, stoppingToken);//等待1秒
             }
         }
     }

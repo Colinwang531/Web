@@ -89,7 +89,7 @@ namespace ShipWeb.Controllers
                         },
                             did = embModel.Did
                         };
-                        manager.DeveiceUpdate(emb, embModel.Did, camera.Id);
+                       // manager.DeveiceUpdate(emb, embModel.Did, camera.Id);
                     }
                     _context.Update(camera);
                     await _context.SaveChangesAsync();

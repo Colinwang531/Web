@@ -8,31 +8,39 @@
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script type="text/javascript">
     $(document).ready(function () {
+        Load();
+        $("#ckAll").click(function () {
+            $('input[name="ck"]').prop("checked", this.checked);
+        });
+    });
+    function Load() {
         $.ajax({
             url: "CameraConfigs/Load",
             type: "get",
             contentType: "application/json; charset=utf-8",
             dataType: "json",
             success: function (res) {
+                var str = "";//定义用于拼接的字符串
                 if (res.code == 0) {
                     var data = res.data;
                     if (res.isSet) {
                         var option = '<input type="submit" value="批量保存" class="btn btn-primary" onclick="SaveAll()" />';
                         $("#divOption").html(option);
                     }
-                    var str = "";//定义用于拼接的字符串
                     for (var i = 0; i < data.length; i++) {
                         str += '<tr><td><input type = "checkbox" name = "ck" />';
                         str += '<td>' + data[i].nickName + '<input type="hidden" value="' + data[i].cid + '" />';
                         str += '<input type="hidden" value="' + (data[i].id == null ? "" : data[i].id) + '" /></td>';
-                        str += '<td><input type="text" value="' + (data[i].gpu == null ? 0 : data[i].gpu) + '" /></td>';
+                        str += '<td><input type="text" onkeyup="this.value=this.value.replace(/[^1-9]/g,0)" value="' + (data[i].gpu == null ? 0 : data[i].gpu) + '" /></td>';
                         str += '<td><input type = "checkbox" name = "chk"' + (data[i].enableSleep ? "checked=true" : "") + '/></td>';
                         str += '<td><input type = "checkbox" name = "chk"' + (data[i].enableFight ? "checked=true" : "") + '/></td>';
                         str += '<td><input type = "checkbox" name = "chk"' + (data[i].enableHelmet ? "checked=true" : "") + ' /></td>';
                         str += '<td><input type = "checkbox" name = "chk"' + (data[i].enablePhone ? "checked=true" : "") + '/></td>';
-                        str += '<td><input type = "radio" name = "rdo' + i + '"' + (data[i].enableAttendanceIn ? "checked=true" : "") + ' /></td>';
-                        str += '<td><input type = "radio" name = "rdo' + i + '"' + (data[i].enableAttendanceOut ? "checked=true" : "") + ' /></td>';
-                        str += '<td><input type="text" value="' + (data[i].similar == null ? 0 : data[i].similar) + '"/></td>';
+                        //str += '<td><input type = "radio" name = "rdo' + i + '"' + (data[i].enableAttendanceIn ? "checked=true" : "") + ' /></td>';
+                        //str += '<td><input type = "radio" name = "rdo' + i + '"' + (data[i].enableAttendanceOut ? "checked=true" : "") + ' /></td>';
+                        str += '<td><input type = "checkbox" onclick="Chose(this,'+i+')" name = "rdo' + i + '"' + (data[i].enableAttendanceIn ? "checked=true" : "") + ' /></td>';
+                        str += '<td><input type = "checkbox" onclick="Chose(this,'+i+')" name = "rdo' + i + '"' + (data[i].enableAttendanceOut ? "checked=true" : "") + ' /></td>';
+                        str += '<td><input type="number"onkeyup="if((event.keyCode<48 || event.keyCode>57) && event.keyCode!=46 || /\.\d\d$/.test(value))event.returnValue=false" maxlength="4" value="' + (data[i].similar == null ? 0 : data[i].similar) + '"/></td>';
                         str += '<td>'
                         if (res.isSet) {
                             str += "<a class=\"layui-btn layui-btn-xs\"  href=\"javascript: \" onclick=\"TbSave('" + i + "','" + data[i].id + "','" + data[i].cid + "')\">修改</a>";
@@ -40,14 +48,20 @@
                         str += "</td>";
                         str += '</tr>';
                     }
-                    $("#tbo").append(str);
                 }
+                $("#tbo").html(str);
             }
         });
-        $("#ckAll").click(function () {
-            $('input[name="ck"]').prop("checked", this.checked);
-        });
-    });
+    }
+    function Chose(obj,index) {       
+        var name = "rdo" + index;
+        var checks = $("input[name='" + name + "']");
+        for (var i = 0; i < checks.length; i++) {
+            checks[i].checked = false;
+        }
+        obj.checked = true;
+
+    }
     //单个保存
     function TbSave(index, id, cid) {
         var att = {};
@@ -65,6 +79,14 @@
                 txt = tds[i].children[0].value;
             }
             str.push(txt);
+        }
+        if (str[0] == '' || str[0] == undefined) {
+            alert("gpu不能为空");
+            return false;
+        }
+        if (!CheckSimila(str[7])) {
+            alert("人脸相似度只能转入0-1之间的小数，如0.99");
+            return false;
         }
         var att = {
             Cid: cid,
@@ -90,6 +112,9 @@
             success: function (res) {
                 if (res.code == 1) {
                     alert(res.msg);
+                } else {
+                    alert("数据保存成功");
+                    Load();
                 }
             }
         });
@@ -98,6 +123,8 @@
     function SaveAll() {
         var k; var att = {};
         var Array = [];//一个空的数组
+        var strgpu = "";//记录gpu为空的数据
+        var strsm = "";//记录Simila有问题的数据
         $('#tb1 tbody tr').each(function () {
             //遍历每一个tr
             var str = [];
@@ -117,15 +144,24 @@
                     })
                     continue;
                 }
-                else if (chil.eq(k).children('input').attr("name") == "chk") {
-                    txt = chil.eq(k).children('input')[0].checked;
-                } else if (chil.eq(k).children('input').attr("type") == "radio") {
+                //else if (chil.eq(k).children('input').attr("name") == "chk") {
+                //    txt = chil.eq(k).children('input')[0].checked;
+                //}
+                else if (chil.eq(k).children('input').attr("type") == "checkbox") {
                     txt = chil.eq(k).children('input')[0].checked;
                 }
                 else {
                     txt = chil.eq(k).children('input').val();
                 }
                 str.push(txt);
+            }
+            if (str[2] == '' || str[2] == undefined) {
+                strgpu = "第" + (this.rowIndex) + "行";
+                return false;
+            }
+            if (!CheckSimila(str[9])) {
+                strsm = "第" + (this.rowIndex) + "行";
+                return false;
             }
             att = {
                 Cid: str[0],
@@ -139,9 +175,18 @@
                 EnableAttendanceOut: str[8],
                 Similar: str[9]
             };
+            
             //把每一个tr的数据写成一个json数据
             Array.push(att);
         });
+        if (strgpu != "") {
+            alert(strgpu + "中gpu不能为空");
+            return false;
+        }
+        if (strsm != "") {
+            alert(strsm + "中人脸相似度只能转入0-1之间的小数，如0.99");
+            return false;
+        }
         if (Array.length == 0) {
             alert("请选择你要保存的数据");
             return;
@@ -157,14 +202,22 @@
             success: function (res) {
                 if (res.code == 1) {
                     alert(res.msg);
+                } else {
+                    alert("数据保存成功");
+                    Load();
                 }
             }
         })
     };
 
-    //$("#ckAll").click(function () {
-    //    $('input[name="ck"]').prop("checked", $(this).checked);
-    //});
+    function CheckSimila(simila)
+    {
+        var text = parseFloat(simila);
+        if (!(text >= 0 && text <= 0.99)) {
+            return false;
+        }
+        return true;
+    }
 </script>
 <h1>
     算法配置

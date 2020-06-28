@@ -39,20 +39,26 @@ namespace ShipWeb.Controllers
         public IActionResult UserLogin(string name,string password)
         {
             var usersModel = _context.Users.FirstOrDefault(u => u.Name == name && u.Password == MD5Help.MD5Encrypt(password));
-            if (usersModel==null)
+            if (usersModel == null)
             {
-                return new JsonResult(new { code=1,msg= "用户名或密码不正确" });
+                return new JsonResult(new { code = 1, msg = "用户名或密码不正确" });
             }
-            else 
+            else
             {
                 //保存登陆的用户ID
                 HttpContext.Session.Set("uid", Encoding.UTF8.GetBytes(usersModel.Uid));
                 //保存用户可操作的权限 admin 最高权限
-                ManagerHelp.IsSet =name.ToLower()=="admin"?true:usersModel.EnableConfigure;
+                ManagerHelp.IsSet = usersModel.Uid.ToLower() == "admin" ? true : usersModel.EnableConfigure;
+                bool flag = false;//判断船是否存在
+                var ship = _context.Ship.FirstOrDefault();
+                if (ship != null)
+                {
+                    ManagerHelp.ShipId = ship.Id;
+                    flag = true;
+                }
                 //登陆成功后跳转组件页面
-               //return RedirectToAction(nameof(Index), "Home");
-                 
-                return new JsonResult(new { code = 0 });
+                //return RedirectToAction(nameof(Index), "Home");
+                return new JsonResult(new { code = 0, flag = flag });
             }
         }
         /// <summary>

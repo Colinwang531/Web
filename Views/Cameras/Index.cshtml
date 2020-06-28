@@ -5,6 +5,10 @@
 }
 
 <h1>摄像机列表</h1>
+<hr />
+<div>
+    <a href="@Url.Action("Index","Embedded")">返回设备列表</a>
+</div>
 
 <link href="~/layui/css/layui.css" rel="stylesheet" />
 <table class="layui-table">
@@ -55,15 +59,11 @@
                         @Html.DisplayFor(modelItem => item.ShipId)
                     </td>*@
                 <td>
-                    
-                    <a class="layui-btn layui-btn-xs" asp-action="Edit" asp-route-id="@item.Id">修改</a>                   
+
+                    <a class="layui-btn layui-btn-xs" asp-action="Edit" asp-route-id="@item.Id">修改</a>
                 </td>
             </tr>
         }
     </tbody>
 </table>
 
-<div>
-    @*<a href="Embedded/Index">返回设备列表</a>*@
-    <a href="@Url.Action("Index","Embedded")">返回设备列表</a>
-</div>

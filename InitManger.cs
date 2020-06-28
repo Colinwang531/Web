@@ -56,46 +56,51 @@ namespace ShipWeb
         /// </summary>
         public static void Alarm()
         {
-            string identity = Guid.NewGuid().ToString();
 
             #region 测试数据
-            string path = AppContext.BaseDirectory + "/images/26ada481d97ec17810439688534b4fc.jpg";
-            FileStream fs = new FileStream(path, FileMode.Open, FileAccess.Read);
-            byte[] byt = new byte[fs.Length];
-            fs.Read(byt, 0,Convert.ToInt32(fs.Length));
-            fs.Close();
-            string pics=Convert.ToBase64String(byt);
-            ShipWeb.Models.Alarm model = new ShipWeb.Models.Alarm()
+            var pathDir = AppContext.BaseDirectory + "/images/";
+            var images = Directory.GetFiles(pathDir);
+            foreach (var item in images)
             {
-                Id = identity,
-                Picture = Encoding.UTF8.GetBytes(pics),//alarm.picture
-                Time = DateTime.Now, 
-                ShipId =ManagerHelp.ShipId,
-                alarmInformation = new AlarmInformation()
+                string identity = Guid.NewGuid().ToString();
+                FileStream fs = new FileStream(item, FileMode.Open, FileAccess.Read);
+                byte[] byt = new byte[fs.Length];
+                fs.Read(byt, 0, Convert.ToInt32(fs.Length));
+                fs.Close();
+                string pics = Convert.ToBase64String(byt);
+                ShipWeb.Models.Alarm model = new ShipWeb.Models.Alarm()
                 {
-                    AlarmId = identity,
-                    Cid = "111", //alarm.cid,
+                    Id = identity,
+                    Picture = Encoding.UTF8.GetBytes(pics),//alarm.picture
+                    Time = DateTime.Now,
+                    ShipId = ManagerHelp.ShipId,
+                    alarmInformation = new AlarmInformation()
+                    {
+                        AlarmId = identity,
+                        Cid = "111", //alarm.cid,
+                        Id = Guid.NewGuid().ToString(),
+                        Shipid = ManagerHelp.ShipId,
+                        Type = 5,
+                        Uid = "002",
+                        alarmInformationPositions = new List<AlarmInformationPosition>()
+                    }
+                };
+                AlarmInformationPosition position = new AlarmInformationPosition()
+                {
+                    AlarmInformationId = model.alarmInformation.Id,
+                    ShipId = ManagerHelp.ShipId,
                     Id = Guid.NewGuid().ToString(),
-                    Shipid = ManagerHelp.ShipId,
-                    Type = 5,
-                    Uid = "002",
-                    alarmInformationPositions = new List<AlarmInformationPosition>()
-                }
-            };
-            AlarmInformationPosition position = new AlarmInformationPosition()
-            {
-                AlarmInformationId = model.alarmInformation.Id,
-                ShipId = ManagerHelp.ShipId,
-                Id = Guid.NewGuid().ToString(),
-                H = 200,
-                W = 150,
-                X = 30, 
-                Y = 20 
-            };
-            model.alarmInformation.alarmInformationPositions.Add(position);
-            
-            //操作入库
-            _context.Alarm.Add(model);
+                    H = 200,
+                    W = 150,
+                    X = 30,
+                    Y = 20
+                };
+                model.alarmInformation.alarmInformationPositions.Add(position);
+
+                //操作入库
+                _context.Alarm.Add(model);
+            }
+           
             _context.SaveChanges();
             #endregion
 

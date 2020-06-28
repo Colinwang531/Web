@@ -14,6 +14,7 @@
             data: {},
             contentType: "application/json;chartset=utf-8",
             success: function (res) {
+                var html = "";
                 if (res.code == 0) {
                     var tb = res.data;
                     if (res.isSet == true) {
@@ -21,7 +22,6 @@
                         $("#divCreate").html(create);
                     }
                     if (tb.length > 0) {
-                        var html = "";
                         for (var i = 0; i < tb.length; i++) {
                             html += '<tr>';
                             html += '<td>' + tb[i].uid + '</td>';
@@ -36,9 +36,9 @@
                             html += '</td>';
                             html += '</tr>';
                         }
-                        $("#tbList").html(html);
                     }
                 }
+                $("#tbList").html(html);
             }
         });
     }

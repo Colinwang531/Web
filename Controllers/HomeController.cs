@@ -50,19 +50,29 @@ namespace ShipWeb.Controllers
                 };
                 DateTime dts = DateTime.Now;
                 //取出报警表中指定条数的数据
-                var alarm = _context.Alarm.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToList();
-                var alarmIds = string.Join(',', alarm.Select(c => c.Id));
-                var alarmInfo = _context.AlarmInformation.Where(c => alarmIds.Contains(c.AlarmId)).ToList();
-                var infoIds = string.Join(',', alarmInfo.Select(c => c.Id));
-                var cids = string.Join(',', alarmInfo.Select(c => c.Cid));
-                var shipIds = string.Join(',', alarmInfo.Select(c => c.Shipid));
+                var alarm = (from a in _context.Alarm
+                         join b in _context.AlarmInformation on a.Id equals b.AlarmId
+                         where b.Type != 5
+                         select new { 
+                            b.Id,
+                            a.Time,
+                            a.Picture,
+                            b.Type,
+                            b.Cid,
+                            a.ShipId
+                         }).ToList();
+                //var alarm = _context.Alarm.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToList();
+                //var alarmIds = string.Join(',', alarm.Select(c => c.Id));
+                //var alarmInfo = _context.AlarmInformation.Where(c => alarmIds.Contains(c.AlarmId)).ToList();
+                var infoIds = string.Join(',', alarm.Select(c => c.Id));
+                var cids = string.Join(',', alarm.Select(c => c.Cid));
+                var shipIds = string.Join(',', alarm.Select(c => c.ShipId));
                 var alarmInfoPos = _context.AlarmInformationPosition.Where(c => infoIds.Contains(c.AlarmInformationId)).ToList();
                 var camera = _context.Camera.Where(c => cids.Contains(c.Cid)).ToList();
                 var ship = _context.Ship.Where(c => shipIds.Contains(c.Id)).ToList();
                 var data = (from a in alarm
-                           join b in alarmInfo on a.Id equals b.AlarmId
-                           join c in alarmInfoPos on b.Id equals c.AlarmInformationId
-                           join d in camera on b.Cid equals d.Cid
+                           join c in alarmInfoPos on a.Id equals c.AlarmInformationId
+                           join d in camera on a.Cid equals d.Cid
                            join e in ship on a.ShipId equals e.Id
                            select new
                            {
@@ -70,12 +80,12 @@ namespace ShipWeb.Controllers
                                a.ShipId,
                                a.Time,
                                Picture = ManagerHelp.DrawAlarm(a.Picture, c.X, c.Y, c.W, c.H),
-                               b.Cid,
-                               b.Type,
+                               a.Cid,
+                               a.Type,
                                d.NickName,
-                           }).AsEnumerable();
-                int count = _context.Alarm.Count();
-                var pageList= data.Skip((pageIndex-1)*pageSize).Take(pageSize);
+                           }).AsParallel();
+                int count = data.Count();
+                var pageList= data.Skip((pageIndex - 1)*pageSize).Take(pageSize);
                 DateTime dte = DateTime.Now;
                 var result = new
                 {
@@ -213,6 +223,7 @@ namespace ShipWeb.Controllers
                         shipId = ship.Id;
                     }
                 }
+
                 ManagerHelp.ShipId = shipId;
 
                 var result = new

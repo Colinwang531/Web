@@ -17,10 +17,11 @@ namespace ShipWeb.Controllers
     public class UsersController : BaseController
     {
         private readonly MyContext _context;
-        private ProtoManager manager = new ProtoManager();
+        private ProtoManager manager;
         public UsersController(MyContext context)
         {
             _context = context;
+            manager = new ProtoManager();
         }
 
         // GET: Users
@@ -77,12 +78,12 @@ namespace ShipWeb.Controllers
                 users.Enablequery = enablequery;
 
                 Person person = ConvertModel(users);
-                int result = manager.UserUpdate(person, users.Uid, id);
-                if (result == 0)
-                {
+                //int result = manager.UserUpdate(person, users.Uid, id);
+                //if (result == 0)
+                //{
                     _context.Users.Update(users);
                     _context.SaveChanges();
-                }
+                //}
                 return new JsonResult(new { code = 0 });
             }
             catch (Exception ex)
@@ -102,15 +103,14 @@ namespace ShipWeb.Controllers
             if (ModelState.IsValid)
             {
                 string identity = Guid.NewGuid().ToString();
-                ProtoManager manager = new ProtoManager();
                 users.Uid = "11111";
                 users.Id = identity;
                 Person person = ConvertModel(users);
-                UserResponse response = manager.UserAdd(person, identity);
-                if (response.result == 0)
-                {
-                    users.Uid = response.uid;
-                }
+                //UserResponse response = manager.UserAdd(person, identity);
+                //if (response.result == 0)
+                //{
+                //    users.Uid = response.uid;
+                //}
                 _context.Add(users);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -165,13 +165,12 @@ namespace ShipWeb.Controllers
                 {
                     return NotFound();
                 }
-                ProtoManager manager = new ProtoManager();
-                int result = manager.UserDelete(users.Uid, users.Id);
-                if (result == 0)
-                {
+                //int result = manager.UserDelete(users.Uid, users.Id);
+                //if (result == 0)
+                //{
                     _context.Users.Remove(users);
                     _context.SaveChanges();
-                }
+                //}
 
                 return Json(new { code = 0, msg = "删除成功"});
             }

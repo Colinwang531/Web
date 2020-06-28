@@ -8,7 +8,7 @@
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script type="text/javascript">
     $(document).ready(function () {
-        Load()
+        Load();
     });
     function Load() {
         $.ajax({
@@ -18,6 +18,7 @@
             data: {},
             contentType: "application/json;chartset=utf-8",
             success: function (res) {
+                var html = "";
                 if (res.code == 0) {
                     var tb = res.data;
                     if (res.isSet == true) {
@@ -25,12 +26,20 @@
                         $("#divCreate").html(create);
                     }
                     if (tb.length > 0) {
-                        var html = "";
+                      
                         for (var i = 0; i < tb.length; i++) {
                             html += '<tr>';
                             html += '<td>' + tb[i].uid + '</td>';
                             html += '<td>' + tb[i].name + '</td>';
                             html += '<td>' + tb[i].job + '</td>';
+                            html += '<td>';
+                            var pics = tb[i].employeePictures;
+                            if (pics.length > 0) {                                
+                                for (var j = 0; j < pics.length; j++) {
+                                    html += '<img style="width:50px;height:30px" ondblclick="showBigImage(this)" src="data:image/jpeg;base64,' +pics[j].picture + '"/>&nbsp;&nbsp;&nbsp'
+                                }
+                            }
+                            html += '</td>';
                             html += '<td>';
                             if (res.isSet == true) {
                                 html += '<a class="layui-btn layui-btn-xs"  href="Employees/Edit/' + tb[i].id + '">修改</a>';
@@ -39,10 +48,29 @@
                             html += '</td>'
                             html += '</tr>';
                         }
-                        $("#tbList").html(html);
                     }
                 }
+                $("#tbList").html(html);
             }
+        });
+    }
+    function showBigImage(e) {
+        layui.use('layer', function () { //独立版的layer无需执行这一句
+            var $ = layui.jquery, layer = layui.layer; //独立版的layer无需执行这一句
+            var x = document.documentElement.clientWidth / 6;
+            var y = document.documentElement.clientHeight / 6;
+            var windowH = $(window).height();
+            var windowW = $(window).width();
+            layer.open({
+                type: 1,
+                offset: [y + "px", x + "px"],
+                title: false,
+                closeBtn: true,
+                id: 'LAY_layuipro',
+                shadeClose: true, //点击阴影关闭
+                area: [windowW * 0.8 + 'px', windowH * 0.8 + 'px'], //宽高
+                content: "<img src=" + $(e).attr('src') + " />"
+            });
         });
     }
     function Del(id) {
@@ -82,6 +110,7 @@
             <th>
                 工作内容
             </th>
+            <th>船员图片</th>
             <th></th>
         </tr>
     </thead>

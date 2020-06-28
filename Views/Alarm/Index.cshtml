@@ -73,13 +73,18 @@
     function showBigImage(e) {
         layui.use('layer', function () { //独立版的layer无需执行这一句
             var $ = layui.jquery, layer = layui.layer; //独立版的layer无需执行这一句
+            var x = document.documentElement.clientWidth / 6;
+            var y = document.documentElement.clientHeight / 6;
+            var windowH = $(window).height();
+            var windowW = $(window).width();
             layer.open({
                 type: 1,
+                offset: [y + "px", x + "px"],
                 title: false,
-                closeBtn: false,
+                closeBtn: true,
                 id: 'LAY_layuipro',
                 shadeClose: true, //点击阴影关闭
-                area: [$(e).width + 'px', $(e).height + 'px'], //宽高
+                area: [windowW*0.8 + 'px', windowH*0.8 + 'px'], //宽高
                 content: "<img src=" + $(e).attr('src') + " />"
             });
         });

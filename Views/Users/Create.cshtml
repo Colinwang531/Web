@@ -31,16 +31,16 @@
         <form asp-action="CreateSave" onsubmit="return Save()">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
-                <label class="control-label">*用户名</label>
-                <input id="txtuser" asp-for="Name" class="form-control" />
+                <label class="control-label">用户名</label>
+                <input id="txtuser" asp-for="Name" maxlength="20" class="form-control" />
             </div>
             <div class="form-group">
                 <label class="control-label">密码</label>
-                <input id="txtpwd" asp-for="Password" class="form-control" type="password" />
+                <input id="txtpwd" asp-for="Password" maxlength="32" class="form-control" type="password" />
             </div>
             <div class="form-group">
                 <label class="control-label">确认密码</label>
-                <input id="btnPwdSure" class="form-control" type="password" />
+                <input id="btnPwdSure" class="form-control" maxlength="32" type="password" />
             </div>
             <div class="form-group">
                 <label class="control-label">配置权限标识</label>

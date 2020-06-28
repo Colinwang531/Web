@@ -16,10 +16,11 @@ namespace ShipWeb.Controllers
     public class EmbeddedController : BaseController
     {
         private readonly MyContext _context;
-
+        private ProtoBuffer.ProtoManager manager;
         public EmbeddedController(MyContext context)
         {
             _context = context;
+            manager = new ProtoBuffer.ProtoManager();
         }
 
        
@@ -33,7 +34,7 @@ namespace ShipWeb.Controllers
             var result = new {
                 code = 0,
                 data = data,
-                isSet = ManagerHelp.IsSet
+                isSet = !string.IsNullOrEmpty(ManagerHelp.ShipId) ? ManagerHelp.IsSet : false
             };
             return new JsonResult(result);
         }
@@ -45,8 +46,7 @@ namespace ShipWeb.Controllers
         public async Task<IActionResult> Save(Models.Embedded Embedded)
         {
             if (ModelState.IsValid)
-            {
-                ProtoBuffer.ProtoManager manager = new ProtoBuffer.ProtoManager();             
+            {            
                 string shipId = ManagerHelp.ShipId; //船ID              
                 string iditity = Guid.NewGuid().ToString();
                 ProtoBuffer.Models.Embedded emb = new ProtoBuffer.Models.Embedded()
@@ -150,7 +150,6 @@ namespace ShipWeb.Controllers
                 {
                     if (Embedded != null)
                     {
-                        ProtoBuffer.ProtoManager manager = new ProtoBuffer.ProtoManager();
                         ProtoBuffer.Models.Embedded emb = new ProtoBuffer.Models.Embedded()
                         {
                             ip = Embedded.IP,
@@ -159,7 +158,7 @@ namespace ShipWeb.Controllers
                             port = Embedded.Port,
                             nickname = Embedded.Nickname
                         };
-                        int result = manager.DeveiceUpdate(emb, Embedded.Did, id);
+                        //int result = manager.DeveiceUpdate(emb, Embedded.Did, id);
                     }
                     _context.Update(Embedded);
                     await _context.SaveChangesAsync();
@@ -199,23 +198,25 @@ namespace ShipWeb.Controllers
                 {
                     return NotFound();
                 }
-                ProtoBuffer.ProtoManager manager = new ProtoBuffer.ProtoManager();
-                int resutl = manager.DeveiceDelete(Embedded.Did, Embedded.Id);
-                if (resutl == 0)
-                {
+                //int resutl = manager.DeveiceDelete(Embedded.Did, Embedded.Id);
+                //if (resutl == 0)
+                //{
                     var cameras = _context.Camera.Where(c => c.EmbeddedId == Embedded.Id).ToList();
                     foreach (var item in cameras)
                     {
                         var cameraConfig = _context.CameraConfig.FirstOrDefault(c => c.Cid == item.Cid);
-                        //删除摄像机配置表
-                        _context.CameraConfig.Remove(cameraConfig);
+                        if (cameraConfig != null)
+                        {
+                            //删除摄像机配置表
+                            _context.CameraConfig.Remove(cameraConfig);
+                        }
                         //删除摄像机表
                         _context.Camera.Remove(item);
                     }
                     //删除设备表
                     _context.Embedded.Remove(Embedded);
                     _context.SaveChanges();
-                }
+                //}
                 return new JsonResult(new { code = 0, msg = "删除成功!" });
             }
             catch (Exception ex)

@@ -62,7 +62,7 @@ namespace ShipWeb.Controllers
                 code = 0,
                 data = list,
                 msg="",
-                isSet = ManagerHelp.IsSet
+                isSet = !string.IsNullOrEmpty(ManagerHelp.ShipId) ? ManagerHelp.IsSet:false
             };
             return new JsonResult(result);
 
@@ -107,7 +107,7 @@ namespace ShipWeb.Controllers
                 foreach (var item in modelList)
                 {
                     item.ShipId = ManagerHelp.ShipId;
-                    if (item.Id!="")
+                    if (item.Id != "null"&&item.Id!="")
                     {
                         _context.Update(item);
                     }

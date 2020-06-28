@@ -48,11 +48,40 @@ namespace ShipWeb.Controllers
         public IActionResult Load()
         {
             var data = _context.Employee.Where(c=>c.ShipId==ManagerHelp.ShipId).ToList();
+            var ids = string.Join(',', data.Select(c => c.Id));
+            var Pics=_context.EmployeePicture.Where(c => ids.Contains(c.EmployeeId)).ToList();
+            foreach (var item in data)
+            {
+                var picW = Pics.Where(c =>c.EmployeeId== item.Id);
+                item.employeePictures = new List<EmployeePicture>();
+                if (picW.Count()>0)
+                {
+                    foreach (var pic in picW)
+                    {
+                        item.employeePictures.Add(pic);
+                    }
+                    
+                }
+            }
+            var dataShow = from a in data
+                           select new
+                           {
+                               a.Id,
+                               a.Job,
+                               a.Uid,
+                               a.Name,
+                               a.ShipId,
+                               employeePictures =from b in a.employeePictures
+                                                   select new {
+                                                       Picture=Convert.ToBase64String(Convert.FromBase64String(Encoding.UTF8.GetString(b.Picture)))
+                                                   }
+                           };
+
             var result = new
             {
                 code = 0,
-                data = data,
-                isSet = ManagerHelp.IsSet
+                data = dataShow,
+                isSet = !string.IsNullOrEmpty(ManagerHelp.ShipId) ? ManagerHelp.IsSet:false
             };
             return new JsonResult(result);
         }
@@ -262,10 +291,9 @@ namespace ShipWeb.Controllers
                 {
                     return NotFound();
                 }
-                ProtoManager manager = new ProtoManager();
-                int result = manager.CrewDelete(employee.Uid, employee.Id);
-                if (result == 0)
-                {
+                //int result = manager.CrewDelete(employee.Uid, employee.Id);
+                //if (result == 0)
+                //{
                     var employeePictures = _context.EmployeePicture.Where(e => e.EmployeeId == employee.Id).ToList();
                     foreach (var item in employeePictures)
                     {
@@ -275,7 +303,7 @@ namespace ShipWeb.Controllers
                     //删除船员
                     _context.Employee.Remove(employee);
                     _context.SaveChanges();
-                }
+                //}
                 return new JsonResult(new { code = 0, msg = "删除成功!" });
             }
             catch (Exception ex)
