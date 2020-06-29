@@ -123,7 +123,6 @@ namespace ShipWeb.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Save(Employee employee)
         {
             if (ModelState.IsValid)
@@ -134,7 +133,9 @@ namespace ShipWeb.Controllers
                      job=employee.Job,
                       name=employee.Name
                 };
-                string uid = "222";//manager.CrewAdd(emp, identity);
+                Random rb = new Random();
+                //测试数据
+                string uid = rb.Next(111,999).ToString();//manager.CrewAdd(emp, identity);
                 if (uid!="")
                 {
                     employee.ShipId = ManagerHelp.ShipId;

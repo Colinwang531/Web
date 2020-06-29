@@ -24,8 +24,12 @@ namespace ShipWeb.Controllers
         }
 
        
-        public IActionResult Index()
+        public IActionResult Index(string id="")
         {
+            if (!string.IsNullOrEmpty(id))
+            {
+                ManagerHelp.ShipId = id;
+            }
             return View();
         }
         public IActionResult Load()
@@ -60,12 +64,13 @@ namespace ShipWeb.Controllers
                 Embedded.Id = iditity;
                 Embedded.ShipId = shipId;
                 Embedded.Did = "asdf";
+                Random rm = new Random();
                 //模似已接收消息数据
                 Embedded.CameraModelList = new List<Models.Camera>()
                 {
                      new Models.Camera()
                      {
-                         Cid="111",
+                         Cid=rm.Next(111,999).ToString(),
                          EmbeddedId= iditity,
                          Enalbe=false,
                          Id=Guid.NewGuid().ToString(),
@@ -76,7 +81,7 @@ namespace ShipWeb.Controllers
                      },
                      new Models.Camera()
                      {
-                         Cid="2222",
+                         Cid=rm.Next(111,999).ToString(),
                          EmbeddedId= iditity,
                          Enalbe=false,
                          Id=Guid.NewGuid().ToString(),

@@ -78,8 +78,8 @@
             var $ = layui.jquery, layer = layui.layer; //独立版的layer无需执行这一句
             var x = document.documentElement.clientWidth / 6;
             var y = document.documentElement.clientHeight / 6;
-            var windowH = $(window).height();
-            var windowW = $(window).width();
+            var windowW = 960;
+            var windowH = 540;
             layer.open({
                 type: 1,
                 offset: [y + "px", x + "px"],
@@ -87,8 +87,8 @@
                 closeBtn: true,
                 id: 'LAY_layuipro',
                 shadeClose: true, //点击阴影关闭
-                area: [windowW * 0.8 + 'px', windowH * 0.8 + 'px'], //宽高
-                content: "<img src=" + $(e).attr('src') + " />"
+                area: [windowW + 'px', windowH + 'px'], //宽高
+                content: "<img style=\"position: absolute;width:100%;height:100%\" src=" + $(e).attr('src') + " />"
             });
         });
     }

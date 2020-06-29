@@ -40,7 +40,7 @@
                         //str += '<td><input type = "radio" name = "rdo' + i + '"' + (data[i].enableAttendanceOut ? "checked=true" : "") + ' /></td>';
                         str += '<td><input type = "checkbox" onclick="Chose(this,'+i+')" name = "rdo' + i + '"' + (data[i].enableAttendanceIn ? "checked=true" : "") + ' /></td>';
                         str += '<td><input type = "checkbox" onclick="Chose(this,'+i+')" name = "rdo' + i + '"' + (data[i].enableAttendanceOut ? "checked=true" : "") + ' /></td>';
-                        str += '<td><input type="number"onkeyup="if((event.keyCode<48 || event.keyCode>57) && event.keyCode!=46 || /\.\d\d$/.test(value))event.returnValue=false" maxlength="4" value="' + (data[i].similar == null ? 0 : data[i].similar) + '"/></td>';
+                        str += '<td><input type="number"onkeyup="if((event.keyCode<48 || event.keyCode>57) && event.keyCode!=46 || /\.\d\d$/.test(value))event.returnValue=false;if(value.length>4)value=value.slice(0,4)"  value="' + (data[i].similar == null ? 0 : data[i].similar) + '"/></td>';
                         str += '<td>'
                         if (res.isSet) {
                             str += "<a class=\"layui-btn layui-btn-xs\"  href=\"javascript: \" onclick=\"TbSave('" + i + "','" + data[i].id + "','" + data[i].cid + "')\">修改</a>";

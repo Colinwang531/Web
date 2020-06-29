@@ -70,7 +70,7 @@
 
 
 <script type="text/javascript">
-  
+    var uploadFiles;
     $(function () {
         layui.use('upload', function () {
             var $ = layui.jquery;
@@ -82,11 +82,24 @@
                 acceptMime: 'image/*',
                 ext: 'jpg|png|gif|bmp|jpeg',
                 multiple: true,
+                choose: function (obj) {
+                    uploadFiles = obj.pushFile(); 
+                    var len = getJsonLength(uploadFiles);
+                    if (parseInt(len) > 3) {
+                        alert("上传的图片不能大于3张");
+                        clearFile();
+                        return false;
+                    } else {
+                        obj.preview(function (index, file, result) {
+                            $('#demo2').append('<img width="200px" height="180px" src="' + result + '" name="image" alt="' + file.name + '" class="form-imgage">&nbsp;&nbsp;&nbsp')
+                        });
+                    }
+                },
                 before: function (obj) {
                     //预读本地文件示例，不支持ie8
-                    obj.preview(function (index, file, result) {
-                        $('#demo2').append('<img width="200px" height="300px" src="' + result + '" name="image" alt="' + file.name + '" class="form-imgage">&nbsp;&nbsp;&nbsp')
-                    });
+                    //obj.preview(function (index, file, result) {
+                    //    $('#demo2').append('<img width="200px" height="300px" src="' + result + '" name="image" alt="' + file.name + '" class="form-imgage">&nbsp;&nbsp;&nbsp')
+                    //});
                 },
                 done: function (res) {
 
@@ -95,6 +108,20 @@
             });
         });
     });
+    //清空上传的图片s
+    function clearFile() {
+        for (let x in uploadFiles) {
+            delete uploadFiles[x];
+        }
+    }
+    //获取上传数量
+    function getJsonLength(jsonData) {
+        var jsonLength = 0;
+        for (var item in jsonData) {
+            jsonLength++;
+        }
+        return jsonLength;
+    }
     //json的length    
     //清空所有图片
     function clearAll() {
@@ -107,6 +134,7 @@
                     success: function (res) {
                         if (res.code == 0) {
                             $("#demo2").html("");
+                            clearFile();
                             layer.close(index);
                         }
                     }

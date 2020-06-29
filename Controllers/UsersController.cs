@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using ProtoBuf;
 using ShipWeb.DB;
 using ShipWeb.Models;
@@ -116,6 +117,51 @@ namespace ShipWeb.Controllers
                 return RedirectToAction(nameof(Index));
             }
             return View(users);
+        }
+
+        public IActionResult UserSave(string users) {
+            var model = JsonConvert.DeserializeObject<Users>(users);
+            if (model!=null)
+            {
+                if (!string.IsNullOrEmpty(model.Id)&&model.Id!="null")
+                {
+                    var user = _context.Users.FirstOrDefault(c => c.Id == model.Id);
+                    if (user == null)
+                    {
+                        return new JsonResult(new { code = 1, msg = "数据库中不存在条数" });
+                    }
+                    user.Name = model.Name;
+                    user.Password = model.Password;
+                    user.EnableConfigure = model.EnableConfigure;
+                    user.Enablequery = model.Enablequery;
+                    Person person = ConvertModel(user);
+                    //int result = manager.UserUpdate(person, users.Uid, id);
+                    //if (result == 0)
+                    //{
+                    _context.Users.Update(user);
+                    _context.SaveChanges();
+                    //}
+                }
+                else
+                {
+                    model.Password= MD5Help.MD5Encrypt(model.Password);
+                    string identity = Guid.NewGuid().ToString();
+                    Random rm = new Random();
+                    //测试值
+                    model.Uid = rm.Next(1111, 9999).ToString();
+                    model.Id = identity;
+                    Person person = ConvertModel(model);
+                    //UserResponse response = manager.UserAdd(person, identity);
+                    //if (response.result == 0)
+                    //{
+                    //    users.Uid = response.uid;
+                    //}
+                    _context.Users.Add(model);
+
+                }
+                _context.SaveChanges();
+            }
+            return new JsonResult(new { code = 0 });
         }
         /// <summary>
         /// 将本地实体转为传输格式实体
