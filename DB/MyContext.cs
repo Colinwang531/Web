@@ -38,7 +38,7 @@ namespace ShipWeb.DB
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             if (!optionsBuilder.IsConfigured)
-                optionsBuilder.UseMySql(AppSettingHelper.GetConnectionString("dbconn"));
+                optionsBuilder.UseMySQL(AppSettingHelper.GetConnectionString("dbconn"));
         }
 
         /// <summary>

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Amazon.Util;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.CodeStyle;
 using ShipWeb.DB;

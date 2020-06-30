@@ -8,13 +8,10 @@ using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Pomelo.EntityFrameworkCore.MySql;
 using Microsoft.EntityFrameworkCore;
 using ShipWeb.DB;
 using Microsoft.Extensions.Options;
 using MySql.Data.MySqlClient;
-using Pomelo.EntityFrameworkCore.MySql.Internal;
-using Pomelo.EntityFrameworkCore.MySql.Infrastructure;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.FileProviders;
@@ -39,7 +36,7 @@ namespace ShipWeb
                 options.Cookie.HttpOnly = true;
                 options.Cookie.IsEssential = true;
             });
-            services.AddDbContext<MyContext>(options => options.UseMySql(AppSettingHelper.GetConnectionString("dbconn")));
+            services.AddDbContext<MyContext>(options => options.UseMySQL(AppSettingHelper.GetConnectionString("dbconn")));
             services.AddRazorPages(options =>
             {
                 //options.Conventions.Add(new DefaultRouteRemovalPageRouteModelConvention(String.Empty));
