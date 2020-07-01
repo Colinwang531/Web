@@ -63,48 +63,23 @@ namespace ShipWeb.Controllers
                 };
                 Embedded.Id = iditity;
                 Embedded.ShipId = shipId;
-                Embedded.Did = "asdf";
-                Random rm = new Random();
-                //模似已接收消息数据
-                Embedded.CameraModelList = new List<Models.Camera>()
-                {
-                     new Models.Camera()
-                     {
-                         Cid=rm.Next(111,999).ToString(),
-                         EmbeddedId= iditity,
-                         Enalbe=false,
-                         Id=Guid.NewGuid().ToString(),
-                         Index=1,
-                         IP="127.0.0.1",
-                         NickName="测试",
-                         ShipId= shipId
-                     },
-                     new Models.Camera()
-                     {
-                         Cid=rm.Next(111,999).ToString(),
-                         EmbeddedId= iditity,
-                         Enalbe=false,
-                         Id=Guid.NewGuid().ToString(),
-                         Index=2,
-                         IP="127.0.0.2",
-                         NickName="测试",
-                         ShipId= shipId
 
-                     }
-               };
-                //发送注册设备消息
-                //DeviceResponse rep = manager.DeveiceAdd(emb, iditity);
+                //测试数据
+                Random rd = new Random();
+                Embedded.Did = rd.Next(111, 999).ToString();
+                ////发送注册设备消息
+                //ProtoBuffer.Models.DeviceResponse rep = manager.DeveiceAdd(emb, iditity);
                 //if (rep != null && rep.result == 0)
                 //{
                 //    Embedded.Did = rep.did;
                 //    if (rep.embedded.Count == 1 && rep.embedded[0].cameras.Count > 0)
                 //    {
-                //        List<CameraModel> list = new List<CameraModel>();
+                //        List<Camera> list = new List<Camera>();
                 //        var repList = rep.embedded[0].cameras;
                 //        foreach (var item in repList)
                 //        {
                 //            string cmId = Guid.NewGuid().ToString();
-                //            CameraModel cmodel = new CameraModel()
+                //            Camera cmodel = new Camera()
                 //            {
                 //                Cid = item.cid,
                 //                EmbeddedId = iditity,
@@ -118,10 +93,10 @@ namespace ShipWeb.Controllers
                 //            list.Add(cmodel);
                 //        }
                 //    }
-                _context.Embedded.Add(Embedded);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-                //}
+                    _context.Embedded.Add(Embedded);
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
+                }
             }
             return View(Embedded);
         }
@@ -155,15 +130,18 @@ namespace ShipWeb.Controllers
                 {
                     if (Embedded != null)
                     {
-                        ProtoBuffer.Models.Embedded emb = new ProtoBuffer.Models.Embedded()
-                        {
-                            ip = Embedded.IP,
-                            name = Embedded.Name,
-                            password = Embedded.Password,
-                            port = Embedded.Port,
-                            nickname = Embedded.Nickname
-                        };
-                        //int result = manager.DeveiceUpdate(emb, Embedded.Did, id);
+                      await Task.Factory.StartNew(state => {
+                            ProtoBuffer.Models.Embedded emb = new ProtoBuffer.Models.Embedded()
+                            {
+                                ip = Embedded.IP,
+                                name = Embedded.Name,
+                                password = Embedded.Password,
+                                port = Embedded.Port,
+                                nickname = Embedded.Nickname
+                            };
+                            int result = manager.DeveiceUpdate(emb, Embedded.Did, id);
+                        }, TaskCreationOptions.LongRunning);
+                        
                     }
                     _context.Update(Embedded);
                     await _context.SaveChangesAsync();
@@ -203,6 +181,7 @@ namespace ShipWeb.Controllers
                 {
                     return NotFound();
                 }
+                //先删除服务器上的再删除本地的
                 //int resutl = manager.DeveiceDelete(Embedded.Did, Embedded.Id);
                 //if (resutl == 0)
                 //{
@@ -226,7 +205,7 @@ namespace ShipWeb.Controllers
             }
             catch (Exception ex)
             {
-                return new JsonResult(new { code=1,msg="删除失败!"+ex.Message});
+                return new JsonResult(new { code = 1, msg = "删除失败!" + ex.Message });
             }
            
         }

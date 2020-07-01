@@ -56,97 +56,63 @@ namespace ShipWeb
         /// </summary>
         public static void Alarm()
         {
-
-            #region 测试数据
-            var pathDir = AppContext.BaseDirectory + "/images/";
-            var images = Directory.GetFiles(pathDir);
-            foreach (var item in images)
-            {
-                string identity = Guid.NewGuid().ToString();
-                FileStream fs = new FileStream(item, FileMode.Open, FileAccess.Read);
-                byte[] byt = new byte[fs.Length];
-                fs.Read(byt, 0, Convert.ToInt32(fs.Length));
-                fs.Close();
-                string pics = Convert.ToBase64String(byt);
-                ShipWeb.Models.Alarm model = new ShipWeb.Models.Alarm()
-                {
-                    Id = identity,
-                    Picture = Encoding.UTF8.GetBytes(pics),//alarm.picture
-                    Time = DateTime.Now,
-                    ShipId = ManagerHelp.ShipId,
-                    alarmInformation = new AlarmInformation()
-                    {
-                        AlarmId = identity,
-                        Cid = "111", //alarm.cid,
-                        Id = Guid.NewGuid().ToString(),
-                        Shipid = ManagerHelp.ShipId,
-                        Type = 5,
-                        Uid = "002",
-                        alarmInformationPositions = new List<AlarmInformationPosition>()
-                    }
-                };
-                AlarmInformationPosition position = new AlarmInformationPosition()
-                {
-                    AlarmInformationId = model.alarmInformation.Id,
-                    ShipId = ManagerHelp.ShipId,
-                    Id = Guid.NewGuid().ToString(),
-                    H = 200,
-                    W = 150,
-                    X = 30,
-                    Y = 20
-                };
-                model.alarmInformation.alarmInformationPositions.Add(position);
-
-                //操作入库
-                _context.Alarm.Add(model);
-            }
-           
-            _context.SaveChanges();
-            #endregion
-
             #region 获取报警信息并入库
-            //Alarm alarm = manager.AlarmStart(identity);
-            //if (alarm != null)
-            //{
-            //    ShipWeb.Models.Alarm model = new ShipWeb.Models.Alarm()
-            //    {
-            //        Id = identity,
-            //        Picture = Encoding.UTF8.GetBytes(alarm.picture),
-            //        Time = Convert.ToDateTime(alarm.time),
-            //        ShipId = shipId,
-            //        alarmInformation = new AlarmInformation()
-            //        {
-            //            AlarmId = identity,
-            //            Cid = alarm.cid,
-            //            Id = Guid.NewGuid().ToString(),
-            //            Shipid = ManagerHelp.ShipId,
-            //            Type = (int)alarm.information.type,
-            //            Uid = alarm.information.uid,
-            //            alarmInformationPositions = new List<AlarmInformationPosition>()
-            //        }
-            //    };
-            //    List<Position> replist = alarm.information.position;
-            //    if (replist.Count > 0)
-            //    {
-            //        foreach (var item in replist)
-            //        {
-            //            AlarmInformationPosition position = new AlarmInformationPosition()
-            //            {
-            //                AlarmInformationId = model.alarmInformation.Id,
-            //                ShipId = ManagerHelp.ShipId,
-            //                Id = Guid.NewGuid().ToString(),
-            //                H = item.h,
-            //                W = item.w,
-            //                X = item.x,
-            //                Y = item.y
-            //            };
-            //            model.alarmInformation.alarmInformationPositions.Add(position);
-            //        }
-            //    }
-            //    //操作入库
-            //    _context.Alarm.Add(model);
-            //    _context.SaveChanges();
-            //}
+            try
+            {
+                string shipId = "";
+                var ship = _context.Ship.FirstOrDefault();
+                if (ship != null)
+                {
+                    shipId = ship.Id;
+                    string identity = Guid.NewGuid().ToString();
+                    ProtoBuffer.Models.Alarm alarm = manager.AlarmStart(identity);
+                    if (alarm != null)
+                    {
+                        ShipWeb.Models.Alarm model = new ShipWeb.Models.Alarm()
+                        {
+                            Id = identity,
+                            Picture = Encoding.UTF8.GetBytes(alarm.picture),
+                            Time = Convert.ToDateTime(alarm.time),
+                            ShipId = shipId,
+                            alarmInformation = new AlarmInformation()
+                            {
+                                AlarmId = identity,
+                                Cid = alarm.cid,
+                                Id = Guid.NewGuid().ToString(),
+                                Shipid = ManagerHelp.ShipId,
+                                Type = (int)alarm.information.type,
+                                Uid = alarm.information.uid,
+                                alarmInformationPositions = new List<AlarmInformationPosition>()
+                            }
+                        };
+                        List<Position> replist = alarm.information.position;
+                        if (replist.Count > 0)
+                        {
+                            foreach (var item in replist)
+                            {
+                                AlarmInformationPosition position = new AlarmInformationPosition()
+                                {
+                                    AlarmInformationId = model.alarmInformation.Id,
+                                    ShipId = ManagerHelp.ShipId,
+                                    Id = Guid.NewGuid().ToString(),
+                                    H = item.h,
+                                    W = item.w,
+                                    X = item.x,
+                                    Y = item.y
+                                };
+                                model.alarmInformation.alarmInformationPositions.Add(position);
+                            }
+                        }
+                        //操作入库
+                        _context.Alarm.Add(model);
+                        _context.SaveChanges();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
             #endregion
         }
     }

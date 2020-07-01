@@ -71,25 +71,29 @@ namespace ShipWeb.Controllers
             {
                 try
                 {
-                   var embModel=_context.Embedded.FirstOrDefault(e => e.Id == camera.EmbeddedId);
-                    if (embModel!=null)
+                    //异常发送请求修改摄像机名称及开启状态
+                    await Task.Factory.StartNew(state =>
                     {
-                        ProtoBuffer.ProtoManager manager = new ProtoBuffer.ProtoManager();
-                        ProtoBuffer.Models.Embedded emb = new ProtoBuffer.Models.Embedded()
+                        var embModel = _context.Embedded.FirstOrDefault(e => e.Id == camera.EmbeddedId);
+                        if (embModel != null)
                         {
-                            cameras = new List<ProtoBuffer.Models.Camera>() {
-                            new ProtoBuffer.Models.Camera(){
+                            ProtoBuffer.ProtoManager manager = new ProtoBuffer.ProtoManager();
+                            ProtoBuffer.Models.Embedded emb = new ProtoBuffer.Models.Embedded()
+                            {
+                                cameras = new List<ProtoBuffer.Models.Camera>() {
+                                 new ProtoBuffer.Models.Camera(){
                                  cid=camera.Cid,
                                  index=camera.Index,
                                  enable=camera.Enalbe,
                                  ip=camera.Id,
                                  nickname=camera.NickName
-                          }
-                        },
-                            did = embModel.Did
-                        };
-                       // manager.DeveiceUpdate(emb, embModel.Did, camera.Id);
-                    }
+                                 }
+                                },
+                                did = embModel.Did
+                            };
+                            manager.DeveiceUpdate(emb, embModel.Did, camera.Id);
+                        }
+                    }, TaskCreationOptions.LongRunning);
                     _context.Update(camera);
                     await _context.SaveChangesAsync();
                 }
