@@ -96,7 +96,7 @@ namespace ShipWeb.Controllers
                     _context.Embedded.Add(Embedded);
                     await _context.SaveChangesAsync();
                     return RedirectToAction(nameof(Index));
-                }
+                //}
             }
             return View(Embedded);
         }

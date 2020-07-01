@@ -59,55 +59,59 @@ namespace ShipWeb
             #region 获取报警信息并入库
             try
             {
-                string shipId = "";
-                var ship = _context.Ship.FirstOrDefault();
-                if (ship != null)
+                Task.Factory.StartNew(state =>
                 {
-                    shipId = ship.Id;
-                    string identity = Guid.NewGuid().ToString();
-                    ProtoBuffer.Models.Alarm alarm = manager.AlarmStart(identity);
-                    if (alarm != null)
+                    string shipId = "";
+                    var ship = _context.Ship.FirstOrDefault();
+                    if (ship != null)
                     {
-                        ShipWeb.Models.Alarm model = new ShipWeb.Models.Alarm()
+                        shipId = ship.Id;
+                        string identity = Guid.NewGuid().ToString();
+                        ProtoBuffer.Models.Alarm alarm = manager.AlarmStart(identity);
+                        if (alarm != null)
                         {
-                            Id = identity,
-                            Picture = Encoding.UTF8.GetBytes(alarm.picture),
-                            Time = Convert.ToDateTime(alarm.time),
-                            ShipId = shipId,
-                            alarmInformation = new AlarmInformation()
+                            ShipWeb.Models.Alarm model = new ShipWeb.Models.Alarm()
                             {
-                                AlarmId = identity,
-                                Cid = alarm.cid,
-                                Id = Guid.NewGuid().ToString(),
-                                Shipid = ManagerHelp.ShipId,
-                                Type = (int)alarm.information.type,
-                                Uid = alarm.information.uid,
-                                alarmInformationPositions = new List<AlarmInformationPosition>()
-                            }
-                        };
-                        List<Position> replist = alarm.information.position;
-                        if (replist.Count > 0)
-                        {
-                            foreach (var item in replist)
-                            {
-                                AlarmInformationPosition position = new AlarmInformationPosition()
+                                Id = identity,
+                                Picture = Encoding.UTF8.GetBytes(alarm.picture),
+                                Time = Convert.ToDateTime(alarm.time),
+                                ShipId = shipId,
+                                alarmInformation = new AlarmInformation()
                                 {
-                                    AlarmInformationId = model.alarmInformation.Id,
-                                    ShipId = ManagerHelp.ShipId,
+                                    AlarmId = identity,
+                                    Cid = alarm.cid,
                                     Id = Guid.NewGuid().ToString(),
-                                    H = item.h,
-                                    W = item.w,
-                                    X = item.x,
-                                    Y = item.y
-                                };
-                                model.alarmInformation.alarmInformationPositions.Add(position);
+                                    Shipid = ManagerHelp.ShipId,
+                                    Type = (int)alarm.information.type,
+                                    Uid = alarm.information.uid,
+                                    alarmInformationPositions = new List<AlarmInformationPosition>()
+                                }
+                            };
+                            List<Position> replist = alarm.information.position;
+                            if (replist.Count > 0)
+                            {
+                                foreach (var item in replist)
+                                {
+                                    AlarmInformationPosition position = new AlarmInformationPosition()
+                                    {
+                                        AlarmInformationId = model.alarmInformation.Id,
+                                        ShipId = ManagerHelp.ShipId,
+                                        Id = Guid.NewGuid().ToString(),
+                                        H = item.h,
+                                        W = item.w,
+                                        X = item.x,
+                                        Y = item.y
+                                    };
+                                    model.alarmInformation.alarmInformationPositions.Add(position);
+                                }
                             }
+                            //操作入库
+                            _context.Alarm.Add(model);
+                            _context.SaveChanges();
                         }
-                        //操作入库
-                        _context.Alarm.Add(model);
-                        _context.SaveChanges();
                     }
-                }
+                }, TaskCreationOptions.LongRunning);
+
             }
             catch (Exception ex)
             {
