@@ -10,15 +10,15 @@ EXPOSE 443
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1-buster AS build
 
 WORKDIR /src
-COPY ["Ship.csproj", ""]
+COPY ["ShipWeb.csproj", ""]
 COPY . .
 WORKDIR "/src/."
-RUN dotnet build "Ship.csproj" -c Release -o /app/build
+RUN dotnet build "ShipWeb.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "Ship.csproj" -c Release -o /app/publish
+RUN dotnet publish "ShipWeb.csproj" -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "Ship.dll"]
+ENTRYPOINT ["dotnet", "ShipWeb.dll"]

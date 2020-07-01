@@ -52,13 +52,20 @@ namespace ShipWeb.Tool
         public static byte[] DrawAlarm(byte[] bytes, int x, int y, int w, int h)
         {
             byte[] byt = Convert.FromBase64String(Encoding.UTF8.GetString(bytes));
-            using (var stream = new MemoryStream(byt, 0, byt.Length, false, true))
+            try
             {
-                Image image = Image.FromStream(stream);
-                Graphics.FromImage(image).DrawRectangle(new Pen(Brushes.Red, 5), x, y, w, h);
-                var ms = new MemoryStream();
-                image.Save(ms, ImageFormat.Png);
-                return ms.GetBuffer();
+                using (var stream = new MemoryStream(byt, 0, byt.Length, false, true))
+                {
+                    Image image = Image.FromStream(stream);
+                    Graphics.FromImage(image).DrawRectangle(new Pen(Brushes.Red, 5), x, y, w, h);
+                    var ms = new MemoryStream();
+                    image.Save(ms, ImageFormat.Png);
+                    return ms.GetBuffer();
+                }
+            }
+            catch (Exception ex)
+            {
+                return byt;
             }
         }
     }
