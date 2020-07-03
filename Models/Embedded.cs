@@ -19,11 +19,11 @@ namespace ShipWeb.Models
         /// <summary>
         /// 设备厂商 1：HIKVISION 海康，2：DAHUA 大华，3：EATON 伊顿
         /// </summary>
-        public Factory Factory { get; set; }
+        public int Factory { get; set; }
         /// <summary>
         /// 设备类型1：DVR，2：NVR，3：IPC
         /// </summary>
-        public Type Type { get; set; }
+        public int Type { get; set; }
         /// <summary>
         /// 设备登录名称
         /// </summary>

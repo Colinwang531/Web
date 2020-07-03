@@ -1,106 +1,247 @@
 ﻿
 @{
     ViewData["Title"] = "Index";
+    Layout = null;
 }
 <link href="~/layui/css/layui.css" rel="stylesheet" />
-<script src="~/lib/jquery/dist/jquery.js"></script>
-<script src="~/lib/jquery/dist/jquery.min.js"></script>
-<h1>设备列表</h1>
+<script src="~/layui/layui.js"></script>
 <script type="text/javascript">
-    $(document).ready(function () {
-        Load()
-    });
-    function Load() {
-        $.ajax({
-            url: "/Embedded/Load",
-            type: "get",
-            dataType: "json",
-            data: {},
-            contentType: "application/json;chartset=utf-8",
-            success: function (res) {
-                var html = "";
-                if (res.code == 0) {
-                    var tb = res.data;
-                    if (res.isSet == true) {
-                        var create = '<a  class="layui-btn" href="Embedded/Create/">添加设备</a>';
-                        $("#divCreate").html(create);
+    layui.use(['form', 'table'], function () {
+        var $ = layui.$;
+        var table = layui.table;
+        var form = layui.form;
+        var mainIndex;
+        var tableIns = table.render({
+            elem: '#userTable',   //渲染的目标对象
+            url: '/Embedded/Load', //数据接口
+            toolbar: "#userToolBar",   //表格的工具条
+            page: false,  //是否启用分页
+            cols: [[   //列表数据
+                {
+                    field: 'factory', title: '设备厂商', width: 120, sort: true, templet: function (e) {
+                        if (e.factory == 1) return "海康";
+                        else if (e.factory == 2) return "大华";
+                        else if (e.factory == 3) return "伊顿";
                     }
-                    if (tb.length > 0) {
-                      
-                        for (var i = 0; i < tb.length; i++) {
-                            html += '<tr>';
-                            html += '<td>' + tb[i].factory + '</td>';
-                            html += '<td>' + tb[i].type + '</td>';
-                            html += '<td>' + tb[i].name + '</td>';
-                            html += '<td>' + tb[i].password + '</td>';
-                            html += '<td>' + tb[i].ip + '</td>';
-                            html += '<td>' + tb[i].port + '</td>';
-                            html += '<td><a class="layui-btn layui-btn-primary layui-btn-xs" href="Cameras/Index/' + tb[i].id + '">详情</a>';
-                            if (res.isSet == true) {
-                                html += '<a class="layui-btn layui-btn-xs"  href="Embedded/Edit/' + tb[i].id + '">修改</a>';
-                                html += "<a class=\"layui-btn layui-btn-danger layui-btn-xs\"  href=\"javascript: \" onclick=\"Del('" + tb[i].id + "')\">删除</a>";
-                            }
-                            html += '</td>';
-                            html += '</tr>';
-                        }
+                },
+                {
+                    field: 'type', title: '设备类型', width: 120, sort: true, align: 'center', templet: function (e) {
+                        if (e.factory == 1) return "DVR";
+                        else if (e.factory == 2) return "NVR";
+                        else if (e.factory == 3) return "IPC";
                     }
-                }
-                $("#tbList").html(html);
+                },
+                { field: 'name', title: '设备登陆名称', align: 'center', width: 200 },
+                { field: 'password', title: '设备登陆密码', align: 'center', width: 200 },
+                { field: 'ip', title: '设备登陆IP', align: 'center', width: 150 },
+                { field: 'port', title: '设备登陆端口', align: 'center', width: 120 },
+                { field: 'nickname', title: '设备别名', align: 'center', width: 120 },
+                { fixed: 'right', title: '操作', toolbar: '#userBar', width: 220, align: 'center' }
+            ]],
+            done: function (res) {
+                // 隐藏列
+                $(".layui-table-tool-self").css("display", "none");
             }
         });
-    }
-    function Del(id) {
-        var r = confirm("是否确定要删除吗？");
-        if (r == true) {
+        //监听头部工具栏事件
+        table.on("toolbar(userTable)", function (obj) {
+            switch (obj.event) {
+                case 'add':
+                    mainIndex = layer.open({
+                        type: 1,
+                        title: '添加设备',
+                        content: $("#divAddOrUpdate"),
+                        area: ['800px', '600px'],
+                        success: function (index) {
+                            $("#hidId").val("");
+                            //清空表单数据
+                            $("#dataFrm")[0].reset();
+                            //url = "employees/addEmployees.action";
+                        }
+                    });
+                    break;
+            };
+        });
+        form.verify({
+            ip: [
+                /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/
+                , 'IP地址不符合规则'
+            ]
+        });
+        //监听工具条
+        table.on('tool(userTable)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'del') {
+                layer.confirm('真的删除行么', function (index) {
+                    obj.del();
+                    layer.close(index);
+                    $.ajax({
+                        url: "/Embedded/Delete",
+                        type: "get",
+                        dataType: "json",
+                        data: { id: data.id },
+                        contentType: "application/json;chartset=utf-8",
+                        success: function (res) {
+                            if (res.code == 1) {
+                                layer.msg(res.msg, { icon: 2 });
+                            } else {
+                                tableIns.reload();
+                            }
+                        }
+                    });
+                });
+            } else if (obj.event === 'edit') {
+                //layer.alert('编辑行：<br>' + JSON.stringify(data))
+                mainIndex = layer.open({
+                    type: 1,
+                    title: '修改设备',
+                    content: $("#divAddOrUpdate"),
+                    area: ['800px', '600px'],
+                    success: function (index) {
+                        form.val("dataFrm", data);
+                        //url = "employees/updateEmployees.action";
+                    },
+                    yes: function () {
+                        layer.closeAll();
+                    }
+                });
+            } else if (obj.event === 'detail') {
+                window.location.href = "/Cameras/Index?id=" + obj.data.id;
+                @*mainIndex = layer.open({
+                    type: 1,
+                    title: '设备下摄像机明细',
+                    content: @RedirectResult("/Cameras/Index"),
+                    area: ['800px', '600px'],
+                    success: function (index) {
+                    },
+                    yes: function () {
+                        layer.closeAll();
+                    }
+                });*@
+            }
+        });
+        //表单提交
+        form.on("submit(doSubmit)", function (frm) {
+            var data = {
+                ip: frm.field.ip,
+                name: frm.field.name,
+                nickname: frm.field.nickname,
+                password: frm.field.password,
+                port: parseInt(frm.field.port),
+                type: parseInt(frm.field.type),
+                factory: parseInt(frm.field.factory),
+                id: frm.field.id
+            };
             $.ajax({
-                url: "/Embedded/Delete",
+                url: "/Embedded/Save",
+                data: { strEmbed: JSON.stringify(data) },
                 type: "get",
                 dataType: "json",
-                data: { id: id },
-                contentType: "application/json;chartset=utf-8",
+                contentType: "application/json;charset=utf-8",
                 success: function (res) {
-                    if (res.code == 1) {
-                        alert(res.msg);
+                    if (res.code == 0) {
+                        layer.msg("保存成功", { icon: 1 });
+                        layer.closeAll();
+                        tableIns.reload();
                     } else {
-                        Load();
+                        layer.msg(res.msg, { icon: 2 });
                     }
                 }
             });
-        }
+            return false;
+        });
+
+    });
+</script>
+<div style="margin:20px;width:96%">
+    <h1>设备列表</h1>
+    <hr />
+
+    <table class="layui-table" id="userTable" lay-filter="userTable"></table>
+    @if (ShipWeb.Tool.ManagerHelp.IsSet)
+    {
+        <div style="display: none;" id="userToolBar">
+            <button type="button" class="layui-btn layui-btn-sm" id="btnAdd" lay-event="add">增加</button>
+        </div>
     }
 
-</script>
-<p>
-    <div id="divCreate"></div>
-</p>
-<div>
-    <table class="layui-table">
-        <thead>
-            <tr>
-                <th>
-                    设备厂商
-                </th>
-                <th>
-                    设备类型
-                </th>
-                <th>
-                    设备登陆名称
-                </th>
-                <th>
-                    设备登陆密码
-                </th>
-                <th>
-                    设备登陆IP
-                </th>
-                <th>
-                    设备登陆端口
-                </th>
-                <th>
-                    设备别名
-                </th>
-            </tr>
-        </thead>
-        <tbody id="tbList"></tbody>
-    </table>
+    <div id="userBar" style="display: none;">
+        <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="detail">详情</a>
+        @if (ShipWeb.Tool.ManagerHelp.IsSet)
+        {
+            <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+            <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+        }
+    </div>
 </div>
+<div id="divAddOrUpdate" style="display:none;margin-top:20px">
+    <form class="layui-form" action="" id="dataFrm" lay-filter="dataFrm">
+        <input name="id" id="hidId" type="hidden" class="layui-input" />
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">设备厂商：</label>
+                <div class="layui-input-inline">
+                    <select name="factory" class="layui-input">
+                        <option value="1" selected="selected">HIKVISION 海康</option>
+                        <option value="2">DAHUA 大华</option>
+                        <option value="3">EATON 伊顿</option>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">设备类型：</label>
+                <div class="layui-input-inline">
+                    <select name="type" class="layui-input">
+                        <option value="1" selected="selected">DVR</option>
+                        <option value="2">NVR</option>
+                        <option value="3" selected="selected">IPC</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">登陆名称：</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="name" maxlength="100" lay-verify="required" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">登陆密码：</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="password" maxlength="100" lay-verify="required" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">登陆IP：</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="ip" maxlength="20" lay-verify="ip" autocomplete="off" class="layui-input">
+                </div>
+            </div>
 
+            <div class="layui-inline">
+                <label class="layui-form-label">登陆端口：</label>
+                <div class="layui-input-inline">
+                    <input type="number" name="port" lay-verify="required" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">设备别名：</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="nickname" maxlength="20" lay-verify="required" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block" id="divShow">
+                <button type="submit" class="layui-btn layui-btn-normal layui-btn-sm layui-icon layui-icon-release" lay-filter="doSubmit" lay-submit="">提交</button>
+                <button type="reset" class="layui-btn layui-btn-warm layui-btn-sm layui-icon layui-icon-refresh">重置</button>
+            </div>
+        </div>
+    </form>
+
+</div>

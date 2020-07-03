@@ -1,37 +1,42 @@
 ﻿
 @{
-    ViewData["Title"] = "Index";
-    if (!ViewBag.IsShowLayout)
-    {
-        Layout = null;
-    }
+    ViewData["Title"] = "AlarmShipAll";
+    Layout = null;
 }
+
 <link href="~/layui/css/layui.css" rel="stylesheet" />
 <script src="~/lib/jquery/dist/jquery.js"></script>
-<script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script src="~/layui/layui.js"></script>
 <script type="text/javascript">
     var page = 1; //设置首页页码
     var limit = 5; //设置一页显示的条数
     var total; //总条数
-    $(document).ready(function () {
-        loadData();
+    $(function () {
+        LoadAlarm();
         getdate();
     });
-    //初使化
-    function loadData() {
+    function LoadAlarm() {
+        var data = {
+            pageIndex: page,
+            pageSize: limit
+        }
         $.ajax({
-            url: "/Alarm/Load",
+            url: "/Alarm/LoadAlarm",
             type: "get",
-            data: {
-                pageIndex: page,
-                pageSize: limit
-            },
+            data: data,
             dataType: "json",
             contentType: "application/json;charset=utf-8",
             success: function (res) {
                 if (res.code == 0) {
                     var tb = res.data;
+                    var sl = res.ship;
+                    if (sl.length > 0) {
+                        var slHtml = '<option value="">请选择</option>';
+                        for (var i = 0; i < sl.length; i++) {
+                            slHtml += '<option value="' + sl[i].id + '">' + sl[i].name + '</option>'
+                        }
+                        $("#slShip").html(slHtml);
+                    }
                     total = res.count;
                     LoadHtml(tb);
                     getPage();
@@ -44,6 +49,7 @@
         if (tb.length > 0) {
             for (var i = 0; i < tb.length; i++) {
                 html += '<tr>';
+                html += '<td>' + tb[i].name + '</td>';
                 html += '<td>' + tb[i].time + '</td>';
                 html += '<td>' + tb[i].cid + '</td>';
                 html += '<td>' + tb[i].nickName + '</td>';
@@ -74,32 +80,15 @@
 
         $("#tblist").html(html);
     }
-    function showBigImage(e) {
-        layui.use('layer', function () { //独立版的layer无需执行这一句
-            var $ = layui.jquery, layer = layui.layer; //独立版的layer无需执行这一句
-            var x = document.documentElement.clientWidth / 6;
-            var y = document.documentElement.clientHeight / 6;
-            var windowW = 960;
-            var windowH = 540;
-            layer.open({
-                type: 1,
-                offset: [y + "px", x + "px"],
-                title: false,
-                closeBtn: true,
-                id: 'LAY_layuipro',
-                shadeClose: true, //点击阴影关闭
-                area: [windowW + 'px', windowH + 'px'], //宽高
-                content: "<img style=\"position: absolute;width:100%;height:100%\" src=" + $(e).attr('src') + " />"
-            });
-        });
-    }
     function Query(pageIndex, isRefresh = true) {
         var cid = $("#txtUid").val();
         var name = $("#txtName").val();
         var type = $("#slType").val();
         var startTime = $("#dtStartTime").val();
         var endTime = $("#dtEndTime").val();
+        var shipId = $("#slShip").val();
         var data = {
+            shipId: shipId,
             cid: cid,
             name: name,
             type: parseInt(type),
@@ -109,8 +98,10 @@
             pageSize: limit
         }
         $.ajax({
-            url: "/Alarm/QueryPage",
-            data: data,
+            url: "/Alarm/SearchAlarm",
+            data: {
+                searchModel: JSON.stringify(data)
+            },
             type: "get",
             dataType: "json",
             contentType: "application/json;chartset=utf-8",
@@ -164,9 +155,28 @@
             });
         });
     }
+    function showBigImage(e) {
+        layui.use('layer', function () { //独立版的layer无需执行这一句
+            var $ = layui.jquery, layer = layui.layer; //独立版的layer无需执行这一句
+            var x = document.documentElement.clientWidth / 6;
+            var y = document.documentElement.clientHeight / 6;
+            var windowW = 960;
+            var windowH = 540;
+            layer.open({
+                type: 1,
+                offset: [y + "px", x + "px"],
+                title: false,
+                closeBtn: true,
+                id: 'LAY_layuipro',
+                shadeClose: true, //点击阴影关闭
+                area: [windowW + 'px', windowH + 'px'], //宽高
+                content: "<img style=\"position: absolute;width:100%;height:100%\" src=" + $(e).attr('src') + " />"
+            });
+        });
+    }
 </script>
 
-<div style="margin:20px;width:96%">
+<div id="divAlarm" style="margin:20px;width:96%">
     <div class="layui-form-item">
         <label class="layui-form-label">编号</label>
         <div class="layui-input-inline" style="width:100px">
@@ -184,6 +194,9 @@
             <option value="3">安全帽</option>
             <option value="4">手机</option>
         </select>
+        <label class="layui-form-label">船舶</label>
+        <select id="slShip" class="layui-form-label" style="width:100px">
+        </select>
         <label class="layui-form-label">时间起</label>
         <div class="layui-input-inline" style="width:100px">
             <input name="date" class="layui-input" id="dtStartTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off">
@@ -197,6 +210,7 @@
     <table class="layui-table">
         <thead>
             <tr>
+                <th style="width:180px">船舶</th>
                 <th style="width:180px">报警时间</th>
                 <th style="width:120px">摄像机编号</th>
                 <th style="width:150px">摄像机名称</th>

@@ -49,6 +49,7 @@ namespace ShipWeb.Controllers
                 HttpContext.Session.Set("uid", Encoding.UTF8.GetBytes(usersModel.Uid));
                 //保存用户可操作的权限 admin 最高权限
                 ManagerHelp.IsSet = usersModel.Uid.ToLower() == "admin" ? true : usersModel.EnableConfigure;
+                ManagerHelp.LoginName = name;
                 bool flag = false;//判断船是否存在
                 var ship = _context.Ship.FirstOrDefault();
                 if (ship != null)
@@ -69,6 +70,8 @@ namespace ShipWeb.Controllers
         {
             //消除缓存
             HttpContext.Session.Remove("uid");
+            ManagerHelp.ShipId = "";
+            ManagerHelp.IsShowLandHome = false;
             InitManger.Exit();
             return RedirectToAction(nameof(Index));
         }

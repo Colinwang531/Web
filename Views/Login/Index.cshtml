@@ -37,10 +37,11 @@
                     var type = $("#slType").val(); //$(':radio[name="rdo"]:checked').val();
                     if (type == 1) {
                         if (res.flag) {
-                            window.location.href = "/Alarm/Index";//如果船存在就跳到报警页面
-                        } else {
-                            window.location.href = "/Ship/Edit";//船不存在就先添加船
+                            window.location.href = "/Alarm/Index?isShow=true";//如果船存在就跳到报警页面
                         }
+                        //else {
+                        //    window.location.href = "/Ship/Edit";//船不存在就先添加船
+                        //}
                     } else {
                         window.location.href = "/Home/LandHome";
                     }

@@ -12,8 +12,14 @@ namespace ShipWeb.Tool
     public class ManagerHelp
     {
         private static ManagerHelp _manager = null;
+        //船ID
         public static string ShipId = "";
+        //摄像机ID
         public static string Cid = "5555";
+        //是否显示返回陆地端菜单
+        public static bool IsShowLandHome = false;
+        //显示登陆名称
+        public static string LoginName = "";
         /// <summary>
         /// 是否有设置权限
         /// </summary>

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
+using Newtonsoft.Json;
 using ShipWeb.DB;
 using ShipWeb.Models;
 using ShipWeb.Tool;
@@ -47,58 +48,114 @@ namespace ShipWeb.Controllers
             return View();
         }
 
-        public async Task<IActionResult> Save(Models.Embedded Embedded)
+        public IActionResult Save(string strEmbed)
         {
             if (ModelState.IsValid)
-            {            
-                string shipId = ManagerHelp.ShipId; //船ID              
-                string iditity = Guid.NewGuid().ToString();
-                ProtoBuffer.Models.Embedded emb = new ProtoBuffer.Models.Embedded()
+            {
+                Models.Embedded model = JsonConvert.DeserializeObject<Models.Embedded>(strEmbed);
+                if (!string.IsNullOrEmpty(model.Id))
                 {
-                    ip = Embedded.IP,
-                    name = Embedded.Name,
-                    password = Embedded.Password,
-                    port = Embedded.Port,
-                    nickname = Embedded.Nickname
-                };
-                Embedded.Id = iditity;
-                Embedded.ShipId = shipId;
+                    #region 修改
+                    var embedded =_context.Embedded.FirstOrDefault(c => c.Id == model.Id);
+                    if (embedded==null)
+                    {
+                        return new JsonResult(new { code = 1, msg = "数据不存在" });
+                    }
+                    embedded.IP = model.IP;
+                    embedded.Name = model.Name;
+                    embedded.Nickname = model.Nickname;
+                    embedded.Password = model.Password;
+                    embedded.Port = model.Port; ;
+                    embedded.Type = model.Type;
+                    embedded.Factory = model.Factory;
+                    Task.Factory.StartNew(state =>
+                    {
+                        ProtoBuffer.Models.Embedded emb = new ProtoBuffer.Models.Embedded()
+                        {
+                            ip = embedded.IP,
+                            name = embedded.Name,
+                            password = embedded.Password,
+                            port = embedded.Port,
+                            nickname = embedded.Nickname
+                        };
+                        int result = manager.DeveiceUpdate(emb, embedded.Did, embedded.Id);
+                    }, TaskCreationOptions.LongRunning);
+                    _context.Update(embedded);
+                    #endregion
+                }
+                else
+                {
+                    #region 添加
+                    string iditity = Guid.NewGuid().ToString();
+                    ProtoBuffer.Models.Embedded emb = new ProtoBuffer.Models.Embedded()
+                    {
+                        ip = model.IP,
+                        name = model.Name,
+                        password = model.Password,
+                        port = model.Port,
+                        nickname = model.Nickname
+                    };
+                    model.Id = iditity;
+                    model.ShipId = ManagerHelp.ShipId;
 
-                //测试数据
-                Random rd = new Random();
-                Embedded.Did = rd.Next(111, 999).ToString();
-                ////发送注册设备消息
-                //ProtoBuffer.Models.DeviceResponse rep = manager.DeveiceAdd(emb, iditity);
-                //if (rep != null && rep.result == 0)
-                //{
-                //    Embedded.Did = rep.did;
-                //    if (rep.embedded.Count == 1 && rep.embedded[0].cameras.Count > 0)
-                //    {
-                //        List<Camera> list = new List<Camera>();
-                //        var repList = rep.embedded[0].cameras;
-                //        foreach (var item in repList)
-                //        {
-                //            string cmId = Guid.NewGuid().ToString();
-                //            Camera cmodel = new Camera()
-                //            {
-                //                Cid = item.cid,
-                //                EmbeddedId = iditity,
-                //                Enalbe = item.enable,
-                //                Id = cmId,
-                //                NickName = item.nickname,
-                //                IP = item.ip,
-                //                ShipId = shipId,
-                //                Index = item.index
-                //            };
-                //            list.Add(cmodel);
-                //        }
-                //    }
-                    _context.Embedded.Add(Embedded);
-                    await _context.SaveChangesAsync();
-                    return RedirectToAction(nameof(Index));
-                //}
+                    //测试数据
+                    Random rd = new Random();
+                    model.Did = rd.Next(1111, 9999).ToString();
+                    model.CameraModelList = new List<Camera>() {
+                        new Camera(){
+                         Cid=rd.Next(111,999).ToString(),
+                         EmbeddedId = iditity,
+                         Enalbe = false,
+                         Id = Guid.NewGuid().ToString(),
+                         NickName ="摄像机1",
+                         IP ="127.0.0.1",
+                         ShipId = model.ShipId,
+                         Index = 1
+                        },
+                         new Camera(){
+                         Cid=rd.Next(111,999).ToString(),
+                         EmbeddedId = iditity,
+                         Enalbe = false,
+                         Id = Guid.NewGuid().ToString(),
+                         NickName ="摄像机2",
+                         IP = "127.0.0.1",
+                         ShipId = model.ShipId,
+                         Index = 2
+                        }
+                    };
+                    #region 发送注册设备请求并接收设备下的摄像机信息
+                    //ProtoBuffer.Models.DeviceResponse rep = manager.DeveiceAdd(emb, iditity);
+                    //if (rep != null && rep.result == 0)
+                    //{
+                    //    embedded.Did = rep.did;
+                    //    if (rep.embedded.Count == 1 && rep.embedded[0].cameras.Count > 0)
+                    //    {
+                    //        embedded.CameraModelList = new List<Camera>();
+                    //        var repList = rep.embedded[0].cameras;
+                    //        foreach (var item in repList)
+                    //        {
+                    //            Camera cmodel = new Camera()
+                    //            {
+                    //                Cid = item.cid,
+                    //                EmbeddedId = iditity,
+                    //                Enalbe = item.enable,
+                    //                Id = Guid.NewGuid().ToString(),
+                    //                NickName = item.nickname,
+                    //                IP = item.ip,
+                    //                ShipId = embedded.ShipId,
+                    //                Index = item.index
+                    //            };
+                    //            embedded.CameraModelList.Add(cmodel);
+                    //        }
+                    //    }
+                    _context.Embedded.Add(model);
+                    //}
+                    #endregion
+                    #endregion
+                }
+                _context.SaveChangesAsync();
             }
-            return View(Embedded);
+            return new JsonResult(new { code = 0 });
         }
 
         // GET: Embedded/Edit/5

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using ProtoBuf;
 using ShipWeb.DB;
 using ShipWeb.Models;
@@ -46,11 +47,30 @@ namespace ShipWeb.Controllers
         {
             try
             {
-                var data = _context.Ship.ToList();
+                var ship = _context.Ship.FirstOrDefault(c => c.Id == ManagerHelp.ShipId);
                 var result = new
                 {
                     code = 0,
-                    data = data
+                    data = ship,
+                    isSet = ManagerHelp.IsSet
+                };
+                return new JsonResult(result);
+            }
+            catch (Exception ex)
+            {
+                return new JsonResult(new { code = 1, msg = "获取数据失败!" + ex.Message });
+            }
+        }
+        public IActionResult LoadAll()
+        {
+            try
+            {
+                var ship = _context.Ship.ToList();
+                var result = new
+                {
+                    code = 0,
+                    data = ship,
+                    isSet = ManagerHelp.IsSet
                 };
                 return new JsonResult(result);
             }
@@ -64,7 +84,7 @@ namespace ShipWeb.Controllers
         /// </summary>
         /// <param name="ship"></param>
         /// <returns></returns>
-        public IActionResult Save(string id,string name,int type,string status)
+        public IActionResult Save(string id,string name, Ship.ShipType type,string flag)
         {
             try
             {
@@ -76,7 +96,7 @@ namespace ShipWeb.Controllers
                 {
                     Ship ship = new Ship()
                     {
-                        Flag = status == "1" ? true : false,
+                        Flag = flag == "1" ? true : false,
                         Id = id,
                         Name = name,
                         Type = type
@@ -92,7 +112,7 @@ namespace ShipWeb.Controllers
                     //int result = manager.StatesSet(sr, ship.Id);
                     //if (result == 0)
                     //{
-                    if (!string.IsNullOrEmpty(id))
+                    if (!string.IsNullOrEmpty(ship.Id))
                     {
                         _context.Ship.Update(ship);
                     }

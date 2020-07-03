@@ -1,72 +1,168 @@
 ﻿
 
 <!DOCTYPE html>
-    <html lang="en">
-    <head>
-        <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>@ViewData["Title"] - Ship</title>
-        <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />       
-        <link rel="stylesheet" href="~/css/site.css" />
-    </head>
-        <body>
-            <header>
-                <div>
-                    <div style="text-align:right">
-                        <a class="nav-link text-dark" asp-area="" asp-controller="Login" asp-action="SignOut">退出</a>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="renderer" content="webkit|ie-comp|ie-stand" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="bookmark" href="/favicon.ico" />
+    <title>@ViewBag.Title</title>
+    <link href="/css/main.css" rel="stylesheet" />
+    <link href="/scripts/layui/css/layui.css" rel="stylesheet" />
+    <link href="/fontawesome/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="/fontmoduleicon/FontIcon.css" rel="stylesheet" />
+</head>
+<body class="layui-layout-body">   
+    <div class="layui-layout layui-layout-admin">
+        <div class="layui-header">
+            <div class="layui-logo">禹创智能科技</div>
+            <ul class="layui-nav layui-layout-left">
+            </ul>
+            <ul class="layui-nav layui-layout-right">
+                <li class="layui-nav-item">
+                    欢迎您：@ShipWeb.Tool.ManagerHelp.LoginName
+                    @*<a href="javascript:;">
+                        <img src="~/images/head/user.png" class="layui-nav-img">
+                        小福泥
+                    </a>
+                    <dl class="layui-nav-child">
+                        <dd><a href="">基本资料</a></dd>
+                        <dd><a href="">安全设置</a></dd>
+                    </dl>*@
+                </li>
+                <li class="layui-nav-item"><a href="/Login/SignOut">退了</a></li>
+            </ul>
+        </div>
+
+        <div class="layui-side layui-bg-black">
+            <div class="layui-side-scroll">
+                <!-- 左侧导航区域 -->
+                <ul class="layui-nav layui-nav-tree" lay-filter="test">
+                    @if (ShipWeb.Tool.ManagerHelp.IsShowLandHome)
+                    {
+                        <li class="layui-nav-item"><a href="/Home/LandHome">返回陆地端</a></li>
+                    }
+                    <li class="layui-nav-item embedded"><a href="#">设备</a></li><!--/Embedded/Index-->
+                    <li class="layui-nav-item cameraconfig"><a href="#">算法配置</a></li>
+                    <li class="layui-nav-item employee"><a href="#">船员</a></li>
+                    <li class="layui-nav-item ship"><a href="#">航行设置</a></li><!--/Ship/Edit-->
+                    <li class="layui-nav-item alarm layui-this"><a href="#">报警</a></li>
+                    <li class="layui-nav-item attendance"><a href="#">考勤</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="layui-body">
+            <iframe id="frm" src="/Alarm/Index?isShow=false" style="width:100%;height:97%">
+                <!-- 内容主体区域 -->
+                @RenderBody()
+            </iframe>           
+        </div>
+
+        <div class="layui-footer">底部信息 @($"{DateTime.Now:HH:mm:ss}") , 您好 King Yu 禹创智能科技</div>
+    </div>
+    <script src="/scripts/layui/layui.js" type="text/javascript"></script>
+    <script src="/scripts/layui/global.js" type="text/javascript"></script>
+    <script>
+        layui.use('element', function () {
+            var $ = layui.jquery
+                , element = layui.element;
+            $(".embedded").click(function () {
+                $("#frm").attr("src", "/Embedded/Index")
+            });
+            $(".cameraconfig").click(function () {
+                $("#frm").attr("src", "/CameraConfigs/Index")
+            });
+            $(".employee").click(function () {
+                $("#frm").attr("src", "/Employees/Index")
+            });
+            $(".ship").click(function () {
+                $("#frm").attr("src", "/Ship/Edit")
+            });
+            $(".alarm").click(function () {                
+                $("#frm").attr("src", "/Alarm/Index?isShow=false")
+            });
+            $(".attendance").click(function () {
+                $("#frm").attr("src", "/Attendance/Index")
+            });
+        });
+        
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+@*<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Ship</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <header>
+        <div>
+            <div style="text-align:right">
+                <a class="nav-link text-dark" asp-area="" asp-controller="Login" asp-action="SignOut">退出</a>
+            </div>
+        </div>
+    </header>
+    <div>
+        <div style="width:200px;float:left">
+            <nav class="navbar">
+                <div class="container">
+                    <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
+                        <ul class="navbar-nav flex-grow-1">
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Embedded" asp-action="Index">设备</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="CameraConfigs" asp-action="Index">算法配置</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Employees" asp-action="Index">船员</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Ship" asp-action="Edit">航行设置</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Alarm" asp-action="Index">报警消息</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-area="" asp-controller="Attendance" asp-action="Index">考勤</a>
+                            </li>
+                        </ul>
                     </div>
                 </div>
-            </header>
-            <div>
-                <div style="width:200px;float:left">
-                    <nav class="navbar">
-                        <div class="container">                            
-                            <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
-                                <ul class="navbar-nav flex-grow-1">                                   
-                                    <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-area="" asp-controller="Embedded" asp-action="Index">设备</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-area="" asp-controller="CameraConfigs" asp-action="Index">算法配置</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-area="" asp-controller="Employees" asp-action="Index">船员</a>
-                                    </li>
-                                    @*<li class="nav-item">
-                                        <a class="nav-link text-dark" asp-area="" asp-controller="Users" asp-action="Index"> 用户</a>
-                                    </li>*@
-                                    <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-area="" asp-controller="Ship" asp-action="Edit">航行设置</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-area="" asp-controller="Alarm" asp-action="Index">报警消息</a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a class="nav-link text-dark" asp-area="" asp-controller="Attendance" asp-action="Index">考勤</a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                    </nav>
-                </div>
-                <div style="float:left;margin:10px">
-                    <main role="main" class="pb-3">
-                        @RenderBody()
-                    </main>
-                </div>
-               
-            </div>
+            </nav>
+        </div>
+        <div style="float:left;margin:10px">
+            <main role="main" class="pb-3">
+                @RenderBody()
+            </main>
+        </div>
 
-            <footer class="border-top footer text-muted">
-                <div class="container">
-                    &copy; 2020 - Ship - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                </div>
-            </footer>
-            <script src="~/lib/jquery/dist/jquery.min.js"></script>
-            <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-            <script src="~/js/site.js" asp-append-version="true"></script>
-            <script src="~/layui/layui.js"></script>
-            <script src="~/lib/jquery/dist/jquery.js"></script>
-            @RenderSection("Scripts", required: false)
-        </body>
-        </html>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            &copy; 2020 - Ship - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/layui/layui.js"></script>
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>*@

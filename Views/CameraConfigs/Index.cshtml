@@ -2,11 +2,17 @@
 
 @{
     ViewData["Title"] = "Index";
+    Layout = null;
 }
 <link href="~/layui/css/layui.css" rel="stylesheet" />
+<script src="~/layui/layui.js"></script>
 <script src="~/lib/jquery/dist/jquery.js"></script>
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
+
 <script type="text/javascript">
+
+
+
     $(document).ready(function () {
         Load();
         $("#ckAll").click(function () {
@@ -15,7 +21,7 @@
     });
     function Load() {
         $.ajax({
-            url: "CameraConfigs/Load",
+            url: "/CameraConfigs/Load",
             type: "get",
             contentType: "application/json; charset=utf-8",
             dataType: "json",
@@ -24,7 +30,7 @@
                 if (res.code == 0) {
                     var data = res.data;
                     if (res.isSet) {
-                        var option = '<input type="submit" value="批量保存" class="btn btn-primary" onclick="SaveAll()" />';
+                        var option = '<input type="submit" value="批量保存"  class="layui-btn" onclick="SaveAll()" />';
                         $("#divOption").html(option);
                     }
                     for (var i = 0; i < data.length; i++) {
@@ -32,14 +38,12 @@
                         str += '<td>' + data[i].nickName + '<input type="hidden" value="' + data[i].cid + '" />';
                         str += '<input type="hidden" value="' + (data[i].id == null ? "" : data[i].id) + '" /></td>';
                         str += '<td><input type="text" onkeyup="this.value=this.value.replace(/[^1-9]/g,0)" value="' + (data[i].gpu == null ? 0 : data[i].gpu) + '" /></td>';
-                        str += '<td><input type = "checkbox" name = "chk"' + (data[i].enableSleep ? "checked=true" : "") + '/></td>';
-                        str += '<td><input type = "checkbox" name = "chk"' + (data[i].enableFight ? "checked=true" : "") + '/></td>';
-                        str += '<td><input type = "checkbox" name = "chk"' + (data[i].enableHelmet ? "checked=true" : "") + ' /></td>';
-                        str += '<td><input type = "checkbox" name = "chk"' + (data[i].enablePhone ? "checked=true" : "") + '/></td>';
-                        //str += '<td><input type = "radio" name = "rdo' + i + '"' + (data[i].enableAttendanceIn ? "checked=true" : "") + ' /></td>';
-                        //str += '<td><input type = "radio" name = "rdo' + i + '"' + (data[i].enableAttendanceOut ? "checked=true" : "") + ' /></td>';
-                        str += '<td><input type = "checkbox" onclick="Chose(this,'+i+')" name = "rdo' + i + '"' + (data[i].enableAttendanceIn ? "checked=true" : "") + ' /></td>';
-                        str += '<td><input type = "checkbox" onclick="Chose(this,'+i+')" name = "rdo' + i + '"' + (data[i].enableAttendanceOut ? "checked=true" : "") + ' /></td>';
+                        str += '<td><input type = "checkbox" name = "chk"' +IsShowCheck(data[i].enableSleep) + '/></td>';
+                        str += '<td><input type = "checkbox" name = "chk"' +IsShowCheck(data[i].enableFight) + '/></td>';
+                        str += '<td><input type = "checkbox" name = "chk"' +IsShowCheck(data[i].enableHelmet) + '/></td>';
+                        str += '<td><input type = "checkbox" name = "chk"' + IsShowCheck(data[i].enablePhone) + '/></td>';
+                        str += '<td><input type = "checkbox" onclick="Chose(this,' + i + ')" name = "rdo' + i + '"' + IsShowCheck(data[i].enableAttendanceIn) + '/></td>';
+                        str += '<td><input type = "checkbox" onclick="Chose(this,' + i + ')" name = "rdo' + i + '"' + IsShowCheck(data[i].enableAttendanceOut) + '/></td>';                      
                         str += '<td><input type="number"onkeyup="if((event.keyCode<48 || event.keyCode>57) && event.keyCode!=46 || /\.\d\d$/.test(value))event.returnValue=false;if(value.length>4)value=value.slice(0,4)"  value="' + (data[i].similar == null ? 0 : data[i].similar) + '"/></td>';
                         str += '<td>'
                         if (res.isSet) {
@@ -53,7 +57,13 @@
             }
         });
     }
-    function Chose(obj,index) {       
+    function IsShowCheck(ck) {
+        if (ck) {
+            return "checked ";
+        }
+        return "";
+    }
+    function Chose(obj,index) {
         var name = "rdo" + index;
         var checks = $("input[name='" + name + "']");
         for (var i = 0; i < checks.length; i++) {
@@ -175,7 +185,7 @@
                 EnableAttendanceOut: str[8],
                 Similar: str[9]
             };
-            
+
             //把每一个tr的数据写成一个json数据
             Array.push(att);
         });
@@ -219,50 +229,49 @@
         return true;
     }
 </script>
-<h1>
-    算法配置
-</h1>
-
-<div id="divOption">
-
+<div style="margin:20px;width:96%">
+    <h1>
+        算法配置
+    </h1>
+    <hr />
+    <div id="divOption">
+        </div>
+        <table class="layui-table" id="tb1" style="width:80%">
+            <thead>
+                <tr>
+                    <th><input type="checkbox" id="ckAll" /></th>
+                    <th>
+                        摄像机名称
+                    </th>
+                    <th>
+                        GPU
+                    </th>
+                    <th>
+                        睡觉
+                    </th>
+                    <th>
+                        启用打架
+                    </th>
+                    <th>
+                        启用安全帽
+                    </th>
+                    <th>
+                        启用打电话
+                    </th>
+                    <th>
+                        请求考勤入
+                    </th>
+                    <th>
+                        请求考勤出
+                    </th>
+                    <th>
+                        人脸相似度
+                    </th>
+                  
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="tbo">
+            </tbody>
+        </table>
 </div>
-<table class="layui-table" id="tb1">
-    <thead>
-        <tr>
-            <th><input type="checkbox" id="ckAll" /></th>
-            <th>
-                摄像机名称
-            </th>
-            <th>
-                GPU
-            </th>
-            <th>
-                睡觉
-            </th>
-            <th>
-                启用打架
-            </th>
-            <th>
-                启用安全帽
-            </th>
-            <th>
-                启用打电话
-            </th>
-            <th>
-                请求考勤入
-            </th>
-            <th>
-                请求考勤出
-            </th>
-            <th>
-                人脸相似度
-            </th>
-            @*<th>
-                    @Html.DisplayNameFor(model => model.ShipId)
-                </th>*@
-            <th></th>
-        </tr>
-    </thead>
-    <tbody id="tbo">
-    </tbody>
-</table>

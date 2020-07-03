@@ -1,93 +1,228 @@
-﻿<link href="~/layui/css/layui.css" rel="stylesheet" />
-<script src="~/lib/jquery/dist/jquery.js"></script>
-<script src="~/lib/jquery/dist/jquery.min.js"></script>
+﻿
+<script src="~/layui/layui.js"></script>
 @{
     Layout = null;
 }
-<h1>用户信息</h1>
+<link href="~/layui/css/layui.css" rel="stylesheet" />
+<script src="~/layui/layui.js"></script>
 <script type="text/javascript">
-    $(document).ready(function () {
-        Load()
-    });
-    function Load() {
-        $.ajax({
-            url: "/Users/Load",
-            type: "get",
-            dataType: "json",
-            data: {},
-            contentType: "application/json;chartset=utf-8",
-            success: function (res) {
-                var html = "";
-                if (res.code == 0) {
-                    var tb = res.data;
-                    if (res.isSet == true) {
-                        var create = '<a  class="layui-btn" href="Users/Create/">添加用户</a>';
-                        $("#divCreate").html(create);
+    var url;
+    var mainIndex;
+    layui.use(['table', 'form'], function () {
+        var $ = layui.$;
+        var table = layui.table;
+        var form = layui.form;
+        var tableIns = table.render({
+            elem: '#userTable',   //渲染的目标对象
+            url: '/Users/Load', //数据接口
+            toolbar: "#userToolBar",   //表格的工具条
+            page: false,  //是否启用分页
+            cols: [[   //列表数据
+                { field: 'uid', title: '用户编码', width: 220, sort: true },
+                { field: 'name', title: '用户名', width: 220, sort: true, align: 'center' },
+                {
+                    field: 'enableConfigure', title: '配置权限标识', align: 'center', width: 220, templet: function (d) {
+                        return d.enableConfigure == true ? '是' : '否';
                     }
-                    if (tb.length > 0) {
-                        for (var i = 0; i < tb.length; i++) {
-                            html += '<tr>';
-                            html += '<td>' + tb[i].uid + '</td>';
-                            html += '<td>' + tb[i].name + '</td>';
-                            html += '<td>' + (tb[i].enableConfigure?"是":"否") + '</td>';
-                            html += '<td>' + (tb[i].enablequery ? "是" : "否") + '</td>';
-                            html += '<td>';
-                            if (res.isSet == true) {
-                                html += '<a class="layui-btn layui-btn-xs"  href="Users/Edit/' + tb[i].id + '">修改</a>';
-                                html += "<a class=\"layui-btn layui-btn-danger layui-btn-xs\"  href=\"javascript: \" onclick=\"Del('" + tb[i].id + "')\">删除</a>";
-                            }
-                            html += '</td>';
-                            html += '</tr>';
-                        }
+                },
+                {
+                    field: 'enablequery', title: '配置查询标识', align: 'center', width: 220, templet: function (d) {
+                        return d.enablequery == true ? '是' : '否';
                     }
-                }
-                $("#tbList").html(html);
+                },
+                { fixed: 'right', title: '操作', toolbar: '#userBar', width: 220, align: 'center' }
+            ]],
+            done: function () {
+
             }
         });
-    }
-    function Del(id) {
-        var r = confirm("是否确定要删除吗？");
-        if (r == true) {
+        //监听头部工具栏事件
+        table.on("toolbar(userTable)", function (obj) {
+            switch (obj.event) {
+                case 'add':
+                    mainIndex = layer.open({
+                        type: 1,
+                        title: '添加用户',
+                        content: $("#saveOrUpdateDiv"),
+                        area: ['600px', '400px'],
+                        success: function (index) {
+                            $("#hidId").val("");
+                            //清空表单数据
+                            $("#dataFrm")[0].reset();
+                            url = "user/addUser.action";
+                        }
+                    });
+                    break;
+            };
+        });
+        //监听工具条
+        table.on('tool(userTable)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'del') {
+                layer.confirm('真的删除行么', function (index) {
+                    obj.del();
+                    layer.close(index);
+                    $.ajax({
+                        url: "/Users/Delete",
+                        type: "get",
+                        dataType: "json",
+                        data: { id: data.id },
+                        contentType: "application/json;chartset=utf-8",
+                        success: function (res) {
+                            if (res.code == 1) {                              
+                                layer.msg(res.msg, { icon: 2 });
+                            } else {
+                                layer.msg("删除成功", { icon:1 });
+                                tableIns.reload();
+                            }
+                        }
+                    });
+                });
+            } else if (obj.event === 'edit') {
+                //layer.alert('编辑行：<br>' + JSON.stringify(data))
+                mainIndex = layer.open({
+                    type: 1,
+                    title: '修改用户',
+                    content: $("#saveOrUpdateDiv"),
+                    area: ['600px', '400px'],
+                    success: function (index) {
+                        form.val("dataFrm", data);
+                        $("#txtxpwd").val("");
+                        $("#txtspwd").val("");
+                        url = "user/updateUser.action";
+                    },
+                    yes: function () {
+                        layer.closeAll();
+                    }
+                });
+            }
+        });
+        //保存
+        form.on("submit(doSubmit)", function (viewobj) {
+            var xpwd = $("#txtxpwd").val();
+            var spwd = $("#txtspwd").val();
+            var id = $("#hidId").val();
+            if (id == undefined || id == "") {
+                if (xpwd == undefined || xpwd == "") {
+                    layer.msg("数据保存失败", { icon: 2 });
+                    return false;
+                }
+                if (xpwd != spwd) {
+                    layer.msg("前后两次输入的密码不一致", { icon: 2 });
+                    return false;
+                }
+            } else {
+                if (xpwd != undefined && xpwd != "") {
+                    if (xpwd != spwd) {
+                        layer.msg("前后两次输入的密码不一致", { icon: 2 });
+                        return false;
+                    }
+                }
+            }
+            var data = {
+                Id: id,
+                Name: $("#txtUserame").val(),
+                EnableConfigure: $("#ck1").prop("checked"),
+                Enablequery: $("#ck2").prop("checked"),
+                Password: xpwd
+            }
             $.ajax({
-                url: "/Users/Delete",
+                url: "/Users/UserSave",
+                data: { users: JSON.stringify(data) },
                 type: "get",
                 dataType: "json",
-                data: { id: id },
-                contentType: "application/json;chartset=utf-8",
+                contentType: "application/json;charset=utf-8",
                 success: function (res) {
                     if (res.code == 1) {
-                        alert(res.msg);
+                        layer.msg("数据保存失败", { icon: 2 });
                     } else {
-                        Load();
+                        layer.msg("保存成功", { icon: 1 });
+                        tableIns.reload();
+                        layer.closeAll();
                     }
                 }
             });
-        }
-    }
+            return false;
+        });
+        //自定义验证规则
+        form.verify({
+            passSure: function (value) {
+                var xpwd = $("#txtxpwd").val();
+                if (xpwd!="") {
+                    if (xpwd != value) {
+                        return '前后两次输入密码不一致';
+                    }
+                }
+            },
+            pass: [
+                /^[\S]{6,12}$/
+                , '密码必须6到12位，且不能出现空格'
+            ]
+        });
 
+    });
 </script>
-<p>
-    <div id="divCreate"></div>
-</p>
-<table class="layui-table">
-    <thead>
-        <tr>
-            <th>
-                用户编号
-            </th>
-            <th>
-                用户名
-            </th>           
-            <th>
-                配置权限标识
-            </th>
-            <th>
-                查询权限标识
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody id="tbList">
-       
-    </tbody>
-</table>
+<div style="margin:20px;width:96%">
+    <h1>用户管理</h1>
+    <hr />
+    <table class="layui-hide" id="userTable" lay-filter="userTable"></table>
+    <div style="display: none;" id="userToolBar">
+        <button type="button" class="layui-btn layui-btn-sm" lay-event="add">增加</button>
+        @*<button type="button" class="layui-btn layui-btn-sm" lay-event="batchDelete">批量删除</button>*@
+    </div>
+
+    <div id="userBar" style="display: none;">
+        <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    </div>
+
+
+    <div style="display: none;" id="saveOrUpdateDiv">
+        <form class="layui-form" action="" id="dataFrm" lay-filter="dataFrm">
+            <input name="id" id="hidId" type="hidden" />
+            <div class="layui-form-item" style="margin-top: 20px;">
+                <div class="layui-inline">
+                    <label class="layui-form-label">用户名：</label>
+                    <div class="layui-input-inline">
+                        <input type="text" id="txtUserame" name="name" lay-reqtext="用户名是必填项"  maxlength="20" lay-verify="required" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">配置：</label>
+                    <div class="layui-input-inline">
+                        <input type="checkbox" id="ck1" name="enableConfigure" title="配置权限标识">
+                        <input type="checkbox" id="ck2" name="enablequery" title="配置查询标识">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">新密码：</label>
+                    <div class="layui-input-inline">
+                        <input type="password" id="txtxpwd" maxlength="32" lay-verify="pass" autocomplete="off" class="layui-input">
+                    </div>
+                    <div class="layui-form-mid layui-word-aux">请填写6到12位密码</div>
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="layui-form-label">确认密码：</label>
+                    <div class="layui-input-inline">
+                        <input type="password" id="txtspwd" maxlength="32" lay-verify="passSure" autocomplete="off" class="layui-input">
+                    </div>
+                </div>
+            </div>
+            <div class="layui-form-item" style="text-align: center">
+                <div class="layui-input-block">
+                    <button type="submit" class="layui-btn layui-btn-normal layui-btn-sm layui-icon layui-icon-release" lay-filter="doSubmit" lay-submit="">提交</button>
+                    <button type="reset" class="layui-btn layui-btn-warm layui-btn-sm layui-icon layui-icon-refresh">重置</button>
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+</div>

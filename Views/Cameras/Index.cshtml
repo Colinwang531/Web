@@ -2,68 +2,118 @@
 
 @{
     ViewData["Title"] = "Index";
+    Layout = null;
 }
 
-<h1>摄像机列表</h1>
-<hr />
-<div>
-    <a href="@Url.Action("Index","Embedded")">返回设备列表</a>
-</div>
-
 <link href="~/layui/css/layui.css" rel="stylesheet" />
-<table class="layui-table">
-    <thead>
-        <tr>
-            <th>
-                摄像机序号
-            </th>
-            <th>
-                是否启用设备
-            </th>
-            <th>
-                摄像机别名
-            </th>
-            <th>
-                摄像机ip地址
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in Model)
-        {
-            <tr>
-                @*<td>
-                        @Html.DisplayFor(modelItem => item.Cid)
-                    </td>*@
-                <td>
-                    @Html.DisplayFor(modelItem => item.Index)
-                </td>
-                <td>
-                    @if (item.Enalbe)
-                    {
-                        <label>开启</label>
+<script src="~/layui/layui.js"></script>
+<script type="text/javascript">
+    layui.use(['table','form'], function () {
+        var $ = layui.$;
+        var table = layui.table;
+        var form = layui.form;
+        var layIndex;
+        var tableIns = table.render({
+            elem: "#tbCamers",
+            url: "/Cameras/Load?id="+ $("#hidEmb").val(),
+            page: false,
+            cols: [[
+                { field: "index", title: "摄像机序号", width: 100 },
+                {
+                    field: "enalbe", title: "启用设备", width: 100, templet: function (e) {
+                        return e.enalbe ? "开启" : "停用";
                     }
-                    else
-                    {
-                        <label>停用</label>
+                },
+                { field: "nickName", title: "摄像机别名", width: 200 },
+                { field: "ip", title: "摄像机IP",width:150 },
+                { fixed: 'right', title: '操作', toolbar: '#camerBar', width: 220, align: 'center' }
+            ]],
+            done: function (res) {
+                if (res.code==0) {
+                    $("#camerBar").hide();
+                }
+            }
+        });
+        //监听工具条
+        table.on('tool(tbCamers)', function (obj) {
+            var data = obj.data;
+            if (obj.event === "edit") {
+                layIndex=layer.open({
+                    type: 1,
+                    title: "修改摄像机",
+                    content: $("#divUpdate"),
+                    area: ["400px", "260px"],
+                    success: function (index) {
+                        form.val("dataFrm", data);
                     }
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.NickName)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.IP)
-                </td>
-                @*<td>
-                        @Html.DisplayFor(modelItem => item.ShipId)
-                    </td>*@
-                <td>
+                });
 
-                    <a class="layui-btn layui-btn-xs" asp-action="Edit" asp-route-id="@item.Id">修改</a>
-                </td>
-            </tr>
-        }
-    </tbody>
-</table>
+            }
+        });
+        form.on("submit(doSubmit)", function (frm) {
+            var data = {
+                id: frm.field.id,
+                nickName: frm.field.nickName,
+                enalbe: frm.field.enalbe
+            }
+            $.ajax({
+                url: "/Cameras/Save",
+                data: data,
+                type: "get",
+                datatype: "json",
+                contenttype: "application/json;chartset=utf-8",
+                success: function (res) {
+                    if (res.code == 0) {
+                        layer.msg("数据保存成功", { icon: 1 });
+                        tableIns.reload();
+                        layer.closeAll();
+                    } else {
+                        layer.msg(res.msg, {icon:2})
+                    }
+                }
+            });
+            return false;
+        });
+    });
+</script>
+<div style="margin:20px;width:96%">
+    <h1>摄像机列表</h1>
+    <hr />
+    <input type="hidden" id="hidEmb" value="@ViewBag.id " />
+    <a href="/Embedded/Index">返回设备列表</a>
+    <table class="layui-table" id="tbCamers" lay-filter="tbCamers">
+    </table>
+    @if (ShipWeb.Tool.ManagerHelp.IsSet)
+    {
+        <div id="camerBar" lay-filter="camerBar" style="display: none;">
+            <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+        </div>
+    }
 
+</div>
+<div id="divUpdate" style="display:none;margin-top:20px">
+    <form class="layui-form" action="" id="dataFrm" lay-filter="dataFrm">
+        <input name="id" id="hidId" type="hidden" class="layui-input" />
+        <div class="layui-form-item">
+                <label class="layui-form-label" style="width:120px">摄像机状态：</label>
+                <div class="layui-input-inline">
+                    <div class="layui-input-inline">
+                        <input type="radio" name="enalbe" value="1" title="开启" class="layui-input">
+                        <input type="radio" name="enalbe" value="2" title="禁用" class="layui-input" checked="checked">
+                    </div>
+                </div>
+        </div>
+        <div class="layui-form-item">           
+                <label class="layui-form-label" style="width:120px">摄像机别名：</label>
+                <div class="layui-input-inline" style="width:200px">
+                    <input type="text" name="nickName" maxlength="20" lay-verify="required" autocomplete="off" class="layui-input">
+                </div>
+        </div>
+        <div class="layui-form-item" style="margin-top:20px;margin-left:80px">
+            <div class="layui-input-block" id="divShow">
+                <button type="submit" class="layui-btn layui-btn-normal layui-btn-sm layui-icon layui-icon-release" lay-filter="doSubmit" lay-submit="">提交</button>
+            </div>
+        </div>
+    </form>
+
+</div>

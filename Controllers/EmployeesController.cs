@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
+using Org.BouncyCastle.Crypto.Tls;
 using ProtoBuf;
 using ShipWeb.DB;
 using ShipWeb.Models;
@@ -26,7 +27,7 @@ namespace ShipWeb.Controllers
 
         private readonly MyContext _context;
         private ProtoManager manager;
-        public static List<byte[]> bylist;
+        public static Dictionary<string,byte[]> picBytes;
         public EmployeesController(MyContext context)
         {
             _context = context;
@@ -36,7 +37,7 @@ namespace ShipWeb.Controllers
         // GET: Employees
         public IActionResult Index()
         {
-            bylist = new List<byte[]>();
+            picBytes = new Dictionary<string, byte[]>();
             return View();
         }
         /// <summary>
@@ -71,6 +72,7 @@ namespace ShipWeb.Controllers
                                a.ShipId,
                                employeePictures =from b in a.employeePictures
                                                    select new {
+                                                       b.Id,
                                                        Picture=Convert.ToBase64String(Convert.FromBase64String(Encoding.UTF8.GetString(b.Picture)))
                                                    }
                            };
@@ -101,8 +103,9 @@ namespace ShipWeb.Controllers
                 string base64 = Convert.ToBase64String(bytes);
                 //将加密后的字符串转换为流
                 byte[] by = Encoding.UTF8.GetBytes(base64);
-                bylist.Add(by);
-                return Json(new { code =0, msg = "上传成功" });
+                string identity = Guid.NewGuid().ToString();
+                picBytes.Add(identity, by);
+                return Json(new { code =0,data=identity, msg = "上传成功" });
                 #endregion
             }
             catch (Exception ex)
@@ -111,164 +114,146 @@ namespace ShipWeb.Controllers
             }
               
         }
-       
-
-        // GET: Employees/Create
-        public IActionResult Create()
+        
+        /// <summary>
+        /// 保存（新增/修改）
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="name"></param>
+        /// <param name="job"></param>
+        /// <param name="picIds">图片ID</param>
+        /// <returns></returns>
+        public IActionResult Save(string id,string name,string job,string picIds)
         {
-            bylist = new List<byte[]>();
-            return View();
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Save(Employee employee)
-        {
-            if (ModelState.IsValid)
+            try
             {
-                string identity = Guid.NewGuid().ToString();
-               ShipWeb.ProtoBuffer.Models.Employee emp = new ShipWeb.ProtoBuffer.Models.Employee()
+                if (ModelState.IsValid)
                 {
-                     job=employee.Job,
-                      name=employee.Name
-                };
-                Random rb = new Random();
-                //测试数据
-                string uid = rb.Next(111,999).ToString();//manager.CrewAdd(emp, identity);
-                if (uid!="")
-                {
-                    employee.ShipId = ManagerHelp.ShipId;
-                    employee.Uid = uid;
-                    employee.Id = identity;
-                    //添加图片
-                    if (bylist.Count>0)
-                    {
-                        List<EmployeePicture> list = new List<EmployeePicture>();
-                        foreach (var item in bylist)
-                        {
-                            EmployeePicture pic = new EmployeePicture()
-                            {
-                                Id = Guid.NewGuid().ToString(),
-                                EmployeeId = identity,
-                                ShipId = ManagerHelp.ShipId,
-                                Picture=item
-                            };
-                            list.Add(pic);
-                        }
-                        employee.employeePictures = list;
+                    Employee employee;
+                    List<string> ids = new List<string>();
+                    if (picIds!=null)
+                    { 
+                        ids = picIds.Split(',').ToList();
                     }
-                }
-                _context.Add(employee);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
-            }
-            return View(employee);
-        }
-
-        // GET: Employees/Edit/5
-        public IActionResult Edit(string id)
-        {
-            bylist = new List<byte[]>();
-            if (id == null)
-            {
-                return NotFound();
-            }
-            var employee = _context.Employee.Find(id);
-            if (employee == null)
-            {
-                return NotFound();
-            }
-            //获取船员图片
-            var camList = _context.EmployeePicture.Where(c => c.EmployeeId == id).ToList();
-            employee.employeePictures = new List<EmployeePicture>();
-            List<string> picUrl = new List<string>();
-            foreach (var item in camList)
-            {
-                bylist.Add(item.Picture);
-                ////将流图片转成加密后base64字符串
-                string base64 = Encoding.UTF8.GetString(item.Picture);
-                ////将加密后的字符串转为流
-                byte[] by =Convert.FromBase64String(base64);
-                employee.employeePictures.Add(new EmployeePicture()
-                {
-                    EmployeeId = item.EmployeeId,
-                    Id = item.Id,
-                    Picture = by,
-                    ShipId = item.ShipId
-                });
-
-            }
-            return View(employee);
-        }
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> EditSave(string id,Employee employee)
-        {
-            if (id != employee.Id)
-            {
-                return NotFound();
-            }
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    ShipWeb.ProtoBuffer.Models.Employee emp = new ShipWeb.ProtoBuffer.Models.Employee()
+                    if (!string.IsNullOrEmpty(id))
                     {
-                        job = employee.Job,
-                        name = employee.Name
-                    };
-                    if (bylist.Count>0)
-                    {
-                        emp.pictures = bylist;
-                        employee.employeePictures = new List<EmployeePicture>();
-                        var delepic = _context.EmployeePicture.Where(c => c.EmployeeId == employee.Id).ToList();
-                        foreach (var item in delepic)
+                        #region 修改船员信息
+                        employee = _context.Employee.FirstOrDefault(c => c.Id == id);
+                        if (employee == null)
                         {
-                            _context.Remove(item);
+                            return new JsonResult(new { code = 1, msg = "数据中不存在此数据" });
                         }
-                        foreach (var item in bylist)
+                        employee.Name = name;
+                        employee.Job = job;
+                        ShipWeb.ProtoBuffer.Models.Employee emp = new ShipWeb.ProtoBuffer.Models.Employee()
                         {
-                            EmployeePicture pic = new EmployeePicture()
+                            job = employee.Job,
+                            name = employee.Name
+                        };
+
+                        var picList = _context.EmployeePicture.Where(c => c.EmployeeId == id).ToList();
+                        //记录数据库中存在的图片ID
+                        List<string> dbIds = new List<string>();                        
+                        foreach (var item in ids)
+                        {
+                            if (picBytes.Where(c => c.Key == item).Any())
                             {
-                                EmployeeId = employee.Id,
-                                Id = Guid.NewGuid().ToString(),
-                                Picture = item,
-                                ShipId = employee.ShipId
-                            };
-                            _context.EmployeePicture.Add(pic);
+                                #region 需要添加的图片
+                                var pic = picBytes.Where(c => c.Key == item).FirstOrDefault();
+                                EmployeePicture ep = new EmployeePicture()
+                                {
+                                    EmployeeId = employee.Id,
+                                    Id = pic.Key,
+                                    Picture = pic.Value,
+                                    ShipId = employee.ShipId
+                                };
+                                _context.EmployeePicture.Add(ep);
+
+                                #endregion
+                            }
+                            else if (picList.Where(c => c.Id == item).Any())
+                            {
+                                dbIds.Add(item);
+                            }
                         }
+                        //查找当前船员下需要删除的图片
+                        var delPicList = picList.Where(c => c.EmployeeId == id && !dbIds.Contains(c.Id)).ToList();
+                        if (delPicList.Count > 0)
+                        {
+                            _context.EmployeePicture.RemoveRange(picList);
+                        }
+
+                        // manager.CrewUpdate(emp, employee.Uid, employee.Id);
+                        _context.Employee.Update(employee);
+                        #endregion
                     }
                     else
                     {
-                       var picList= _context.EmployeePicture.Where(c => c.EmployeeId == id);
-                        _context.EmployeePicture.RemoveRange(picList);
+                        #region 添加船员信息
+                        string identity = Guid.NewGuid().ToString();
+                        employee = new Employee()
+                        {
+                            Job = job,
+                            Name = name,
+                            Id = identity,
+                            ShipId = ManagerHelp.ShipId
+                        };
+                        ShipWeb.ProtoBuffer.Models.Employee emp = new ShipWeb.ProtoBuffer.Models.Employee()
+                        {
+                            job = employee.Job,
+                            name = employee.Name
+                        };
+                        Random rb = new Random();
+                        //测试数据
+                        string uid = rb.Next(111, 999).ToString();//manager.CrewAdd(emp, identity);
+                        if (uid != "")
+                        {
+                            employee.Uid = uid;
+                            //添加图片
+                            if (picBytes.Count > 0&& ids.Count>0)
+                            {
+                                List<EmployeePicture> list = new List<EmployeePicture>();
+                                foreach (var item in ids)
+                                {
+                                    if (picBytes.Where(c => c.Key == item).Any()) {
+                                        EmployeePicture pic = new EmployeePicture()
+                                        {
+                                            Id = item,
+                                            EmployeeId = identity,
+                                            ShipId = ManagerHelp.ShipId,
+                                            Picture = picBytes.Where(c => c.Key == item).FirstOrDefault().Value
+                                        };
+                                        list.Add(pic);
+                                    }
+                                }
+                                employee.employeePictures = list;
+                            }
+                        }
+                        _context.Add(employee);
+                        #endregion
                     }
-                    
-                   // manager.CrewUpdate(emp, employee.Uid, employee.Id);
-                    _context.Employee.Update(employee);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException ex)
-                {
-                    if (!EmployeeExists(employee.Id))
+                    _context.SaveChangesAsync();
+                    //清除已经上传了的图片
+                    foreach (var item in ids)
                     {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
+                        picBytes.Remove(item);
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                return new JsonResult(new { code = 0 });
             }
-            return View(employee);
+            catch (Exception ex)
+            {
+                return new JsonResult(new { code = 1 ,msg="添加船员失败"+ex.Message});
+            }
         }
+
         /// <summary>
         /// 删除界面上的图片
         /// </summary>
         /// <returns></returns>
         public IActionResult DeleteImg()
         {
-            bylist = new List<byte[]>();
+            picBytes = new Dictionary<string, byte[]>();
             return Json(new { code = 0 });
         }
         /// <summary>
@@ -311,10 +296,5 @@ namespace ShipWeb.Controllers
             }
         }
 
-
-        private bool EmployeeExists(string id)
-        {
-            return _context.Employee.Any(e => e.Id == id);
-        }
     }
 }
