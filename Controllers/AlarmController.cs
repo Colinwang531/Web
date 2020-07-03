@@ -25,9 +25,13 @@ namespace ShipWeb.Controllers
         {
             _context = context;
         }
-        public IActionResult Index(bool isShow)
+        public IActionResult Index(bool isShow,string shipid="")
         {
             ViewBag.IsShowLayout = isShow;//显示报警的框架
+            if (!string.IsNullOrEmpty(shipid))
+            {
+                ManagerHelp.ShipId = shipid;
+            }
             return View();
         }
         public IActionResult AlarmShipAll()

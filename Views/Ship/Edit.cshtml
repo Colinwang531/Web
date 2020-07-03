@@ -63,6 +63,10 @@
                                 "type": res.data.type,
                                 "flag": res.data.flag ? 1 : 2
                             });
+                            if (res.data.type==2) {
+                                $('select').attr('disabled', 'disabled').css("background-color", "#EEEEEE");
+                                form.render();
+                            }
                         }
                         if (res.isSet) {
                             var html = ' <button type="submit" class="layui-btn layui-btn-normal layui-btn-sm layui-icon layui-icon-release" lay-filter="doSubmit" lay-submit="">提交</button>';
