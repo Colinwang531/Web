@@ -1,6 +1,9 @@
 ﻿@model ShipWeb.Models.Ship
 @{
-    Layout = null;
+    if (!ViewBag.isShow)
+    {
+        Layout = null;
+    }
 }
 <link href="~/layui/css/layui.css" rel="stylesheet" />
 <script src="~/layui/layui.js"></script>

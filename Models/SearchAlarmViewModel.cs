@@ -31,13 +31,6 @@ namespace ShipWeb.Models
         /// 报警结束时间
         /// </summary>
         public string EndTime { get; set; }
-        /// <summary>
-        /// 当前页
-        /// </summary>
-        public int PageIndex { get; set; }
-        /// <summary>
-        /// 每页显示条数
-        /// </summary>
-        public int PageSize { get; set; }
+        
     }
 }

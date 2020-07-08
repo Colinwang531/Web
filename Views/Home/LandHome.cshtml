@@ -64,7 +64,7 @@
         </ul>
     </div>
 
-    <div style="margin-top:10px;width:200px;float:left">      
+    <div style="margin-top:10px;width:200px;float:left">
         <div class="layui-side layui-bg-black">
             <div class="layui-side-scroll">
                 <!-- 左侧导航区域 -->
@@ -75,15 +75,15 @@
                         <li class="layui-nav-item ship"><a href="#">船舶信息</a></li>
                         <li class="layui-nav-item user"><a href="#">用户信息</a></li>
                     }
-                    </ul>
+                </ul>
             </div>
         </div>
     </div>
     <div style="float:left;margin-top:10px">
         <div id="divBody" class="layui-body">
-            <iframe id="ifBody" src="/Alarm/AlarmShipAll" style="width:100%;height:97%"></iframe>
+            <iframe id="ifBody" src="/Alarm/AlarmShipAll" style="width:100%;height:100%"></iframe>
         </div>
-        <div id="divShip" style="display:none;margin-left:10px;">
+        <div id="divShip" style="display:none;margin-left:20px;">
             <table class="layui-table">
                 <thead>
                     <tr>
@@ -97,5 +97,6 @@
             </table>
         </div>
     </div>
+    <div class="layui-footer">底部信息 @($"{DateTime.Now:HH:mm:ss}") , 您好 King Yu 禹创智能科技</div>
 </div>
 

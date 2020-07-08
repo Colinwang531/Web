@@ -19,10 +19,10 @@ namespace ShipWeb.Controllers
         {
             _context = context;
         }
-        public IActionResult Edit()
+        public IActionResult Edit(bool isShow = false)
         {
-           var ship= _context.Ship.FirstOrDefault(c=>c.Id==ManagerHelp.ShipId);
-            if (ship!=null)
+            var ship = _context.Ship.FirstOrDefault(c => c.Id == ManagerHelp.ShipId);
+            if (ship != null)
             {
                 ViewBag.Id = ship.Id;
                 ViewBag.Name = ship.Name;
@@ -36,8 +36,9 @@ namespace ShipWeb.Controllers
                 ViewBag.Type = 1;
                 ViewBag.Flag = false;
             }
+            ViewBag.isShow = isShow;
             ViewBag.isSet = ManagerHelp.IsSet;
-           return View();
+            return View();
         }
         public IActionResult Index()
         {
@@ -84,13 +85,13 @@ namespace ShipWeb.Controllers
         /// </summary>
         /// <param name="ship"></param>
         /// <returns></returns>
-        public IActionResult Save(string id,string name, Ship.ShipType type,string flag)
+        public IActionResult Save(string id, string name, Ship.ShipType type, string flag)
         {
             try
             {
                 if (!ManagerHelp.IsSet)
                 {
-                    new JsonResult(new { code =1, msg = "您没有权限修改数据!" });
+                    new JsonResult(new { code = 1, msg = "您没有权限修改数据!" });
                 }
                 if (ModelState.IsValid)
                 {
@@ -112,16 +113,24 @@ namespace ShipWeb.Controllers
                     //int result = manager.StatesSet(sr, ship.Id);
                     //if (result == 0)
                     //{
-                    if (!string.IsNullOrEmpty(ship.Id))
-                    {
-                        _context.Ship.Update(ship);
-                    }
-                    else
-                    {
-                        ship.Id = Guid.NewGuid().ToString();
-                        ManagerHelp.ShipId = ship.Id;
-                        _context.Ship.Add(ship);
-                    }
+                        if (!string.IsNullOrEmpty(ship.Id))
+                        {
+                            _context.Ship.Update(ship);
+                        }
+                        else
+                        {
+                            //注册船信息时查询组件是中已经有船ID
+                            var comp = _context.Components.FirstOrDefault(c => c.Cid == ManagerHelp.Cid);
+                            if (comp != null)
+                            {
+                                ship.Id = comp.ShipId;
+                            }
+                            else
+                            {
+                                ship.Id = ManagerHelp.ShipId;
+                            }
+                            _context.Ship.Add(ship);
+                        }
                         _context.SaveChanges();
                     //}
                 }
@@ -129,7 +138,7 @@ namespace ShipWeb.Controllers
             }
             catch (Exception ex)
             {
-                return new JsonResult(new { code = 0 ,msg="数据保存失败"+ex.Message}) ;
+                return new JsonResult(new { code = 0, msg = "数据保存失败" + ex.Message });
             }
         }
     }

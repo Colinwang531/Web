@@ -80,9 +80,6 @@ namespace ShipWeb
             });
             app.UseCors();
            
-            
-            InitManger.Init();
-            //InitManger.Alarm();//≤‚ ‘ ˝æ›
         }
 
     }

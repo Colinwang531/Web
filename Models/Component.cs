@@ -10,6 +10,13 @@ namespace ShipWeb.Models
     /// </summary>
     public class Component
     {
+        public enum ComponentType {
+            XMQ=1,
+            WEB=2,
+            HKD=3,
+            DHD=4,
+            ALM=5
+        }
         /// <summary>
         /// 主键id
         /// </summary>
@@ -21,7 +28,7 @@ namespace ShipWeb.Models
         /// <summary>
         /// 组件类型 1：XMQ，2：WEB ，3：HKD，4：DHD，5：ALM 
         /// </summary>
-        public int Type { get; set; }
+        public ComponentType Type { get; set; }
         /// <summary>
         /// 组件名称
         /// </summary>

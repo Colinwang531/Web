@@ -123,14 +123,16 @@ namespace ShipWeb.Controllers
                          Index = 2
                         }
                     };
+                    _context.Embedded.Add(model);
+
                     #region 发送注册设备请求并接收设备下的摄像机信息
                     //ProtoBuffer.Models.DeviceResponse rep = manager.DeveiceAdd(emb, iditity);
                     //if (rep != null && rep.result == 0)
                     //{
-                    //    embedded.Did = rep.did;
+                    //    model.Did = rep.did;
                     //    if (rep.embedded.Count == 1 && rep.embedded[0].cameras.Count > 0)
                     //    {
-                    //        embedded.CameraModelList = new List<Camera>();
+                    //        model.CameraModelList = new List<Camera>();
                     //        var repList = rep.embedded[0].cameras;
                     //        foreach (var item in repList)
                     //        {
@@ -142,13 +144,13 @@ namespace ShipWeb.Controllers
                     //                Id = Guid.NewGuid().ToString(),
                     //                NickName = item.nickname,
                     //                IP = item.ip,
-                    //                ShipId = embedded.ShipId,
+                    //                ShipId = model.ShipId,
                     //                Index = item.index
                     //            };
-                    //            embedded.CameraModelList.Add(cmodel);
+                    //            model.CameraModelList.Add(cmodel);
                     //        }
                     //    }
-                    _context.Embedded.Add(model);
+                    //_context.Embedded.Add(model);
                     //}
                     #endregion
                     #endregion
@@ -156,67 +158,6 @@ namespace ShipWeb.Controllers
                 _context.SaveChangesAsync();
             }
             return new JsonResult(new { code = 0 });
-        }
-
-        // GET: Embedded/Edit/5
-        public async Task<IActionResult> Edit(string id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
-            var Embedded = await _context.Embedded.FindAsync(id);
-           
-            if (Embedded == null)
-            {
-                return NotFound();
-            }
-            return View(Embedded);
-        }
-        [HttpPost]
-        public async Task<IActionResult> EditSave(string id, Models.Embedded Embedded)
-        {
-            if (id != Embedded.Id)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    if (Embedded != null)
-                    {
-                      await Task.Factory.StartNew(state => {
-                            ProtoBuffer.Models.Embedded emb = new ProtoBuffer.Models.Embedded()
-                            {
-                                ip = Embedded.IP,
-                                name = Embedded.Name,
-                                password = Embedded.Password,
-                                port = Embedded.Port,
-                                nickname = Embedded.Nickname
-                            };
-                            int result = manager.DeveiceUpdate(emb, Embedded.Did, id);
-                        }, TaskCreationOptions.LongRunning);
-                        
-                    }
-                    _context.Update(Embedded);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!EmbeddedExists(Embedded.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
-            }
-            return View(Embedded);
         }
 
         /// <summary>
@@ -239,9 +180,9 @@ namespace ShipWeb.Controllers
                     return NotFound();
                 }
                 //先删除服务器上的再删除本地的
-                //int resutl = manager.DeveiceDelete(Embedded.Did, Embedded.Id);
-                //if (resutl == 0)
-                //{
+                int resutl = manager.DeveiceDelete(Embedded.Did, Embedded.Id);
+                if (resutl == 0)
+                {
                     var cameras = _context.Camera.Where(c => c.EmbeddedId == Embedded.Id).ToList();
                     foreach (var item in cameras)
                     {
@@ -257,7 +198,7 @@ namespace ShipWeb.Controllers
                     //删除设备表
                     _context.Embedded.Remove(Embedded);
                     _context.SaveChanges();
-                //}
+                }
                 return new JsonResult(new { code = 0, msg = "删除成功!" });
             }
             catch (Exception ex)
@@ -265,10 +206,6 @@ namespace ShipWeb.Controllers
                 return new JsonResult(new { code = 1, msg = "删除失败!" + ex.Message });
             }
            
-        }
-        private bool EmbeddedExists(string id)
-        {
-            return _context.Embedded.Any(e => e.Id == id);
         }
     }
 }

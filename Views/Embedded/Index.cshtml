@@ -51,7 +51,7 @@
                         type: 1,
                         title: '添加设备',
                         content: $("#divAddOrUpdate"),
-                        area: ['800px', '600px'],
+                        area: ['700px', '400px'],
                         success: function (index) {
                             $("#hidId").val("");
                             //清空表单数据
@@ -96,7 +96,7 @@
                     type: 1,
                     title: '修改设备',
                     content: $("#divAddOrUpdate"),
-                    area: ['800px', '600px'],
+                    area: ['700px', '400px'],
                     success: function (index) {
                         form.val("dataFrm", data);
                         //url = "employees/updateEmployees.action";
@@ -237,7 +237,7 @@
             </div>
         </div>
         <div class="layui-form-item">
-            <div class="layui-input-block" id="divShow">
+            <div class="layui-input-block" id="divShow" style="text-align:center">
                 <button type="submit" class="layui-btn layui-btn-normal layui-btn-sm layui-icon layui-icon-release" lay-filter="doSubmit" lay-submit="">提交</button>
                 <button type="reset" class="layui-btn layui-btn-warm layui-btn-sm layui-icon layui-icon-refresh">重置</button>
             </div>

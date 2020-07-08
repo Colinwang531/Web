@@ -25,22 +25,56 @@ namespace ShipWeb
         /// </summary>
         public static void Init()
         {
-            Task.Factory.StartNew(state => {
+           var comList= _context.Components.ToList();
+            if (comList.Count==0)
+            {
+                Component();
+            }
+            else
+            {
+                ManagerHelp.Cid = comList[0].Cid;
+            }
+            
+        }
+        /// <summary>
+        /// 组件注册
+        /// </summary>
+        private static void Component() {
+            Task.Factory.StartNew(state =>
+            {
                 //发送组件注册
                 string iditity = Guid.NewGuid().ToString();
+                ManagerHelp.ShipId = Guid.NewGuid().ToString();
                 string name = "组件1";
                 ComponentResponse rep = manager.ComponentStart(iditity, 2, name);
                 if (rep != null && rep.result == 0)
                 {
                     Models.Component model = new Models.Component()
                     {
-                        Cid = rep.cid,
+                        Cid =rep.cid,
                         Id = iditity,
                         Name = name,
-                        Type = 2
+                        Type = Models.Component.ComponentType.WEB,
+                        ShipId = ManagerHelp.ShipId
                     };
                     ManagerHelp.Cid = rep.cid;
+                    ManagerHelp.ComponentType = model.Type;
+
                     _context.Components.Add(model);
+                    _context.SaveChanges();
+                }
+            }, TaskCreationOptions.LongRunning);
+        }
+        /// <summary>
+        /// 心跳查询
+        /// </summary>
+        public static void HeartBeat()
+        {
+            Task.Factory.StartNew(state => {
+                if (!string.IsNullOrEmpty(ManagerHelp.Cid))
+                {
+                    string iditity = Guid.NewGuid().ToString();
+                    ComponentResponse rep = manager.ComponentStart(iditity, (int)ManagerHelp.ComponentType, "", ManagerHelp.Cid);
                 }
             }, TaskCreationOptions.LongRunning);
         }

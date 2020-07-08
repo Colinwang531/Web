@@ -183,7 +183,7 @@ namespace ShipWeb.Controllers
                             _context.EmployeePicture.RemoveRange(picList);
                         }
 
-                        // manager.CrewUpdate(emp, employee.Uid, employee.Id);
+                         //manager.CrewUpdate(emp, employee.Uid, employee.Id);
                         _context.Employee.Update(employee);
                         #endregion
                     }
@@ -205,7 +205,7 @@ namespace ShipWeb.Controllers
                         };
                         Random rb = new Random();
                         //测试数据
-                        string uid = rb.Next(111, 999).ToString();//manager.CrewAdd(emp, identity);
+                        string uid = rb.Next(111, 999).ToString();//manager.CrewAdd(emp, identity);//
                         if (uid != "")
                         {
                             employee.Uid = uid;

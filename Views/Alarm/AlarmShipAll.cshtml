@@ -8,153 +8,143 @@
 <script src="~/lib/jquery/dist/jquery.js"></script>
 <script src="~/layui/layui.js"></script>
 <script type="text/javascript">
-    var page = 1; //设置首页页码
-    var limit = 5; //设置一页显示的条数
-    var total; //总条数
-    $(function () {
-        LoadAlarm();
-        getdate();
-    });
-    function LoadAlarm() {
-        var data = {
-            pageIndex: page,
-            pageSize: limit
-        }
-        $.ajax({
-            url: "/Alarm/LoadAlarm",
-            type: "get",
-            data: data,
-            dataType: "json",
-            contentType: "application/json;charset=utf-8",
-            success: function (res) {
-                if (res.code == 0) {
-                    var tb = res.data;
-                    var sl = res.ship;
-                    if (sl.length > 0) {
-                        var slHtml = '<option value="">请选择</option>';
-                        for (var i = 0; i < sl.length; i++) {
-                            slHtml += '<option value="' + sl[i].id + '">' + sl[i].name + '</option>'
-                        }
-                        $("#slShip").html(slHtml);
-                    }
-                    total = res.count;
-                    LoadHtml(tb);
-                    getPage();
-                }
-            }
+    layui.use(['form', 'table', 'layer', 'laydate'], function (obj) {
+        var $ = layui.$;
+        var table = layui.table;
+        var form = layui.form;
+        var layer = layui.layer;
+        var laydate = layui.laydate;
+        var index = layer.loading; //添加laoding,0-2两种方式       
+        laydate.render({
+            elem: '#dtStartTime',
+            type: 'date'
         });
-    }
-    function LoadHtml(tb) {
-        var html = "";
-        if (tb.length > 0) {
-            for (var i = 0; i < tb.length; i++) {
-                html += '<tr>';
-                html += '<td>' + tb[i].name + '</td>';
-                html += '<td>' + tb[i].time + '</td>';
-                html += '<td>' + tb[i].cid + '</td>';
-                html += '<td>' + tb[i].nickName + '</td>';
-                if (tb[i].type == 1) {
-                    html += '<td><img style="width:800px;height:30px" ondblclick="showBigImage(this)"  src="data:image/jpeg;base64,' + tb[i].picture + '"/></td>';
-                    html += '<td></td>';
-                    html += '<td></td>';
-                    html += '<td></td>';
-                }
-                else if (tb[i].type == 2) {
-                    html += '<td></td>';
-                    html += '<td><img style="width:800px;height:30px"  ondblclick="showBigImage(this)"  src="data:image/jpeg;base64,' + tb[i].picture + '"/></td>';
-                    html += '<td></td>';
-                    html += '<td></td>';
-                } else if (tb[i].type == 3) {
-                    html += '<td></td>';
-                    html += '<td></td>';
-                    html += '<td><img style="width:800px;height:30px" ondblclick="showBigImage(this)"  src="data:image/jpeg;base64,' + tb[i].picture + '"/></td>';
-                    html += '<td></td>';
-                } else {
-                    html += '<td></td>';
-                    html += '<td></td>';
-                    html += '<td></td>';
-                    html += '<td><img style="width:800px;height:30px"  ondblclick="showBigImage(this)" src="data:image/jpeg;base64,' + tb[i].picture + '"/></td>';
-                }
-            }
-        }
-
-        $("#tblist").html(html);
-    }
-    function Query(pageIndex, isRefresh = true) {
-        var cid = $("#txtUid").val();
-        var name = $("#txtName").val();
-        var type = $("#slType").val();
-        var startTime = $("#dtStartTime").val();
-        var endTime = $("#dtEndTime").val();
-        var shipId = $("#slShip").val();
-        var data = {
-            shipId: shipId,
-            cid: cid,
-            name: name,
-            type: parseInt(type),
-            startTime: startTime,
-            endTime: endTime,
-            pageIndex: pageIndex,
-            pageSize: limit
-        }
-        $.ajax({
-            url: "/Alarm/SearchAlarm",
-            data: {
-                searchModel: JSON.stringify(data)
+        laydate.render({
+            elem: '#dtEndTime',
+            type: 'date'
+        });
+        //第一个实例
+        table.render({
+            elem: '#alarmTable',
+            loading: true, //翻页加loading
+            url: "/Alarm/LoadAlarm", //数据接口
+            request: {
+                pageName: 'pageIndex',//页码的参数名称，默认：page
+                limitName: 'pageSize' //每页数据量的参数名，默认：limit
             },
-            type: "get",
-            dataType: "json",
-            contentType: "application/json;chartset=utf-8",
-            success: function (res) {
-                if (res.code == 0) {
-                    total = res.count;
-                    var tb = res.data;
-                    LoadHtml(tb);
-                    if (isRefresh) {
-                        getPage();
+            cols: [[
+                { field: 'name', title: '船舶', width: 100 },
+                { field: 'time', title: '报警时间', width: 180 },
+                { field: 'cid', title: '摄像机编号', width: 120 },
+                { field: 'nickName', title: '摄像机名称', width: 150 },
+                {
+                    field: 'type', title: '睡觉', width: 150, templet: function (e) {
+                        if (e.type == 1) {                            
+                            var id = "sleep" + e.LAY_INDEX;
+                            var url = Drawing(e.picture, e.w, e.h, e.x, e.y, id);
+                            return LoadImg(id);
+                           
+                        } else return "";
+                    }
+                },
+                {
+                    field: 'type', title: '打架', width: 150, templet: function (e) {
+                        if (e.type == 2) {
+                            var id = "fight" + e.LAY_INDEX;
+                            var url = Drawing(e.picture, e.w, e.h, e.x, e.y, id);
+                            return LoadImg(id);
+                        } else return "";
+                    }
+                },
+                {
+                    field: 'type', title: '安全帽', width: 150, templet: function (e) {
+                        if (e.type == 3) {
+                            var id = "helmet" + e.LAY_INDEX;
+                            var url = Drawing(e.picture, e.w, e.h, e.x, e.y, id);
+                            return LoadImg(id);
+                        } else return "";
+                    }
+                },
+                {
+                    field: 'type', title: '手机', width: 150, templet: function (e) {
+                        if (e.type == 4) {
+                            var id = "phone" + e.LAY_INDEX;
+                            var url = Drawing(e.picture, e.w, e.h, e.x, e.y, id);
+                            return LoadImg(id);
+                        } else return "";
                     }
                 }
+            ]],
+            limit: 10,
+            limits: [10, 20, 30, 40, 50],
+            page: {
+                groups: 5 //只显示 5 个连续页码
+            }, done: function (res) {
+                var sl = res.ship;
+                if (sl.length > 0) {
+                    var slHtml = '<option value="">请选择</option>';
+                    for (var i = 0; i < sl.length; i++) {
+                        slHtml += '<option value="' + sl[i].id + '">' + sl[i].name + '</option>'
+                    }
+                    $("#slShip").html(slHtml);
+                }
+                form.render()//表单重新渲染，要不然添加完显示不出来新的option
+                //返回数据执行回调函数
+                layer.close(index);
+                //返回数据关闭loading
             }
-        })
-    }
-    //时间控件
-    function getdate() {
-        layui.use('laydate', function () {
-            var laydate = layui.laydate;
-            var layer = layui.layer;
-            laydate.render({
-                elem: '#dtStartTime',
-                type: 'date'
-            });
         });
-        layui.use('laydate', function () {
-            var laydate = layui.laydate;
-            var layer = layui.layer;
-            laydate.render({
-                elem: '#dtEndTime',
-                type: 'date'
-            });
-        })
-    };
-    //分页处理
-    function getPage() {
-        layui.use('laypage', function () {
-            var laypage = layui.laypage;
-            var layer = layui.layer;
-            laypage.render({
-                elem: 'pages',
-                count: total, //数据总数，从服务端得到
-                limit: limit,
-                jump: function (obj, first) {
-                    page = obj.curr; //改变当前页码
-                    limit = obj.limit;
-                    if (!first) {
-                        Query(page, false);
-                    }
+        function LoadImg(id) {
+            //var html = '<img style="width:800px;height:30px" ondblclick="showBigImage(this)"  src="data:image/jpeg;base64,' + pic + '"/>';
+            var html = '<img style="width:200px;height:30px" id="' + id + '" ondblclick="showBigImage(this)" />';
+            return html;
+        }
+        form.on("submit(query)", function (obj) {
+            var data = {
+                shipId: obj.field.ship,
+                cid: obj.field.cid,
+                name: obj.field.name,
+                type: parseInt(obj.field.type),
+                startTime: obj.field.startTime,
+                endTime: obj.field.endTime
+            }
+            table.reload('alarmTable', {
+                url: "/Alarm/SearchAlarm",
+                where: {
+                    searchModel: JSON.stringify(data)
+                },
+                request: {
+                    pageName: 'pageIndex',//页码的参数名称，默认：page
+                    limitName: 'pageSize' //每页数据量的参数名，默认：limit
+                },
+                page: {
+                    curr: 1
+                },
+                done: function (res) {
+                    form.render();
                 }
             });
+            return false;
         });
-    }
+
+
+        function Drawing(pic, w, h, x, y,imgId) {
+            var canvas = document.createElement("canvas");
+            var cxt = canvas.getContext("2d");
+            var img = new Image();
+            img.src = "data:image/jpeg;base64," + pic;
+            img.onload = function () {
+                canvas.width = this.width;
+                canvas.height = this.height;
+                cxt.drawImage(this, 0, 0, this.width, this.height);
+                cxt.strokeStyle = "red"; // 图形边框的样式
+                cxt.lineWidth = 2; // 设置图形边框的宽度
+                cxt.strokeRect(x, y, w, h); // 绘制矩形边框
+                var imgData = canvas.toDataURL("image/jpeg");
+                $('#' + imgId).attr("src", imgData);
+            }
+        }
+    });
     function showBigImage(e) {
         layui.use('layer', function () { //独立版的layer无需执行这一句
             var $ = layui.jquery, layer = layui.layer; //独立版的layer无需执行这一句
@@ -175,53 +165,44 @@
         });
     }
 </script>
+<div style="margin:20px;width:96%">
+    <form class="layui-form" action="" id="dataFrm" lay-filter="dataFrm">
+        <div class="layui-form-item">
+            <label class="layui-form-label">编号</label>
+            <div class="layui-input-inline" style="width:100px">
+                <input name="cid" class="layui-input" type="text" placeholder="请输入" autocomplete="off">
+            </div>
+            <label class="layui-form-label">名称</label>
+            <div class="layui-input-inline" style="width:100px">
+                <input name="name" class="layui-input" type="text" placeholder="请输入" autocomplete="off">
+            </div>
+            <label class="layui-form-label">类型</label>
+            <div class="layui-input-inline">
+                <select name="type" style="width:100px">
+                    <option value="0">请选择</option>
+                    <option value="1">睡觉</option>
+                    <option value="2">打架</option>
+                    <option value="3">安全帽</option>
+                    <option value="4">手机</option>
+                </select>
+            </div>
 
-<div id="divAlarm" style="margin:20px;width:96%">
-    <div class="layui-form-item">
-        <label class="layui-form-label">编号</label>
-        <div class="layui-input-inline" style="width:100px">
-            <input id="txtUid" class="layui-input" type="text" placeholder="请输入" autocomplete="off" lay-verify="required">
+            <label class="layui-form-label">船舶</label>
+            <div class="layui-input-inline">
+                <select name="ship"id="slShip" style="width:100px">
+                </select>
+            </div>
+
+            <label class="layui-form-label">时间起</label>
+            <div class="layui-input-inline" style="width:100px">
+                <input name="startTime" class="layui-input" id="dtStartTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off">
+            </div>
+            <label class="layui-form-label">时间止</label>
+            <div class="layui-input-inline" style="width:100px">
+                <input name="endTime" class="layui-input" id="dtEndTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off">
+            </div>
+            <button class="layui-btn" type="submit" lay-submit="" lay-filter="query">查询</button>
         </div>
-        <label class="layui-form-label">名称</label>
-        <div class="layui-input-inline" style="width:100px">
-            <input id="txtName" class="layui-input" type="text" placeholder="请输入" autocomplete="off" lay-verify="required">
-        </div>
-        <label class="layui-form-label">类型</label>
-        <select id="slType" class="layui-form-label" style="width:100px">
-            <option value="0">请选择</option>
-            <option value="1">睡觉</option>
-            <option value="2">打架</option>
-            <option value="3">安全帽</option>
-            <option value="4">手机</option>
-        </select>
-        <label class="layui-form-label">船舶</label>
-        <select id="slShip" class="layui-form-label" style="width:100px">
-        </select>
-        <label class="layui-form-label">时间起</label>
-        <div class="layui-input-inline" style="width:100px">
-            <input name="date" class="layui-input" id="dtStartTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off">
-        </div>
-        <label class="layui-form-label">时间止</label>
-        <div class="layui-input-inline" style="width:100px">
-            <input name="date" class="layui-input" id="dtEndTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off">
-        </div>
-        <button class="layui-btn" type="submit" onclick="Query(1)">查询</button>
-    </div>
-    <table class="layui-table">
-        <thead>
-            <tr>
-                <th style="width:180px">船舶</th>
-                <th style="width:180px">报警时间</th>
-                <th style="width:120px">摄像机编号</th>
-                <th style="width:150px">摄像机名称</th>
-                <th>睡觉</th>
-                <th>打架</th>
-                <th>安全帽</th>
-                <th>手机</th>
-            </tr>
-        </thead>
-        <tbody id="tblist">
-        </tbody>
-    </table>
-    <div id="pages" class="center"></div>
+    </form>
+    <table class="layui-table" id="alarmTable" layer-filter="alarmTable"></table>
 </div>

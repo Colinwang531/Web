@@ -33,7 +33,7 @@ namespace ShipWeb.ProtoBuffer
         /// 发送组件注册请求
         /// </summary>
         /// <returns>组件ID</returns>
-        public ComponentResponse ComponentStart(string identity, int type = 2, string name = "组件1")
+        public ComponentResponse ComponentStart(string identity, int type = 2, string name = "组件1",string cid="")
         {
             ComponentResponse retult = new ComponentResponse();
             dealer.Options.Identity = Encoding.Unicode.GetBytes(identity);
@@ -56,6 +56,7 @@ namespace ShipWeb.ProtoBuffer
                     }
                 }
             };
+            if (!string.IsNullOrEmpty(cid))  msg.component.componentrequest.componentinfo.cid = cid;
             if (type == 1) msg.component.componentrequest.componentinfo.type = ComponentInfo.Type.XMQ;
             if (type == 3) msg.component.componentrequest.componentinfo.type = ComponentInfo.Type.HKD;
             if (type == 4) msg.component.componentrequest.componentinfo.type = ComponentInfo.Type.DHD;

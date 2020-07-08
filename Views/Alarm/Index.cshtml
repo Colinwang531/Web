@@ -11,8 +11,193 @@
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <script src="~/layui/layui.js"></script>
 <script type="text/javascript">
+    layui.use(['form', 'table', 'layer', 'laydate'], function (obj) {
+        var $ = layui.$;
+        var table = layui.table;
+        var form = layui.form;
+        var layer = layui.layer;
+        var laydate = layui.laydate;
+        var index = layer.loading; //添加laoding,0-2两种方式
+        laydate.render({
+            elem: '#dtStartTime',
+            type: 'date'
+        });
+        laydate.render({
+            elem: '#dtEndTime',
+            type: 'date'
+        });
+        //第一个实例
+        table.render({
+            elem: '#alarmTable',
+            loading: true, //翻页加loading
+            url: "/Alarm/Load", //数据接口
+            request: {
+                pageName: 'pageIndex',//页码的参数名称，默认：page
+                limitName: 'pageSize' //每页数据量的参数名，默认：limit
+            },
+            cols: [[
+                { field: 'time', title: '报警时间', width: 180 },
+                { field: 'cid', title: '摄像机编号', width: 120 },
+                { field: 'nickName', title: '摄像机名称', width: 150 },
+                {
+                    field: 'type', title: '睡觉', width: 150, templet: function (e) {
+                        if (e.type == 1) {
+                            var id = "sleep" + e.LAY_INDEX;
+                            var url = Drawing(e.picture, e.w, e.h, e.x, e.y, id);
+                            return LoadImg(id);
+
+                        } else return "";
+                    }
+                },
+                {
+                    field: 'type', title: '打架', width: 150, templet: function (e) {
+                        if (e.type == 2) {
+                            var id = "fight" + e.LAY_INDEX;
+                            var url = Drawing(e.picture, e.w, e.h, e.x, e.y, id);
+                            return LoadImg(id);
+                        } else return "";
+                    }
+                },
+                {
+                    field: 'type', title: '安全帽', width: 150, templet: function (e) {
+                        if (e.type == 3) {
+                            var id = "helmet" + e.LAY_INDEX;
+                            var url = Drawing(e.picture, e.w, e.h, e.x, e.y, id);
+                            return LoadImg(id);
+                        } else return "";
+                    }
+                },
+                {
+                    field: 'type', title: '手机', width: 150, templet: function (e) {
+                        if (e.type == 4) {
+                            var id = "phone" + e.LAY_INDEX;
+                            var url = Drawing(e.picture, e.w, e.h, e.x, e.y, id);
+                            return LoadImg(id);
+                        } else return "";
+                    }
+                }
+            ]],
+            limit: 10,
+            limits: [10, 20, 30, 40, 50],
+            page: {
+                groups: 5 //只显示 5 个连续页码
+            }, done: function (res) {
+                //返回数据执行回调函数
+                layer.close(index);
+                //返回数据关闭loading
+            }
+        });
+        function LoadImg(id) {
+            //var html = '<img style="width:800px;height:30px" ondblclick="showBigImage(this)"  src="data:image/jpeg;base64,' + pic + '"/>';
+            var html = '<img style="width:200px;height:30px" id="' + id + '" ondblclick="showBigImage(this)" />';
+            return html;
+        }
+        form.on("submit(query)", function (obj) {
+            var data = {
+                cid: obj.field.cid,
+                name: obj.field.name,
+                type: parseInt(obj.field.type),
+                startTime: obj.field.startTime,
+                endTime: obj.field.endTime
+            }
+            table.reload('alarmTable', {
+                url: "/Alarm/QueryPage",
+                where:data,
+                request: {
+                    pageName: 'pageIndex',//页码的参数名称，默认：page
+                    limitName: 'pageSize' //每页数据量的参数名，默认：limit
+                },
+                page: {
+                    curr: 1
+                },
+                done: function (res) {
+                    form.render();
+                }
+            });
+            return false;
+        });
+
+
+        function Drawing(pic, w, h, x, y, imgId) {
+            var canvas = document.createElement("canvas");
+            var cxt = canvas.getContext("2d");
+            var img = new Image();
+            img.src = "data:image/jpeg;base64," + pic;
+            img.onload = function () {
+                canvas.width = this.width;
+                canvas.height = this.height;
+                cxt.drawImage(this, 0, 0, this.width, this.height);
+                cxt.strokeStyle = "red"; // 图形边框的样式
+                cxt.lineWidth = 2; // 设置图形边框的宽度
+                cxt.strokeRect(x, y, w, h); // 绘制矩形边框
+                var imgData = canvas.toDataURL("image/jpeg");
+                $('#' + imgId).attr("src", imgData);
+            }
+        }
+    });
+    function showBigImage(e) {
+        layui.use('layer', function () { //独立版的layer无需执行这一句
+            var $ = layui.jquery, layer = layui.layer; //独立版的layer无需执行这一句
+            var x = document.documentElement.clientWidth / 6;
+            var y = document.documentElement.clientHeight / 6;
+            var windowW = 960;
+            var windowH = 540;
+            layer.open({
+                type: 1,
+                offset: [y + "px", x + "px"],
+                title: false,
+                closeBtn: true,
+                id: 'LAY_layuipro',
+                shadeClose: true, //点击阴影关闭
+                area: [windowW + 'px', windowH + 'px'], //宽高
+                content: "<img style=\"position: absolute;width:100%;height:100%\" src=" + $(e).attr('src') + " />"
+            });
+        });
+    }
+</script>
+<div style="margin:20px;width:96%">
+    <form class="layui-form" action="" id="dataFrm" lay-filter="dataFrm">
+        <div class="layui-form-item">
+            <label class="layui-form-label">编号</label>
+            <div class="layui-input-inline" style="width:100px">
+                <input name="cid" class="layui-input" type="text" placeholder="请输入" autocomplete="off">
+            </div>
+            <label class="layui-form-label">名称</label>
+            <div class="layui-input-inline" style="width:100px">
+                <input name="name" class="layui-input" type="text" placeholder="请输入" autocomplete="off">
+            </div>
+            <label class="layui-form-label">类型</label>
+            <div class="layui-input-inline">
+                <select name="type" style="width:100px">
+                    <option value="0">请选择</option>
+                    <option value="1">睡觉</option>
+                    <option value="2">打架</option>
+                    <option value="3">安全帽</option>
+                    <option value="4">手机</option>
+                </select>
+            </div>
+
+            <label class="layui-form-label">时间起</label>
+            <div class="layui-input-inline" style="width:100px">
+                <input name="startTime" class="layui-input" id="dtStartTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off">
+            </div>
+            <label class="layui-form-label">时间止</label>
+            <div class="layui-input-inline" style="width:100px">
+                <input name="endTime" class="layui-input" id="dtEndTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off">
+            </div>
+            <button class="layui-btn" type="submit" lay-submit="" lay-filter="query">查询</button>
+        </div>
+    </form>
+    <table class="layui-table" id="alarmTable" layer-filter="alarmTable"></table>
+</div>
+
+
+
+
+
+@*<script type="text/javascript">
     var page = 1; //设置首页页码
-    var limit = 5; //设置一页显示的条数
+    var limit = 13; //设置一页显示的条数
     var total; //总条数
     $(document).ready(function () {
         loadData();
@@ -20,6 +205,8 @@
     });
     //初使化
     function loadData() {
+        var dt = new Date();
+        console.log("请求后台开始" + dt);
         $.ajax({
             url: "/Alarm/Load",
             type: "get",
@@ -30,6 +217,8 @@
             dataType: "json",
             contentType: "application/json;charset=utf-8",
             success: function (res) {
+                var dt1 = new Date();
+                console.log("已经获取数据" + dt1);
                 if (res.code == 0) {
                     var tb = res.data;
                     total = res.count;
@@ -210,4 +399,4 @@
         </tbody>
     </table>
     <div id="pages" class="center"></div>
-</div>
+</div>*@

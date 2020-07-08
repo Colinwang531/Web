@@ -42,27 +42,44 @@ namespace ShipWeb.Controllers
         {
             try
             {
-                string time=DateTime.Now.ToString();
-                //查询摄像机名称及其报警类型
-                var data = from a in _context.Alarm
-                            join b in _context.AlarmInformation on a.Id equals b.AlarmId
-                            join c in _context.Camera on b.Cid equals c.Cid
-                            join d in _context.AlarmInformationPosition on b.Id equals d.AlarmInformationId
-                            where a.ShipId==b.Shipid&&b.Shipid==c.ShipId&&c.ShipId==d.ShipId
-                            where b.Type != 5 && a.ShipId==ManagerHelp.ShipId
-                            select new
-                            {
-                                a.Time,
-                                Picture = ManagerHelp.DrawAlarm(a.Picture, d.X, d.Y, d.W, d.H),
-                                b.Cid,
-                                b.Type,
-                                c.NickName,
-                                b.Id,
-                                b.AlarmId
-                            };
-                string endtime = DateTime.Now.ToString();
-                int count = data.ToList().Count;
-                var dataPage = data.Skip((pageIndex - 1) * pageSize).Take(pageSize);
+                //取出报警表中指定条数的数据
+                var alarm = (from a in _context.Alarm
+                             join b in _context.AlarmInformation on a.Id equals b.AlarmId
+                             where b.Type != 5 && a.ShipId == ManagerHelp.ShipId
+                             select new
+                             {
+                                 b.Id,
+                                 a.Time,
+                                 a.Picture,
+                                 b.Type,
+                                 b.Cid,
+                                 a.ShipId
+                             }).ToList();
+                //获取报警信息表ID
+                var infoIds = string.Join(',', alarm.Select(c => c.Id));
+                ///获取报像机ID
+                var cids = string.Join(',', alarm.Select(c => c.Cid));
+                var camera = _context.Camera.Where(c => cids.Contains(c.Cid)).ToList();
+                //给报警图片加上位置
+                var pics = _context.AlarmInformationPosition.Where(c => infoIds.Contains(c.AlarmInformationId)).ToList();
+                //组合数据
+                var dataPage = (from a in alarm
+                           join b in pics on a.Id equals b.AlarmInformationId
+                           join c in camera on a.Cid equals c.Cid
+                           select new
+                           {
+                               Time = a.Time.ToString("yyyy-MM-dd HH:mm:ss"),
+                               c.Cid,
+                               c.NickName,
+                               a.Type,
+                               Picture = Convert.FromBase64String(Encoding.UTF8.GetString(a.Picture)),
+                               b.X,
+                               b.Y,
+                               b.W,
+                               b.H
+                           }).Skip((pageIndex-1)*pageSize).Take(pageSize);
+
+                int count = alarm.Count;              
                 var result = new
                 {
                     code = 0,
@@ -92,33 +109,16 @@ namespace ShipWeb.Controllers
             try
             {
                 var data = from a in _context.Alarm
-                           join b in _context.AlarmInformation on a.Id equals b.AlarmId
-                           join c in _context.Camera on b.Cid equals c.Cid
-                           join d in _context.AlarmInformationPosition on b.Id equals d.AlarmInformationId
-                           where a.ShipId == b.Shipid && b.Shipid == c.ShipId && c.ShipId == d.ShipId
-                           where b.Type!=5 && a.ShipId==ManagerHelp.ShipId
+                            join b in _context.AlarmInformation on a.Id equals b.AlarmId
+                            where (type > 0 ? b.Type == type : 1 == 1) && a.ShipId == ManagerHelp.ShipId && b.Type != 5
                            select new
-                           {
-                               a.Time,
-                               Picture = ManagerHelp.DrawAlarm(a.Picture,d.X,d.Y,d.W,d.H),
-                               b.Cid,
-                               b.Type,
-                               c.NickName,
-                               a.Id,
-                               b.AlarmId
-                           };
-                if (!string.IsNullOrEmpty(cid))
-                {
-                    data = data.Where(c => c.Cid == cid);
-                }
-                if (!string.IsNullOrEmpty(name))
-                {
-                    data = data.Where(c => c.NickName.Contains(name));
-                }
-                if (type > 0)
-                {
-                    data = data.Where(c => c.Type == type);
-                }
+                            {
+                                a.Time,
+                                a.Picture,
+                                b.Type,
+                                b.Cid,
+                                b.Id
+                            };
                 if (!(string.IsNullOrEmpty(startTime)) && !(string.IsNullOrEmpty(endTime)))
                 {
                     DateTime dtStart = DateTime.Parse(startTime);
@@ -135,8 +135,41 @@ namespace ShipWeb.Controllers
                     DateTime dtEnd = DateTime.Parse(endTime);
                     data = data.Where(c => c.Time <= dtEnd);
                 }
-                int count = data.ToList().Count();
-                var pageList = data.Skip((pageIndex - 1) * pageSize).Take(pageSize);
+                var alarm = data.ToList();
+                //获取报警信息表ID
+                var infoIds = string.Join(',', data.Select(c => c.Id));
+                ///获取报像机ID
+                var cids = string.Join(',', data.Select(c => c.Cid));
+                //给报警图片加上位置
+                var pics = _context.AlarmInformationPosition.Where(c => infoIds.Contains(c.AlarmInformationId)).ToList();
+                //查询摄像机信息
+                var camera = _context.Camera.Where(c => (!string.IsNullOrEmpty(cid) ? c.Cid == cid : 1 == 1) &&
+                                    (!string.IsNullOrEmpty(name) ? c.NickName.Contains(name) : 1 == 1) && cids.Contains(c.Cid)).ToList();
+
+                //组合数据
+                var pageList = (from a in alarm
+                                join b in pics on a.Id equals b.AlarmInformationId
+                               join c in camera on a.Cid equals c.Cid
+                               select new
+                               {
+                                   Time = a.Time.ToString("yyyy-MM-dd HH:mm:ss"),
+                                   a.Type,
+                                   a.Cid,
+                                   c.NickName,
+                                   Picture = Convert.FromBase64String(Encoding.UTF8.GetString(a.Picture)),
+                                   b.X,
+                                   b.Y,
+                                   b.W,
+                                   b.H
+                               }).Skip((pageIndex-1)*pageSize).Take(pageSize);
+                //查询总条数
+                var total = from a in alarm
+                            join b in camera on a.Cid equals b.Cid
+                            select new
+                            {
+                                a.Id
+                            };                
+                int count = total.Count();
                 var result = new
                 {
                     code = 0,
@@ -157,13 +190,7 @@ namespace ShipWeb.Controllers
         public IActionResult LoadAlarm(int pageIndex, int pageSize)
         {
             try
-            {
-                SearchAlarmViewModel model = new SearchAlarmViewModel()
-                {
-                    PageIndex = pageIndex,
-                    PageSize = pageSize
-                };
-                DateTime dts = DateTime.Now;
+            {                
                 //取出报警表中指定条数的数据
                 var alarm = (from a in _context.Alarm
                              join b in _context.AlarmInformation on a.Id equals b.AlarmId
@@ -177,131 +204,122 @@ namespace ShipWeb.Controllers
                                  b.Cid,
                                  a.ShipId
                              }).ToList();
+               
                 var infoIds = string.Join(',', alarm.Select(c => c.Id));
                 var cids = string.Join(',', alarm.Select(c => c.Cid));
                 var shipIds = string.Join(',', alarm.Select(c => c.ShipId));
-                var alarmInfoPos = _context.AlarmInformationPosition.Where(c => infoIds.Contains(c.AlarmInformationId)).ToList();
                 var camera = _context.Camera.Where(c => cids.Contains(c.Cid)).ToList();
                 var ship = _context.Ship.Where(c => shipIds.Contains(c.Id)).ToList();
-                var data = (from a in alarm
-                            join c in alarmInfoPos on a.Id equals c.AlarmInformationId
-                            join d in camera on a.Cid equals d.Cid
+
+                var pics = _context.AlarmInformationPosition.Where(c => infoIds.Contains(c.AlarmInformationId)).ToList();
+                var pageList = (from a in alarm
+                            join b in pics on a.Id equals b.AlarmInformationId
+                            join c in camera on a.Cid equals c.Cid
                             join e in ship on a.ShipId equals e.Id
                             select new
                             {
                                 e.Name,
-                                a.ShipId,
-                                a.Time,
-                                Picture = ManagerHelp.DrawAlarm(a.Picture, c.X, c.Y, c.W, c.H),
+                                Time = a.Time.ToString("yyyy-MM-dd HH:mm:ss"),
                                 a.Cid,
                                 a.Type,
-                                d.NickName,
-                            }).AsParallel();
-                int count = data.Count();
-                var pageList = data.Skip((pageIndex - 1) * pageSize).Take(pageSize);
-                DateTime dte = DateTime.Now;
+                                c.NickName,
+                                Picture = Convert.FromBase64String(Encoding.UTF8.GetString(a.Picture)),
+                                b.X,
+                                b.Y,
+                                b.W,
+                                b.H
+                            }).Skip((pageIndex-1)*pageSize).Take(pageSize); 
                 var result = new
                 {
                     code = 0,
                     data = pageList,
-                    ship = _context.Ship.ToList(),
-                    pageIndex = model.PageIndex,
-                    pageSize = model.PageSize,
-                    count = count
-                };
+                    ship = _context.Ship,
+                    pageIndex = pageIndex,
+                    pageSize = pageSize,
+                    count = alarm.Count()
+                };            
                 return new JsonResult(result);
             }
             catch (Exception ex)
             {
                 return new JsonResult(new { code = 1, msg = "查询失败" + ex.Message });
             }
+
         }
-        public IActionResult SearchAlarm(string searchModel)
+        public IActionResult SearchAlarm(string searchModel, int pageIndex, int pageSize)
         {
             var model = JsonConvert.DeserializeObject<SearchAlarmViewModel>(searchModel);
-            int count = 0;
-            var pageList = Search(model, out count);
+            var data = from a in _context.Alarm
+                       join b in _context.AlarmInformation on a.Id equals b.AlarmId
+                       join c in _context.Ship on a.ShipId equals c.Id
+                       where (model.Type > 0 ? b.Type == model.Type : 1 == 1) && (!string.IsNullOrEmpty(model.ShipId) ? c.Id == model.ShipId : 1 == 1) && b.Type != 5
+                       select new
+                       {
+                           a.Time,
+                           c.Name,
+                           a.Picture,
+                           b.Type,
+                           b.Cid,
+                           b.Id
+                       };
+            if (!(string.IsNullOrEmpty(model.StartTime)) && !(string.IsNullOrEmpty(model.EndTime)))
+            {
+                DateTime dtStart = DateTime.Parse(model.StartTime);
+                DateTime dtEnd = DateTime.Parse(model.EndTime);
+                data = data.Where(c => c.Time >= dtStart && c.Time <= dtEnd);
+            }
+            else if (!(string.IsNullOrEmpty(model.StartTime)))
+            {
+                DateTime dtStart = DateTime.Parse(model.StartTime);
+                data = data.Where(c => c.Time >= dtStart);
+            }
+            else if (!(string.IsNullOrEmpty(model.EndTime)))
+            {
+                DateTime dtEnd = DateTime.Parse(model.EndTime);
+                data = data.Where(c => c.Time <= dtEnd);
+            }
+            var alarm = data.ToList();
+            ///获取报像机ID
+            var cids = string.Join(',', alarm.Select(c => c.Cid));
+            var infoIds = string.Join(',', alarm.Select(c => c.Id));
+            //查询摄像机信息
+            var camera = _context.Camera.Where(c => (!string.IsNullOrEmpty(model.Cid) ? c.Cid == model.Cid : 1 == 1) &&
+                                (!string.IsNullOrEmpty(model.Name) ? c.NickName.Contains(model.Name) : 1 == 1) && cids.Contains(c.Cid)).ToList();
+
+            //给报警图片加上位置
+            var pics = _context.AlarmInformationPosition.Where(c => infoIds.Contains(c.AlarmInformationId)).ToList();
+            //组合数据
+            var pageList = (from a in alarm
+                            join b in pics on a.Id equals b.AlarmInformationId
+                            join c in camera on a.Cid equals c.Cid
+                            select new
+                            {
+                                Time=a.Time.ToString("yyyy-MM-dd HH:mm:ss"),
+                                a.Name,
+                                c.Cid,
+                                c.NickName,
+                                a.Type,
+                                Picture = Convert.FromBase64String(Encoding.UTF8.GetString(a.Picture)) ,
+                                b.X,
+                                b.Y,
+                                b.W,
+                                b.H
+                            }).Skip((pageIndex - 1) * pageSize).Take(pageSize);
+            var total = from a in alarm
+                        join b in camera on a.Cid equals b.Cid
+                        select new
+                        {
+                            a.Id
+                        };
             var result = new
             {
                 code = 0,
                 data = pageList,
-                pageIndex = model.PageIndex,
-                pageSize = model.PageSize,
-                count = count
+                pageIndex = pageIndex,
+                pageSize = pageSize,
+                count = total.Count()
             };
             return new JsonResult(result);
         }
-        private List<AlarmViewModel> Search(SearchAlarmViewModel model, out int count)
-        {
-            var data = from a in _context.Alarm
-                       join b in _context.AlarmInformation on a.Id equals b.AlarmId
-                       join c in _context.Camera on b.Cid equals c.Cid
-                       join d in _context.AlarmInformationPosition on b.Id equals d.AlarmInformationId
-                       join e in _context.Ship on a.ShipId equals e.Id
-                       where a.ShipId == b.Shipid && b.Shipid == c.ShipId && c.ShipId == d.ShipId && e.Id == a.ShipId && b.Type != 5
-                       select new
-                       {
-                           e.Name,
-                           a.ShipId,
-                           a.Time,
-                           Picture = ManagerHelp.DrawAlarm(a.Picture, d.X, d.Y, d.W, d.H),
-                           b.Cid,
-                           b.Type,
-                           c.NickName,
-                       };
-            if (model != null)
-            {
-                if (!string.IsNullOrEmpty(model.Cid))
-                {
-                    data = data.Where(c => c.Cid == model.Cid);
-                }
-                if (!string.IsNullOrEmpty(model.ShipId))
-                {
-                    data = data.Where(c => c.ShipId == model.ShipId);
-                }
-                if (!string.IsNullOrEmpty(model.Name))
-                {
-                    data = data.Where(c => c.NickName.Contains(model.Name));
-                }
-                if (model.Type > 0)
-                {
-                    data = data.Where(c => c.Type == model.Type);
-                }
-                if (!(string.IsNullOrEmpty(model.StartTime)) && !(string.IsNullOrEmpty(model.EndTime)))
-                {
-                    DateTime dtStart = DateTime.Parse(model.StartTime);
-                    DateTime dtEnd = DateTime.Parse(model.EndTime);
-                    data = data.Where(c => c.Time >= dtStart && c.Time <= dtEnd);
-                }
-                else if (!(string.IsNullOrEmpty(model.StartTime)))
-                {
-                    DateTime dtStart = DateTime.Parse(model.StartTime);
-                    data = data.Where(c => c.Time >= dtStart);
-                }
-                else if (!(string.IsNullOrEmpty(model.EndTime)))
-                {
-                    DateTime dtEnd = DateTime.Parse(model.EndTime);
-                    data = data.Where(c => c.Time <= dtEnd);
-                }
-            }
-            count = data.Count();
-            var queryList = data.Skip((model.PageIndex - 1) * model.PageSize).Take(model.PageSize).ToList();
-            List<AlarmViewModel> list = new List<AlarmViewModel>();
-            foreach (var item in queryList)
-            {
-                AlarmViewModel vmodel = new AlarmViewModel()
-                {
-                    Name = item.Name,
-                    NickName = item.NickName,
-                    Picture = item.Picture,
-                    Time = item.Time,
-                    Cid = item.Cid,
-                    Type = item.Type
-                };
-                list.Add(vmodel);
-            }
-            return list;
-        }
-       
     }
 }

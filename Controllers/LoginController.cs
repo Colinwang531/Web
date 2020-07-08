@@ -38,6 +38,10 @@ namespace ShipWeb.Controllers
         /// <returns></returns>
         public IActionResult UserLogin(string name,string password)
         {
+            if (string.IsNullOrEmpty(ManagerHelp.Cid))
+            {
+                return new JsonResult(new { code = 1, msg = "组件还在自动注册中，请稍等" });
+            }
             var usersModel = _context.Users.FirstOrDefault(u => u.Name == name && u.Password == MD5Help.MD5Encrypt(password));
             if (usersModel == null)
             {
@@ -45,6 +49,7 @@ namespace ShipWeb.Controllers
             }
             else
             {
+
                 //保存登陆的用户ID
                 HttpContext.Session.Set("uid", Encoding.UTF8.GetBytes(usersModel.Uid));
                 //保存用户可操作的权限 admin 最高权限

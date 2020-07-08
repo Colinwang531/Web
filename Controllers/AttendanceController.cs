@@ -36,16 +36,19 @@ namespace ShipWeb.Controllers
                            join c in _context.CameraConfig on b.Cid equals c.Cid
                            join d in _context.Employee on b.Uid equals d.Uid
                            join e in _context.AlarmInformationPosition on b.Id equals e.AlarmInformationId
-                           where a.ShipId==b.Shipid&&b.Shipid==c.ShipId&&c.ShipId==d.ShipId&&d.ShipId==e.ShipId
                            where b.Type==5 && a.ShipId==ManagerHelp.ShipId
                            select new
                            {
                                d.Uid,
                                d.Name,
-                               a.Time,
+                               Time = a.Time.ToString("yyyy-MM-dd HH:mm:ss"),
                                c.EnableAttendanceIn,
                                c.EnableAttendanceOut,
-                               Picture =ManagerHelp.DrawAlarm(a.Picture,e.X,e.Y,e.W,e.H),
+                               Picture = Convert.FromBase64String(Encoding.UTF8.GetString(a.Picture)),
+                               e.X,
+                               e.Y,
+                               e.W,
+                               e.H
                            };
                 var list = data.ToList();
                 int count = list.Count;
@@ -83,7 +86,6 @@ namespace ShipWeb.Controllers
                            join c in _context.CameraConfig on b.Cid equals c.Cid
                            join d in _context.Employee on b.Uid equals d.Uid
                            join e in _context.AlarmInformationPosition on b.Id equals e.AlarmInformationId
-                           where a.ShipId == b.Shipid && b.Shipid == c.ShipId && c.ShipId == d.ShipId && d.ShipId == e.ShipId
                            where b.Type == 5 && a.ShipId == ManagerHelp.ShipId
                            select new
                            {
@@ -92,7 +94,11 @@ namespace ShipWeb.Controllers
                                a.Time,
                                c.EnableAttendanceIn,
                                c.EnableAttendanceOut,
-                               Picture = ManagerHelp.DrawAlarm(a.Picture, e.X, e.Y, e.W, e.H),
+                               Picture = Convert.FromBase64String(Encoding.UTF8.GetString(a.Picture)),
+                               e.X,
+                               e.Y,
+                               e.W,
+                               e.H
                            };
                 if (!string.IsNullOrEmpty(uid))
                 {

@@ -14,17 +14,32 @@ namespace ShipWeb.Tool
         private static ManagerHelp _manager = null;
         //船ID
         public static string ShipId = "";
-        //摄像机ID
-        public static string Cid = "5555";
-        //是否显示返回陆地端菜单
+        /// <summary>
+        /// 保存组件ID文件夹
+        /// </summary>
+        public static string path = AppContext.BaseDirectory + "/Component.txt";
+        /// <summary>
+        /// 组件ID（组件注册成功后返回的ID）
+        /// </summary>
+        public static string Cid = "";
+        /// <summary>
+        /// 组件类型
+        /// </summary>
+        public static Models.Component.ComponentType ComponentType;
+
+        /// <summary>
+        /// 是否显示返回陆地端菜单
+        /// </summary>
         public static bool IsShowLandHome = false;
-        //显示登陆名称
+        /// <summary>
+        /// 显示登陆名称
+        /// </summary>
         public static string LoginName = "";
         /// <summary>
         /// 是否有设置权限
         /// </summary>
         public static bool IsSet = true;
-        public static Dictionary<int, string> components;
+        //public static Dictionary<int, string> components;
         private static object ShipId_Lock = new object(); //锁同步
         private static object Cid_Lock = new object(); //锁同步
         //int aa;
