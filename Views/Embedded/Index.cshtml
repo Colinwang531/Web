@@ -1,7 +1,10 @@
 ﻿
 @{
     ViewData["Title"] = "Index";
-    Layout = null;
+    if (!ViewBag.IsShowLayout)
+    {
+        Layout = null;
+    }
 }
 <link href="~/layui/css/layui.css" rel="stylesheet" />
 <script src="~/layui/layui.js"></script>

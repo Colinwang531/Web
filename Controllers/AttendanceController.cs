@@ -31,28 +31,39 @@ namespace ShipWeb.Controllers
         {
             try
             {
-                var data = from a in _context.Alarm
-                           join b in _context.AlarmInformation on a.Id equals b.AlarmId
-                           join c in _context.CameraConfig on b.Cid equals c.Cid
-                           join d in _context.Employee on b.Uid equals d.Uid
-                           join e in _context.AlarmInformationPosition on b.Id equals e.AlarmInformationId
-                           where b.Type==5 && a.ShipId==ManagerHelp.ShipId
-                           select new
-                           {
-                               d.Uid,
-                               d.Name,
-                               Time = a.Time.ToString("yyyy-MM-dd HH:mm:ss"),
-                               c.EnableAttendanceIn,
-                               c.EnableAttendanceOut,
-                               Picture = Convert.FromBase64String(Encoding.UTF8.GetString(a.Picture)),
-                               e.X,
-                               e.Y,
-                               e.W,
-                               e.H
-                           };
-                var list = data.ToList();
-                int count = list.Count;
-                var pageList=list.Skip((pageIndex - 1) * pageSize).Take(pageSize);
+                //查询记录考虑的摄像机
+                var info =( from a in _context.AlarmInformation
+                         join b in _context.CameraConfig on a.Cid equals b.Cid
+                         where a.Type == 5 && ((b.EnableAttendanceIn && !b.EnableAttendanceOut) || (!b.EnableAttendanceIn && b.EnableAttendanceOut))&&a.Shipid==ManagerHelp.ShipId
+                         select new
+                         {
+                             a.AlarmId,
+                             a.Uid,
+                             b.EnableAttendanceIn,
+                             b.EnableAttendanceOut
+                         }).ToList();
+                var alarmIds = string.Join(',', info.Select(c => c.AlarmId));
+                var uids = string.Join(',', info.Select(c => c.Uid));
+                //查询考勤图片
+                var alarm = _context.Alarm.Where(c => alarmIds.Contains(c.Id)).ToList();
+                //查询船员信息
+                var employee = _context.Employee.Where(c => uids.Contains(c.Uid)).ToList();
+                //组合数据
+                var data = from a in info
+                               join b in alarm on a.AlarmId equals b.Id
+                               join c in employee on a.Uid equals c.Uid
+                               select new
+                               {
+                                   Picture = Convert.FromBase64String(Encoding.UTF8.GetString(b.Picture)),
+                                   Time = b.Time.ToString("yyyy-MM-dd HH:mm:ss"),
+                                   c.Uid,
+                                   c.Name,
+                                   a.EnableAttendanceIn,
+                                   a.EnableAttendanceOut
+                               };
+
+                int count = data.Count();
+                var pageList = data.Skip((pageIndex - 1) * pageSize).Take(pageSize);
                 var result = new
                 {
                     code = 0,
@@ -81,52 +92,58 @@ namespace ShipWeb.Controllers
         {
             try
             {
-                var data = from a in _context.Alarm
-                           join b in _context.AlarmInformation on a.Id equals b.AlarmId
-                           join c in _context.CameraConfig on b.Cid equals c.Cid
-                           join d in _context.Employee on b.Uid equals d.Uid
-                           join e in _context.AlarmInformationPosition on b.Id equals e.AlarmInformationId
-                           where b.Type == 5 && a.ShipId == ManagerHelp.ShipId
-                           select new
-                           {
-                               d.Uid,
-                               d.Name,
-                               a.Time,
-                               c.EnableAttendanceIn,
-                               c.EnableAttendanceOut,
-                               Picture = Convert.FromBase64String(Encoding.UTF8.GetString(a.Picture)),
-                               e.X,
-                               e.Y,
-                               e.W,
-                               e.H
-                           };
-                if (!string.IsNullOrEmpty(uid))
-                {
-                    data=data.Where(c => c.Uid == uid);
-                }
-                if (!string.IsNullOrEmpty(name))
-                {
-                    data=data.Where(c => c.Name.Contains(name));
-                }
-                if (!(string.IsNullOrEmpty(startTime))&&!(string.IsNullOrEmpty(endTime)))
+                //查询记录考虑的摄像机
+                var info = (from a in _context.AlarmInformation
+                            join b in _context.CameraConfig on a.Cid equals b.Cid
+                            where a.Type == 5 && ((b.EnableAttendanceIn && !b.EnableAttendanceOut) || (!b.EnableAttendanceIn && b.EnableAttendanceOut)) && a.Shipid == ManagerHelp.ShipId
+                            select new
+                            {
+                                a.AlarmId,
+                                a.Uid,
+                                b.EnableAttendanceIn,
+                                b.EnableAttendanceOut
+                            }).ToList();
+                var alarmIds = string.Join(',', info.Select(c => c.AlarmId));
+                var uids = string.Join(',', info.Select(c => c.Uid));
+                //查询考勤图片
+                var alarmWhere = _context.Alarm.Where(c => alarmIds.Contains(c.Id));
+                if (!(string.IsNullOrEmpty(startTime)) && !(string.IsNullOrEmpty(endTime)))
                 {
                     DateTime dtStart = DateTime.Parse(startTime);
                     DateTime dtEnd = DateTime.Parse(endTime);
-                    data = data.Where(c => c.Time >= dtStart && c.Time <= dtEnd);
+                    alarmWhere = alarmWhere.Where(c => c.Time >= dtStart && c.Time <= dtEnd);
                 }
                 else if (!(string.IsNullOrEmpty(startTime)))
                 {
                     DateTime dtStart = DateTime.Parse(startTime);
-                    data = data.Where(c => c.Time >= dtStart );
+                    alarmWhere = alarmWhere.Where(c => c.Time >= dtStart);
                 }
                 else if (!(string.IsNullOrEmpty(endTime)))
                 {
                     DateTime dtEnd = DateTime.Parse(endTime);
-                    data = data.Where(c => c.Time <= dtEnd);
+                    alarmWhere = alarmWhere.Where(c => c.Time <= dtEnd);
                 }
-                var list = data.ToList();
-                int count = list.Count();
-                var pageList = list.Skip((pageIndex - 1) * pageSize).Take(pageSize);
+                var alarm = alarmWhere.ToList();
+                //查询船员信息
+                var employee = _context.Employee.Where(c => uids.Contains(c.Uid)&&
+                                                    (!string.IsNullOrEmpty(uid) ? c.Uid == uid:1==1)&&
+                                                    (!string.IsNullOrEmpty(name)? c.Name.Contains(name):1==1)).ToList();
+                //组合数据
+                var data = from a in info
+                           join b in alarm on a.AlarmId equals b.Id
+                           join c in employee on a.Uid equals c.Uid
+                           select new
+                           {
+                               Picture = Convert.FromBase64String(Encoding.UTF8.GetString(b.Picture)),
+                               Time = b.Time.ToString("yyyy-MM-dd HH:mm:ss"),
+                               c.Uid,
+                               c.Name,
+                               a.EnableAttendanceIn,
+                               a.EnableAttendanceOut
+                           };
+
+                int count = data.Count();
+                var pageList = data.Skip((pageIndex - 1) * pageSize).Take(pageSize);
                 var result = new
                 {
                     code = 0,

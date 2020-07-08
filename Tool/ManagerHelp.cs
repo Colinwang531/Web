@@ -39,6 +39,10 @@ namespace ShipWeb.Tool
         /// 是否有设置权限
         /// </summary>
         public static bool IsSet = true;
+        /// <summary>
+        /// 查询报警信息权限
+        /// </summary>
+        public static bool IsShowAlarm = true;
         //public static Dictionary<int, string> components;
         private static object ShipId_Lock = new object(); //锁同步
         private static object Cid_Lock = new object(); //锁同步

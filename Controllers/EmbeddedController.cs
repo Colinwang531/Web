@@ -25,12 +25,15 @@ namespace ShipWeb.Controllers
         }
 
        
-        public IActionResult Index(string id="")
+        public IActionResult Index(bool isShow=false,string id="")
         {
             if (!string.IsNullOrEmpty(id))
             {
                 ManagerHelp.ShipId = id;
+                //陆地端过来不显示报警信息
+                ManagerHelp.IsShowAlarm = false;
             }
+            ViewBag.IsShowLayout = isShow;
             return View();
         }
         public IActionResult Load()
@@ -180,9 +183,9 @@ namespace ShipWeb.Controllers
                     return NotFound();
                 }
                 //先删除服务器上的再删除本地的
-                int resutl = manager.DeveiceDelete(Embedded.Did, Embedded.Id);
-                if (resutl == 0)
-                {
+                //int resutl = manager.DeveiceDelete(Embedded.Did, Embedded.Id);
+                //if (resutl == 0)
+                //{
                     var cameras = _context.Camera.Where(c => c.EmbeddedId == Embedded.Id).ToList();
                     foreach (var item in cameras)
                     {
@@ -198,7 +201,7 @@ namespace ShipWeb.Controllers
                     //删除设备表
                     _context.Embedded.Remove(Embedded);
                     _context.SaveChanges();
-                }
+                //}
                 return new JsonResult(new { code = 0, msg = "删除成功!" });
             }
             catch (Exception ex)

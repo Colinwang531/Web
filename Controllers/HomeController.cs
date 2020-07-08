@@ -37,6 +37,7 @@ namespace ShipWeb.Controllers
             ViewBag.isAdmin =  uid.ToLower() == "admin" ? true : false;
             ManagerHelp.ShipId = "";
             ManagerHelp.IsShowLandHome = true;
+            ManagerHelp.IsShowAlarm = false;
             return View(data);
         }
     }

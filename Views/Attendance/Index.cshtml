@@ -49,10 +49,8 @@
                 },
                 {
                     field: 'type', title: '略缩图', width: 150, templet: function (e) {
-
-                        var id = "enable" + e.LAY_INDEX;
-                        var url = Drawing(e.picture, e.w, e.h, e.x, e.y, id);
-                        return LoadImg(id);
+                        var html = '<img style="width:800px;height:30px" ondblclick="showBigImage(this)"  src="data:image/jpeg;base64,' + e.picture + '"/>';
+                        return html;
                     }
                 }
             ]],
@@ -66,11 +64,6 @@
                 //返回数据关闭loading
             }
         });
-        function LoadImg(id) {
-            //var html = '<img style="width:800px;height:30px" ondblclick="showBigImage(this)"  src="data:image/jpeg;base64,' + pic + '"/>';
-            var html = '<img style="width:200px;height:30px" id="' + id + '" ondblclick="showBigImage(this)" />';
-            return html;
-        }
         form.on("submit(query)", function (obj) {
             var data = {
                 cid: obj.field.cid,
@@ -95,24 +88,6 @@
             });
             return false;
         });
-
-
-        function Drawing(pic, w, h, x, y, imgId) {
-            var canvas = document.createElement("canvas");
-            var cxt = canvas.getContext("2d");
-            var img = new Image();
-            img.src = "data:image/jpeg;base64," + pic;
-            img.onload = function () {
-                canvas.width = this.width;
-                canvas.height = this.height;
-                cxt.drawImage(this, 0, 0, this.width, this.height);
-                cxt.strokeStyle = "red"; // 图形边框的样式
-                cxt.lineWidth = 2; // 设置图形边框的宽度
-                cxt.strokeRect(x, y, w, h); // 绘制矩形边框
-                var imgData = canvas.toDataURL("image/jpeg");
-                $('#' + imgId).attr("src", imgData);
-            }
-        }
     });
     function showBigImage(e) {
         layui.use('layer', function () { //独立版的layer无需执行这一句

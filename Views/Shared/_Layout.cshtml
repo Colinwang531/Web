@@ -44,20 +44,23 @@
                 <ul class="layui-nav layui-nav-tree" lay-filter="test">
                     @if (ShipWeb.Tool.ManagerHelp.IsShowLandHome)
                     {
-                        <li class="layui-nav-item"><a href="/Home/LandHome">返回陆地端</a></li>
+                        <li class="layui-nav-item"><a href="/Home/LandHome">返回</a></li>
                     }
                     <li class="layui-nav-item embedded"><a href="#">设备</a></li><!--/Embedded/Index-->
                     <li class="layui-nav-item cameraconfig"><a href="#">算法配置</a></li>
                     <li class="layui-nav-item employee"><a href="#">船员</a></li>
                     <li class="layui-nav-item ship"><a href="#">航行设置</a></li><!--/Ship/Edit-->
-                    <li class="layui-nav-item alarm layui-this"><a href="#">报警</a></li>
-                    <li class="layui-nav-item attendance"><a href="#">考勤</a></li>
+                    @if (ShipWeb.Tool.ManagerHelp.IsShowAlarm)
+                    {
+                        <li class="layui-nav-item alarm"><a href="#">报警</a></li>
+                        <li class="layui-nav-item attendance"><a href="#">考勤</a></li>
+                    }
                 </ul>
             </div>
         </div>
 
         <div class="layui-body">
-            <iframe id="frm" src="/Alarm/Index?isShow=false" style="width:100%;height:98%">
+            <iframe id="frm" src="" style="width:100%;height:98%">
                 <!-- 内容主体区域 -->
                 @RenderBody()
             </iframe>           

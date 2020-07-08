@@ -54,6 +54,7 @@ namespace ShipWeb.Controllers
                 HttpContext.Session.Set("uid", Encoding.UTF8.GetBytes(usersModel.Uid));
                 //保存用户可操作的权限 admin 最高权限
                 ManagerHelp.IsSet = usersModel.Uid.ToLower() == "admin" ? true : usersModel.EnableConfigure;
+                ManagerHelp.IsShowAlarm = usersModel.Uid.ToLower() == "admin" ? true : usersModel.Enablequery;
                 ManagerHelp.LoginName = name;
                 bool flag = false;//判断船是否存在
                 var ship = _context.Ship.FirstOrDefault();
@@ -62,6 +63,12 @@ namespace ShipWeb.Controllers
                     ManagerHelp.ShipId = ship.Id;
                     flag = true;
                 }
+                //ManagerHelp.IframeSrc = "/Embedded/Index?isShow=false";
+                //if (flag && ManagerHelp.IsShowAlarm)
+                //{
+                //    ManagerHelp.IframeSrc = "/Alarm/Index?isShow=false";
+                //}
+                //else if (!flag) ManagerHelp.IframeSrc = "/Ship/Edit?isShow=false";
                 //登陆成功后跳转组件页面
                 //return RedirectToAction(nameof(Index), "Home");
                 return new JsonResult(new { code = 0, flag = flag });
