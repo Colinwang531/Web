@@ -10,9 +10,6 @@
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 
 <script type="text/javascript">
-
-
-
     $(document).ready(function () {
         Load();
         $("#ckAll").click(function () {
@@ -66,10 +63,12 @@
     function Chose(obj,index) {
         var name = "rdo" + index;
         var checks = $("input[name='" + name + "']");
-        for (var i = 0; i < checks.length; i++) {
-            checks[i].checked = false;
+        if (obj.checked) {
+            for (var i = 0; i < checks.length; i++) {
+                checks[i].checked = false;
+            }
+            obj.checked = true;
         }
-        obj.checked = true;
 
     }
     //单个保存
@@ -90,8 +89,8 @@
             }
             str.push(txt);
         }
-        if (str[0] == '' || str[0] == undefined) {
-            alert("gpu不能为空");
+        if (str[0] == '' || str[0] == undefined || parseInt(str[0])==0) {
+            alert("gpu不能为空或0");
             return false;
         }
         if (!CheckSimila(str[7])) {
@@ -110,6 +109,10 @@
             EnableAttendanceOut: str[6],
             Similar: parseFloat(str[7])
         };
+        if (!(att.EnableSleep || att.EnableFight || att.EnableHelmet || att.EnablePhone || att.EnableAttendanceIn || att.EnableAttendanceOut)) {
+            alert("此摄像机未做任何配置");
+            return false;
+        }
         Array.push(att);
         $.ajax({
             url: "/CameraConfigs/Create",
@@ -135,6 +138,7 @@
         var Array = [];//一个空的数组
         var strgpu = "";//记录gpu为空的数据
         var strsm = "";//记录Simila有问题的数据
+        var enable = "";//记录摄像机未做的配置
         $('#tb1 tbody tr').each(function () {
             //遍历每一个tr
             var str = [];
@@ -165,7 +169,7 @@
                 }
                 str.push(txt);
             }
-            if (str[2] == '' || str[2] == undefined) {
+            if (str[2] == '' || str[2] == undefined || parseInt(str[0]) == 0) {
                 strgpu = "第" + (this.rowIndex) + "行";
                 return false;
             }
@@ -173,6 +177,7 @@
                 strsm = "第" + (this.rowIndex) + "行";
                 return false;
             }
+            
             att = {
                 Cid: str[0],
                 Id: str[1],
@@ -185,7 +190,10 @@
                 EnableAttendanceOut: str[8],
                 Similar: str[9]
             };
-
+            if (!(att.EnableSleep || att.EnableFight || att.EnableHelmet || att.EnablePhone || att.EnableAttendanceIn || att.EnableAttendanceOut)){
+                enable = "第" + (this.rowIndex) + "行";
+                return false;
+            }
             //把每一个tr的数据写成一个json数据
             Array.push(att);
         });
@@ -195,6 +203,10 @@
         }
         if (strsm != "") {
             alert(strsm + "中人脸相似度只能转入0-1之间的小数，如0.99");
+            return false;
+        }
+        if (enable != "") {
+            alert(enable + "此摄像机未做任何配置");
             return false;
         }
         if (Array.length == 0) {

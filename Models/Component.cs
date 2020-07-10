@@ -29,7 +29,7 @@ namespace ShipWeb.Models
         /// 组件类型 1：XMQ，2：WEB ，3：HKD，4：DHD，5：ALM 
         /// </summary>
         public ComponentType Type { get; set; }
-        /// <summary>
+        /// <summary>s
         /// 组件名称
         /// </summary>
         public string Name { get; set; }

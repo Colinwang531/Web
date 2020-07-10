@@ -86,6 +86,34 @@ namespace ShipWeb.Controllers
             return new JsonResult(result);
         }
         /// <summary>
+        /// 陆地端查看船员信息
+        /// </summary>
+        /// <returns></returns>
+        private IActionResult LandLoad()
+        {
+            string identity = Guid.NewGuid().ToString();
+            var data=manager.CrewQuery(identity);
+            var dataShow = from a in data
+                           select new
+                           {
+                               a.job,
+                               a.name,
+                               ShipId=ManagerHelp.ShipId,
+                               employeePictures = from b in a.pictures
+                                                  select new
+                                                  {
+                                                      Picture = Convert.ToBase64String(Convert.FromBase64String(Encoding.UTF8.GetString(b)))
+                                                  }
+                           };
+            var result = new
+            {
+                code = 0,
+                data = dataShow,
+                isSet = !string.IsNullOrEmpty(ManagerHelp.ShipId) ? ManagerHelp.IsSet : false
+            };
+            return new JsonResult(result);
+        }
+        /// <summary>
         /// 上传图片
         /// </summary>
         /// <returns></returns>

@@ -11,7 +11,13 @@ namespace ShipWeb.ProtoBuffer.Models
     {
 		public enum Command
 		{
+			/// <summary>
+			/// 设置请求
+			/// </summary>
 			SET_REQ = 1,
+			/// <summary>
+			/// 设置响应
+			/// </summary>
 			SET_REP = 2,
 			QUERY_REQ = 3,
 			QUERY_REP = 4

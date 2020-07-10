@@ -98,33 +98,13 @@
             }
         });
         //保存
-        form.on("submit(doSubmit)", function (viewobj) {
-            var xpwd = $("#txtxpwd").val();
-            var spwd = $("#txtspwd").val();
-            var id = $("#hidId").val();
-            if (id == undefined || id == "") {
-                if (xpwd == undefined || xpwd == "") {
-                    layer.msg("数据保存失败", { icon: 2 });
-                    return false;
-                }
-                if (xpwd != spwd) {
-                    layer.msg("前后两次输入的密码不一致", { icon: 2 });
-                    return false;
-                }
-            } else {
-                if (xpwd != undefined && xpwd != "") {
-                    if (xpwd != spwd) {
-                        layer.msg("前后两次输入的密码不一致", { icon: 2 });
-                        return false;
-                    }
-                }
-            }
+        form.on("submit(doSubmit)", function (viewobj) {           
             var data = {
-                Id: id,
+                Id: $("#hidId").val(),
                 Name: $("#txtUserame").val(),
                 EnableConfigure: $("#ck1").prop("checked"),
                 Enablequery: $("#ck2").prop("checked"),
-                Password: xpwd
+                Password: $("#txtxpwd").val()
             }
             $.ajax({
                 url: "/Users/UserSave",
@@ -145,19 +125,28 @@
             return false;
         });
         //自定义验证规则
-        form.verify({
+        form.verify({            
             passSure: function (value) {
-                var xpwd = $("#txtxpwd").val();
-                if (xpwd!="") {
+                if ($("#hidId").val() == "") {
+                    var xpwd = $("#txtxpwd").val();
                     if (xpwd != value) {
                         return '前后两次输入密码不一致';
                     }
                 }
             },
-            pass: [
-                /^[\S]{6,12}$/
-                , '密码必须6到12位，且不能出现空格'
-            ]
+            pass: function (value) {
+                if ($("#hidId").val() == "") {
+                    var reg = /^[0-9a-zA-Z_]{6,12}$/;
+                    if (!new RegExp(reg).test(value) || value.indexOf(" ") != -1 || value.length < 6 || value.length > 12) {
+                        return '密码必须6到12位，且不能出现空格';
+                    }
+
+                }
+            }
+            //pass: [
+            //    /^[\S]{6,12}$/
+            //    , '密码必须6到12位，且不能出现空格'
+            //]
         });
 
     });

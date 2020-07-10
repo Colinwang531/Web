@@ -29,9 +29,9 @@
                 },
                 {
                     field: 'type', title: '设备类型', width: 120, sort: true, align: 'center', templet: function (e) {
-                        if (e.factory == 1) return "DVR";
-                        else if (e.factory == 2) return "NVR";
-                        else if (e.factory == 3) return "IPC";
+                        if (e.type == 1) return "DVR";
+                        else if (e.type == 2) return "NVR";
+                        else if (e.type == 3) return "IPC";
                     }
                 },
                 { field: 'name', title: '设备登陆名称', align: 'center', width: 200 },
@@ -59,7 +59,6 @@
                             $("#hidId").val("");
                             //清空表单数据
                             $("#dataFrm")[0].reset();
-                            //url = "employees/addEmployees.action";
                         }
                     });
                     break;

@@ -138,7 +138,8 @@
                 var len = getJsonLength(uploadFiles);
                 var ids = $("#hidPicIds").val();
                 var frmLeng = 0;//查询已显示的图片
-                if (ids != "") {
+                //只有修改的时候才需要判断显示了几张图片。
+                if (ids != "" ) {
                     frmLeng = ids.split(',').length;
                 }
                 if (parseInt(len) + parseInt(frmLeng) > 3) {
@@ -171,9 +172,11 @@
                 }
                 var len = getJsonLength(uploadFiles);
                 if (upnum == len) {
-                    upflag = true
+                    upflag = true;
+                    upnum = 0;
+                    //上传完毕
+                    clearFile();
                 }
-                //上传完毕
             }
         });
         //表单提交

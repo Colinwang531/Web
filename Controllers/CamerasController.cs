@@ -15,7 +15,7 @@ namespace ShipWeb.Controllers
     public class CamerasController : BaseController
     {
         private readonly MyContext _context;
-
+        private ProtoBuffer.ProtoManager manager = new ProtoBuffer.ProtoManager();
         public CamerasController(MyContext context)
         {
             _context = context;
@@ -37,7 +37,27 @@ namespace ShipWeb.Controllers
             };
             return new JsonResult(result);
         }
-      
+        /// <summary>
+        /// 陆地端显示算法信息
+        /// </summary>
+        /// <param name="did"></param>
+        /// <returns></returns>
+        private IActionResult LandLoad(string did) 
+        {
+            string identity = Guid.NewGuid().ToString();
+            var emdList=manager.DeviceQuery(identity, did);
+            List<ShipWeb.ProtoBuffer.Models.Camera> list = new List<ProtoBuffer.Models.Camera>();
+            if (emdList.Count>0)
+            {
+                list= emdList[0].cameras;
+            }
+            var result = new
+            {
+                code = 0,
+                data = list
+            };
+            return new JsonResult(result);
+        }
         public IActionResult Save(string id,string nickName,string enalbe)
         {
             if (ModelState.IsValid)
@@ -54,7 +74,6 @@ namespace ShipWeb.Controllers
                     var embModel = _context.Embedded.FirstOrDefault(e => e.Id == camera.EmbeddedId);
                     if (embModel != null)
                     {
-                        ProtoBuffer.ProtoManager manager = new ProtoBuffer.ProtoManager();
                         ProtoBuffer.Models.Embedded emb = new ProtoBuffer.Models.Embedded()
                         {
                             cameras = new List<ProtoBuffer.Models.Camera>() {

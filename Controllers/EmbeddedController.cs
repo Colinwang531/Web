@@ -46,6 +46,22 @@ namespace ShipWeb.Controllers
             };
             return new JsonResult(result);
         }
+        /// <summary>
+        /// 陆地端查看设备信息
+        /// </summary>
+        /// <returns></returns>
+        private IActionResult LandLoad()
+        {
+            string identity = Guid.NewGuid().ToString();
+            var data=manager.DeviceQuery(identity);
+            var result = new
+            {
+                code = 0,
+                data = "",
+                isSet = !string.IsNullOrEmpty(ManagerHelp.ShipId) ? ManagerHelp.IsSet : false
+            };
+            return new JsonResult(result);
+        }
         public IActionResult Create()
         {
             return View();

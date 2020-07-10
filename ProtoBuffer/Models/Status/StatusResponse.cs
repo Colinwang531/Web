@@ -13,5 +13,7 @@ namespace ShipWeb.ProtoBuffer.Models
         public int result { get; set; }
         [ProtoMember(2)]
         public bool flag { get; set; }
+        [ProtoMember(3)]
+        public string name { get; set; }
     }
 }

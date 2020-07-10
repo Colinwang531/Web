@@ -28,6 +28,9 @@ namespace ShipWeb.Controllers
         /// <returns></returns>
         public IActionResult Index()
         {
+            HttpContext.Session.Remove("uid");
+            ManagerHelp.ShipId = "";
+            ManagerHelp.IsShowLandHome = false;
             return View();
         }
 

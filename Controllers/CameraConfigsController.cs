@@ -20,7 +20,7 @@ namespace ShipWeb.Controllers
     public class CameraConfigsController : BaseController
     {
         private readonly MyContext _context;
-
+        private ProtoManager manager = new ProtoManager();
         public CameraConfigsController(MyContext context)
         {
             _context = context;
@@ -67,6 +67,19 @@ namespace ShipWeb.Controllers
             return new JsonResult(result);
 
         }
+        private IActionResult LandLoad()
+        {
+            string identity = Guid.NewGuid().ToString();
+            var alg=manager.AlgorithmQuery(identity);
+            var result = new
+            {
+                code = 0,
+                data = alg,
+                msg = "",
+                isSet = !string.IsNullOrEmpty(ManagerHelp.ShipId) ? ManagerHelp.IsSet : false
+            };
+            return new JsonResult(result);
+        }
         public IActionResult Create(string mList)
         {
             
@@ -80,7 +93,6 @@ namespace ShipWeb.Controllers
                 //发送消息
                 Task.Factory.StartNew(state =>
                 {
-                    ProtoManager manager = new ProtoManager();
                     string identity = Guid.NewGuid().ToString();
                     List<Configure> list = new List<Configure>();
                     foreach (var item in modelList)
@@ -103,21 +115,24 @@ namespace ShipWeb.Controllers
                     //返回0为成功
                     int result = manager.AlgorithmSet(identity, list);
                 }, TaskCreationOptions.LongRunning);
-
-                foreach (var item in modelList)
-                {
-                    item.ShipId = ManagerHelp.ShipId;
-                    if (item.Id != "null"&&item.Id!="")
+                //陆地端设置算法配置是不写入陆地端的库的
+                //if (!ManagerHelp.IsShowLandHome)
+                //{
+                    foreach (var item in modelList)
                     {
-                        _context.Update(item);
+                        item.ShipId = ManagerHelp.ShipId;
+                        if (item.Id != "null" && item.Id != "")
+                        {
+                            _context.Update(item);
+                        }
+                        else
+                        {
+                            item.Id = Guid.NewGuid().ToString();
+                            _context.Add(item);
+                        }
                     }
-                    else
-                    {
-                        item.Id = Guid.NewGuid().ToString();
-                        _context.Add(item);
-                    }
-                }
-                _context.SaveChanges();
+                    _context.SaveChanges();
+                //}             
             }
             return new JsonResult(new { code = 0 });
         }

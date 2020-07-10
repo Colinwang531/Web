@@ -45,7 +45,9 @@ namespace ShipWeb.Controllers
                 //取出报警表中指定条数的数据
                 var alarm = (from a in _context.Alarm
                              join b in _context.AlarmInformation on a.Id equals b.AlarmId
-                             where b.Type != 5 && a.ShipId == ManagerHelp.ShipId
+                             join c in _context.CameraConfig on b.Cid equals c.Cid
+                             where b.Type != 5 && a.ShipId == ManagerHelp.ShipId &&
+                            (c.EnableFight == true || c.EnableHelmet == true || c.EnablePhone == true || c.EnableSleep == true)
                              select new
                              {
                                  b.Id,
@@ -110,15 +112,17 @@ namespace ShipWeb.Controllers
             {
                 var data = from a in _context.Alarm
                             join b in _context.AlarmInformation on a.Id equals b.AlarmId
-                            where (type > 0 ? b.Type == type : 1 == 1) && a.ShipId == ManagerHelp.ShipId && b.Type != 5
+                            join c in _context.CameraConfig on b.Cid equals c.Cid
+                            where (type > 0 ? b.Type == type : 1 == 1) && a.ShipId == ManagerHelp.ShipId && b.Type != 5&&
+                            (c.EnableFight==true||c.EnableHelmet==true||c.EnablePhone==true||c.EnableSleep==true)
                            select new
-                            {
-                                a.Time,
-                                a.Picture,
-                                b.Type,
-                                b.Cid,
-                                b.Id
-                            };
+                           {
+                               a.Time,
+                               a.Picture,
+                               b.Type,
+                               b.Cid,
+                               b.Id
+                           };
                 if (!(string.IsNullOrEmpty(startTime)) && !(string.IsNullOrEmpty(endTime)))
                 {
                     DateTime dtStart = DateTime.Parse(startTime);
@@ -194,7 +198,9 @@ namespace ShipWeb.Controllers
                 //取出报警表中指定条数的数据
                 var alarm = (from a in _context.Alarm
                              join b in _context.AlarmInformation on a.Id equals b.AlarmId
-                             where b.Type != 5
+                             join c in _context.CameraConfig on b.Cid equals c.Cid
+                             where b.Type != 5 &&
+                            (c.EnableFight == true || c.EnableHelmet == true || c.EnablePhone == true || c.EnableSleep == true)
                              select new
                              {
                                  b.Id,
@@ -251,12 +257,14 @@ namespace ShipWeb.Controllers
             var model = JsonConvert.DeserializeObject<SearchAlarmViewModel>(searchModel);
             var data = from a in _context.Alarm
                        join b in _context.AlarmInformation on a.Id equals b.AlarmId
-                       join c in _context.Ship on a.ShipId equals c.Id
-                       where (model.Type > 0 ? b.Type == model.Type : 1 == 1) && (!string.IsNullOrEmpty(model.ShipId) ? c.Id == model.ShipId : 1 == 1) && b.Type != 5
+                       join c in _context.CameraConfig on b.Cid equals c.Cid
+                       join d in _context.Ship on a.ShipId equals d.Id
+                       where (model.Type > 0 ? b.Type == model.Type : 1 == 1) && (!string.IsNullOrEmpty(model.ShipId) ? d.Id == model.ShipId : 1 == 1) && b.Type != 5 &&
+                            (c.EnableFight == true || c.EnableHelmet == true || c.EnablePhone == true || c.EnableSleep == true)
                        select new
                        {
                            a.Time,
-                           c.Name,
+                           d.Name,
                            a.Picture,
                            b.Type,
                            b.Cid,
