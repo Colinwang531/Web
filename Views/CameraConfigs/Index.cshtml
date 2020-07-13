@@ -41,7 +41,7 @@
                         str += '<td><input type = "checkbox" name = "chk"' + IsShowCheck(data[i].enablePhone) + '/></td>';
                         str += '<td><input type = "checkbox" onclick="Chose(this,' + i + ')" name = "rdo' + i + '"' + IsShowCheck(data[i].enableAttendanceIn) + '/></td>';
                         str += '<td><input type = "checkbox" onclick="Chose(this,' + i + ')" name = "rdo' + i + '"' + IsShowCheck(data[i].enableAttendanceOut) + '/></td>';                      
-                        str += '<td><input type="text"onkeyup="this.value=this.value.replace(/[^1-9]/g,\'\')" maxlength="4" value="' + (data[i].similar == null ? "" : data[i].similar) + '"/></td>';
+                        str += '<td><input  type="number" min="0.10" max="1.0" step="0.10" onkeyup="if(this.value>this.max){this.value=0;}else if(this.value.length>4){this.value=this.value.slice(0,4)}" value="' + (data[i].similar == null ? "" : data[i].similar) + '"/></td>';
                         str += '<td>'
                         if (res.isSet) {
                             str += "<a class=\"layui-btn layui-btn-xs\"  href=\"javascript: \" onclick=\"TbSave('" + i + "','" + data[i].id + "','" + data[i].cid + "')\">修改</a>";
@@ -78,7 +78,7 @@
         //遍历每一个tr
         var str = [];
         var tds = $("#tb1 tbody").find("tr").eq(index).find("td");
-        for (var i = 2; i < tds.length - 1; i++) {
+        for (var i = 3; i < tds.length - 1; i++) {
             var txt;
             if (tds[i].children[0].type == "checkbox") {
                 txt = tds[i].children[0].checked;
@@ -231,11 +231,9 @@
             }
         })
     };
-
-    function CheckSimila(simila)
-    {
+    function CheckSimila(simila) {
         var text = parseFloat(simila);
-        if (!(text >= 0 && text <= 0.99)) {
+        if (!(text >= 0.1 && text <= 0.99)) {
             return false;
         }
         return true;

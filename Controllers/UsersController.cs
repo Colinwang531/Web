@@ -45,12 +45,17 @@ namespace ShipWeb.Controllers
             var model = JsonConvert.DeserializeObject<Users>(users);
             if (model!=null)
             {
+                var userdb = _context.Users.FirstOrDefault(c => c.Name == model.Name);
                 if (!string.IsNullOrEmpty(model.Id)&&model.Id!="null")
                 {
                     var user = _context.Users.FirstOrDefault(c => c.Id == model.Id);
                     if (user == null)
                     {
-                        return new JsonResult(new { code = 1, msg = "数据库中不存在条数" });
+                        return new JsonResult(new { code = 1, msg = "该数据不存在" });
+                    }
+                    if (userdb!=null&& userdb.Name!=user.Name)
+                    {
+                        return new JsonResult(new { code = 1, msg = "该用户名已存在，请重新修改" });
                     }
                     user.Name = model.Name;
                     user.Password = MD5Help.MD5Encrypt(model.Password);
@@ -66,6 +71,10 @@ namespace ShipWeb.Controllers
                 }
                 else
                 {
+                    if (userdb!=null)
+                    {
+                        return new JsonResult(new { code = 1, msg = "该用户名已存在，不能重复添加" });
+                    }
                     model.Password = MD5Help.MD5Encrypt(model.Password);
                     string identity = Guid.NewGuid().ToString();
                     Random rm = new Random();
