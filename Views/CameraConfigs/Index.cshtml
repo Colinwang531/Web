@@ -31,17 +31,17 @@
                         $("#divOption").html(option);
                     }
                     for (var i = 0; i < data.length; i++) {
-                        str += '<tr><td><input type = "checkbox" name = "ck" />';
-                        str += '<td>' + data[i].nickName + '<input type="hidden" value="' + data[i].cid + '" />';
-                        str += '<input type="hidden" value="' + (data[i].id == null ? "" : data[i].id) + '" /></td>';
-                        str += '<td><input type="text" onkeyup="this.value=this.value.replace(/[^1-9]/g,0)" value="' + (data[i].gpu == null ? 0 : data[i].gpu) + '" /></td>';
+                        str += '<tr><td><input type = "checkbox" name = "ck" /><input type="hidden" value="' + (data[i].id == null ? "" : data[i].id) + '" /></td>';
+                        str += '<td><label>' + data[i].cid +'</label></td>';
+                        str += '<td>' + data[i].nickName+'</td>';
+                        str += '<td><input type="text" onkeyup="this.value=this.value.replace(/[^1-9]/g,\'\')"  value="' + (data[i].gpu == 0 ? "" : data[i].gpu) + '" /></td>';
                         str += '<td><input type = "checkbox" name = "chk"' +IsShowCheck(data[i].enableSleep) + '/></td>';
                         str += '<td><input type = "checkbox" name = "chk"' +IsShowCheck(data[i].enableFight) + '/></td>';
                         str += '<td><input type = "checkbox" name = "chk"' +IsShowCheck(data[i].enableHelmet) + '/></td>';
                         str += '<td><input type = "checkbox" name = "chk"' + IsShowCheck(data[i].enablePhone) + '/></td>';
                         str += '<td><input type = "checkbox" onclick="Chose(this,' + i + ')" name = "rdo' + i + '"' + IsShowCheck(data[i].enableAttendanceIn) + '/></td>';
                         str += '<td><input type = "checkbox" onclick="Chose(this,' + i + ')" name = "rdo' + i + '"' + IsShowCheck(data[i].enableAttendanceOut) + '/></td>';                      
-                        str += '<td><input type="number"onkeyup="if((event.keyCode<48 || event.keyCode>57) && event.keyCode!=46 || /\.\d\d$/.test(value))event.returnValue=false;if(value.length>4)value=value.slice(0,4)"  value="' + (data[i].similar == null ? 0 : data[i].similar) + '"/></td>';
+                        str += '<td><input type="text"onkeyup="this.value=this.value.replace(/[^1-9]/g,\'\')" maxlength="4" value="' + (data[i].similar == null ? "" : data[i].similar) + '"/></td>';
                         str += '<td>'
                         if (res.isSet) {
                             str += "<a class=\"layui-btn layui-btn-xs\"  href=\"javascript: \" onclick=\"TbSave('" + i + "','" + data[i].id + "','" + data[i].cid + "')\">修改</a>";
@@ -149,27 +149,27 @@
             }
             var tdcount = chil.length - 1;
             var txt;
-            for (k = 1; k < tdcount; k++) {
+            for (k = 0; k < tdcount; k++) {
                 //循环得到td的四项内容值
-                if (chil.eq(k).children('input').attr("type") == "hidden") {
+                if (chil.eq(k).children('input[type="hidden"]').length > 0) {
                     chil.eq(k).children('input[type="hidden"]').each(function (res) {
                         txt = $(this).val();
                         str.push(txt);
                     })
-                    continue;
                 }
-                //else if (chil.eq(k).children('input').attr("name") == "chk") {
-                //    txt = chil.eq(k).children('input')[0].checked;
-                //}
                 else if (chil.eq(k).children('input').attr("type") == "checkbox") {
                     txt = chil.eq(k).children('input')[0].checked;
+                    str.push(txt);
                 }
-                else {
+                else if (chil.eq(k).children('input').length>0){
                     txt = chil.eq(k).children('input').val();
+                    str.push(txt);
+                } else if (chil.eq(k).children('label').length > 0) {
+                    txt = chil.eq(k).children('label').text();
+                    str.push(txt);
                 }
-                str.push(txt);
             }
-            if (str[2] == '' || str[2] == undefined || parseInt(str[0]) == 0) {
+            if (str[2] == '' || str[2] == undefined || parseInt(str[2]) == 0) {
                 strgpu = "第" + (this.rowIndex) + "行";
                 return false;
             }
@@ -179,8 +179,8 @@
             }
             
             att = {
-                Cid: str[0],
-                Id: str[1],
+                Id: str[0],
+                Cid: str[1],
                 GPU: str[2],
                 EnableSleep: str[3],
                 EnableFight: str[4],
@@ -251,7 +251,8 @@
         <table class="layui-table" id="tb1" style="width:80%">
             <thead>
                 <tr>
-                    <th><input type="checkbox" id="ckAll" /></th>
+                    <th><input type="checkbox" id="ckAll"  /></th>
+                    <th>摄像机编码</th>
                     <th>
                         摄像机名称
                     </th>
@@ -280,7 +281,7 @@
                         人脸相似度
                     </th>
                   
-                    <th></th>
+                    <th>操作</th>
                 </tr>
             </thead>
             <tbody id="tbo">
