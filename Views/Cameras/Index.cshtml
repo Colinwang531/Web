@@ -44,6 +44,7 @@
                     content: $("#divUpdate"),
                     area: ["400px", "260px"],
                     success: function (index) {
+                        $("#dataFrm")[0].reset();
                         form.val("dataFrm", data);
                     }
                 });
@@ -53,6 +54,8 @@
         form.on("submit(doSubmit)", function (frm) {
             var data = {
                 id: frm.field.id,
+                did: $("#hidEmb").val(),
+                cid: frm.field.cid,
                 nickName: frm.field.nickName,
                 enalbe: frm.field.enalbe
             }
@@ -79,7 +82,7 @@
 <div style="margin:20px;width:96%">
     <h1>摄像机列表</h1>
     <hr />
-    <input type="hidden" id="hidEmb" value="@ViewBag.id " />
+    <input type="hidden" id="hidEmb" value="@ViewBag.id" />
     <a href="/Embedded/Index">返回设备列表</a>
     <table class="layui-table" id="tbCamers" lay-filter="tbCamers">
     </table>
@@ -94,6 +97,7 @@
 <div id="divUpdate" style="display:none;margin-top:20px">
     <form class="layui-form" action="" id="dataFrm" lay-filter="dataFrm">
         <input name="id" id="hidId" type="hidden" class="layui-input" />
+        <input name="cid" id="hidCid" type="hidden" class="layui-input"/>
         <div class="layui-form-item">
                 <label class="layui-form-label" style="width:120px">摄像机状态：</label>
                 <div class="layui-input-inline">

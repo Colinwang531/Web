@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
 using Newtonsoft.Json;
+using Org.BouncyCastle.Crypto.Tls;
 using ProtoBuf;
 using ShipWeb.DB;
 using ShipWeb.Models;
@@ -30,12 +31,12 @@ namespace ShipWeb.Controllers
         {
             return View();
         }
-        public IActionResult Edit()
-        {
-            return View();
-        }
         public IActionResult Load()
         {
+            if (ManagerHelp.IsShowLandHome)
+            {
+                return LandLoad();
+            }
             var aa = from a in _context.Camera
                      join b in _context.CameraConfig on a.Cid equals b.Cid
                      into c
@@ -69,12 +70,26 @@ namespace ShipWeb.Controllers
         }
         private IActionResult LandLoad()
         {
-            string identity = Guid.NewGuid().ToString();
-            var alg=manager.AlgorithmQuery(identity);
+            var alg=manager.AlgorithmQuery(ManagerHelp.ShipId);
+            var data = from a in alg
+                       select new
+                       {
+                           id = a.cid.Split(',')[0],
+                           Cid = a.cid.Split(',')[1],
+                           NickName = a.cid.Split(',')[2],
+                           EnableAttendanceIn = a.enableattendancein,
+                           EnableAttendanceOut = a.enableattendanceout,
+                           EnableFight = a.enablefight,
+                           EnableHelmet = a.enablehelmet,
+                           EnablePhone = a.enablephone,
+                           EnableSleep = a.enablesleep,
+                           GPU = a.gpu,
+                           a.similar
+                       };
             var result = new
             {
                 code = 0,
-                data = alg,
+                data = data,
                 msg = "",
                 isSet = !string.IsNullOrEmpty(ManagerHelp.ShipId) ? ManagerHelp.IsSet : false
             };
@@ -93,14 +108,12 @@ namespace ShipWeb.Controllers
                 //发送消息
                 Task.Factory.StartNew(state =>
                 {
-                    string identity = Guid.NewGuid().ToString();
                     List<Configure> list = new List<Configure>();
                     foreach (var item in modelList)
                     {
-
                         Configure mqModel = new Configure()
                         {
-                            cid = item.Cid,
+                            cid =item.Id+","+item.Cid,
                             enableattendancein = item.EnableAttendanceIn,
                             enableattendanceout = item.EnableAttendanceOut,
                             enablefight = item.EnableFight,
@@ -113,11 +126,11 @@ namespace ShipWeb.Controllers
                         list.Add(mqModel);
                     }
                     //返回0为成功
-                    int result = manager.AlgorithmSet(identity, list);
+                    int result = manager.AlgorithmSet(ManagerHelp.ShipId, list);
                 }, TaskCreationOptions.LongRunning);
                 //陆地端设置算法配置是不写入陆地端的库的
-                //if (!ManagerHelp.IsShowLandHome)
-                //{
+                if (!ManagerHelp.IsShowLandHome)
+                {
                     foreach (var item in modelList)
                     {
                         item.ShipId = ManagerHelp.ShipId;
@@ -132,7 +145,7 @@ namespace ShipWeb.Controllers
                         }
                     }
                     _context.SaveChanges();
-                //}             
+                }
             }
             return new JsonResult(new { code = 0 });
         }

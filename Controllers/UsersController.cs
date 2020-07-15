@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.WebSockets;
+using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -58,10 +61,13 @@ namespace ShipWeb.Controllers
                         return new JsonResult(new { code = 1, msg = "该用户名已存在，请重新修改" });
                     }
                     user.Name = model.Name;
-                    user.Password = MD5Help.MD5Encrypt(model.Password);
+                    if (!string.IsNullOrEmpty(model.Password))
+                    {
+                        user.Password = MD5Help.MD5Encrypt(model.Password);
+                    }
                     user.EnableConfigure = model.EnableConfigure;
                     user.Enablequery = model.Enablequery;
-                    Person person = ConvertModel(user);
+                    //Person person = ConvertModel(user);
                     //int result = manager.UserUpdate(person, users.Uid, id);
                     //if (result == 0)
                     //{
@@ -79,9 +85,9 @@ namespace ShipWeb.Controllers
                     string identity = Guid.NewGuid().ToString();
                     Random rm = new Random();
                     //测试值
-                    model.Uid = rm.Next(1111, 9999).ToString();
+                    model.Uid = rm.Next(0001, 9999).ToString();
                     model.Id = identity;
-                    Person person = ConvertModel(model);
+                    //Person person = ConvertModel(model);
                     //UserResponse response = manager.UserAdd(person, identity);
                     //if (response.result == 0)
                     //{
@@ -140,6 +146,29 @@ namespace ShipWeb.Controllers
             {
                 return Json(new { code = 1, msg = "删除失败" + ex.Message });
             }
+        }
+        public IActionResult UpdatePwd(string ypwd, string xpwd)
+        {
+            if (!string.IsNullOrEmpty(ypwd)&&!string.IsNullOrEmpty(xpwd))
+            {
+                byte[]by=HttpContext.Session.Get("uid");
+                if (by==null)
+                {
+                    return Redirect("/Login/Index");
+                }
+                string uid = Encoding.UTF8.GetString(by);
+                var user = _context.Users.FirstOrDefault(c => c.Uid == uid && c.Password == MD5Help.MD5Encrypt(ypwd));
+                if (user==null)
+                {
+                    return new JsonResult(new { code = 1,msg="原始密码输入有误，请重新输入" });
+                }
+                user.Password = MD5Help.MD5Encrypt(xpwd);
+                _context.Users.Update(user);
+                _context.SaveChanges();
+                return new JsonResult(new { code = 0 });
+            }
+           
+            return new JsonResult(new { code = 1,msg="修改密码失败" });
         }
     }
 }

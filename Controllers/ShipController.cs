@@ -109,30 +109,24 @@ namespace ShipWeb.Controllers
                         name = ship.Name,
                         type = (ShipWeb.ProtoBuffer.Models.StatusRequest.Type)ship.Type
                     };
-
-                    //int result = manager.StatesSet(sr, ship.Id);
-                    //if (result == 0)
-                    //{
-                        if (!string.IsNullOrEmpty(ship.Id))
+                    string identity = ship.Id;
+                    if (!string.IsNullOrEmpty(ship.Id))
+                    {
+                        _context.Ship.Update(ship);
+                    }
+                    else
+                    {
+                        //注册船信息时查询组件是中已经有船ID
+                        var comp = _context.Components.FirstOrDefault(c => c.Cid == ManagerHelp.Cid);
+                        if (comp != null)
                         {
-                            _context.Ship.Update(ship);
+                            ship.Id = comp.ShipId;
                         }
-                        else
-                        {
-                            //注册船信息时查询组件是中已经有船ID
-                            var comp = _context.Components.FirstOrDefault(c => c.Cid == ManagerHelp.Cid);
-                            if (comp != null)
-                            {
-                                ship.Id = comp.ShipId;
-                            }
-                            else
-                            {
-                                ship.Id = ManagerHelp.ShipId;
-                            }
-                            _context.Ship.Add(ship);
-                        }
-                        _context.SaveChanges();
-                    //}
+                        _context.Ship.Add(ship);
+                        identity = ship.Id + "," + comp.Cid;
+                    }
+                    _context.SaveChanges();
+                    manager.StatesSet(sr, identity);
                 }
                 return new JsonResult(new { code = 0 });
             }

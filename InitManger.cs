@@ -44,9 +44,8 @@ namespace ShipWeb
             {
                 //发送组件注册
                 string iditity = Guid.NewGuid().ToString();
-                ManagerHelp.ShipId = Guid.NewGuid().ToString();
                 string name = "组件1";
-                ComponentResponse rep = manager.ComponentStart(iditity, 2, name);
+                ComponentResponse rep = manager.ComponentStart(iditity,ComponentInfo.Type.WEB, name);
                 if (rep != null && rep.result == 0)
                 {
                     Models.Component model = new Models.Component()
@@ -55,10 +54,9 @@ namespace ShipWeb
                         Id = iditity,
                         Name = name,
                         Type = Models.Component.ComponentType.WEB,
-                        ShipId = ManagerHelp.ShipId
+                        ShipId =Guid.NewGuid().ToString()
                     };
                     ManagerHelp.Cid = rep.cid;
-                    ManagerHelp.ComponentType = model.Type;
 
                     _context.Components.Add(model);
                     _context.SaveChanges();
@@ -74,7 +72,7 @@ namespace ShipWeb
                 if (!string.IsNullOrEmpty(ManagerHelp.Cid))
                 {
                     string iditity = Guid.NewGuid().ToString();
-                    ComponentResponse rep = manager.ComponentStart(iditity, (int)ManagerHelp.ComponentType, "", ManagerHelp.Cid);
+                    ComponentResponse rep = manager.ComponentStart(iditity,ComponentInfo.Type.WEB, "", ManagerHelp.Cid);
                 }
             }, TaskCreationOptions.LongRunning);
         }

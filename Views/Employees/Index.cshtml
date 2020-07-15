@@ -80,7 +80,7 @@
                         url: "/Employees/Delete",
                         type: "get",
                         dataType: "json",
-                        data: { id: data.id },
+                        data: { id: data.id, uid: data.uid },
                         contentType: "application/json;chartset=utf-8",
                         success: function (res) {
                             if (res.code == 1) {
@@ -187,6 +187,7 @@
             }
             var data = {
                 id: frm.field.id,
+                uid: frm.field.uid,
                 name: frm.field.name,
                 job: frm.field.job,
                 picIds: frm.field.picIds
@@ -289,6 +290,7 @@
 <div id="divAddOrUpdate" style="display:none">
     <form class="layui-form" action="" id="dataFrm" lay-filter="dataFrm">
         <input name="id" id="hidId" type="hidden" class="layui-input" />
+        <input name="uid" id="hidUid" type="hidden" class="layui-input" />
         <input id="hidPicIds" name="picIds" type="hidden" class="layui-input" />
         <div class="layui-form-item">
             <div class="layui-inline">

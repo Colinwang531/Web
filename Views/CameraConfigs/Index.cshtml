@@ -24,6 +24,7 @@
             dataType: "json",
             success: function (res) {
                 var str = "";//定义用于拼接的字符串
+                $("#ckAll").prop("checked", false);
                 if (res.code == 0) {
                     var data = res.data;
                     if (res.isSet) {

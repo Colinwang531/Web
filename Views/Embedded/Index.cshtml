@@ -81,12 +81,13 @@
                         url: "/Embedded/Delete",
                         type: "get",
                         dataType: "json",
-                        data: { id: data.id },
+                        data: { id: data.id, did: data.did },
                         contentType: "application/json;chartset=utf-8",
                         success: function (res) {
                             if (res.code == 1) {
                                 layer.msg(res.msg, { icon: 2 });
                             } else {
+                                layer.msg("删除成功");
                                 tableIns.reload();
                             }
                         }
@@ -108,7 +109,7 @@
                     }
                 });
             } else if (obj.event === 'detail') {
-                window.location.href = "/Cameras/Index?id=" + obj.data.id;
+                window.location.href = "/Cameras/Index?id=" + obj.data.id + "&did=" + obj.data.did;
                 @*mainIndex = layer.open({
                     type: 1,
                     title: '设备下摄像机明细',
@@ -132,7 +133,8 @@
                 port: parseInt(frm.field.port),
                 type: parseInt(frm.field.type),
                 factory: parseInt(frm.field.factory),
-                id: frm.field.id
+                id: frm.field.id,
+                did: frm.field.did
             };
             $.ajax({
                 url: "/Embedded/Save",
@@ -179,6 +181,7 @@
 <div id="divAddOrUpdate" style="display:none;margin-top:20px">
     <form class="layui-form" action="" id="dataFrm" lay-filter="dataFrm">
         <input name="id" id="hidId" type="hidden" class="layui-input" />
+        <input name="did" id="hidDid" type="hidden" class="layui-input"/>
         <div class="layui-form-item">
             <div class="layui-inline">
                 <label class="layui-form-label">设备厂商：</label>

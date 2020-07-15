@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -15,17 +16,9 @@ namespace ShipWeb.Tool
         //船ID
         public static string ShipId = "";
         /// <summary>
-        /// 保存组件ID文件夹
-        /// </summary>
-        public static string path = AppContext.BaseDirectory + "/Component.txt";
-        /// <summary>
         /// 组件ID（组件注册成功后返回的ID）
         /// </summary>
         public static string Cid = "";
-        /// <summary>
-        /// 组件类型
-        /// </summary>
-        public static Models.Component.ComponentType ComponentType;
 
         /// <summary>
         /// 是否显示返回陆地端菜单
@@ -65,6 +58,7 @@ namespace ShipWeb.Tool
                 }
             }
         }
+       
         /// <summary>
         /// 未做转换的字节流
         /// </summary>

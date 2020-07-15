@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using NetMQ;
 using ProtoBuf;
 using ShipWeb.DB;
 using ShipWeb.Models;
@@ -22,13 +23,21 @@ namespace ShipWeb.Controllers
         }
 
         // GET: Cameras
-        public IActionResult Index(string id)
+        public IActionResult Index(string id,string did)
         {
-            ViewBag.id = id;
+            ViewBag.id = id.Trim();
+            if (ManagerHelp.IsShowLandHome)
+            {
+                ViewBag.id = did.Trim();
+            }
             return View();
         }
         public IActionResult Load(string id)
         {
+            if (ManagerHelp.IsShowLandHome)
+            {
+                return LandLoad(id);
+            }
             var camera = _context.Camera.Where(m => m.EmbeddedId == id.Trim()).ToList();
             var result = new
             {
@@ -44,13 +53,18 @@ namespace ShipWeb.Controllers
         /// <returns></returns>
         private IActionResult LandLoad(string did) 
         {
-            string identity = Guid.NewGuid().ToString();
-            var emdList=manager.DeviceQuery(identity, did);
-            List<ShipWeb.ProtoBuffer.Models.Camera> list = new List<ProtoBuffer.Models.Camera>();
-            if (emdList.Count>0)
-            {
-                list= emdList[0].cameras;
-            }
+            var emdList=manager.DeviceQuery(ManagerHelp.ShipId, did);
+            var cams = emdList.Count>0?emdList[0].cameras:new List<ProtoBuffer.Models.Camera> ();
+            var list = from a in cams
+                       select new
+                       {
+                           id=a.cid.Split(',')[0],
+                           cid=a.cid.Split(',')[1],
+                           enalbe=a.enable,
+                           a.index,
+                           a.ip,
+                           nickName=a.nickname
+                       };
             var result = new
             {
                 code = 0,
@@ -58,12 +72,30 @@ namespace ShipWeb.Controllers
             };
             return new JsonResult(result);
         }
-        public IActionResult Save(string id,string nickName,string enalbe)
+        public IActionResult Save(string id,string did,string cid,string nickName,string enalbe)
         {
             if (ModelState.IsValid)
             {
                 try
                 {
+                    //陆地端远程修改摄像机信息
+                    if (ManagerHelp.IsShowLandHome)
+                    {
+                        ProtoBuffer.Models.Embedded emb = new ProtoBuffer.Models.Embedded()
+                        {
+                            cameras = new List<ProtoBuffer.Models.Camera>() {
+                                 new ProtoBuffer.Models.Camera(){
+                                 cid=cid,
+                                 enable=enalbe == "1" ? true : false,
+                                 nickname=nickName
+                                 }
+                               },
+                            did = did
+                        };
+                        var code = manager.DeveiceUpdate(emb, did, ManagerHelp.ShipId);
+                        return new JsonResult(new { code = code, msg = code == 1 ? "数据修改失败" : "数据修改成功" });
+                    }
+
                     Camera camera = _context.Camera.FirstOrDefault(c => c.Id == id);
                     if (camera == null)
                     {
@@ -89,7 +121,7 @@ namespace ShipWeb.Controllers
                         };
                         Task.Factory.StartNew(state =>
                         {
-                            manager.DeveiceUpdate(emb, embModel.Did, camera.Id);
+                            manager.DeveiceUpdate(emb, embModel.Did,ManagerHelp.ShipId);
                         }, TaskCreationOptions.LongRunning);
                         _context.Update(camera);
                         _context.SaveChangesAsync();

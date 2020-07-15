@@ -12,6 +12,7 @@ using ShipWeb.ProtoBuffer;
 using ShipWeb.ProtoBuffer.Models;
 using System.Text;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication.Cookies;
 
 namespace ShipWeb.Controllers
 {
@@ -66,6 +67,7 @@ namespace ShipWeb.Controllers
                     ManagerHelp.ShipId = ship.Id;
                     flag = true;
                 }
+
                 //ManagerHelp.IframeSrc = "/Embedded/Index?isShow=false";
                 //if (flag && ManagerHelp.IsShowAlarm)
                 //{

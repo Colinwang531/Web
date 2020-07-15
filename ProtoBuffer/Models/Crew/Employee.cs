@@ -12,20 +12,22 @@ namespace ShipWeb.ProtoBuffer.Models
     [ProtoContract]
     public class Employee
     {
+        [ProtoMember(1)]
+        public string uid { get; set; }
         /// <summary>
         /// 雇员名称
         /// </summary>
-        [ProtoMember(1)]
+        [ProtoMember(2)]
         public string name { get; set; }
         /// <summary>
         /// 雇员负责工作
         /// </summary>
-        [ProtoMember(2)]
+        [ProtoMember(3)]
         public string job { get; set; }
         /// <summary>
         /// 雇员照片
         /// </summary>
-        [ProtoMember(3)]
+        [ProtoMember(4)]
         public List<byte[]> pictures { get; set; }
     }
 }

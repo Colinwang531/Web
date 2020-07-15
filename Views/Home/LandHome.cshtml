@@ -8,9 +8,10 @@
 <script src="~/lib/jquery/dist/jquery.js"></script>
 <script src="~/layui/layui.js"></script>
 <script type="text/javascript">
-    layui.use(['element','table', 'form'], function () {
+    layui.use(['element', 'table', 'form'], function () {
         var $ = layui.jquery
         var element = layui.element;
+        var form = layer.form;
         $(".alarm").click(function () {
             $("#divBody").show();
             $("#divShip").hide();
@@ -18,7 +19,7 @@
         });
         $(".ship").click(function () {
             ShowShip();
-        }); 
+        });
         $(".user").click(function () {
             $("#divBody").show();
             $("#divShip").hide();
@@ -43,7 +44,7 @@
                             html += '<tr>';
                             html += '<td>' + tb[i].name + '</td>';
                             html += '<td>' + (tb[i].flag ? "航行" : "停港") + '</td>';
-                            html += '<td><a class="layui-btn layui-btn-primary layui-btn-xs" href="/Embedded/Index?isShow=true&id=' + tb[i].id+'">详情</a></td>';
+                            html += '<td><a class="layui-btn layui-btn-primary layui-btn-xs" href="/Embedded/Index?isShow=true&id=' + tb[i].id + '">详情</a></td>';
                             html += '</tr>';
                         }
                     }
@@ -52,13 +53,76 @@
             }
         });
     }
+    function EditPwd() {
+        layui.use(['layer', 'form'], function () {
+            var $ = layui.$;
+            var form = layui.form;
+            layer.open({
+                type: 1,
+                title: "修改密码",
+                content: $("#saveDiv"),
+                area: ["480px", "320px"],
+                success: function () {
+                    $("#dataFrm")[0].reset();
+                }
+            });
+            form.verify({
+                pass: function (value) {
+                    var reg = /^[0-9a-zA-Z_]{6,12}$/;
+                    if (!new RegExp(reg).test(value) || value.indexOf(" ") != -1 || value.length < 6 || value.length > 12) {
+                        return '密码必须6到12位，且不能出现空格';
+                    }
+                },
+                passSure: function (value) {
+                    var xpwd = $("#txtxpwd").val();
+                    if ($("#hidId").val() == "" || xpwd != "") {
+                        if (xpwd != value) {
+                            return '前后两次输入密码不一致';
+                        }
+                    }
+                }
+            });
+            form.on("submit(doSubmit)", function (frm) {
+                var data = {
+                    ypwd: frm.field.ypwd,
+                    xpwd: frm.field.xpwd
+                }
+                $.ajax({
+                    url: "/Users/UpdatePwd",
+                    data: data,
+                    type: "get",
+                    contentType: "javascript/json;chartset=utf-8",
+                    dataType: "json",
+                    success: function (res) {
+                        if (res.code == 0) {
+                            layer.msg("密码修改成功", { time: 3000 }, function () {
+                                layer.closeAll();
+                            });
+                        } else {
+                            layer.msg(res.msg);
+                        }
+                    }
+                });
+                return false;
+            })
+        });
+       
+    }
 </script>
 <div class="layui-layout layui-layout-admin">
     <div class="layui-header" style="background-color:#393D49">
         <div class="layui-logo">禹创智能科技</div>
         <ul class="layui-nav layui-layout-right">
             <li class="layui-nav-item">
-                欢迎您：@ShipWeb.Tool.ManagerHelp.LoginName
+                <a href="javascript:;">
+                    欢迎您：@ShipWeb.Tool.ManagerHelp.LoginName
+                </a>
+                @if (!ViewBag.isAdmin)
+                {
+                    <dl class="layui-nav-child">
+                        <dd><a href="javascript:;" onclick="EditPwd()">修改密码</a></dd>
+                    </dl>
+                }
             </li>
             <li class="layui-nav-item"><a href="/Login/SignOut">退了</a></li>
         </ul>
@@ -70,11 +134,11 @@
                 <!-- 左侧导航区域 -->
                 <ul class="layui-nav layui-nav-tree" lay-filter="test">
                     <li class="layui-nav-item alarm layui-this"><a href="#">报警</a></li>
-                    @*@if (ViewBag.isAdmin)
-                    {*@
-                        <li class="layui-nav-item ship"><a href="#">船舶信息</a></li>
+                    <li class="layui-nav-item ship"><a href="#">船舶信息</a></li>
+                    @if (ViewBag.isAdmin)
+                    {
                         <li class="layui-nav-item user"><a href="#">用户信息</a></li>
-                    @*}*@
+                    }
                 </ul>
             </div>
         </div>
@@ -97,6 +161,44 @@
             </table>
         </div>
     </div>
-    <div class="layui-footer">底部信息 @($"{DateTime.Now:HH:mm:ss}") , 您好 King Yu 禹创智能科技</div>
+    <div class="layui-footer">底部信息 @($"{ShipWeb.Tool.DateTimeExtentions.ToCstTime(DateTime.Now).ToString("yyyy-MM-dd HH:mm:ss")}") , 您好 King Yu 禹创智能科技</div>
 </div>
 
+<div style="display: none;" id="saveDiv">
+    <form class="layui-form" action="" id="dataFrm" lay-filter="dataFrm">
+        <div class="layui-form-item" style="margin-top:20px">
+            <div class="layui-inline">
+                <label class="layui-form-label">原始密码：</label>
+                <div class="layui-input-inline">
+                    <input type="password" id="txtypwd" name="ypwd" maxlength="32" lay-verify="pass" autocomplete="off" class="layui-input">
+                </div>
+                <div class="layui-form-mid layui-word-aux">请填写6到12位密码</div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">新密码：</label>
+                <div class="layui-input-inline">
+                    <input type="password" id="txtxpwd" name="xpwd" maxlength="32" lay-verify="pass" autocomplete="off" class="layui-input">
+                </div>
+                <div class="layui-form-mid layui-word-aux">请填写6到12位密码</div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">确认密码：</label>
+                <div class="layui-input-inline">
+                    <input type="password" id="txtspwd" name="spwd" maxlength="32" lay-verify="passSure" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item" style="text-align: center">
+            <div class="layui-input-block">
+                <button type="submit" class="layui-btn layui-btn-normal layui-btn-sm layui-icon layui-icon-release" lay-filter="doSubmit" lay-submit="">提交</button>
+                <button type="reset" class="layui-btn layui-btn-warm layui-btn-sm layui-icon layui-icon-refresh">重置</button>
+            </div>
+        </div>
+
+    </form>
+
+</div>
