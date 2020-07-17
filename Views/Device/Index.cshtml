@@ -17,7 +17,7 @@
         var DISABLED = 'layui-btn-disabled';
         var tableIns = table.render({
             elem: '#userTable',   //渲染的目标对象
-            url: '/Embedded/Load', //数据接口
+            url: '/Device/Load', //数据接口
             toolbar: "#userToolBar",   //表格的工具条
             page: false,  //是否启用分页
             cols: [[   //列表数据
@@ -85,10 +85,10 @@
                     obj.del();
                     layer.close(index);
                     $.ajax({
-                        url: "/Embedded/Delete",
+                        url: "/Device/Delete",
                         type: "get",
                         dataType: "json",
-                        data: { id: data.id, did: data.did },
+                        data: { id: data.id },
                         contentType: "application/json;chartset=utf-8",
                         success: function (res) {
                             if (res.code == 1) {
@@ -116,7 +116,7 @@
                     }
                 });
             } else if (obj.event === 'detail') {
-                window.location.href = "/Cameras/Index?id=" + obj.data.id + "&did=" + obj.data.did;
+                window.location.href = "/Camera/Index?id=" + obj.data.id;
                 @*mainIndex = layer.open({
                     type: 1,
                     title: '设备下摄像机明细',
@@ -142,10 +142,9 @@
                 type: parseInt(frm.field.type),
                 factory: parseInt(frm.field.factory),
                 id: frm.field.id,
-                did: frm.field.did
             };
             $.ajax({
-                url: "/Embedded/Save",
+                url: "/Device/Save",
                 data: { strEmbed: JSON.stringify(data) },
                 type: "get",
                 dataType: "json",
@@ -190,7 +189,6 @@
 <div id="divAddOrUpdate" style="display:none;margin-top:20px">
     <form class="layui-form" action="" id="dataFrm" lay-filter="dataFrm">
         <input name="id" id="hidId" type="hidden" class="layui-input" />
-        <input name="did" id="hidDid" type="hidden" class="layui-input"/>
         <div class="layui-form-item">
             <div class="layui-inline">
                 <label class="layui-form-label">设备厂商：</label>

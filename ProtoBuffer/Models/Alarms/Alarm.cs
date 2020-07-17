@@ -32,6 +32,6 @@ namespace ShipWeb.ProtoBuffer.Models
         /// 报警信息
         /// </summary>
         [ProtoMember(4)]
-        public Information information { get; set; }
+        public AlarmInfo alarminfo { get; set; }
     }
 }

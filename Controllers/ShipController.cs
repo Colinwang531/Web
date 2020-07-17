@@ -15,6 +15,7 @@ namespace ShipWeb.Controllers
     public class ShipController : BaseController
     {
         private readonly MyContext _context;
+        private ProtoManager manager = new ProtoManager();
         public ShipController(MyContext context)
         {
             _context = context;
@@ -26,7 +27,7 @@ namespace ShipWeb.Controllers
             {
                 ViewBag.Id = ship.Id;
                 ViewBag.Name = ship.Name;
-                ViewBag.Type = ship.Type;
+                ViewBag.Type = ship.type;
                 ViewBag.Flag = ship.Flag;
             }
             else
@@ -85,7 +86,7 @@ namespace ShipWeb.Controllers
         /// </summary>
         /// <param name="ship"></param>
         /// <returns></returns>
-        public IActionResult Save(string id, string name, Ship.ShipType type, string flag)
+        public IActionResult Save(string id, string name, int type)
         {
             try
             {
@@ -93,40 +94,64 @@ namespace ShipWeb.Controllers
                 {
                     new JsonResult(new { code = 1, msg = "您没有权限修改数据!" });
                 }
-                if (ModelState.IsValid)
+                if (!string.IsNullOrEmpty(id))
+                {
+                    var ship = _context.Ship.FirstOrDefault(c => c.Id == id);
+                    if (ship != null)
+                    {
+                        ship.Name = name;
+                        ship.type = (Ship.Type)type;
+                        ship.Flag = type == (int)Ship.Type.PORT ? false : true;
+                    }
+
+                    _context.Ship.Update(ship);
+                    _context.SaveChanges();
+                    ShipWeb.ProtoBuffer.Models.StatusRequest sr = new ShipWeb.ProtoBuffer.Models.StatusRequest()
+                    {
+                        type = (ShipWeb.ProtoBuffer.Models.StatusRequest.Type)ship.type,
+                        flag = ship.Flag
+                    };
+                    manager.StatesSet(sr, ship.Id);
+                    if (ship.Name != name)
+                    {
+                        sr = new ProtoBuffer.Models.StatusRequest()
+                        {
+                            type = ProtoBuffer.Models.StatusRequest.Type.NAME,
+                            text = name
+                        };
+                        manager.StatesSet(sr, ship.Id);
+                    }
+                }
+                else
                 {
                     Ship ship = new Ship()
                     {
-                        Flag = flag == "1" ? true : false,
                         Id = id,
                         Name = name,
-                        Type = type
+                        type = (Ship.Type)type
                     };
-                    ProtoManager manager = new ProtoManager();
+                    //注册船信息时查询组件是中已经有船ID
+                    var comp = _context.Component.FirstOrDefault(c => c.Id == ManagerHelp.Cid);
+                    if (comp != null)
+                    {
+                        ship.Id = string.IsNullOrEmpty(comp.ShipId) ? Guid.NewGuid().ToString() : comp.ShipId;
+                    }
+                    _context.Ship.Add(ship);
+                    _context.SaveChanges();
+                    //修改船航行状态
                     ShipWeb.ProtoBuffer.Models.StatusRequest sr = new ShipWeb.ProtoBuffer.Models.StatusRequest()
                     {
-                        flag = ship.Flag,
-                        name = ship.Name,
-                        type = (ShipWeb.ProtoBuffer.Models.StatusRequest.Type)ship.Type
+                        type = (ShipWeb.ProtoBuffer.Models.StatusRequest.Type)ship.type,
+                        flag = ship.Flag
                     };
-                    string identity = ship.Id;
-                    if (!string.IsNullOrEmpty(ship.Id))
+                    manager.StatesSet(sr, ship.Id);
+                    //修改船名
+                    sr = new ProtoBuffer.Models.StatusRequest()
                     {
-                        _context.Ship.Update(ship);
-                    }
-                    else
-                    {
-                        //注册船信息时查询组件是中已经有船ID
-                        var comp = _context.Components.FirstOrDefault(c => c.Cid == ManagerHelp.Cid);
-                        if (comp != null)
-                        {
-                            ship.Id = comp.ShipId;
-                        }
-                        _context.Ship.Add(ship);
-                        identity = ship.Id + "," + comp.Cid;
-                    }
-                    _context.SaveChanges();
-                    manager.StatesSet(sr, identity);
+                        type = ProtoBuffer.Models.StatusRequest.Type.NAME,
+                        text = name
+                    };
+                    manager.StatesSet(sr, ship.Id);
                 }
                 return new JsonResult(new { code = 0 });
             }

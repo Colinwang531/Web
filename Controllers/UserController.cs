@@ -18,24 +18,24 @@ using ShipWeb.Tool;
 
 namespace ShipWeb.Controllers
 {
-    public class UsersController : BaseController
+    public class UserController : BaseController
     {
         private readonly MyContext _context;
         private ProtoManager manager;
-        public UsersController(MyContext context)
+        public UserController(MyContext context)
         {
             _context = context;
             manager = new ProtoManager();
         }
 
-        // GET: Users
+        // GET: User
         public ActionResult Index()
         {
             return View();
         }
         public IActionResult Load()
         {
-            var data = _context.Users.Where(c => c.Uid != "admin").ToList();
+            var data = _context.User.Where(c => c.Id != "admin").ToList();
             var result = new
             {
                 code = 0,
@@ -44,14 +44,14 @@ namespace ShipWeb.Controllers
             };
             return new JsonResult(result);
         }
-        public IActionResult UserSave(string users) {
-            var model = JsonConvert.DeserializeObject<Users>(users);
+        public IActionResult Save(string users) {
+            var model = JsonConvert.DeserializeObject<Models.User>(users);
             if (model!=null)
             {
-                var userdb = _context.Users.FirstOrDefault(c => c.Name == model.Name);
+                var userdb = _context.User.FirstOrDefault(c => c.Name == model.Name);
                 if (!string.IsNullOrEmpty(model.Id)&&model.Id!="null")
                 {
-                    var user = _context.Users.FirstOrDefault(c => c.Id == model.Id);
+                    var user = _context.User.FirstOrDefault(c => c.Id == model.Id);
                     if (user == null)
                     {
                         return new JsonResult(new { code = 1, msg = "该数据不存在" });
@@ -71,7 +71,7 @@ namespace ShipWeb.Controllers
                     //int result = manager.UserUpdate(person, users.Uid, id);
                     //if (result == 0)
                     //{
-                    _context.Users.Update(user);
+                    _context.User.Update(user);
                     _context.SaveChanges();
                     //}
                 }
@@ -83,9 +83,6 @@ namespace ShipWeb.Controllers
                     }
                     model.Password = MD5Help.MD5Encrypt(model.Password);
                     string identity = Guid.NewGuid().ToString();
-                    Random rm = new Random();
-                    //测试值
-                    model.Uid = rm.Next(0001, 9999).ToString();
                     model.Id = identity;
                     //Person person = ConvertModel(model);
                     //UserResponse response = manager.UserAdd(person, identity);
@@ -93,7 +90,7 @@ namespace ShipWeb.Controllers
                     //{
                     //    users.Uid = response.uid;
                     //}
-                    _context.Users.Add(model);
+                    _context.User.Add(model);
 
                 }
                 _context.SaveChanges();
@@ -103,18 +100,18 @@ namespace ShipWeb.Controllers
         /// <summary>
         /// 将本地实体转为传输格式实体
         /// </summary>
-        /// <param name="users"></param>
+        /// <param name="user"></param>
         /// <returns></returns>
-        private Person ConvertModel(Users users)
+        private Person ConvertModel(Models.User user)
         {
             Person person = new Person()
             {
-                name = users.Name,
-                password = users.Password,
+                name = user.Name,
+                password = user.Password,
                 author = new Author()
                 {
-                    enableconfigure = users.EnableConfigure,
-                    enablequery = users.Enablequery
+                    enableconfigure = user.EnableConfigure,
+                    enablequery = user.Enablequery
                 }
             };
             return person;
@@ -128,7 +125,7 @@ namespace ShipWeb.Controllers
                     return NotFound();
                 }
 
-                var users = _context.Users.FirstOrDefault(m => m.Id == id);
+                var users = _context.User.FirstOrDefault(m => m.Id == id);
                 if (users == null)
                 {
                     return NotFound();
@@ -136,7 +133,7 @@ namespace ShipWeb.Controllers
                 //int result = manager.UserDelete(users.Uid, users.Id);
                 //if (result == 0)
                 //{
-                    _context.Users.Remove(users);
+                    _context.User.Remove(users);
                     _context.SaveChanges();
                 //}
 
@@ -157,13 +154,13 @@ namespace ShipWeb.Controllers
                     return Redirect("/Login/Index");
                 }
                 string uid = Encoding.UTF8.GetString(by);
-                var user = _context.Users.FirstOrDefault(c => c.Uid == uid && c.Password == MD5Help.MD5Encrypt(ypwd));
+                var user = _context.User.FirstOrDefault(c => c.Id == uid && c.Password == MD5Help.MD5Encrypt(ypwd));
                 if (user==null)
                 {
                     return new JsonResult(new { code = 1,msg="原始密码输入有误，请重新输入" });
                 }
                 user.Password = MD5Help.MD5Encrypt(xpwd);
-                _context.Users.Update(user);
+                _context.User.Update(user);
                 _context.SaveChanges();
                 return new JsonResult(new { code = 0 });
             }

@@ -24,7 +24,7 @@
         $(".user").click(function () {
             $("#divBody").show();
             $("#divShip").hide();
-            $("#ifBody").attr("src", "/Users/Index")
+            $("#ifBody").attr("src", "/User/Index")
         });
     });
     function ShowShip() {
@@ -45,7 +45,7 @@
                             html += '<tr>';
                             html += '<td>' + tb[i].name + '</td>';
                             html += '<td>' + (tb[i].flag ? "航行" : "停港") + '</td>';
-                            html += '<td><a class="layui-btn layui-btn-primary layui-btn-xs" href="/Embedded/Index?isShow=true&id=' + tb[i].id + '">详情</a></td>';
+                            html += '<td><a class="layui-btn layui-btn-primary layui-btn-xs" href="/Device/Index?isShow=true&id=' + tb[i].id + '">详情</a></td>';
                             html += '</tr>';
                         }
                     }
@@ -89,7 +89,7 @@
                     xpwd: frm.field.xpwd
                 }
                 $.ajax({
-                    url: "/Users/UpdatePwd",
+                    url: "/User/UpdatePwd",
                     data: data,
                     type: "get",
                     contentType: "javascript/json;chartset=utf-8",

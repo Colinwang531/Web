@@ -33,33 +33,31 @@ namespace ShipWeb.Controllers
             {
                 //查询记录考虑的摄像机
                 var info =( from a in _context.AlarmInformation
-                         join b in _context.CameraConfig on a.Cid equals b.Cid
-                         where a.Type == 5 && ((b.EnableAttendanceIn && !b.EnableAttendanceOut) || (!b.EnableAttendanceIn && b.EnableAttendanceOut))&&a.Shipid==ManagerHelp.ShipId
+                         join b in _context.Algorithm on a.Cid equals b.Cid
+                         where (a.Type == Models.AlarmType.ATTENDANCE_IN||a.Type==Models.AlarmType.ATTENDANCE_OUT)&&a.Shipid==ManagerHelp.ShipId
                          select new
                          {
                              a.AlarmId,
                              a.Uid,
-                             b.EnableAttendanceIn,
-                             b.EnableAttendanceOut
+                             b.Type
                          }).ToList();
                 var alarmIds = string.Join(',', info.Select(c => c.AlarmId));
                 var uids = string.Join(',', info.Select(c => c.Uid));
                 //查询考勤图片
                 var alarm = _context.Alarm.Where(c => alarmIds.Contains(c.Id)).ToList();
                 //查询船员信息
-                var employee = _context.Employee.Where(c => uids.Contains(c.Uid)).ToList();
+                var employee = _context.Crew.Where(c => uids.Contains(c.Id)).ToList();
                 //组合数据
                 var data = from a in info
                                join b in alarm on a.AlarmId equals b.Id
-                               join c in employee on a.Uid equals c.Uid
+                               join c in employee on a.Uid equals c.Id
                                select new
                                {
                                    Picture = Convert.FromBase64String(Encoding.UTF8.GetString(b.Picture)),
                                    Time = b.Time.ToString("yyyy-MM-dd HH:mm:ss"),
-                                   c.Uid,
+                                   c.Id,
                                    c.Name,
-                                   a.EnableAttendanceIn,
-                                   a.EnableAttendanceOut
+                                   a.Type
                                };
 
                 int count = data.Count();
@@ -94,14 +92,13 @@ namespace ShipWeb.Controllers
             {
                 //查询记录考虑的摄像机
                 var info = (from a in _context.AlarmInformation
-                            join b in _context.CameraConfig on a.Cid equals b.Cid
-                            where a.Type == 5 && ((b.EnableAttendanceIn && !b.EnableAttendanceOut) || (!b.EnableAttendanceIn && b.EnableAttendanceOut)) && a.Shipid == ManagerHelp.ShipId
+                            join b in _context.Algorithm on a.Cid equals b.Cid
+                            where (a.Type == Models.AlarmType.ATTENDANCE_IN || a.Type == Models.AlarmType.ATTENDANCE_OUT) && a.Shipid == ManagerHelp.ShipId
                             select new
                             {
                                 a.AlarmId,
                                 a.Uid,
-                                b.EnableAttendanceIn,
-                                b.EnableAttendanceOut
+                                b.Type
                             }).ToList();
                 var alarmIds = string.Join(',', info.Select(c => c.AlarmId));
                 var uids = string.Join(',', info.Select(c => c.Uid));
@@ -125,21 +122,20 @@ namespace ShipWeb.Controllers
                 }
                 var alarm = alarmWhere.ToList();
                 //查询船员信息
-                var employee = _context.Employee.Where(c => uids.Contains(c.Uid)&&
-                                                    (!string.IsNullOrEmpty(uid) ? c.Uid == uid:1==1)&&
+                var employee = _context.Crew.Where(c => uids.Contains(c.Id)&&
+                                                    (!string.IsNullOrEmpty(uid) ? c.Id == uid:1==1)&&
                                                     (!string.IsNullOrEmpty(name)? c.Name.Contains(name):1==1)).ToList();
                 //组合数据
                 var data = from a in info
                            join b in alarm on a.AlarmId equals b.Id
-                           join c in employee on a.Uid equals c.Uid
+                           join c in employee on a.Uid equals c.Id
                            select new
                            {
                                Picture = Convert.FromBase64String(Encoding.UTF8.GetString(b.Picture)),
                                Time = b.Time.ToString("yyyy-MM-dd HH:mm:ss"),
-                               c.Uid,
+                               c.Id,
                                c.Name,
-                               a.EnableAttendanceIn,
-                               a.EnableAttendanceOut
+                               a.Type
                            };
 
                 int count = data.Count();

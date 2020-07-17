@@ -13,6 +13,6 @@ namespace ShipWeb.ProtoBuffer.Models
         /// 配置
         /// </summary>
         [ProtoMember (1)]
-        public List<Configure> configure { get; set; }
+        public AlgorithmInfo algorithminfo { get; set; }
     }
 }

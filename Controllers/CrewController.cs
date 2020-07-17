@@ -22,13 +22,13 @@ using ShipWeb.Tool;
 
 namespace ShipWeb.Controllers
 {
-    public class EmployeesController : BaseController
+    public class CrewController : BaseController
     {
 
         private readonly MyContext _context;
         private ProtoManager manager;
         public static Dictionary<string,byte[]> picBytes;
-        public EmployeesController(MyContext context)
+        public CrewController(MyContext context)
         {
             _context = context;
             manager = new ProtoManager();
@@ -51,13 +51,13 @@ namespace ShipWeb.Controllers
                 return LandLoad();
             }
 
-            var data = _context.Employee.Where(c=>c.ShipId==ManagerHelp.ShipId).ToList();
+            var data = _context.Crew.Where(c=>c.ShipId==ManagerHelp.ShipId).ToList();
             var ids = string.Join(',', data.Select(c => c.Id));
-            var Pics=_context.EmployeePicture.Where(c => ids.Contains(c.EmployeeId)).ToList();
+            var Pics=_context.CrewPicture.Where(c => ids.Contains(c.CrewId)).ToList();
             foreach (var item in data)
             {
-                var picW = Pics.Where(c =>c.EmployeeId== item.Id);
-                item.employeePictures = new List<EmployeePicture>();
+                var picW = Pics.Where(c =>c.CrewId== item.Id);
+                item.employeePictures = new List<CrewPicture>();
                 if (picW.Count()>0)
                 {
                     foreach (var pic in picW)
@@ -72,7 +72,6 @@ namespace ShipWeb.Controllers
                            {
                                a.Id,
                                a.Job,
-                               a.Uid,
                                a.Name,
                                a.ShipId,
                                employeePictures =from b in a.employeePictures
@@ -102,8 +101,7 @@ namespace ShipWeb.Controllers
                            {
                                a.job,
                                a.name,
-                               id=a.uid.Split(',')[0],
-                               uid=a.uid.Split(',')[1],
+                               id=a.uid,
                                ShipId=ManagerHelp.ShipId,
                                employeePictures = from b in a.pictures
                                                   select new
@@ -158,7 +156,7 @@ namespace ShipWeb.Controllers
         /// <param name="job"></param>
         /// <param name="picIds">图片ID</param>
         /// <returns></returns>
-        public IActionResult Save(string id,string uid,string name,string job,string picIds)
+        public IActionResult Save(string id,string name,string job,string picIds)
         {
             try
             {
@@ -172,7 +170,7 @@ namespace ShipWeb.Controllers
                     #region 陆地端添加/修改船员
                     if (ManagerHelp.IsShowLandHome)
                     {
-                        ShipWeb.ProtoBuffer.Models.Employee emp = new ShipWeb.ProtoBuffer.Models.Employee()
+                        ShipWeb.ProtoBuffer.Models.CrewInfo emp = new ShipWeb.ProtoBuffer.Models.CrewInfo()
                         {
                             job = job,
                             name = name
@@ -180,7 +178,7 @@ namespace ShipWeb.Controllers
                         
                         int code = 0;
                         //陆地端添加船员
-                        if (string.IsNullOrEmpty(uid))
+                        if (string.IsNullOrEmpty(id))
                         { //添加图片
                             if (picBytes.Count > 0 && ids.Count > 0)
                             {
@@ -194,8 +192,7 @@ namespace ShipWeb.Controllers
                                     }
                                 }
                             }
-                            string result = manager.CrewAdd(emp, ManagerHelp.ShipId);
-                            code = result != "" ? 0 : 1;
+                            code = manager.CrewAdd(emp, ManagerHelp.ShipId);
                         }
                         else
                         {
@@ -217,7 +214,7 @@ namespace ShipWeb.Controllers
                                     }
                                 }
                             }
-                            int result = manager.CrewUpdate(emp, uid, ManagerHelp.ShipId);
+                            int result = manager.CrewUpdate(emp, id, ManagerHelp.ShipId);
                             code = result;
                         }
                         //清除已经上传了的图片
@@ -229,12 +226,12 @@ namespace ShipWeb.Controllers
                     }
                     #endregion
 
-                    Employee employee;
-                    var empdb = _context.Employee.FirstOrDefault(c => c.Name == name);
+                    Crew employee;
+                    var empdb = _context.Crew.FirstOrDefault(c => c.Name == name);
                     if (!string.IsNullOrEmpty(id))
                     {
                         #region 修改船员信息
-                        employee = _context.Employee.FirstOrDefault(c => c.Id == id);
+                        employee = _context.Crew.FirstOrDefault(c => c.Id == id);
                         if (employee == null)
                         {
                             return new JsonResult(new { code = 1, msg = "数据中不存在此数据" });
@@ -245,7 +242,7 @@ namespace ShipWeb.Controllers
                         }
                         employee.Name = name;
                         employee.Job = job;
-                        var picList = _context.EmployeePicture.Where(c => c.EmployeeId == id).ToList();
+                        var picList = _context.CrewPicture.Where(c => c.CrewId == id).ToList();
                         //记录数据库中存在的图片ID
                         List<string> dbIds = new List<string>();
                         foreach (var item in ids)
@@ -254,14 +251,14 @@ namespace ShipWeb.Controllers
                             {
                                 #region 需要添加的图片
                                 var pic = picBytes.Where(c => c.Key == item).FirstOrDefault();
-                                EmployeePicture ep = new EmployeePicture()
+                                CrewPicture ep = new CrewPicture()
                                 {
-                                    EmployeeId = employee.Id,
+                                    CrewId = employee.Id,
                                     Id = pic.Key,
                                     Picture = pic.Value,
                                     ShipId = employee.ShipId
                                 };
-                                _context.EmployeePicture.Add(ep);
+                                _context.CrewPicture.Add(ep);
 
                                 #endregion
                             }
@@ -271,12 +268,12 @@ namespace ShipWeb.Controllers
                             }
                         }
                         //查找当前船员下需要删除的图片
-                        var delPicList = picList.Where(c => c.EmployeeId == id && !dbIds.Contains(c.Id)).ToList();
+                        var delPicList = picList.Where(c => c.CrewId == id && !dbIds.Contains(c.Id)).ToList();
                         if (delPicList.Count > 0)
                         {
-                            _context.EmployeePicture.RemoveRange(picList);
+                            _context.CrewPicture.RemoveRange(picList);
                         }
-                        _context.Employee.Update(employee);
+                        _context.Crew.Update(employee);
                         #endregion
                     }
                     else
@@ -287,28 +284,25 @@ namespace ShipWeb.Controllers
                             return new JsonResult(new { code = 1, msg = "船员名称不能重复" });
                         }
                         string identity = Guid.NewGuid().ToString();
-                        employee = new Employee()
+                        employee = new Crew()
                         {
                             Job = job,
                             Name = name,
                             Id = identity,
                             ShipId = ManagerHelp.ShipId
                         };
-                        Random rb = new Random();
-                        //测试数据
-                        employee.Uid = rb.Next(0001, 9999).ToString(); ;
                         //添加图片
                         if (picBytes.Count > 0 && ids.Count > 0)
                         {
-                            List<EmployeePicture> list = new List<EmployeePicture>();
+                            List<CrewPicture> list = new List<CrewPicture>();
                             foreach (var item in ids)
                             {
                                 if (picBytes.Where(c => c.Key == item).Any())
                                 {
-                                    EmployeePicture pic = new EmployeePicture()
+                                    CrewPicture pic = new CrewPicture()
                                     {
                                         Id = item,
-                                        EmployeeId = identity,
+                                        CrewId = identity,
                                         ShipId = ManagerHelp.ShipId,
                                         Picture = picBytes.Where(c => c.Key == item).FirstOrDefault().Value
                                     };
@@ -349,7 +343,7 @@ namespace ShipWeb.Controllers
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
-        public  IActionResult Delete(string id,string uid)
+        public  IActionResult Delete(string id)
         {
             try
             {
@@ -357,30 +351,30 @@ namespace ShipWeb.Controllers
                 //陆地端远程删除船员
                 if (ManagerHelp.IsShowLandHome)
                 {
-                    if (uid==null)
+                    if (id == null)
                     {
                         return NotFound();
                     }
-                    manager.CrewDelete(uid, ManagerHelp.ShipId);
+                    manager.CrewDelete(id, ManagerHelp.ShipId);
                     return new JsonResult(new { code = 0, msg = "删除成功!" });
                 }
                 if (id == null)
                 {
                     return NotFound();
                 }
-                var employee = _context.Employee.Find(id);
+                var employee = _context.Crew.Find(id);
                 if (employee == null)
                 {
                     return NotFound();
                 }
-                var employeePictures = _context.EmployeePicture.Where(e => e.EmployeeId == employee.Id).ToList();
+                var employeePictures = _context.CrewPicture.Where(e => e.CrewId == employee.Id).ToList();
                 if (employeePictures.Count() > 0)
                 {
                     //删除船员图片
-                    _context.EmployeePicture.RemoveRange(employeePictures);
+                    _context.CrewPicture.RemoveRange(employeePictures);
                 }
                 //删除船员
-                _context.Employee.Remove(employee);
+                _context.Crew.Remove(employee);
                 _context.SaveChanges();
                 return new JsonResult(new { code = 0, msg = "删除成功!" });
             }

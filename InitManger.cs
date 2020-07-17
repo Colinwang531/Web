@@ -25,14 +25,14 @@ namespace ShipWeb
         /// </summary>
         public static void Init()
         {
-           var comList= _context.Components.ToList();
+           var comList= _context.Component.ToList();
             if (comList.Count==0)
             {
                 Component();
             }
             else
             {
-                ManagerHelp.Cid = comList[0].Cid;
+                ManagerHelp.Cid = comList[0].Id;
             }
             
         }
@@ -50,7 +50,6 @@ namespace ShipWeb
                 {
                     Models.Component model = new Models.Component()
                     {
-                        Cid =rep.cid,
                         Id = iditity,
                         Name = name,
                         Type = Models.Component.ComponentType.WEB,
@@ -58,7 +57,7 @@ namespace ShipWeb
                     };
                     ManagerHelp.Cid = rep.cid;
 
-                    _context.Components.Add(model);
+                    _context.Component.Add(model);
                     _context.SaveChanges();
                 }
             }, TaskCreationOptions.LongRunning);
@@ -114,12 +113,11 @@ namespace ShipWeb
                                     Cid = alarm.cid,
                                     Id = Guid.NewGuid().ToString(),
                                     Shipid = ManagerHelp.ShipId,
-                                    Type = (int)alarm.information.type,
-                                    Uid = alarm.information.uid,
+                                    Type = (AlarmType)alarm.alarminfo.type,
                                     alarmInformationPositions = new List<AlarmInformationPosition>()
                                 }
                             };
-                            List<Position> replist = alarm.information.position;
+                            List<AlarmPosition> replist = alarm.alarminfo.position;
                             if (replist.Count > 0)
                             {
                                 foreach (var item in replist)

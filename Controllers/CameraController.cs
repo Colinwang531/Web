@@ -13,23 +13,19 @@ using ShipWeb.Tool;
 
 namespace ShipWeb.Controllers
 {
-    public class CamerasController : BaseController
+    public class CameraController : BaseController
     {
         private readonly MyContext _context;
         private ProtoBuffer.ProtoManager manager = new ProtoBuffer.ProtoManager();
-        public CamerasController(MyContext context)
+        public CameraController(MyContext context)
         {
             _context = context;
         }
 
         // GET: Cameras
-        public IActionResult Index(string id,string did)
+        public IActionResult Index(string id)
         {
-            ViewBag.id = id.Trim();
-            if (ManagerHelp.IsShowLandHome)
-            {
-                ViewBag.id = did.Trim();
-            }
+            ViewBag.id = id.Trim();           
             return View();
         }
         public IActionResult Load(string id)
@@ -38,7 +34,7 @@ namespace ShipWeb.Controllers
             {
                 return LandLoad(id);
             }
-            var camera = _context.Camera.Where(m => m.EmbeddedId == id.Trim()).ToList();
+            var camera = _context.Camera.Where(m => m.DeviceId == id.Trim()).ToList();
             var result = new
             {
                 code = 0,
@@ -47,19 +43,18 @@ namespace ShipWeb.Controllers
             return new JsonResult(result);
         }
         /// <summary>
-        /// 陆地端显示算法信息
+        /// 
         /// </summary>
         /// <param name="did"></param>
         /// <returns></returns>
         private IActionResult LandLoad(string did) 
         {
             var emdList=manager.DeviceQuery(ManagerHelp.ShipId, did);
-            var cams = emdList.Count>0?emdList[0].cameras:new List<ProtoBuffer.Models.Camera> ();
+            var cams = emdList.Count>0?emdList[0].camerainfos:new List<ProtoBuffer.Models.CameraInfo> ();
             var list = from a in cams
                        select new
                        {
-                           id=a.cid.Split(',')[0],
-                           cid=a.cid.Split(',')[1],
+                           id=a.cid,
                            enalbe=a.enable,
                            a.index,
                            a.ip,
@@ -72,7 +67,7 @@ namespace ShipWeb.Controllers
             };
             return new JsonResult(result);
         }
-        public IActionResult Save(string id,string did,string cid,string nickName,string enalbe)
+        public IActionResult Save(string id,string did,string nickName,string enalbe)
         {
             if (ModelState.IsValid)
             {
@@ -81,11 +76,11 @@ namespace ShipWeb.Controllers
                     //陆地端远程修改摄像机信息
                     if (ManagerHelp.IsShowLandHome)
                     {
-                        ProtoBuffer.Models.Embedded emb = new ProtoBuffer.Models.Embedded()
+                        ProtoBuffer.Models.DeviceInfo emb = new ProtoBuffer.Models.DeviceInfo()
                         {
-                            cameras = new List<ProtoBuffer.Models.Camera>() {
-                                 new ProtoBuffer.Models.Camera(){
-                                 cid=cid,
+                            camerainfos = new List<ProtoBuffer.Models.CameraInfo>() {
+                                 new ProtoBuffer.Models.CameraInfo(){
+                                 cid=id,
                                  enable=enalbe == "1" ? true : false,
                                  nickname=nickName
                                  }
@@ -103,25 +98,25 @@ namespace ShipWeb.Controllers
                     }
                     camera.NickName = nickName;
                     camera.Enalbe = enalbe == "1" ? true : false;
-                    var embModel = _context.Embedded.FirstOrDefault(e => e.Id == camera.EmbeddedId);
+                    var embModel = _context.Device.FirstOrDefault(e => e.Id == camera.DeviceId);
                     if (embModel != null)
                     {
-                        ProtoBuffer.Models.Embedded emb = new ProtoBuffer.Models.Embedded()
+                        ProtoBuffer.Models.DeviceInfo emb = new ProtoBuffer.Models.DeviceInfo()
                         {
-                            cameras = new List<ProtoBuffer.Models.Camera>() {
-                                 new ProtoBuffer.Models.Camera(){
-                                 cid=camera.Cid,
+                            camerainfos = new List<ProtoBuffer.Models.CameraInfo>() {
+                                 new ProtoBuffer.Models.CameraInfo(){
+                                 cid=camera.Id,
                                  index=camera.Index,
                                  enable=camera.Enalbe,
-                                 ip=camera.Id,
+                                 ip=camera.IP,
                                  nickname=camera.NickName
                                  }
                                },
-                            did = embModel.Did
+                            did = embModel.IP
                         };
                         Task.Factory.StartNew(state =>
                         {
-                            manager.DeveiceUpdate(emb, embModel.Did,ManagerHelp.ShipId);
+                            manager.DeveiceUpdate(emb, embModel.Id,ManagerHelp.ShipId);
                         }, TaskCreationOptions.LongRunning);
                         _context.Update(camera);
                         _context.SaveChangesAsync();

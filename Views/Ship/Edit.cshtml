@@ -27,8 +27,7 @@
             var data = {
                 id: frm.field.id,
                 name: frm.field.name,
-                type: parseInt(frm.field.type),
-                flag: frm.field.flag
+                type: parseInt(frm.field.type)
             }
             $.ajax({
                 url: "/Ship/Save",
@@ -66,8 +65,7 @@
                                 "type": res.data.type,
                                 "flag": res.data.flag ? 1 : 2
                             });
-                            if (res.data.type==2) {
-                                $('select').attr('disabled', 'disabled').css("background-color", "#EEEEEE");
+                            if (res.data.type==2) {                             
                                 form.render();
                             }
                         }
@@ -94,22 +92,24 @@
                 </div>
             </div>
         </div>
-        <div class="layui-form-item">
+        @*<div class="layui-form-item">
             <div class="layui-inline" style="margin-left:30px">
                 <div class="layui-input-inline">
-                    <input type="radio" name="type" value="2" title="自动航行设置" class="layui-input">
-                    <input type="radio" name="type" value="1" title="手动航行设置" class="layui-input" checked="checked">
+                    <input type="radio" name="type" value="1" title="AUTO" class="layui-input">
+                    <input type="radio" name="type" value="2" title="SAIL" class="layui-input" checked="checked">
+                    <input type="radio" name="type" value="3" title="PORT" class="layui-input"/>
                 </div>
             </div>
-        </div>
+        </div>*@
         <div class="layui-form-item">
             <div class="layui-inline">
                 <label class="layui-form-label">航行状态：</label>
                 <div class="layui-input-inline">
                     <div class="layui-input-inline">
                         <select id="slStatus" name="flag" class="layui-input">
-                            <option value="1">SAIL</option>
-                            <option value="2">STOP</option>
+                            <option value="1">AUTO(自动)</option>
+                            <option value="2">SAIL(航行)</option>
+                            <option value="3">PORT(停港)</option>
                         </select>
                     </div>
                 </div>

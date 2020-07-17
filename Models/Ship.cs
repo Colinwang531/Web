@@ -10,11 +10,20 @@ namespace ShipWeb.Models
     /// </summary>
     public class Ship
     {
-        public enum ShipType
+        public enum Type
         {
-            SAIL = 1,
-            AUTO = 2,
-            NAME = 3
+            /// <summary>
+            /// 自动
+            /// </summary>
+            AUTO = 1,
+            /// <summary>
+            /// 航行
+            /// </summary>
+            SAIL = 2,
+            /// <summary>
+            /// 停港
+            /// </summary>
+            PORT = 3
         }
         /// <summary>
         /// 主键id
@@ -27,7 +36,7 @@ namespace ShipWeb.Models
         /// <summary>
         /// 航行类型 1：SAIL 航行 2:自动 3：名称
         /// </summary>
-        public ShipType Type { get; set; }
+        public Type type { get; set; }
         /// <summary>
         /// 是否在港口，true表示航行，false表示停港
         /// </summary>

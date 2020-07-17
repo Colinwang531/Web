@@ -6,7 +6,6 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Reflection.Metadata.Ecma335;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,6 +14,7 @@ using Newtonsoft.Json;
 using ShipWeb.DB;
 using ShipWeb.Models;
 using ShipWeb.Tool;
+using System.Text;
 
 namespace ShipWeb.Controllers
 {
@@ -45,9 +45,8 @@ namespace ShipWeb.Controllers
                 //取出报警表中指定条数的数据
                 var alarm = (from a in _context.Alarm
                              join b in _context.AlarmInformation on a.Id equals b.AlarmId
-                             join c in _context.CameraConfig on b.Cid equals c.Cid
-                             where b.Type != 5 && a.ShipId == ManagerHelp.ShipId &&
-                            (c.EnableFight == true || c.EnableHelmet == true || c.EnablePhone == true || c.EnableSleep == true)
+                             join c in _context.Algorithm on b.Cid equals c.Cid
+                             where b.Type!=AlarmType.ATTENDANCE_IN&&b.Type!=AlarmType.ATTENDANCE_OUT && a.ShipId == ManagerHelp.ShipId 
                              select new
                              {
                                  b.Id,
@@ -61,17 +60,17 @@ namespace ShipWeb.Controllers
                 var infoIds = string.Join(',', alarm.Select(c => c.Id));
                 ///获取报像机ID
                 var cids = string.Join(',', alarm.Select(c => c.Cid));
-                var camera = _context.Camera.Where(c => cids.Contains(c.Cid)).ToList();
+                var camera = _context.Camera.Where(c => cids.Contains(c.Id)).ToList();
                 //给报警图片加上位置
                 var pics = _context.AlarmInformationPosition.Where(c => infoIds.Contains(c.AlarmInformationId)).ToList();
                 //组合数据
                 var dataPage = (from a in alarm
                            join b in pics on a.Id equals b.AlarmInformationId
-                           join c in camera on a.Cid equals c.Cid
+                           join c in camera on a.Cid equals c.Id
                            select new
                            {
                                Time = a.Time.ToString("yyyy-MM-dd HH:mm:ss"),
-                               c.Cid,
+                               c.Id,
                                c.NickName,
                                a.Type,
                                Picture = Convert.FromBase64String(Encoding.UTF8.GetString(a.Picture)),
@@ -83,7 +82,7 @@ namespace ShipWeb.Controllers
 
                 //查询总条数
                 var total = from a in alarm
-                            join b in camera on a.Cid equals b.Cid
+                            join b in camera on a.Cid equals b.Id
                             select new
                             {
                                 a.Id
@@ -118,9 +117,8 @@ namespace ShipWeb.Controllers
             {
                 var data = from a in _context.Alarm
                             join b in _context.AlarmInformation on a.Id equals b.AlarmId
-                            join c in _context.CameraConfig on b.Cid equals c.Cid
-                            where (type > 0 ? b.Type == type : 1 == 1) && a.ShipId == ManagerHelp.ShipId && b.Type != 5&&
-                            (c.EnableFight==true||c.EnableHelmet==true||c.EnablePhone==true||c.EnableSleep==true)
+                            join c in _context.Algorithm on b.Cid equals c.Id
+                            where (type > 0 ? b.Type == (AlarmType)type : 1 == 1) && a.ShipId == ManagerHelp.ShipId && b.Type != AlarmType.ATTENDANCE_IN&&b.Type!=AlarmType.ATTENDANCE_OUT
                            select new
                            {
                                a.Time,
@@ -153,13 +151,13 @@ namespace ShipWeb.Controllers
                 //给报警图片加上位置
                 var pics = _context.AlarmInformationPosition.Where(c => infoIds.Contains(c.AlarmInformationId)).ToList();
                 //查询摄像机信息
-                var camera = _context.Camera.Where(c => (!string.IsNullOrEmpty(cid) ? c.Cid == cid : 1 == 1) &&
-                                    (!string.IsNullOrEmpty(name) ? c.NickName.Contains(name) : 1 == 1) && cids.Contains(c.Cid)).ToList();
+                var camera = _context.Camera.Where(c => (!string.IsNullOrEmpty(cid) ? c.Id == cid : 1 == 1) &&
+                                    (!string.IsNullOrEmpty(name) ? c.NickName.Contains(name) : 1 == 1) && cids.Contains(c.Id)).ToList();
 
                 //组合数据
                 var pageList = (from a in alarm
                                 join b in pics on a.Id equals b.AlarmInformationId
-                               join c in camera on a.Cid equals c.Cid
+                               join c in camera on a.Cid equals c.Id
                                select new
                                {
                                    Time = a.Time.ToString("yyyy-MM-dd HH:mm:ss"),
@@ -174,7 +172,7 @@ namespace ShipWeb.Controllers
                                }).Skip((pageIndex-1)*pageSize).Take(pageSize);
                 //查询总条数
                 var total = from a in alarm
-                            join b in camera on a.Cid equals b.Cid
+                            join b in camera on a.Cid equals b.Id
                             select new
                             {
                                 a.Id
@@ -204,9 +202,8 @@ namespace ShipWeb.Controllers
                 //取出报警表中指定条数的数据
                 var alarm = (from a in _context.Alarm
                              join b in _context.AlarmInformation on a.Id equals b.AlarmId
-                             join c in _context.CameraConfig on b.Cid equals c.Cid
-                             where b.Type != 5 &&
-                            (c.EnableFight == true || c.EnableHelmet == true || c.EnablePhone == true || c.EnableSleep == true)
+                             join c in _context.Algorithm on b.Cid equals c.Cid
+                             where b.Type!=AlarmType.ATTENDANCE_IN&&b.Type!=AlarmType.ATTENDANCE_OUT
                              select new
                              {
                                  b.Id,
@@ -220,13 +217,13 @@ namespace ShipWeb.Controllers
                 var infoIds = string.Join(',', alarm.Select(c => c.Id));
                 var cids = string.Join(',', alarm.Select(c => c.Cid));
                 var shipIds = string.Join(',', alarm.Select(c => c.ShipId));
-                var camera = _context.Camera.Where(c => cids.Contains(c.Cid)).ToList();
+                var camera = _context.Camera.Where(c => cids.Contains(c.Id)).ToList();
                 var ship = _context.Ship.Where(c => shipIds.Contains(c.Id)).ToList();
 
                 var pics = _context.AlarmInformationPosition.Where(c => infoIds.Contains(c.AlarmInformationId)).ToList();
                 var pageList = (from a in alarm
                             join b in pics on a.Id equals b.AlarmInformationId
-                            join c in camera on a.Cid equals c.Cid
+                            join c in camera on a.Cid equals c.Id
                             join e in ship on a.ShipId equals e.Id
                             select new
                             {
@@ -242,7 +239,7 @@ namespace ShipWeb.Controllers
                                 b.H
                             }).Skip((pageIndex-1)*pageSize).Take(pageSize);
                 var total = from a in alarm
-                            join b in camera on a.Cid equals b.Cid
+                            join b in camera on a.Cid equals b.Id
                             select new
                             {
                                 a.Id
@@ -269,10 +266,9 @@ namespace ShipWeb.Controllers
             var model = JsonConvert.DeserializeObject<SearchAlarmViewModel>(searchModel);
             var data = from a in _context.Alarm
                        join b in _context.AlarmInformation on a.Id equals b.AlarmId
-                       join c in _context.CameraConfig on b.Cid equals c.Cid
+                       join c in _context.Algorithm on b.Cid equals c.Cid
                        join d in _context.Ship on a.ShipId equals d.Id
-                       where (model.Type > 0 ? b.Type == model.Type : 1 == 1) && (!string.IsNullOrEmpty(model.ShipId) ? d.Id == model.ShipId : 1 == 1) && b.Type != 5 &&
-                            (c.EnableFight == true || c.EnableHelmet == true || c.EnablePhone == true || c.EnableSleep == true)
+                       where (model.Type > 0 ? b.Type ==(AlarmType)model.Type : 1 == 1) && (!string.IsNullOrEmpty(model.ShipId) ? d.Id == model.ShipId : 1 == 1) && b.Type != AlarmType.ATTENDANCE_IN&&b.Type!=AlarmType.ATTENDANCE_OUT
                        select new
                        {
                            a.Time,
@@ -303,20 +299,20 @@ namespace ShipWeb.Controllers
             var cids = string.Join(',', alarm.Select(c => c.Cid));
             var infoIds = string.Join(',', alarm.Select(c => c.Id));
             //查询摄像机信息
-            var camera = _context.Camera.Where(c => (!string.IsNullOrEmpty(model.Cid) ? c.Cid == model.Cid : 1 == 1) &&
-                                (!string.IsNullOrEmpty(model.Name) ? c.NickName.Contains(model.Name) : 1 == 1) && cids.Contains(c.Cid)).ToList();
+            var camera = _context.Camera.Where(c => (!string.IsNullOrEmpty(model.Cid) ? c.Id == model.Cid : 1 == 1) &&
+                                (!string.IsNullOrEmpty(model.Name) ? c.NickName.Contains(model.Name) : 1 == 1) && cids.Contains(c.Id)).ToList();
 
             //给报警图片加上位置
             var pics = _context.AlarmInformationPosition.Where(c => infoIds.Contains(c.AlarmInformationId)).ToList();
             //组合数据
             var pageList = (from a in alarm
                             join b in pics on a.Id equals b.AlarmInformationId
-                            join c in camera on a.Cid equals c.Cid
+                            join c in camera on a.Cid equals c.Id
                             select new
                             {
                                 Time=a.Time.ToString("yyyy-MM-dd HH:mm:ss"),
                                 a.Name,
-                                c.Cid,
+                                c.Id,
                                 c.NickName,
                                 a.Type,
                                 Picture = Convert.FromBase64String(Encoding.UTF8.GetString(a.Picture)) ,
@@ -326,7 +322,7 @@ namespace ShipWeb.Controllers
                                 b.H
                             }).Skip((pageIndex - 1) * pageSize).Take(pageSize);
             var total = from a in alarm
-                        join b in camera on a.Cid equals b.Cid
+                        join b in camera on a.Cid equals b.Id
                         select new
                         {
                             a.Id

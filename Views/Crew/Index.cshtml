@@ -18,11 +18,10 @@
         var DISABLED = 'layui-btn-disabled';
         var tableIns = table.render({
             elem: '#userTable',   //渲染的目标对象
-            url: '/Employees/Load', //数据接口
+            url: '/Crew/Load', //数据接口
             toolbar: "#userToolBar",   //表格的工具条
             page: false,  //是否启用分页
             cols: [[   //列表数据
-                { field: 'uid', title: '船员编码', width: 220, sort: true },
                 { field: 'name', title: '船员名称', width: 220, sort: true, align: 'center' },
                 { field: 'job', title: '工作内容', align: 'center', width: 220 },
                 {
@@ -78,10 +77,10 @@
                     obj.del();
                     layer.close(index);
                     $.ajax({
-                        url: "/Employees/Delete",
+                        url: "/Crew/Delete",
                         type: "get",
                         dataType: "json",
-                        data: { id: data.id, uid: data.uid },
+                        data: { id: data.id},
                         contentType: "application/json;chartset=utf-8",
                         success: function (res) {
                             if (res.code == 1) {
@@ -129,7 +128,7 @@
         //多图片上传
         upload.render({
             elem: '#test2',
-            url: '/Employees/UpFile/',
+            url: '/Crew/UpFile/',
             acceptMime: 'image/*',
             ext: 'jpg|png|gif|bmp|jpeg',
             size: 300,//限制上传大小 单位KB
@@ -189,13 +188,12 @@
             $('#btnSubmit').attr('disabled', 'disabled').addClass(DISABLED);
             var data = {
                 id: frm.field.id,
-                uid: frm.field.uid,
                 name: frm.field.name,
                 job: frm.field.job,
                 picIds: frm.field.picIds
             };
             $.ajax({
-                url: "/Employees/Save",
+                url: "/Crew/Save",
                 data: data,
                 type: "get",
                 dataType: "json",
@@ -222,7 +220,7 @@
             btn: ["确定", "取消"],
             yes: function (index) {
                 $.ajax({
-                    url: "/Employees/DeleteImg/",
+                    url: "/Crew/DeleteImg/",
                     success: function (res) {
                         if (res.code == 0) {
                             $("#demo2").html("");
@@ -293,7 +291,6 @@
 <div id="divAddOrUpdate" style="display:none">
     <form class="layui-form" action="" id="dataFrm" lay-filter="dataFrm">
         <input name="id" id="hidId" type="hidden" class="layui-input" />
-        <input name="uid" id="hidUid" type="hidden" class="layui-input" />
         <input id="hidPicIds" name="picIds" type="hidden" class="layui-input" />
         <div class="layui-form-item">
             <div class="layui-inline">

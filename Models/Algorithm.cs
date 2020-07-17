@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace ShipWeb.Models
 {
-    public class AlgorithmConfig
+    public class Algorithm
     {
         /// <summary>
         /// 主键ID
@@ -27,32 +27,44 @@ namespace ShipWeb.Models
         /// 人脸相似度（0.1-0.99）
         /// </summary>
         public double Similar { get; set; }
+        /// <summary>
+        /// 检测阀值1
+        /// </summary>
+        public double DetectThreshold_1 { get; set; }
+        /// <summary>
+        /// 检测阀值2
+        /// </summary>
+        public double DetectThreshold_2 { get; set; }
+        /// <summary>
+        /// 跟踪阀值
+        /// </summary>
+        public double TrackThreshold { get; set; }
+        /// <summary>
+        /// 船ID
+        /// </summary>
         public string ShipId { get; set; }
     }
-    public enum AlgorithmType {
-        /// <summary>
-        /// 睡觉
-        /// </summary>
-        ENABLESLEEP = 1,
-        /// <summary>
-        /// 打架
-        /// </summary>
-        ENABLEFIGHT = 2,
+    public enum AlgorithmType 
+    {
         /// <summary>
         /// 安全帽
         /// </summary>
-        ENABLEHELMET = 3,
+        HELMET = 1,
         /// <summary>
         /// 打电话
         /// </summary>
-        ENABLEPHONE = 4,
+        PHONE = 2,
         /// <summary>
-        /// 考勤入
+        /// 睡觉
         /// </summary>
-        ENABLEATTENDANCEIN = 5,
+        SLEEP = 3,
         /// <summary>
-        /// 考勤出
+        /// 打架
         /// </summary>
-        ENABLEATTENDANCEOUT = 6
+        FIGHT = 4,
+        /// <summary>
+        /// 人脸
+        /// </summary>
+        FACE = 5
     }
 }

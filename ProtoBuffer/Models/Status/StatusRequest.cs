@@ -16,28 +16,32 @@ namespace ShipWeb.ProtoBuffer.Models
 			/// </summary>
 			SAIL = 1,
 			/// <summary>
-			/// 自动
+			/// 导航系统
 			/// </summary>
-			AUTO = 2,
+			AIS = 2,
+			/// <summary>
+			/// 母钟
+			/// </summary>
+			CLOCK = 3,
 			/// <summary>
 			/// 名称
 			/// </summary>
-			NAME = 3
+			NAME = 4
 
 		}
 		[ProtoMember(1)]
 		public Type type = Type.SAIL;
 
 		/// <summary>
-		/// 是否在港口
+		/// 当类型为 SAIL或AIS时此值有效
 		/// </summary>
 		[ProtoMember(2)]
 		public bool flag { get; set; }
 
 		/// <summary>
-		/// 修改船名称
+		/// 当类型为CLOCK/NAME 此值有效
 		/// </summary>
 		[ProtoMember(3)]
-		public string name { get; set; }
+		public string text { get; set; }
 	}
 }

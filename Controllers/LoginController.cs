@@ -46,7 +46,7 @@ namespace ShipWeb.Controllers
             {
                 return new JsonResult(new { code = 1, msg = "组件还在自动注册中，请稍等" });
             }
-            var usersModel = _context.Users.FirstOrDefault(u => u.Name == name && u.Password == MD5Help.MD5Encrypt(password));
+            var usersModel = _context.User.FirstOrDefault(u => u.Name == name && u.Password == MD5Help.MD5Encrypt(password));
             if (usersModel == null)
             {
                 return new JsonResult(new { code = 1, msg = "用户名或密码不正确" });
@@ -55,10 +55,10 @@ namespace ShipWeb.Controllers
             {
 
                 //保存登陆的用户ID
-                HttpContext.Session.Set("uid", Encoding.UTF8.GetBytes(usersModel.Uid));
+                HttpContext.Session.Set("uid", Encoding.UTF8.GetBytes(usersModel.Id));
                 //保存用户可操作的权限 admin 最高权限
-                ManagerHelp.IsSet = usersModel.Uid.ToLower() == "admin" ? true : usersModel.EnableConfigure;
-                ManagerHelp.IsShowAlarm = usersModel.Uid.ToLower() == "admin" ? true : usersModel.Enablequery;
+                ManagerHelp.IsSet = usersModel.Id.ToLower() == "admin" ? true : usersModel.EnableConfigure;
+                ManagerHelp.IsShowAlarm = usersModel.Id.ToLower() == "admin" ? true : usersModel.Enablequery;
                 ManagerHelp.LoginName = name;
                 bool flag = false;//判断船是否存在
                 var ship = _context.Ship.FirstOrDefault();

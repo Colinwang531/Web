@@ -10,7 +10,7 @@ namespace ShipWeb.ProtoBuffer.Models
     public class DeviceRequest
     {
         [ProtoMember (1)]
-        public Embedded embedded { get; set; }
+        public DeviceInfo deviceinfo { get; set; }
         [ProtoMember(1)]
         public string did { get; set; }
     }

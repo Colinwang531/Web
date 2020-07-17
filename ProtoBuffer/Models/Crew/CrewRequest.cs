@@ -10,8 +10,6 @@ namespace ShipWeb.ProtoBuffer.Models
     public class CrewRequest
     {
         [ProtoMember (1)]
-        public Employee employee { get; set; }
-        [ProtoMember(2)]
-        public string uid { get; set; }
+        public CrewInfo crewinfo { get; set; }
     }
 }

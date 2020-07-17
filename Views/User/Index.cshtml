@@ -1,5 +1,4 @@
-﻿
-<script src="~/layui/layui.js"></script>
+﻿<script src="~/layui/layui.js"></script>
 @{
     Layout = null;
 }
@@ -15,11 +14,10 @@
         var DISABLED = 'layui-btn-disabled';
         var tableIns = table.render({
             elem: '#userTable',   //渲染的目标对象
-            url: '/Users/Load', //数据接口
+            url: '/User/Load', //数据接口
             toolbar: "#userToolBar",   //表格的工具条
             page: false,  //是否启用分页
             cols: [[   //列表数据
-                { field: 'uid', title: '用户编码', width: 220, sort: true },
                 { field: 'name', title: '用户名', width: 220, sort: true, align: 'center' },
                 {
                     field: 'enableConfigure', title: '配置权限标识', align: 'center', width: 220, templet: function (d) {
@@ -64,13 +62,13 @@
                     obj.del();
                     layer.close(index);
                     $.ajax({
-                        url: "/Users/Delete",
+                        url: "/User/Delete",
                         type: "get",
                         dataType: "json",
                         data: { id: data.id },
                         contentType: "application/json;chartset=utf-8",
                         success: function (res) {
-                            if (res.code == 1) {                              
+                            if (res.code == 1) {
                                 layer.msg(res.msg, { icon: 2 });
                             } else {
                                 layer.msg("删除成功", { icon:1 });
@@ -100,7 +98,7 @@
         });
         //保存
         form.on("submit(doSubmit)", function (viewobj) {
-            $('#btnSubmit').attr('disabled', 'disabled').addClass(DISABLED);          
+            $('#btnSubmit').attr('disabled', 'disabled').addClass(DISABLED);
             var data = {
                 Id: $("#hidId").val(),
                 Name: $("#txtUserame").val().trim(),
@@ -109,7 +107,7 @@
                 Password: $("#txtxpwd").val()
             }
             $.ajax({
-                url: "/Users/UserSave",
+                url: "/User/Save",
                 data: { users: JSON.stringify(data) },
                 type: "get",
                 dataType: "json",
@@ -128,7 +126,7 @@
             return false;
         });
         //自定义验证规则
-        form.verify({            
+        form.verify({
             passSure: function (value) {
                 var xpwd = $("#txtxpwd").val();
                 if ($("#hidId").val() == "" || xpwd!="") {
@@ -176,7 +174,7 @@
                 <div class="layui-inline">
                     <label class="layui-form-label">用户名：</label>
                     <div class="layui-input-inline">
-                        <input type="text" id="txtUserame" name="name" lay-reqtext="用户名是必填项"  maxlength="20" lay-verify="required" autocomplete="off" class="layui-input">
+                        <input type="text" id="txtUserame" name="name" lay-reqtext="用户名是必填项" maxlength="20" lay-verify="required" autocomplete="off" class="layui-input">
                     </div>
                 </div>
             </div>

@@ -8,16 +8,12 @@ namespace ShipWeb.Models
     /// <summary>
     /// 船员表
     /// </summary>
-    public class Employee
+    public class Crew
     {
         /// <summary>
         /// 
         /// </summary>
       public string Id { get; set; }
-        /// <summary>
-        /// 用户id标识
-        /// </summary>
-        public string Uid { get; set; }
         /// <summary>
         /// 船员名字
         /// </summary>
@@ -33,6 +29,6 @@ namespace ShipWeb.Models
         /// <summary>
         /// 船员图片
         /// </summary>
-        public List<EmployeePicture> employeePictures { get; set; }
+        public List<CrewPicture> employeePictures { get; set; }
     }
 }

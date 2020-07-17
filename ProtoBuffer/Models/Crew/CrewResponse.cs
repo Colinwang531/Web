@@ -12,8 +12,6 @@ namespace ShipWeb.ProtoBuffer.Models
         [ProtoMember (1)]
         public int result { get; set; }
         [ProtoMember(2)]
-        public string uid { get; set; }
-        [ProtoMember(3)]
-        public List<Employee> employees { get; set; }
+        public List<CrewInfo> crewinfos { get; set; }
     }
 }

@@ -16,10 +16,6 @@ namespace ShipWeb.Models
         /// </summary>
         public string Id { get; set; }
         /// <summary>
-        /// 摄像机id，uuid
-        /// </summary>
-        public string Cid { get; set; }
-        /// <summary>
         /// 摄像机序号
         ///  </summary>
         public int Index { get; set; }
@@ -38,7 +34,7 @@ namespace ShipWeb.Models
         /// <summary>
         /// 设备表主建id
         /// </summary>
-        public string EmbeddedId { get; set; }
+        public string DeviceId { get; set; }
         /// <summary>
         /// 船表主键id
         /// </summary>

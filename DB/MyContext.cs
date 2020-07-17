@@ -22,14 +22,13 @@ namespace ShipWeb.DB
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Users>();
+            modelBuilder.Entity<User>();
             modelBuilder.Entity<Ship>();
             modelBuilder.Entity<Component>();
-            modelBuilder.Entity<Embedded>();
+            modelBuilder.Entity<Device>();
             modelBuilder.Entity<Camera>();
-            modelBuilder.Entity<CameraConfig>();
-            modelBuilder.Entity<Employee>();
-            modelBuilder.Entity<EmployeePicture>();
+            modelBuilder.Entity<Crew>();
+            modelBuilder.Entity<CrewPicture>();
             modelBuilder.Entity<Alarm>();
             modelBuilder.Entity<AlarmInformation>();
             modelBuilder.Entity<AlarmInformationPosition>();
@@ -44,7 +43,7 @@ namespace ShipWeb.DB
         /// <summary>
         /// 用户
         /// </summary>
-        public DbSet<Users> Users { get; set; }
+        public DbSet<User> User { get; set; }
         /// <summary>
         /// 船(状态)
         /// </summary>
@@ -52,27 +51,23 @@ namespace ShipWeb.DB
         /// <summary>
         /// 组件
         /// </summary>
-        public DbSet<Component> Components { get; set; }
+        public DbSet<Component> Component { get; set; }
         /// <summary>
         /// 设备
         /// </summary>
-        public DbSet<Embedded> Embedded { get; set; }
+        public DbSet<Device> Device { get; set; }
         /// <summary>
         /// 摄像机
         /// </summary>
         public DbSet<Camera> Camera { get; set; }
         /// <summary>
-        /// 摄像机算法(配置)
-        /// </summary>
-        public DbSet<CameraConfig> CameraConfig { get; set; }
-        /// <summary>
         /// 船员
         /// </summary>
-        public DbSet<Employee> Employee { get; set; }
+        public DbSet<Crew> Crew { get; set; }
         /// <summary>
         /// 船员图片
         /// </summary>
-        public DbSet<EmployeePicture> EmployeePicture { get; set; }
+        public DbSet<CrewPicture> CrewPicture { get; set; }
         /// <summary>
         /// 报警
         /// </summary>
@@ -88,6 +83,6 @@ namespace ShipWeb.DB
         /// <summary>
         /// 算法配置
         /// </summary>
-        public DbSet<AlgorithmConfig> AlgorithmConfig { get; set; }
+        public DbSet<Algorithm> Algorithm { get; set; }
     }
 }

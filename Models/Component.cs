@@ -22,10 +22,6 @@ namespace ShipWeb.Models
         /// </summary>
         public string Id { get; set; }
         /// <summary>
-        /// 组件id标识,用CPU@进程id标识
-        /// </summary>
-        public string Cid { get; set; }
-        /// <summary>
         /// 组件类型 1：XMQ，2：WEB ，3：HKD，4：DHD，5：ALM 
         /// </summary>
         public ComponentType Type { get; set; }

@@ -34,7 +34,7 @@ namespace ShipWeb.Controllers
             byte[] by = HttpContext.Session.Get("uid");
             string uid = Encoding.UTF8.GetString(by);
             ViewBag.isAdmin = uid.ToLower() == "admin" ? true : false;
-            var user = _context.Users.FirstOrDefault(c => c.Uid == uid);
+            var user = _context.User.FirstOrDefault(c => c.Id == uid);
             ViewBag.IsSetShip = user != null ? user.EnableConfigure : false;
             ViewBag.IsShow = user != null ? user.Enablequery : false;
             ManagerHelp.ShipId = "";

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace ShipWeb.ProtoBuffer.Models
 {
 	[ProtoContract]
-    public class Embedded
+    public class DeviceInfo
     {
 		public enum Factory
 		{
@@ -79,19 +79,34 @@ namespace ShipWeb.ProtoBuffer.Models
 		/// 设备可用摄像机集合
 		/// </summary>
 		[ProtoMember(10)]
-		public List<Camera> cameras { get; set; }
+		public List<CameraInfo> camerainfos { get; set; }
 	}
 	[ProtoContract]
-	public class Camera
+	public class CameraInfo
 	{
+		/// <summary>
+		/// 摄像机ID
+		/// </summary>
 		[ProtoMember(1)]
 		public string cid { get; set; }
+		/// <summary>
+		/// 摄像机序号
+		/// </summary>
 		[ProtoMember(2)]
 		public int index { get; set; }
+		/// <summary>
+		/// 是否启用 
+		/// </summary>
 		[ProtoMember(3)]
 		public bool enable { get; set; }
+		/// <summary>
+		/// 摄像机别名
+		/// </summary>
 		[ProtoMember(4)]
 		public string nickname { get; set; }
+		/// <summary>
+		/// 摄像机IP
+		/// </summary>
 		[ProtoMember(5)]
 		public string ip { get; set; }
 	}

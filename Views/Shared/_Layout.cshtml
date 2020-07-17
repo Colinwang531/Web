@@ -46,9 +46,9 @@
                     {
                         <li class="layui-nav-item"><a href="/Home/LandHome"><red>返回</red> </a></li>
                     }
-                    <li class="layui-nav-item embedded"><a href="#">设备</a></li><!--/Embedded/Index-->
-                    <li class="layui-nav-item cameraconfig"><a href="#">算法配置</a></li>
-                    <li class="layui-nav-item employee"><a href="#">船员</a></li>
+                    <li class="layui-nav-item device"><a href="#">设备</a></li><!--/Embedded/Index-->
+                    <li class="layui-nav-item algorithm"><a href="#">算法配置</a></li>
+                    <li class="layui-nav-item crew"><a href="#">船员</a></li>
                     <li class="layui-nav-item ship"><a href="#">航行设置</a></li><!--/Ship/Edit-->
                     @if (ShipWeb.Tool.ManagerHelp.IsShowAlarm)
                     {
@@ -74,15 +74,14 @@
         layui.use('element', function () {
             var $ = layui.jquery
                 , element = layui.element;
-            $(".embedded").click(function () {
-                $("#frm").attr("src", "/Embedded/Index")
+            $(".device").click(function () {
+                $("#frm").attr("src", "/Device/Index")
             });
-            $(".cameraconfig").click(function () {
-                //$("#frm").attr("src", "/CameraConfigs/Index")
-                $("#frm").attr("src", "/AlgorithmConfig/Index")
+            $(".algorithm").click(function () {
+                $("#frm").attr("src", "/Algorithm/Index")
             });
-            $(".employee").click(function () {
-                $("#frm").attr("src", "/Employees/Index")
+            $(".crew").click(function () {
+                $("#frm").attr("src", "/Crew/Index")
             });
             $(".ship").click(function () {
                 $("#frm").attr("src", "/Ship/Edit")

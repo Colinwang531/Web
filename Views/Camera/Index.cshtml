@@ -15,7 +15,7 @@
         var layIndex;
         var tableIns = table.render({
             elem: "#tbCamers",
-            url: "/Cameras/Load?id="+ $("#hidEmb").val(),
+            url: "/Camera/Load?id="+ $("#hidEmb").val(),
             page: false,
             cols: [[
                 { field: "index", title: "摄像机序号", width: 100 },
@@ -55,12 +55,11 @@
             var data = {
                 id: frm.field.id,
                 did: $("#hidEmb").val(),
-                cid: frm.field.cid,
                 nickName: frm.field.nickName,
                 enalbe: frm.field.enalbe
             }
             $.ajax({
-                url: "/Cameras/Save",
+                url: "/Camera/Save",
                 data: data,
                 type: "get",
                 datatype: "json",
@@ -83,7 +82,7 @@
     <h1>摄像机列表</h1>
     <hr />
     <input type="hidden" id="hidEmb" value="@ViewBag.id" />
-    <a href="/Embedded/Index">返回设备列表</a>
+    <a href="/Device/Index">返回设备列表</a>
     <table class="layui-table" id="tbCamers" lay-filter="tbCamers">
     </table>
     @if (ShipWeb.Tool.ManagerHelp.IsSet)
@@ -97,7 +96,6 @@
 <div id="divUpdate" style="display:none;margin-top:20px">
     <form class="layui-form" action="" id="dataFrm" lay-filter="dataFrm">
         <input name="id" id="hidId" type="hidden" class="layui-input" />
-        <input name="cid" id="hidCid" type="hidden" class="layui-input"/>
         <div class="layui-form-item">
                 <label class="layui-form-label" style="width:120px">摄像机状态：</label>
                 <div class="layui-input-inline">

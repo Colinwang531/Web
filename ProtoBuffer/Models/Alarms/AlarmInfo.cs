@@ -10,35 +10,40 @@ namespace ShipWeb.ProtoBuffer.Models
 	/// 报警信息
 	/// </summary>
 	[ProtoContract]
-    public class Information
+    public class AlarmInfo
     {
 		public enum Type
 		{
 			/// <summary>
+			/// 安全帽
+			/// </summary>
+			HELMET = 1,
+			/// <summary>
+			/// 打电话
+			/// </summary>
+			PHONE = 2,
+			/// <summary>
 			/// 睡觉
 			/// </summary>
-			SLEEP = 1,
+			SLEEP = 3,
 			/// <summary>
 			/// 打架
 			/// </summary>
-			FIGHT = 2,
+			FIGHT = 4,
 			/// <summary>
-			/// 安全帽
+			/// 考勤入
 			/// </summary>
-			HELMET = 3,
-			/// <summary>
-			/// 手机
-			/// </summary>
-			PHONE = 4,
-			/// <summary>
-			/// 脸
-			/// </summary>
-			FACE = 5
+			ATTENDANCE_IN = 5,
+
+			/// <SUMMARY>
+			/// 考勤出
+			/// </SUMMARY>
+			ATTENDANCE_OUT = 6
 		}
 		[ProtoMember (1)]
 		public Type type = Type.SLEEP;
 		[ProtoMember(2)]
-		public List<Position> position { get; set; }
+		public List<AlarmPosition> position { get; set; }
 		[ProtoMember(3)]
 		public string uid { get; set; }
     }
@@ -46,7 +51,7 @@ namespace ShipWeb.ProtoBuffer.Models
 	/// 报警坐标
 	/// </summary>
 	[ProtoContract]
-	public class Position
+	public class AlarmPosition
 	{
 		[ProtoMember (1)]
 		public int x { get; set; }
