@@ -15,6 +15,7 @@
         var upload = layui.upload;
         var form = layui.form;
         var table = layui.table;
+        var DISABLED = 'layui-btn-disabled';
         var tableIns = table.render({
             elem: '#userTable',   //渲染的目标对象
             url: '/Employees/Load', //数据接口
@@ -185,6 +186,7 @@
                 layer.msg("别着急啊！图片还未上传完", { icon: 2 });
                 return false;
             }
+            $('#btnSubmit').attr('disabled', 'disabled').addClass(DISABLED);
             var data = {
                 id: frm.field.id,
                 uid: frm.field.uid,
@@ -206,6 +208,7 @@
                     } else {
                         layer.msg(res.msg, { icon: 2 });
                     }
+                    $("#btnSubmit").removeAttr('disabled').removeClass(DISABLED);
                 }
             });
             return false;
@@ -324,7 +327,7 @@
         </div>
         <div class="layui-form-item">
             <div class="layui-input-block" id="divShow">
-                <button type="submit" id="btnSave" class="layui-btn layui-btn-normal layui-btn-sm layui-icon layui-icon-release" lay-filter="doSubmit" lay-submit="">提交</button>
+                <button type="submit"id="btnSubmit"  class="layui-btn layui-btn-normal layui-btn-sm layui-icon layui-icon-release" lay-filter="doSubmit" lay-submit="">提交</button>
             </div>
         </div>
     </form>

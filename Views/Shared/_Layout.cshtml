@@ -78,7 +78,8 @@
                 $("#frm").attr("src", "/Embedded/Index")
             });
             $(".cameraconfig").click(function () {
-                $("#frm").attr("src", "/CameraConfigs/Index")
+                //$("#frm").attr("src", "/CameraConfigs/Index")
+                $("#frm").attr("src", "/AlgorithmConfig/Index")
             });
             $(".employee").click(function () {
                 $("#frm").attr("src", "/Employees/Index")
@@ -98,74 +99,3 @@
 </body>
 </html>
 
-
-
-
-
-
-@*<html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Ship</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" />
-</head>
-<body>
-    <header>
-        <div>
-            <div style="text-align:right">
-                <a class="nav-link text-dark" asp-area="" asp-controller="Login" asp-action="SignOut">退出</a>
-            </div>
-        </div>
-    </header>
-    <div>
-        <div style="width:200px;float:left">
-            <nav class="navbar">
-                <div class="container">
-                    <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
-                        <ul class="navbar-nav flex-grow-1">
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Embedded" asp-action="Index">设备</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="CameraConfigs" asp-action="Index">算法配置</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Employees" asp-action="Index">船员</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Ship" asp-action="Edit">航行设置</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Alarm" asp-action="Index">报警消息</a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Attendance" asp-action="Index">考勤</a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </nav>
-        </div>
-        <div style="float:left;margin:10px">
-            <main role="main" class="pb-3">
-                @RenderBody()
-            </main>
-        </div>
-
-    </div>
-
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2020 - Ship - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    <script src="~/layui/layui.js"></script>
-    <script src="~/lib/jquery/dist/jquery.js"></script>
-    @RenderSection("Scripts", required: false)
-</body>
-</html>*@

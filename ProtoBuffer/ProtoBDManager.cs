@@ -321,11 +321,11 @@ namespace ShipWeb.ProtoBuffer
                         model.Job = protoModel.job;
                         model.Name = protoModel.name;
                         var pics = _context.EmployeePicture.Where(c => c.EmployeeId == model.Id);
+                        //记录数据库中存在的图片ID
+                        List<string> dbIds = new List<string>();
                         if (protoModel.pictures!=null&&protoModel.pictures.Count > 0)
                         {
                             var protoPic = protoModel.pictures;
-                            //记录数据库中存在的图片ID
-                            List<string> dbIds = new List<string>();
                             foreach (var item in protoPic)
                             {
                                 string str = Encoding.UTF8.GetString(item);
@@ -346,12 +346,13 @@ namespace ShipWeb.ProtoBuffer
                                     dbIds.Add(ids[0]);
                                 }
                             }
-                            //查找当前船员下需要删除的图片
-                            var delPicList = pics.Where(c=>!dbIds.Contains(c.Id)).ToList();
-                            if (delPicList.Count > 0)
-                            {
-                                _context.EmployeePicture.RemoveRange(pics);
-                            }
+
+                        }
+                        //查找当前船员下需要删除的图片
+                        var delPicList = pics.Where(c => !dbIds.Contains(c.Id)).ToList();
+                        if (delPicList.Count > 0)
+                        {
+                            _context.EmployeePicture.RemoveRange(pics);
                         }
                         _context.Employee.Update(model);
                         _context.SaveChanges();

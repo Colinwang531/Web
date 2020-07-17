@@ -8,6 +8,7 @@
 <script src="~/lib/jquery/dist/jquery.js"></script>
 <script src="~/layui/layui.js"></script>
 <script type="text/javascript">
+
     layui.use(['element', 'table', 'form'], function () {
         var $ = layui.jquery
         var element = layui.element;
@@ -133,8 +134,14 @@
             <div class="layui-side-scroll">
                 <!-- 左侧导航区域 -->
                 <ul class="layui-nav layui-nav-tree" lay-filter="test">
-                    <li class="layui-nav-item alarm layui-this"><a href="#">报警</a></li>
-                    <li class="layui-nav-item ship"><a href="#">船舶信息</a></li>
+                    @if (ViewBag.IsShow)
+                    {
+                        <li class="layui-nav-item alarm layui-this"><a href="#">报警</a></li>
+                    }
+                    @if (ViewBag.IsSetShip)
+                    {
+                        <li class="layui-nav-item ship"><a href="#">船舶信息</a></li>
+                    }
                     @if (ViewBag.isAdmin)
                     {
                         <li class="layui-nav-item user"><a href="#">用户信息</a></li>
@@ -144,10 +151,13 @@
         </div>
     </div>
     <div style="float:left;margin-top:10px">
+        @if(ViewBag.isAdmin||ViewBag.IsShow){
         <div id="divBody" class="layui-body">
             <iframe id="ifBody" src="/Alarm/AlarmShipAll" style="width:100%;height:100%"></iframe>
         </div>
-        <div id="divShip" style="display:none;margin-left:20px;">
+        }
+        @if(ViewBag.IsSetShip){
+        <div id="divShip" style="display:@(ViewBag.isAdmin?"block":"none");margin-left:20px;">
             <table class="layui-table">
                 <thead>
                     <tr>
@@ -160,6 +170,7 @@
                 </tbody>
             </table>
         </div>
+        }
     </div>
     <div class="layui-footer">底部信息 @($"{ShipWeb.Tool.DateTimeExtentions.ToCstTime(DateTime.Now).ToString("yyyy-MM-dd HH:mm:ss")}") , 您好 King Yu 禹创智能科技</div>
 </div>

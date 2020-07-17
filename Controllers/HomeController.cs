@@ -31,14 +31,17 @@ namespace ShipWeb.Controllers
         }
         public IActionResult LandHome()
         {
-            byte[] byt = HttpContext.Session.Get("uid");
-            string uid = Encoding.UTF8.GetString(byt);
-            var data = _context.Ship.ToList();
-            ViewBag.isAdmin =  uid.ToLower() == "admin" ? true : false;
+            byte[] by = HttpContext.Session.Get("uid");
+            string uid = Encoding.UTF8.GetString(by);
+            ViewBag.isAdmin = uid.ToLower() == "admin" ? true : false;
+            var user = _context.Users.FirstOrDefault(c => c.Uid == uid);
+            ViewBag.IsSetShip = user != null ? user.EnableConfigure : false;
+            ViewBag.IsShow = user != null ? user.Enablequery : false;
             ManagerHelp.ShipId = "";
             ManagerHelp.IsShowLandHome = true;
             ManagerHelp.IsShowAlarm = false;
-            return View(data);
+
+            return View();
         }
     }
 }

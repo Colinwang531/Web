@@ -85,5 +85,9 @@ namespace ShipWeb.DB
         /// 报警位置
         /// </summary>
         public DbSet<AlarmInformationPosition> AlarmInformationPosition { get; set; }
+        /// <summary>
+        /// 算法配置
+        /// </summary>
+        public DbSet<AlgorithmConfig> AlgorithmConfig { get; set; }
     }
 }

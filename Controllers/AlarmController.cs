@@ -81,14 +81,20 @@ namespace ShipWeb.Controllers
                                b.H
                            }).Skip((pageIndex-1)*pageSize).Take(pageSize);
 
-                int count = alarm.Count;              
+                //查询总条数
+                var total = from a in alarm
+                            join b in camera on a.Cid equals b.Cid
+                            select new
+                            {
+                                a.Id
+                            };
                 var result = new
                 {
                     code = 0,
                     data = dataPage,
                     pageIndex = pageIndex,
                     pageSize = pageSize,
-                    count = count
+                    count = total.Count()
                 };
                 return new JsonResult(result);
             }
@@ -234,7 +240,13 @@ namespace ShipWeb.Controllers
                                 b.Y,
                                 b.W,
                                 b.H
-                            }).Skip((pageIndex-1)*pageSize).Take(pageSize); 
+                            }).Skip((pageIndex-1)*pageSize).Take(pageSize);
+                var total = from a in alarm
+                            join b in camera on a.Cid equals b.Cid
+                            select new
+                            {
+                                a.Id
+                            };
                 var result = new
                 {
                     code = 0,
@@ -242,7 +254,7 @@ namespace ShipWeb.Controllers
                     ship = _context.Ship,
                     pageIndex = pageIndex,
                     pageSize = pageSize,
-                    count = alarm.Count()
+                    count = total.Count()
                 };            
                 return new JsonResult(result);
             }
