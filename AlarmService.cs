@@ -8,24 +8,22 @@ using System.Threading.Tasks;
 
 namespace ShipWeb
 {
-    public class AlarmDataService: BackgroundService
+    public class AlarmService: BackgroundService
     {
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            //发送注册请求
-            InitManger.Init();
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
                 {
                     //心跳
-                    InitManger.HeartBeat();
+                    InitManger.Alarm();
                 }
                 catch (Exception ex)
                 {
                     //LogHelper.Error(ex.Message);
                 }
-                await Task.Delay(1000*30, stoppingToken);//单位秒
+                await Task.Delay(1000*3, stoppingToken);//单位秒
             }
         }
     }

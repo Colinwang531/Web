@@ -24,23 +24,21 @@ namespace ShipWeb.Controllers
             _context = context;
         }
 
-        public IActionResult Index(string id = "")
-        {
-            ViewBag.shipId = id;
-            return View();
-        }
         public IActionResult LandHome()
         {
-            byte[] by = HttpContext.Session.Get("uid");
-            string uid = Encoding.UTF8.GetString(by);
-            ViewBag.isAdmin = uid.ToLower() == "admin" ? true : false;
-            var user = _context.User.FirstOrDefault(c => c.Id == uid);
-            ViewBag.IsSetShip = user != null ? user.EnableConfigure : false;
-            ViewBag.IsShow = user != null ? user.Enablequery : false;
+            //byte[] by = HttpContext.Session.Get("uid");
+            //string uid = Encoding.UTF8.GetString(by);
+            //ViewBag.isAdmin = uid.ToLower() == "admin" ? true : false;
+            //var user = _context.User.FirstOrDefault(c => c.Id == uid);
+            //ViewBag.IsSetShip = user != null ? user.EnableConfigure : false;
+            //ViewBag.IsShow = user != null ? user.Enablequery : false;
+            ViewBag.IsSetShip = base.user.EnableConfigure;
+            ViewBag.IsShow = base.user.Enablequery;
+            ViewBag.isAdmin=base.user.Id== "admin" ? true : false;
+            ViewBag.LoginName = base.user.Name;
             ManagerHelp.ShipId = "";
             ManagerHelp.IsShowLandHome = true;
             ManagerHelp.IsShowAlarm = false;
-
             return View();
         }
     }

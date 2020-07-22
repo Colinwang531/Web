@@ -13,14 +13,12 @@
         var $ = layui.$;
         var form = layui.form;
         load();
-        form.on("radio", function (data) {
-            //自动时不可选择航行状态
-            if (data.value == "2") {
-                $('select').attr('disabled', 'disabled').css("background-color", "#EEEEEE");
+        form.on("select(type)", function (data) {
+            if (data.value == 1) {
+                $("#txtStatus").val("航行");
             } else {
-                $('select').removeAttr("disabled").removeClass("background-color");
+                $("#txtStatus").val("停港");
             }
-            form.render('select');
         });
         //监听提交
         form.on('submit(doSubmit)', function (frm) {
@@ -62,12 +60,11 @@
                             form.val("dataFrm", {
                                 "id": res.data.id,
                                 "name": res.data.name,
-                                "type": res.data.type,
-                                "flag": res.data.flag ? 1 : 2
+                                "type": res.data.type
                             });
-                            if (res.data.type==2) {                             
-                                form.render();
-                            }
+                            var status = res.data.flag ? "航行" : "停港";
+                            $("#txtStatus").val(status);
+                            form.render();
                         }
                         if (res.isSet) {
                             var html = ' <button type="submit" class="layui-btn layui-btn-normal layui-btn-sm layui-icon layui-icon-release" lay-filter="doSubmit" lay-submit="">提交</button>';
@@ -76,7 +73,7 @@
                     }
                 }
             });
-        }
+        }       
     });
 </script>
 <div style="margin:10px">
@@ -91,32 +88,31 @@
                     <input type="text" id="txtName" name="name" required maxlength="20" lay-verify="required" autocomplete="off" class="layui-input">
                 </div>
             </div>
-        </div>
-        @*<div class="layui-form-item">
-            <div class="layui-inline" style="margin-left:30px">
-                <div class="layui-input-inline">
-                    <input type="radio" name="type" value="1" title="AUTO" class="layui-input">
-                    <input type="radio" name="type" value="2" title="SAIL" class="layui-input" checked="checked">
-                    <input type="radio" name="type" value="3" title="PORT" class="layui-input"/>
-                </div>
-            </div>
-        </div>*@
+        </div> 
         <div class="layui-form-item">
             <div class="layui-inline">
-                <label class="layui-form-label">航行状态：</label>
+                <label class="layui-form-label">设置：</label>
                 <div class="layui-input-inline">
                     <div class="layui-input-inline">
-                        <select id="slStatus" name="flag" class="layui-input">
-                            <option value="1">AUTO(自动)</option>
-                            <option value="2">SAIL(航行)</option>
-                            <option value="3">PORT(停港)</option>
+                        <select id="slStatus" name="type" class="layui-input" lay-filter="type">
+                            <option value="0">AUTO(自动)</option>
+                            <option value="1">SAIL(手动航行)</option>
+                            <option value="2">PORT(手动停港)</option>
                         </select>
                     </div>
                 </div>
             </div>
         </div>
+        <div>
+            <div class="layui-inline">
+                <label class="layui-form-label">默认状态：</label>
+                <div class="layui-input-inline">
+                    <input type="text" id="txtStatus" readonly="readonly" autocomplete="off" class="layui-input" style="background-color:#EEEEEE">
+                </div>
+            </div>
+        </div>
         <div class="layui-form-item">
-            <div class="layui-input-block" id="divShow">
+            <div class="layui-input-block" style="margin-top:20px" id="divShow">
 
                 @*<button type="reset" class="layui-btn layui-btn-warm layui-btn-sm layui-icon layui-icon-refresh">重置</button>*@
             </div>

@@ -18,47 +18,71 @@ namespace ShipWeb
     public class InitManger
     {
 
-        static  ProtoManager manager = new ProtoManager();
-        static MyContext _context = new MyContext();
+        static ProtoManager manager = new ProtoManager();
         /// <summary>
         /// 初使化
         /// </summary>
         public static void Init()
         {
-           var comList= _context.Component.ToList();
-            if (comList.Count==0)
+            using (var context=new MyContext())
             {
-                Component();
+                var comList = context.Component.ToList();
+                if (comList.Count == 0)
+                {
+                    Component();
+                }
+                else
+                {
+                    ManagerHelp.Cid = comList[0].Id;
+                }
             }
-            else
-            {
-                ManagerHelp.Cid = comList[0].Id;
-            }
-            
         }
         /// <summary>
         /// 组件注册
         /// </summary>
-        private static void Component() {
+        private static void Component()
+        {
             Task.Factory.StartNew(state =>
             {
-                //发送组件注册
-                string iditity = Guid.NewGuid().ToString();
-                string name = "组件1";
-                ComponentResponse rep = manager.ComponentStart(iditity,ComponentInfo.Type.WEB, name);
-                if (rep != null && rep.result == 0)
+                using (var context = new MyContext())
                 {
-                    Models.Component model = new Models.Component()
+                    //发送组件注册
+                    string iditity = Guid.NewGuid().ToString();
+                    var ship = context.Ship.FirstOrDefault();
+                    string shipId = Guid.NewGuid().ToString();
+                    if (ship == null)
                     {
-                        Id = iditity,
-                        Name = name,
-                        Type = Models.Component.ComponentType.WEB,
-                        ShipId =Guid.NewGuid().ToString()
-                    };
-                    ManagerHelp.Cid = rep.cid;
+                        Models.Ship model = new Ship()
+                        {
+                            Id = shipId,
+                            Flag = false,
+                            Name = "船1",
+                            type = Ship.Type.PORT
+                        };
+                        context.Ship.Add(model);
+                        context.SaveChanges();
+                    }
+                    else
+                    {
+                        shipId = ship.Id;
+                    }
+                    string name = "组件1";
+                    var protoId = iditity + "," + shipId;
+                    ComponentResponse rep = manager.ComponentStart(iditity, ComponentInfo.Type.WEB, name);
+                    if (rep != null && rep.result == 0)
+                    {
+                        Models.Component model = new Models.Component()
+                        {
+                            Id = iditity,
+                            Name = name,
+                            Type = Models.Component.ComponentType.WEB,
+                            ShipId = shipId
+                        };
+                        ManagerHelp.Cid = rep.cid;
 
-                    _context.Component.Add(model);
-                    _context.SaveChanges();
+                        context.Component.Add(model);
+                        context.SaveChanges();
+                    }
                 }
             }, TaskCreationOptions.LongRunning);
         }
@@ -67,11 +91,11 @@ namespace ShipWeb
         /// </summary>
         public static void HeartBeat()
         {
-            Task.Factory.StartNew(state => {
+            Task.Factory.StartNew(state =>
+            {
                 if (!string.IsNullOrEmpty(ManagerHelp.Cid))
                 {
-                    string iditity = Guid.NewGuid().ToString();
-                    ComponentResponse rep = manager.ComponentStart(iditity,ComponentInfo.Type.WEB, "", ManagerHelp.Cid);
+                    ComponentResponse rep = manager.ComponentStart(ManagerHelp.Cid, ComponentInfo.Type.WEB, "", ManagerHelp.Cid);
                 }
             }, TaskCreationOptions.LongRunning);
         }
@@ -92,56 +116,89 @@ namespace ShipWeb
             {
                 Task.Factory.StartNew(state =>
                 {
-                    string shipId = "";
-                    var ship = _context.Ship.FirstOrDefault();
-                    if (ship != null)
+                    using (var context = new MyContext())
                     {
-                        shipId = ship.Id;
-                        string identity = Guid.NewGuid().ToString();
-                        ProtoBuffer.Models.Alarm alarm = manager.AlarmStart(identity);
-                        if (alarm != null)
+                        string shipId = "";
+                        var ship = context.Ship.FirstOrDefault();
+                        if (ship != null)
                         {
-                            ShipWeb.Models.Alarm model = new ShipWeb.Models.Alarm()
+                            shipId = ship.Id;
+                            string identity = Guid.NewGuid().ToString();
+                            ProtoBuffer.Models.Alarm alarm = manager.AlarmStart(identity);
+                            if (alarm != null)
                             {
-                                Id = identity,
-                                Picture = Encoding.UTF8.GetBytes(alarm.picture),
-                                Time = Convert.ToDateTime(alarm.time),
-                                ShipId = shipId,
-                                alarmInformation = new AlarmInformation()
+                                if (alarm.alarminfo.type == ProtoBuffer.Models.AlarmInfo.Type.ATTENDANCE_IN || alarm.alarminfo.type == ProtoBuffer.Models.AlarmInfo.Type.ATTENDANCE_OUT)
                                 {
-                                    AlarmId = identity,
-                                    Cid = alarm.cid,
-                                    Id = Guid.NewGuid().ToString(),
-                                    Shipid = ManagerHelp.ShipId,
-                                    Type = (AlarmType)alarm.alarminfo.type,
-                                    alarmInformationPositions = new List<AlarmInformationPosition>()
-                                }
-                            };
-                            List<AlarmPosition> replist = alarm.alarminfo.position;
-                            if (replist.Count > 0)
-                            {
-                                foreach (var item in replist)
-                                {
-                                    AlarmInformationPosition position = new AlarmInformationPosition()
+                                    #region 考勤信息入库
+                                    ShipWeb.Models.Attendance attendance = new Attendance()
                                     {
-                                        AlarmInformationId = model.alarmInformation.Id,
-                                        ShipId = ManagerHelp.ShipId,
-                                        Id = Guid.NewGuid().ToString(),
-                                        H = item.h,
-                                        W = item.w,
-                                        X = item.x,
-                                        Y = item.y
-                                    };
-                                    model.alarmInformation.alarmInformationPositions.Add(position);
+                                        Behavior = alarm.alarminfo.type == ProtoBuffer.Models.AlarmInfo.Type.ATTENDANCE_IN ? 0 : 1,
+                                        Id = identity,
+                                        CameraId = alarm.cid,
+                                        ShipId = shipId,
+                                        Time = Convert.ToDateTime(alarm.time),
+                                        CrewId = alarm.alarminfo.uid,
+                                        attendancePictures = new List<AttendancePicture>() {
+                                         new AttendancePicture (){
+                                             AttendanceId=identity,
+                                             Id=Guid.NewGuid().ToString(),
+                                             Picture= Encoding.UTF8.GetBytes(alarm.picture),
+                                             ShipId=shipId
+                                         }
                                 }
-                            }
-                            //操作入库
-                            _context.Alarm.Add(model);
-                            _context.SaveChanges();
-                        }
-                    }
-                }, TaskCreationOptions.LongRunning);
+                                    };
+                                    context.Attendance.Add(attendance);
+                                    #endregion
+                                }
+                                else
+                                {
+                                    #region 报警信息入库
+                                    ShipWeb.Models.Alarm model = new ShipWeb.Models.Alarm()
+                                    {
+                                        Id = identity,
+                                        Picture = Encoding.UTF8.GetBytes(alarm.picture),
+                                        Time = Convert.ToDateTime(alarm.time),
+                                        ShipId = shipId,
+                                        Cid = alarm.cid,
+                                        alarmInfo = new Models.AlarmInfo()
+                                        {
+                                            AlarmId = identity,
+                                            Id = Guid.NewGuid().ToString(),
+                                            Shipid = ManagerHelp.ShipId,
+                                            Type = (AlarmType)alarm.alarminfo.type,
+                                            Uid = alarm.alarminfo.uid,
+                                            alarmPositions = new List<Models.AlarmPosition>()
+                                        }
+                                    };
+                                    var replist = alarm.alarminfo.position;
+                                    if (replist.Count > 0)
+                                    {
+                                        foreach (var item in replist)
+                                        {
 
+                                            Models.AlarmPosition position = new Models.AlarmPosition()
+                                            {
+                                                AlarmInfoId = model.alarmInfo.Id,
+                                                ShipId = ManagerHelp.ShipId,
+                                                Id = Guid.NewGuid().ToString(),
+                                                H = item.h,
+                                                W = item.w,
+                                                X = item.x,
+                                                Y = item.y
+                                            };
+                                            model.alarmInfo.alarmPositions.Add(position);
+                                        }
+                                    }
+                                    context.Alarm.Add(model);
+                                    #endregion
+                                }
+                                context.SaveChanges();
+                            }
+                        }
+
+                    }
+                   
+                }, TaskCreationOptions.LongRunning);
             }
             catch (Exception ex)
             {

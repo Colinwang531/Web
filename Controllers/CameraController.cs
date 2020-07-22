@@ -25,7 +25,8 @@ namespace ShipWeb.Controllers
         // GET: Cameras
         public IActionResult Index(string id)
         {
-            ViewBag.id = id.Trim();           
+            ViewBag.id = id.Trim();
+            ViewBag.IsSet = base.user.EnableConfigure;
             return View();
         }
         public IActionResult Load(string id)

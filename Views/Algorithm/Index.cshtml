@@ -5,6 +5,7 @@
 }
 <script src="~/layui/layui.js"></script>
 <link href="~/layui/css/layui.css" rel="stylesheet" />
+<script src="~/lib/jquery/dist/jquery.js"></script>
 <script type="text/javascript">
     layui.use(['table', 'form'], function () {
         var $ = layui.$;
@@ -28,16 +29,24 @@
                 },
                 { field: 'nickName', title: "摄像机名称", width: 150, sort: true },
                 { field: 'gpu', title: "GPU", width: 100, sort: true },
-                { field: 'detectThreshold_1', title: "检测阀值1", width: 150 },
-                { field: 'detectThreshold_2', title: "检测阀值2", width: 150},
-                { field: 'trackThreshold', title: "跟踪阀值", width: 150},
-                { field: 'similar', title: '人脸相似度', width: 150, sort: true },
+                { field: 'dectectFirst', title: "检测阀值1", width: 150 },
+                { field: 'dectectSecond', title: "检测阀值2", width: 150 },
+                {
+                    field: 'track', title: "跟踪阀值", width: 150, templet: function (e) {
+                        return e.track == 0 ? "" : e.track;
+                    }
+                },
+                {
+                    field: 'similar', title: '人脸相似度', width: 150, sort: true, templet: function (e) {
+                        return e.similar == 0 ? "" : e.similar;
+                    }
+                },
                 { fiexd: 'right', title: '操作', toolbar: '#userBar', width: 200, algin: 'center' }
             ]],
             done: function (res) {
                 if (res.code == 0) {
                     var camera = res.camera;
-                    var html = '<option value = ""> 请选择</option>';
+                    var html = ""; //'<option value = ""> 请选择</option>';
                     for (var i = 0; i < camera.length; i++) {
                         html += '<option value="' + camera[i].id + '">' + camera[i].nickName + '</option>'
                     }
@@ -53,6 +62,7 @@
                     content: $("#divSaveOrUpdate"),
                     area: ["400px", "500px"],
                     success: function () {
+                        $("#btnSubmit").removeAttr('disabled').removeClass(DISABLED);
                         $("#dataFrm")[0].reset();
                         SetCSS(1);
                         $("#hidId").val("");
@@ -75,9 +85,9 @@
                         $("#hidId").val(data.id);
                         $("#selType").val(data.type);
                         $("#slCamera").val(data.cid);
-                        $("#txtThreshold_1").val(data.detectThreshold_1);
-                        $("#txtThreshold_2").val(data.detectThreshold_2);
-                        $("#txtTrack").val(data.trackThreshold == 0 ? "" : data.trackThreshold);
+                        $("#txtThreshold_1").val(data.dectectFirst);
+                        $("#txtThreshold_2").val(data.dectectSecond);
+                        $("#txtTrack").val(data.track == 0 ? "" : data.track);
                         $("#txtSimilar").val(data.similar == 0 ? "" : data.similar);
                         $("#slgpu").val(data.gpu);
                         SetCSS(data.type);
@@ -108,17 +118,16 @@
         });
         //保存
         form.on("submit(doSubmit)", function (frm) {
-            var DISABLED = 'layui-btn-disabled';
             $('#btnSubmit').attr('disabled', 'disabled').addClass(DISABLED);
             var data = {
                 id: frm.field.id,
                 type: parseInt(frm.field.type),
                 cid: frm.field.camera,
                 gpu: frm.field.gpu,
-                similar: frm.field.similar,
-                detectThreshold_1: frm.field.detectThreshold_1,
-                detectThreshold_2: frm.field.detectThreshold_2,
-                trackThreshold: frm.field.trackThreshold
+                similar: frm.field.similar == "" ? 0 : parseFloat(frm.field.similar),
+                dectectFirst: parseFloat(frm.field.dectectFirst),
+                dectectSecond: parseFloat(frm.field.dectectSecond),
+                track: frm.field.track == "" ? 0 : parseFloat(frm.field.track)
             };
             $.ajax({
                 url: "/Algorithm/Save",
@@ -144,10 +153,19 @@
         form.on("select(type)", function (obj) {
             SetCSS(obj.value);
         })
+        $("#txtReset").click(function () {
+            $("#dataFrm")[0].reset();
+            SetCSS(1);
+            $("#hidId").val("");
+            $("#selType").val("");
+            $("#slCamera").val("");
+            $("#slgpu").val("");
+            form.render();
+        });
         //自定义验证规则
         form.verify({
             similar: function (value) {
-                var reg = /^0\.(([1-9])|([1-9]\d))$/;
+                var reg = /^0\.(0([1-9])|([1-9]\d)|([1-9]))$/;
                 var type = $("#selType").val();
                 if (type == 5 || type == 6) {
                     if (!new RegExp(reg).test(value)) {
@@ -156,27 +174,30 @@
                 }
             },
             threshold: function (value) {
-                var reg = /^0\.(([1-9])|([1-9]\d))$/;
-                var type = $("#selType").val();
-                var track = $("#txtTrack").val();
-                if (type==2) {
-                    if (!new RegExp(reg).test(value)) {
-                        return "跟踪阀值的取值范围是0-1，如0.99";
-                    }
-                }else if (track=="") {
-
-                }else if (!new RegExp(reg).test(value)) {
+                var reg = /^0\.(0([1-9])|([1-9]\d)|([1-9]))$/;
+                if (!new RegExp(reg).test(value)) {
                     return "阀值的取值范围是0-1，如0.99";
+                }
+            },
+            track: function (value) {
+                var type = $("#selType").val();
+                var reg = /^0\.(0([1-9])|([1-9]\d)|([1-9]))$/;
+                if (!new RegExp(reg).test(value) && type == 2) {
+                    return "跟踪阀值的取值范围是0-1，如0.99";
                 }
             }
         });
         function SetCSS(value) {
             //人脸相似度是否可填
-            if (value == 5) {
+            if (value == 5 || value == 6) {
                 $("#txtSimilar").removeAttr("disabled").css("background-color", "");
+                $("#txtTrack").attr("disabled", "disabled").css("background-color", "#EEEEEE");
+                $("#txtTrack").val("");
             }//打电话时跟踪阀值可设置
             else if (value == 2) {
                 $("#txtTrack").removeAttr("disabled").css("background-color", "");
+                $("#txtSimilar").attr("disabled", "disabled").css("background-color", "#EEEEEE");
+                $("#txtSimilar").val("");
             }
             else {
                 //人脸不可设置
@@ -188,11 +209,13 @@
             }
             form.render('select');
         }
-    });
 
+    });
 </script>
-<div style="margin:20px;width:70%">
+<div style="margin:20px;width:96%">
     <table class="layui-hide" id="algoTable" lay-filter="algoTable"></table>
+    @if (ViewBag.IsSet)
+    {
     <div style="display:none" id="userToolBar">
         <button class="layui-btn layui-btn-sm" lay-event="add">增加</button>
     </div>
@@ -200,6 +223,9 @@
         <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
         <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
     </div>
+
+    }
+
 </div>
 <div style="display:none" id="divSaveOrUpdate">
     <form class="layui-form" id="dataFrm" layer-filter="dataFrm" action="">
@@ -222,19 +248,19 @@
             <div class="layui-inline">
                 <label class="layui-form-label">检测阀值1</label>
                 <div class="layui-input-inline">
-                    <input type="text" name="detectThreshold_1" id="txtThreshold_1" lay-verify="threshold" autocomplete="off" class="layui-input">
+                    <input type="text" name="dectectFirst" id="txtThreshold_1" lay-verify="threshold" autocomplete="off" class="layui-input">
                 </div>
             </div>
             <div class="layui-inline">
                 <label class="layui-form-label">检测阀值2</label>
                 <div class="layui-input-inline">
-                    <input type="text" name="detectThreshold_2" id="txtThreshold_2" lay-verify="threshold" autocomplete="off" class="layui-input">
+                    <input type="text" name="dectectSecond" id="txtThreshold_2" lay-verify="threshold" autocomplete="off" class="layui-input">
                 </div>
             </div>
             <div class="layui-inline">
                 <label class="layui-form-label">跟踪阀值</label>
                 <div class="layui-input-inline">
-                    <input type="text" name="trackThreshold" id="txtTrack" lay-verify="threshold" autocomplete="off" class="layui-input">
+                    <input type="text" name="track" id="txtTrack" lay-verify="track" autocomplete="off" class="layui-input">
                 </div>
             </div>
         </div>
@@ -243,6 +269,7 @@
                 <label class="layui-form-label">摄像机：</label>
                 <div class="layui-input-inline">
                     <select name="camera" id="slCamera" class="layui-input" lay-verify="required" lay-search>
+                        <option value="">请选择</option>
                     </select>
                 </div>
             </div>
@@ -268,7 +295,7 @@
         <div class="layui-form-item" style="text-align:center">
             <div class="layui-input-block">
                 <button type="submit" id="btnSubmit" class="layui-btn layui-btn-normal layui-btn-sm layui-icon layui-icon-release" lay-filter="doSubmit" lay-submit="">提交</button>
-                <button type="reset" class="layui-btn layui-btn-warm layui-btn-sm layui-icon layui-icon-refresh">重置</button>
+                <button type="button" id="txtReset"class="layui-btn layui-btn-warm layui-btn-sm layui-icon layui-icon-refresh">重置</button>
             </div>
         </div>
     </form>

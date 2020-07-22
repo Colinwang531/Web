@@ -6,25 +6,37 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Newtonsoft.Json;
+using ShipWeb.Models;
 
 namespace ShipWeb.Controllers
 {
     public class BaseController : Controller
     {
+        public User user;
         /// <summary>  
         /// 请求过滤处理
         ///</summary> 
         /// <param name="filterContext"></param> 
         public override void OnActionExecuting(ActionExecutingContext filterContext)
         {
-            byte[] result;
-            filterContext.HttpContext.Session.TryGetValue("uid", out result);
-            if (result == null)
+            string browsertoken = HttpContext.Request.Cookies["token"];
+            if (browsertoken == null || HttpContext.Session.Get(browsertoken) == null)
             {
                 filterContext.Result = new RedirectResult("/Login/Index");
                 return;
             }
+            string urlstr = HttpContext.Session.GetString(browsertoken);
+            user = JsonConvert.DeserializeObject<User>(urlstr);
             base.OnActionExecuting(filterContext);
+            //byte[] result;
+            //filterContext.HttpContext.Session.TryGetValue("uid", out result);
+            //if (result == null)
+            //{
+            //    filterContext.Result = new RedirectResult("/Login/Index");
+            //    return;
+            //}
+            //base.OnActionExecuting(filterContext);
         }
     }
 }

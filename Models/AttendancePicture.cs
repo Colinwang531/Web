@@ -14,7 +14,7 @@ namespace ShipWeb.Models
         /// <summary>
         /// 船员签到图片
         /// </summary>
-        public string Picture { get; set; }
+        public byte[] Picture { get; set; }
         /// <summary>
         /// 船员签到表主键id
         /// </summary>

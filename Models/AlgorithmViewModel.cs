@@ -27,18 +27,18 @@ namespace ShipWeb.Models
         /// <summary>
         /// 人脸相似度（0.1-0.99）
         /// </summary>
-        public string Similar { get; set; }
+        public float Similar { get; set; }
         /// <summary>
         /// 检测阀值1
         /// </summary>
-        public string DetectThreshold_1 { get; set; }
+        public float DectectFirst { get; set; }
         /// <summary>
         /// 检测阀值2
         /// </summary>
-        public string DetectThreshold_2 { get; set; }
+        public float DectectSecond { get; set; }
         /// <summary>
         /// 跟踪阀值
         /// </summary>
-        public string TrackThreshold { get; set; }
+        public float Track { get; set; }
     }
 }

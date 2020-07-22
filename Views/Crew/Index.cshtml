@@ -57,6 +57,7 @@
                         content: $("#divAddOrUpdate"),
                         area: ['800px', '600px'],
                         success: function (index) {
+                            $("#btnSubmit").removeAttr('disabled').removeClass(DISABLED);
                             $("#hidId").val("");
                             $("#hidPicIds").val("");
                             clearFile();
@@ -276,7 +277,7 @@
     <h1>船员信息</h1>
     <hr />
     <table class="layui-table" id="userTable" lay-filter="userTable"></table>
-    @if (ShipWeb.Tool.ManagerHelp.IsSet)
+    @if (ViewBag.IsSet)
     {
     <div style="display: none;" id="userToolBar">
         <button type="button" class="layui-btn layui-btn-sm" lay-event="add">增加</button>

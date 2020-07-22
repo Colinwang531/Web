@@ -37,11 +37,28 @@
             },
             cols: [[
                 { field: 'time', title: '报警时间', width: 180 },
-                { field: 'cid', title: '摄像机编号', width: 120 },
                 { field: 'nickName', title: '摄像机名称', width: 150 },
                 {
-                    field: 'type', title: '睡觉', width: 150, templet: function (e) {
+                    field: 'type', title: '安全帽', width: 150, templet: function (e) {
                         if (e.type == 1) {
+                            var id = "helmet" + e.LAY_INDEX;
+                            var url = Drawing(e.picture, e.w, e.h, e.x, e.y, id);
+                            return LoadImg(id);
+                        } else return "";
+                    }
+                },
+                {
+                    field: 'type', title: '手机', width: 150, templet: function (e) {
+                        if (e.type == 2) {
+                            var id = "phone" + e.LAY_INDEX;
+                            var url = Drawing(e.picture, e.w, e.h, e.x, e.y, id);
+                            return LoadImg(id);
+                        } else return "";
+                    }
+                },
+                {
+                    field: 'type', title: '睡觉', width: 150, templet: function (e) {
+                        if (e.type == 3) {
                             var id = "sleep" + e.LAY_INDEX;
                             var url = Drawing(e.picture, e.w, e.h, e.x, e.y, id);
                             return LoadImg(id);
@@ -51,26 +68,8 @@
                 },
                 {
                     field: 'type', title: '打架', width: 150, templet: function (e) {
-                        if (e.type == 2) {
-                            var id = "fight" + e.LAY_INDEX;
-                            var url = Drawing(e.picture, e.w, e.h, e.x, e.y, id);
-                            return LoadImg(id);
-                        } else return "";
-                    }
-                },
-                {
-                    field: 'type', title: '安全帽', width: 150, templet: function (e) {
-                        if (e.type == 3) {
-                            var id = "helmet" + e.LAY_INDEX;
-                            var url = Drawing(e.picture, e.w, e.h, e.x, e.y, id);
-                            return LoadImg(id);
-                        } else return "";
-                    }
-                },
-                {
-                    field: 'type', title: '手机', width: 150, templet: function (e) {
                         if (e.type == 4) {
-                            var id = "phone" + e.LAY_INDEX;
+                            var id = "fight" + e.LAY_INDEX;
                             var url = Drawing(e.picture, e.w, e.h, e.x, e.y, id);
                             return LoadImg(id);
                         } else return "";
@@ -93,8 +92,7 @@
             return html;
         }
         form.on("submit(query)", function (obj) {
-            var data = {
-                cid: obj.field.cid,
+            var data = {              
                 name: obj.field.name,
                 type: parseInt(obj.field.type),
                 startTime: obj.field.startTime,
@@ -102,7 +100,9 @@
             }
             table.reload('alarmTable', {
                 url: "/Alarm/QueryPage",
-                where:data,
+                where: {
+                    searchModel: JSON.stringify(data)
+                },
                 request: {
                     pageName: 'pageIndex',//页码的参数名称，默认：page
                     limitName: 'pageSize' //每页数据量的参数名，默认：limit
@@ -157,11 +157,7 @@
 </script>
 <div style="margin:20px;width:96%">
     <form class="layui-form" action="" id="dataFrm" lay-filter="dataFrm">
-        <div class="layui-form-item">
-            <label class="layui-form-label">摄像机编号</label>
-            <div class="layui-input-inline" style="width:100px">
-                <input name="cid" class="layui-input" type="text" placeholder="请输入" autocomplete="off">
-            </div>
+        <div class="layui-form-item">           
             <label class="layui-form-label">摄像机名称</label>
             <div class="layui-input-inline" style="width:100px">
                 <input name="name" class="layui-input" type="text" placeholder="请输入" autocomplete="off">
@@ -170,10 +166,10 @@
             <div class="layui-input-inline">
                 <select name="type" style="width:100px">
                     <option value="0">请选择</option>
-                    <option value="1">睡觉</option>
-                    <option value="2">打架</option>
-                    <option value="3">安全帽</option>
-                    <option value="4">手机</option>
+                    <option value="1">安全帽</option>
+                    <option value="2">手机</option>
+                    <option value="3">睡觉</option>
+                    <option value="4">打架</option>
                 </select>
             </div>
 

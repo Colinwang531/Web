@@ -30,8 +30,10 @@ namespace ShipWeb.DB
             modelBuilder.Entity<Crew>();
             modelBuilder.Entity<CrewPicture>();
             modelBuilder.Entity<Alarm>();
-            modelBuilder.Entity<AlarmInformation>();
-            modelBuilder.Entity<AlarmInformationPosition>();
+            modelBuilder.Entity<AlarmInfo>();
+            modelBuilder.Entity<AlarmPosition>();
+            modelBuilder.Entity<Attendance>();
+            modelBuilder.Entity<AttendancePicture>();
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -75,14 +77,22 @@ namespace ShipWeb.DB
         /// <summary>
         /// 报警信息
         /// </summary>
-        public DbSet<AlarmInformation> AlarmInformation { get; set; }
+        public DbSet<AlarmInfo> AlarmInfo { get; set; }
         /// <summary>
         /// 报警位置
         /// </summary>
-        public DbSet<AlarmInformationPosition> AlarmInformationPosition { get; set; }
+        public DbSet<AlarmPosition> AlarmPosition { get; set; }
         /// <summary>
         /// 算法配置
         /// </summary>
         public DbSet<Algorithm> Algorithm { get; set; }
+        /// <summary>
+        /// 考勤
+        /// </summary>
+        public DbSet<Attendance> Attendance { get; set; }
+        /// <summary>
+        /// 考勤图片
+        /// </summary>
+        public DbSet<AttendancePicture> AttendancePicture { get; set; }
     }
 }

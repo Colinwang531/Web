@@ -18,6 +18,10 @@ namespace ShipWeb.Models
         /// </summary>
         public int Type { get; set; }
         /// <summary>
+        /// 设备状态 0:开启 1：关闭
+        /// </summary>
+        public int Enable { get; set; }
+        /// <summary>
         /// 设备登录名称
         /// </summary>
         public string Name { get; set; }

@@ -40,7 +40,7 @@ namespace ShipWeb.Controllers
             {
                 code = 0,
                 data = data,
-                isSet = ManagerHelp.IsSet
+                isSet =base.user.EnableConfigure
             };
             return new JsonResult(result);
         }

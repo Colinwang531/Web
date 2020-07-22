@@ -47,8 +47,12 @@ namespace ShipWeb
                 o.Conventions.ConfigureFilter(new IgnoreAntiforgeryTokenAttribute());
             });
             services.AddAntiforgery(o => o.HeaderName = "XSRF-TOKEN");
-            //注册定时服务
-            services.AddSingleton<IHostedService, AlarmDataService>();
+            //注册心跳
+            services.AddSingleton<IHostedService, HeartService>();
+            ////注册报警
+            //services.AddSingleton<IHostedService, AlarmService>();
+            ////注册组件
+            //services.AddScoped<InitManger>();
             services.AddCors();
         }
 
@@ -79,8 +83,6 @@ namespace ShipWeb
                     pattern: "{controller=Login}/{action=Index}/{id?}");
             });
             app.UseCors();
-           
         }
-
     }
 }

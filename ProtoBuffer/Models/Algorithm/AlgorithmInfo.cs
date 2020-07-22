@@ -59,6 +59,21 @@ namespace ShipWeb.ProtoBuffer.Models
 		/// 人脸相似度
 		/// </summary>
 		[ProtoMember(4)]
+		public float dectectfirst { get; set; }
+		/// <summary>
+		/// 人脸相似度
+		/// </summary>
+		[ProtoMember(5)]
+		public float track { get; set; }
+		/// <summary>
+		/// 人脸相似度
+		/// </summary>
+		[ProtoMember(6)]
+		public float dectectsecond { get; set; }
+		/// <summary>
+		/// 人脸相似度
+		/// </summary>
+		[ProtoMember(7)]
 		public float similar { get; set; }
 	}
 }

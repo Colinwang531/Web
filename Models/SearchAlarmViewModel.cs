@@ -7,14 +7,17 @@ namespace ShipWeb.Models
 {
     public class SearchAlarmViewModel
     {
+        public SearchAlarmViewModel() {
+            ShipId = "";
+            Name = "";
+            Type = 0;
+            StartTime = "";
+            EndTime = "";
+        }
         /// <summary>
         /// 船ID
         /// </summary>
-        public string ShipId { get; set; }
-        /// <summary>
-        /// 摄像机ID
-        /// </summary>
-        public string Cid { get; set; }
+        public string ShipId { get; set; }       
         /// <summary>
         /// 摄像机名称
         /// </summary>

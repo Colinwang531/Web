@@ -21,25 +21,39 @@ namespace ShipWeb.ProtoBuffer
     {
       
         /// <summary>
-        /// 添加组件信息
+        /// 组件设置
         /// </summary>
         /// <param name="componentInfo"></param>
         /// <returns></returns>
-        public static string AddComponent(string identity,ComponentInfo componentInfo)
+        public static string ComponentSet(string identity,ComponentInfo componentInfo)
         {
             using (var _context = new MyContext())
             {
-                string cid = Process.GetCurrentProcess().Id.ToString();
-                ShipWeb.Models.Component model = new ShipWeb.Models.Component()
+                //string cid = Process.GetCurrentProcess().Id.ToString();
+                if (identity.Length > 1)
                 {
-                    Id = identity,
-                    Name = componentInfo.cname,
-                    ShipId = "",
-                    Type = (ShipWeb.Models.Component.ComponentType)ComponentInfo.Type.WEB
-                };
-                _context.Component.Add(model);
-                _context.SaveChanges();
-                return cid;
+                    string id = identity.Split(',')[0];
+                    string shipId = identity.Split(',')[1];
+                    ShipWeb.Models.Component model = new ShipWeb.Models.Component()
+                    {
+                        Id = id,
+                        Name = componentInfo.cname,
+                        ShipId = shipId,
+                        Type = (ShipWeb.Models.Component.ComponentType)ComponentInfo.Type.WEB
+                    };
+                    ShipWeb.Models.Ship ship = new Ship()
+                    {
+                        Id = shipId,
+                        Name = "船1",
+                        Flag = false,
+                        type = ShipWeb.Models.Ship.Type.PORT
+                    };
+                    _context.Ship.Add(ship);
+                    _context.Component.Add(model);
+                    _context.SaveChanges();
+                    return id;
+                }
+                return identity;
             }
         }
 
@@ -47,17 +61,22 @@ namespace ShipWeb.ProtoBuffer
         /// 查询所有设备
         /// </summary>
         /// <returns></returns>
-        public static List<DeviceInfo> EmbeddedQuery(string shipId,string did = "")
+        public static List<DeviceInfo> EmbeddedQuery(string shipId,DeviceInfo info, string did = "")
         {
             using (var _context = new MyContext())
             {
                 List<DeviceInfo> list = new List<DeviceInfo>();
                 //查询设备信息
-                var dbembed = _context.Device.Where(c =>c.ShipId==shipId&& (!string.IsNullOrEmpty(did) ? c.Id == did : 1 == 1)).ToList();
-                var ids = string.Join(',', dbembed.Select(c => c.Id));
+                List<ShipWeb.Models.Device> devList = GetDevice(info);               
+                if (!string.IsNullOrEmpty(did))
+                {
+                    devList = devList.Where(c => c.Id == did).ToList();
+                }
+               
+                var ids = string.Join(',', devList.Select(c => c.Id));
                 //查询设备下的摄像机
                 var cameras = _context.Camera.Where(c =>c.ShipId==shipId&& ids.Contains(c.DeviceId)).ToList();
-                foreach (var item in dbembed)
+                foreach (var item in devList)
                 {
                     DeviceInfo em = new DeviceInfo()
                     {
@@ -69,6 +88,7 @@ namespace ShipWeb.ProtoBuffer
                         password = item.Password,
                         port = item.Port,
                         type=(DeviceInfo.Type)item.type,
+                        enable=item.Enable,
                         camerainfos = new List<CameraInfo>()
                     };
                     var cams = cameras.Where(c => c.DeviceId == item.Id);
@@ -80,7 +100,7 @@ namespace ShipWeb.ProtoBuffer
                             enable = it.Enalbe,
                             index = it.Index,
                             ip = it.IP,
-                            nickname = it.NickName
+                            nickname = it.NickName                             
                         };
                         em.camerainfos.Add(cam);
                     }
@@ -88,6 +108,39 @@ namespace ShipWeb.ProtoBuffer
                 }
                 return list;
             }
+        }
+        private static List<ShipWeb.Models.Device> GetDevice(DeviceInfo info) 
+        {
+            using (var context=new MyContext())
+            {
+                var device = context.Device.Where(c=>1==1);
+                if (info != null)
+                {
+                    device=device.Where(c => c.Enable == info.enable);
+                    if (!string.IsNullOrEmpty(info.name))
+                    {
+                        device = device.Where(c => c.Name.Contains(info.name));
+                    }
+                    if (!string.IsNullOrEmpty(info.nickname))
+                    {
+                        device = device.Where(c => c.Nickname.Contains(info.nickname));
+                    }
+                    if (!string.IsNullOrEmpty(info.ip))
+                    {
+                        device = device.Where(c => c.IP==info.ip);
+                    }
+                    if (!string.IsNullOrEmpty(info.did))
+                    {
+                        device = device.Where(c => c.Id == info.did);
+                    }
+                    if (info.port>0)
+                    {
+                        device = device.Where(c => c.Port==info.port);
+                    }
+                }
+                return device.ToList();
+            }
+            
         }
         public static int EmbeddedAdd(string shipId,DeviceInfo protoModel)
         {
@@ -187,7 +240,8 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="did"></param>
         /// <returns></returns>
-        public static int EmbeddedDelete(string shipId,string did) {
+        public static int EmbeddedDelete(string shipId,string did) 
+        {
             using (var _context = new MyContext())
             {
                 if (!string.IsNullOrEmpty(did))
@@ -255,7 +309,7 @@ namespace ShipWeb.ProtoBuffer
         /// 添加船员
         /// </summary>
         /// <param name="protoModel"></param>
-        /// <returns></returns>
+        /// <returns>0：成功 1:失败 2:数据重复</returns>
         public static int EmployeeAdd(string shipId,CrewInfo protoModel)
         {
             using (var _context = new MyContext())
@@ -265,7 +319,7 @@ namespace ShipWeb.ProtoBuffer
                     var dbemp = _context.Crew.FirstOrDefault(c => c.Name == protoModel.name);
                     if (dbemp != null)
                     {
-                        return 1;
+                        return 2;
                     }
                     string id = Guid.NewGuid().ToString();
                     ShipWeb.Models.Crew employee = new ShipWeb.Models.Crew()
@@ -302,7 +356,7 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="uid"></param>
         /// <param name="protoModel"></param>
-        /// <returns></returns>
+        /// <returns>0：成功 1:失败 2:数据重复</returns>
         public static int EmployeeUpdate(string shipId, CrewInfo protoModel)
         {
             using (var _context = new MyContext())
@@ -313,9 +367,9 @@ namespace ShipWeb.ProtoBuffer
                     if (model != null)
                     {
                         var dbmodel = _context.Crew.FirstOrDefault(c => c.Name == protoModel.name);
-                        if (dbmodel!=null && dbmodel.Name != model.Name)
+                        if (dbmodel!=null&&model.Name!=protoModel.name)
                         {
-                            return 1;
+                            return 2;
                         }
                         model.Job = protoModel.job;
                         model.Name = protoModel.name;
@@ -367,7 +421,8 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="uid"></param>
         /// <returns></returns>
-        public static int EmployeeDelete(string shipId,string uid) {
+        public static int EmployeeDelete(string shipId,string uid) 
+        {
             using (var _context = new MyContext())
             {
                 if (!string.IsNullOrEmpty(uid))
@@ -394,7 +449,8 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="protoModel"></param>
         /// <returns></returns>
-        public static int UserAdd(Person protoModel) {
+        public static int UserAdd(Person protoModel) 
+        {
             using (var _context = new MyContext())
             {
                 if (protoModel != null)
@@ -447,7 +503,8 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="uid"></param>
         /// <returns></returns>
-        public static int UserDelete(string uid) {
+        public static int UserDelete(string uid) 
+        {
             using (var _context = new MyContext())
             {
                 if (!string.IsNullOrEmpty(uid))
@@ -484,6 +541,9 @@ namespace ShipWeb.ProtoBuffer
                                  a.Cid,
                                  a.Type,
                                  a.GPU,
+                                 a.DectectFirst,
+                                 a.DectectSecond,
+                                 a.Track,
                                  a.Similar,
                                  d.NickName
                              };
@@ -491,10 +551,13 @@ namespace ShipWeb.ProtoBuffer
                 {
                     AlgorithmInfo cf = new AlgorithmInfo()
                     {
-                        cid =item.Id+","+item.Cid+","+item.NickName,
+                        cid = item.Id + "," + item.Cid + "," + item.NickName,
                         type = (AlgorithmInfo.Type)item.Type,
                         gpu = item.GPU,
-                        similar = (float)item.Similar
+                        similar = item.Similar,
+                        track = item.Track,
+                        dectectfirst = item.DectectFirst,
+                        dectectsecond = item.DectectSecond
                     };
                     list.Add(cf);
                 }
@@ -509,20 +572,22 @@ namespace ShipWeb.ProtoBuffer
         /// <returns></returns>
         public static int CameraConfigSet(string shipId,AlgorithmInfo protoModel) 
         {
-            int result = 1;
             using (var _context = new MyContext())
             {
                 try
                 {
                     if (protoModel!=null)
                     {
-                        if (protoModel.cid!="")
+                        if (protoModel.cid.Split(',') .Length>1)
                         {
                             string id = protoModel.cid.Split(',')[0];
                             string cid = protoModel.cid.Split(',')[1];
                             var algo = _context.Algorithm.FirstOrDefault(c => c.Id == id);
-                            if (algo == null) result = 1;
+                            if (algo == null) return 1;
                             algo.GPU = protoModel.gpu;
+                            algo.DectectFirst = protoModel.dectectfirst;
+                            algo.DectectSecond = protoModel.dectectsecond;
+                            algo.Track = protoModel.track;
                             algo.Similar = protoModel.similar;
                             algo.Type = (ShipWeb.Models.AlgorithmType)protoModel.type;
                             algo.Cid = cid;
@@ -537,6 +602,9 @@ namespace ShipWeb.ProtoBuffer
                                 Id = Guid.NewGuid().ToString(),
                                 ShipId = shipId,
                                 Similar = protoModel.similar,
+                                Track = protoModel.track,
+                                DectectSecond = protoModel.dectectsecond,
+                                DectectFirst = protoModel.dectectfirst,
                                 Type = (ShipWeb.Models.AlgorithmType)protoModel.type
                             };
                             _context.Algorithm.Add(model);
@@ -552,7 +620,7 @@ namespace ShipWeb.ProtoBuffer
             }
         }
         /// <summary>
-        /// 向陆地端添加船
+        /// 陆地端设备船信息
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -578,7 +646,7 @@ namespace ShipWeb.ProtoBuffer
                         ShipWeb.Models.Ship ship = new ShipWeb.Models.Ship()
                         {
                             Id = ids[0],
-                            Flag = request.flag,
+                            Flag = request.flag==1?true:false,
                             type = (ShipWeb.Models.Ship.Type)request.type
                         };
                         _context.Ship.Add(ship);
@@ -597,8 +665,8 @@ namespace ShipWeb.ProtoBuffer
                             }
                             else if(request.type == StatusRequest.Type.SAIL)
                             {
-                                ship.type = (ShipWeb.Models.Ship.Type)request.type;
-                                ship.Flag = request.flag;
+                                ship.type = (ShipWeb.Models.Ship.Type)request.flag;
+                                ship.Flag = request.flag == 1 ? true : false;
                                 _context.Ship.Update(ship);
                                 _context.SaveChanges();
                             }

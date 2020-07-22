@@ -13,6 +13,7 @@ using ShipWeb.ProtoBuffer.Models;
 using System.Text;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Newtonsoft.Json;
 
 namespace ShipWeb.Controllers
 {
@@ -57,9 +58,7 @@ namespace ShipWeb.Controllers
                 //保存登陆的用户ID
                 HttpContext.Session.Set("uid", Encoding.UTF8.GetBytes(usersModel.Id));
                 //保存用户可操作的权限 admin 最高权限
-                ManagerHelp.IsSet = usersModel.Id.ToLower() == "admin" ? true : usersModel.EnableConfigure;
                 ManagerHelp.IsShowAlarm = usersModel.Id.ToLower() == "admin" ? true : usersModel.Enablequery;
-                ManagerHelp.LoginName = name;
                 bool flag = false;//判断船是否存在
                 var ship = _context.Ship.FirstOrDefault();
                 if (ship != null)
@@ -67,15 +66,24 @@ namespace ShipWeb.Controllers
                     ManagerHelp.ShipId = ship.Id;
                     flag = true;
                 }
-
-                //ManagerHelp.IframeSrc = "/Embedded/Index?isShow=false";
-                //if (flag && ManagerHelp.IsShowAlarm)
-                //{
-                //    ManagerHelp.IframeSrc = "/Alarm/Index?isShow=false";
-                //}
-                //else if (!flag) ManagerHelp.IframeSrc = "/Ship/Edit?isShow=false";
-                //登陆成功后跳转组件页面
-                //return RedirectToAction(nameof(Index), "Home");
+                string userStr = JsonConvert.SerializeObject(usersModel);
+                string browsertoken = HttpContext.Request.Cookies["token"];
+                if (browsertoken == null)
+                {
+                    //生成token
+                    string token = Guid.NewGuid().ToString();
+                    //将请求的url注册
+                    HttpContext.Session.SetString(token, userStr);
+                    //写入浏览器token
+                    HttpContext.Response.Cookies.Append("token", token);
+                }
+                else
+                {
+                    //将请求的url注册
+                    HttpContext.Session.SetString(browsertoken, userStr);
+                    //写入浏览器token
+                    HttpContext.Response.Cookies.Append("token", browsertoken);
+                }
                 return new JsonResult(new { code = 0, flag = flag });
             }
         }
@@ -85,8 +93,13 @@ namespace ShipWeb.Controllers
         /// <returns></returns>
         public IActionResult SignOut()
         {
+            string browsertoken = HttpContext.Request.Cookies["token"];
+            HttpContext.Response.Cookies.Delete("token");
+            HttpContext.Session.Clear();
+
+
             //消除缓存
-            HttpContext.Session.Remove("uid");
+            //HttpContext.Session.Remove("uid");
             ManagerHelp.ShipId = "";
             ManagerHelp.IsShowLandHome = false;
             InitManger.Exit();

@@ -35,18 +35,9 @@
                 limitName: 'pageSize' //每页数据量的参数名，默认：limit
             },
             cols: [[
-                { field: 'uid', title: '船员编号', width: 180 },
                 { field: 'name', title: '船员名称', width: 120 },
                 { field: 'time', title: '打卡时间', width: 200 },
-                {
-                    field: 'enableAttendanceIn', title: '考勤', width: 120, templet: function (e) {
-                        if (e.enableAttendanceIn) {
-                            return "入";
-                        } else {
-                            return "出";
-                        }
-                    }
-                },
+                { field: 'behavior', title: '考勤', width: 120 },
                 {
                     field: 'type', title: '略缩图', width: 150, templet: function (e) {
                         var html = '<img style="width:800px;height:30px" ondblclick="showBigImage(this)"  src="data:image/jpeg;base64,' + e.picture + '"/>';
@@ -66,15 +57,13 @@
         });
         form.on("submit(query)", function (obj) {
             var data = {
-                uid: obj.field.uid,
                 name: obj.field.name,
-                type: parseInt(obj.field.type),
                 startTime: obj.field.startTime,
                 endTime: obj.field.endTime
             }
             table.reload('alarmTable', {
                 url: "/Attendance/QueryPage",
-                where: data,
+                where: { searchModel: JSON.stringify(data) },
                 request: {
                     pageName: 'pageIndex',//页码的参数名称，默认：page
                     limitName: 'pageSize' //每页数据量的参数名，默认：limit
@@ -111,11 +100,7 @@
 </script>
 <div style="margin:20px;width:96%">
     <form class="layui-form" action="" id="dataFrm" lay-filter="dataFrm">
-        <div class="layui-form-item">
-            <label class="layui-form-label">船员编号</label>
-            <div class="layui-input-inline" style="width:100px">
-                <input name="uid" class="layui-input" type="text" placeholder="请输入" autocomplete="off">
-            </div>
+        <div class="layui-form-item">          
             <label class="layui-form-label">船员名称</label>
             <div class="layui-input-inline" style="width:100px">
                 <input name="name" class="layui-input" type="text" placeholder="请输入" autocomplete="off">

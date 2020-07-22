@@ -8,7 +8,7 @@ namespace ShipWeb.Models
     /// <summary>
     /// 报警消息点位表(既触发报警的图形位)
     /// </summary>
-    public class AlarmInformationPosition
+    public class AlarmPosition
     {
         /// <summary>
         /// 
@@ -33,7 +33,7 @@ namespace ShipWeb.Models
         /// <summary>
         /// 报警信息ID
         /// </summary>
-        public string AlarmInformationId { get; set; }
+        public string AlarmInfoId { get; set; }
         /// <summary>
         /// 船表主键id
         /// </summary>

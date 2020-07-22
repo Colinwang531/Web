@@ -40,6 +40,11 @@
                 { field: 'ip', title: '设备登陆IP', align: 'center', width: 150 },
                 { field: 'port', title: '设备登陆端口', align: 'center', width: 120 },
                 { field: 'nickname', title: '设备别名', align: 'center', width: 120 },
+                {
+                    field: 'enable', title: '设备状态', align: 'center', width: 120, templet: function (e) {
+                        return e.enable==1 ? "开启" : "关闭";
+                    }
+                },
                 { fixed: 'right', title: '操作', toolbar: '#userBar', width: 220, align: 'center' }
             ]],
             done: function (res) {
@@ -57,9 +62,12 @@
                         content: $("#divAddOrUpdate"),
                         area: ['700px', '400px'],
                         success: function (index) {
+                            $("#btnSubmit").removeAttr('disabled').removeClass(DISABLED);
                             $("#hidId").val("");
                             //清空表单数据
                             $("#dataFrm")[0].reset();
+                            $("#txtEnable").val(1);
+                            form.render();
                         }
                     });
                     break;
@@ -109,6 +117,9 @@
                     area: ['700px', '400px'],
                     success: function (index) {
                         form.val("dataFrm", data);
+
+                        $("#txtEnable").val(data.enable?1:0);
+                        form.render();
                         //url = "employees/updateEmployees.action";
                     },
                     yes: function () {
@@ -141,6 +152,7 @@
                 port: parseInt(frm.field.port),
                 type: parseInt(frm.field.type),
                 factory: parseInt(frm.field.factory),
+                enable: parseInt(frm.field.enable),
                 id: frm.field.id,
             };
             $.ajax({
@@ -170,7 +182,7 @@
     <hr />
 
     <table class="layui-table" id="userTable" lay-filter="userTable"></table>
-    @if (ShipWeb.Tool.ManagerHelp.IsSet)
+    @if (ViewBag.IsSet)
     {
         <div style="display: none;" id="userToolBar">
             <button type="button" class="layui-btn layui-btn-sm" id="btnAdd" lay-event="add">增加</button>
@@ -179,7 +191,7 @@
 
     <div id="userBar" style="display: none;">
         <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="detail">详情</a>
-        @if (ShipWeb.Tool.ManagerHelp.IsSet)
+        @if (ViewBag.IsSet)
         {
             <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
             <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
@@ -245,6 +257,15 @@
                 <label class="layui-form-label">设备别名：</label>
                 <div class="layui-input-inline">
                     <input type="text" name="nickname" maxlength="20" lay-verify="required" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">设备状态：</label>
+                <div class="layui-input-inline">
+                    <select name="enable" id="txtEnable" class="layui-input">
+                        <option value="1" selected="selected">开启</option>
+                        <option value="0">关闭</option>
+                    </select>
                 </div>
             </div>
         </div>

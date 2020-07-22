@@ -27,11 +27,11 @@ namespace ShipWeb.Tool
         /// <summary>
         /// 显示登陆名称
         /// </summary>
-        public static string LoginName = "";
+        //public static string LoginName = "";
         /// <summary>
         /// 是否有设置权限
         /// </summary>
-        public static bool IsSet = true;
+        //public static bool IsSet = true;
         /// <summary>
         /// 查询报警信息权限
         /// </summary>

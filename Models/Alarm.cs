@@ -15,6 +15,10 @@ namespace ShipWeb.Models
         /// </summary>
         public string Id { get; set; }
         /// <summary>
+        /// 摄像机ID
+        /// </summary>
+        public string Cid { get; set; }
+        /// <summary>
         /// 报警时间
         /// </summary>
         public DateTime Time { get; set; }
@@ -27,6 +31,6 @@ namespace ShipWeb.Models
         /// 船表主键id
         /// </summary>
         public string ShipId { get; set; }
-        public AlarmInformation alarmInformation { get; set; }
+        public AlarmInfo alarmInfo { get; set; }
     }
 }

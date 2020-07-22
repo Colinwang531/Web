@@ -14,7 +14,7 @@ namespace ShipWeb.Models
         /// <summary>
         /// 船员表主键id
         /// </summary>
-        public string EmployeeId { get; set; }
+        public string CrewId { get; set; }
         /// <summary>
         /// 摄像机主键id
         /// </summary>
@@ -31,5 +31,6 @@ namespace ShipWeb.Models
         /// 船表主键id
         /// </summary>
         public string ShipId { get; set; }
+        public List<AttendancePicture> attendancePictures { get; set; }
     }
 }

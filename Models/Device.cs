@@ -38,6 +38,10 @@ namespace ShipWeb.Models
             [Display(Name = "IPC")]
             IPC = 3
         }
+        /// <summary>
+        /// 设备是否开启
+        /// </summary>
+        public bool Enable { get; set; }
         public string Id { get; set; }
         /// <summary>
         /// 设备厂商 1：HIKVISION 海康，2：DAHUA 大华，3：EATON 伊顿

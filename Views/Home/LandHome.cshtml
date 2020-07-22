@@ -43,8 +43,12 @@
                     if (tb.length > 0) {
                         for (var i = 0; i < tb.length; i++) {
                             html += '<tr>';
-                            html += '<td>' + tb[i].name + '</td>';
-                            html += '<td>' + (tb[i].flag ? "航行" : "停港") + '</td>';
+                            html += '<td>' + tb[i].name + '</td>';                          
+                            if (tb[i].flag == 1) {
+                                html += '<td>SAIL(航行)</td>';
+                            }else {
+                                html += '<td>PORT(停港)</td>';
+                            }
                             html += '<td><a class="layui-btn layui-btn-primary layui-btn-xs" href="/Device/Index?isShow=true&id=' + tb[i].id + '">详情</a></td>';
                             html += '</tr>';
                         }
@@ -116,7 +120,7 @@
         <ul class="layui-nav layui-layout-right">
             <li class="layui-nav-item">
                 <a href="javascript:;">
-                    欢迎您：@ShipWeb.Tool.ManagerHelp.LoginName
+                    欢迎您：@ViewBag.LoginName
                 </a>
                 @if (!ViewBag.isAdmin)
                 {
@@ -157,13 +161,13 @@
         </div>
         }
         @if(ViewBag.IsSetShip){
-        <div id="divShip" style="display:@(ViewBag.isAdmin?"block":"none");margin-left:20px;">
+        <div id="divShip" style="display:none;margin-left:20px;">
             <table class="layui-table">
                 <thead>
                     <tr>
                         <th style="width:200px">船名称</th>
                         <th style="width:200px">船状态</th>
-                        <th style="width:200px"></th>
+                        <th style="width:200px">操作</th>
                     </tr>
                 </thead>
                 <tbody id="tbList">

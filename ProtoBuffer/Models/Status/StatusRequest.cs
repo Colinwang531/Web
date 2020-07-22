@@ -36,7 +36,7 @@ namespace ShipWeb.ProtoBuffer.Models
 		/// 当类型为 SAIL或AIS时此值有效
 		/// </summary>
 		[ProtoMember(2)]
-		public bool flag { get; set; }
+		public int flag { get; set; }
 
 		/// <summary>
 		/// 当类型为CLOCK/NAME 此值有效

@@ -13,17 +13,17 @@ namespace ShipWeb.Models
         public enum Type
         {
             /// <summary>
-            /// 自动
+            /// 自动航行
             /// </summary>
-            AUTO = 1,
+            AUTO = 0,
             /// <summary>
-            /// 航行
+            /// 手动航行
             /// </summary>
-            SAIL = 2,
+            SAIL = 1,
             /// <summary>
-            /// 停港
+            /// 手动停港
             /// </summary>
-            PORT = 3
+            PORT = 2
         }
         /// <summary>
         /// 主键id
@@ -34,11 +34,11 @@ namespace ShipWeb.Models
         /// </summary>
         public string Name { get; set; }
         /// <summary>
-        /// 航行类型 1：SAIL 航行 2:自动 3：名称
+        /// 航行类型
         /// </summary>
         public Type type { get; set; }
         /// <summary>
-        /// 是否在港口，true表示航行，false表示停港
+        /// 航状态  true:航行 false:停港
         /// </summary>
         public bool Flag { get; set; }
     }

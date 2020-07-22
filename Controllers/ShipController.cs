@@ -38,7 +38,8 @@ namespace ShipWeb.Controllers
                 ViewBag.Flag = false;
             }
             ViewBag.isShow = isShow;
-            ViewBag.isSet = ManagerHelp.IsSet;
+            ViewBag.IsSet = base.user.EnableConfigure;
+            ViewBag.LoginName = base.user.Name;
             return View();
         }
         public IActionResult Index()
@@ -54,7 +55,7 @@ namespace ShipWeb.Controllers
                 {
                     code = 0,
                     data = ship,
-                    isSet = ManagerHelp.IsSet
+                    isSet =base.user.EnableConfigure
                 };
                 return new JsonResult(result);
             }
@@ -72,7 +73,7 @@ namespace ShipWeb.Controllers
                 {
                     code = 0,
                     data = ship,
-                    isSet = ManagerHelp.IsSet
+                    isSet =base.user.EnableConfigure
                 };
                 return new JsonResult(result);
             }
@@ -90,28 +91,54 @@ namespace ShipWeb.Controllers
         {
             try
             {
-                if (!ManagerHelp.IsSet)
+                if (!base.user.EnableConfigure)
                 {
                     new JsonResult(new { code = 1, msg = "您没有权限修改数据!" });
                 }
+                if (ManagerHelp.IsShowLandHome)
+                {
+                    #region 陆地端登陆船舶端修改船状态
+                    ShipWeb.ProtoBuffer.Models.StatusRequest sr = new ShipWeb.ProtoBuffer.Models.StatusRequest()
+                    {
+                        type = ShipWeb.ProtoBuffer.Models.StatusRequest.Type.SAIL,
+                        flag = type
+                    };
+                    manager.StatesSet(sr,id);
+                    sr = new ProtoBuffer.Models.StatusRequest()
+                    {
+                        type = ProtoBuffer.Models.StatusRequest.Type.NAME,
+                        text = name
+                    };
+                    manager.StatesSet(sr,id);
+                    return new JsonResult(new { code = 0 });
+                    #endregion
+                }
+                #region 船舶端修改船状态
                 if (!string.IsNullOrEmpty(id))
                 {
+                   
                     var ship = _context.Ship.FirstOrDefault(c => c.Id == id);
                     if (ship != null)
                     {
                         ship.Name = name;
                         ship.type = (Ship.Type)type;
-                        ship.Flag = type == (int)Ship.Type.PORT ? false : true;
+                        //航行类型为：自动时，默认状态为停港
+                        ship.Flag = type == 0 ? false : true;
                     }
-
                     _context.Ship.Update(ship);
                     _context.SaveChanges();
                     ShipWeb.ProtoBuffer.Models.StatusRequest sr = new ShipWeb.ProtoBuffer.Models.StatusRequest()
                     {
-                        type = (ShipWeb.ProtoBuffer.Models.StatusRequest.Type)ship.type,
-                        flag = ship.Flag
+                        type = ShipWeb.ProtoBuffer.Models.StatusRequest.Type.SAIL,
+                        flag = type
                     };
-                    manager.StatesSet(sr, ship.Id);
+                    var result= manager.StatesSet(sr, ship.Id);
+                    if (result.result==0)
+                    {
+                        ship.Flag = result.flag;
+                        _context.Ship.Update(ship);
+                        _context.SaveChanges();
+                    }
                     if (ship.Name != name)
                     {
                         sr = new ProtoBuffer.Models.StatusRequest()
@@ -128,7 +155,8 @@ namespace ShipWeb.Controllers
                     {
                         Id = id,
                         Name = name,
-                        type = (Ship.Type)type
+                        type = Ship.Type.AUTO,
+                        Flag=false
                     };
                     //注册船信息时查询组件是中已经有船ID
                     var comp = _context.Component.FirstOrDefault(c => c.Id == ManagerHelp.Cid);
@@ -141,8 +169,8 @@ namespace ShipWeb.Controllers
                     //修改船航行状态
                     ShipWeb.ProtoBuffer.Models.StatusRequest sr = new ShipWeb.ProtoBuffer.Models.StatusRequest()
                     {
-                        type = (ShipWeb.ProtoBuffer.Models.StatusRequest.Type)ship.type,
-                        flag = ship.Flag
+                        type = ShipWeb.ProtoBuffer.Models.StatusRequest.Type.SAIL,
+                        flag =type
                     };
                     manager.StatesSet(sr, ship.Id);
                     //修改船名
@@ -154,6 +182,7 @@ namespace ShipWeb.Controllers
                     manager.StatesSet(sr, ship.Id);
                 }
                 return new JsonResult(new { code = 0 });
+                #endregion
             }
             catch (Exception ex)
             {

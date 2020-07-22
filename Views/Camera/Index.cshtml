@@ -85,7 +85,7 @@
     <a href="/Device/Index">返回设备列表</a>
     <table class="layui-table" id="tbCamers" lay-filter="tbCamers">
     </table>
-    @if (ShipWeb.Tool.ManagerHelp.IsSet)
+    @if (ViewBag.IsSet)
     {
         <div id="camerBar" lay-filter="camerBar" style="display: none;">
             <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
