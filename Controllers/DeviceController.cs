@@ -30,28 +30,42 @@ namespace ShipWeb.Controllers
         {
             if (!string.IsNullOrEmpty(id))
             {
-                ManagerHelp.ShipId = id;
+                string browsertoken = HttpContext.Request.Cookies["token"];
+                if (browsertoken!=null)
+                {
+                    string urlstr = HttpContext.Session.GetString(browsertoken);
+                    user = JsonConvert.DeserializeObject<UserToken>(urlstr);
+                    user.ShipId = id;
+                    user.IsLandHome = true;
+                    string userStr = JsonConvert.SerializeObject(user);
+                    //将请求的url注册
+                    HttpContext.Session.SetString(browsertoken, userStr);
+                    //写入浏览器token
+                    HttpContext.Response.Cookies.Append("token", browsertoken);
+                }               
                 //陆地端过来不显示报警信息
                 ManagerHelp.IsShowAlarm = false;
                 ViewBag.LoginName = base.user.Name;
             }
+            ViewBag.IsLandHome = base.user.IsLandHome;
             ViewBag.IsShowLayout = isShow;
             ViewBag.IsSet = base.user.EnableConfigure;
             return View();
         }
         public IActionResult Load()
         {
-            if (ManagerHelp.IsShowLandHome)
+            
+            if (base.user.IsLandHome )
             {
                 return LandLoad();
             }
-
-            var data = _context.Device.Where(c => c.ShipId == ManagerHelp.ShipId).ToList();
+            string shipId = base.user.ShipId;
+            var data = _context.Device.Where(c => c.ShipId == shipId).ToList();
             var result = new
             {
                 code = 0,
                 data = data,
-                isSet = !string.IsNullOrEmpty(ManagerHelp.ShipId) ?base.user.EnableConfigure : false
+                isSet = !string.IsNullOrEmpty(shipId) ?base.user.EnableConfigure : false
             };
             return new JsonResult(result);
         }
@@ -61,24 +75,28 @@ namespace ShipWeb.Controllers
         /// <returns></returns>
         private IActionResult LandLoad()
         {
-            var protoModel=manager.DeviceQuery(ManagerHelp.ShipId);
-            var data = from a in protoModel
-                       select new
-                       {
-                           a.ip,
-                           a.name,
-                           a.nickname,
-                           a.password,
-                           a.port,
-                           a.type,
-                           id=a.did,
-                           a.factory
-                       };
+            var protoModel=manager.DeviceQuery(base.user.ShipId);
+            List<DeviceViewModel> list = new List<DeviceViewModel>();
+            foreach (var item in protoModel)
+            {
+                list.Add(new DeviceViewModel()
+                {
+                    Enable = item.enable,
+                    Factory = (int)item.factory,
+                    Id = item.did,
+                    IP = item.ip,
+                    Name = item.name,
+                    Nickname = item.nickname,
+                    Password = item.password,
+                    Port = item.port,
+                    Type = (int)item.type
+                });
+            }           
             var result = new
             {
                 code = 0,
-                data = data,
-                isSet = !string.IsNullOrEmpty(ManagerHelp.ShipId) ?base.user.EnableConfigure : false
+                data = list,
+                isSet = !string.IsNullOrEmpty(base.user.ShipId) ?base.user.EnableConfigure : false
             };
             return new JsonResult(result);
         }
@@ -93,15 +111,19 @@ namespace ShipWeb.Controllers
             {
                 if (ModelState.IsValid)
                 {
+                    if (base.user.ShipId=="")
+                    {
+                        return new JsonResult(new { code = 1, msg = "船不存在，无法添加数据"});
+                    }
                     var model = JsonConvert.DeserializeObject<DeviceViewModel>(strEmbed);
                     //陆地端远程添加设备
-                    if (ManagerHelp.IsShowLandHome)
+                    if (base.user.IsLandHome)
                     {
                         ProtoBuffer.Models.DeviceInfo emb = GetProtoDevice(model);
                         int code = 1;
                         if (!string.IsNullOrEmpty(model.Id))
                         {
-                            code = manager.DeveiceUpdate(emb, model.Id, ManagerHelp.ShipId);
+                            code = manager.DeveiceUpdate(emb, model.Id, base.user.ShipId);
                         }
                         else
                         {
@@ -114,7 +136,7 @@ namespace ShipWeb.Controllers
                               nickname="摄像机UU"
                              }
                         };
-                            var result = manager.DeveiceAdd(emb, ManagerHelp.ShipId);
+                            var result = manager.DeveiceAdd(emb, base.user.ShipId);
                             code = result.result;
                         }
                         return new JsonResult(new { code = code, msg = code == 0 ? "数据保存成功" : "数据保存失败" });
@@ -134,11 +156,11 @@ namespace ShipWeb.Controllers
                         device.Port = model.Port;
                         device.type = (Device.Type)model.Type;
                         device.factory = (Device.Factory)model.Factory;
-                        device.Enable = model.Enable == 1 ? true : false;
+                        device.Enable = model.Enable;
                         Task.Factory.StartNew(state =>
                         {
                             ProtoBuffer.Models.DeviceInfo emb = GetProtoDevice(model);
-                            int result = manager.DeveiceUpdate(emb, device.Id, ManagerHelp.ShipId);
+                            int result = manager.DeveiceUpdate(emb, device.Id, base.user.ShipId);
                         }, TaskCreationOptions.LongRunning);
                         _context.Device.Update(device);
                         #endregion
@@ -157,8 +179,8 @@ namespace ShipWeb.Controllers
                             type = (Device.Type)model.Type,
                             factory = (Device.Factory)model.Factory,
                             Id = iditity,
-                            ShipId = ManagerHelp.ShipId,
-                            Enable = model.Enable == 0 ? true : false
+                            ShipId = base.user.ShipId,
+                            Enable = model.Enable
                         };
                         //测试数据
                         device.CameraModelList = new List<Camera>() {
@@ -168,7 +190,7 @@ namespace ShipWeb.Controllers
                          Id = Guid.NewGuid().ToString(),
                          NickName ="摄像机1",
                          IP ="127.0.0.1",
-                         ShipId = ManagerHelp.ShipId,
+                         ShipId = base.user.ShipId,
                          Index = 1
                         },
                         new Camera(){
@@ -177,7 +199,7 @@ namespace ShipWeb.Controllers
                          Id = Guid.NewGuid().ToString(),
                          NickName ="摄像机2",
                          IP = "127.0.0.1",
-                         ShipId = ManagerHelp.ShipId,
+                         ShipId = base.user.ShipId,
                          Index = 2
                         }
                     };
@@ -238,7 +260,8 @@ namespace ShipWeb.Controllers
                 nickname = model.Nickname,
                 factory = (ProtoBuffer.Models.DeviceInfo.Factory)model.Factory,
                 type = (ProtoBuffer.Models.DeviceInfo.Type)model.Type,
-                did=model.Id
+                enable = model.Enable,
+                did = model.Id
             };
             return emb;
         }
@@ -252,9 +275,9 @@ namespace ShipWeb.Controllers
             try
             {
                 //陆地端删除设备
-                if (ManagerHelp.IsShowLandHome)
+                if (base.user.IsLandHome)
                 {
-                    int result = manager.DeveiceDelete(id, ManagerHelp.ShipId);
+                    int result = manager.DeveiceDelete(id, base.user.ShipId);
                     if (result != 0)
                     {
                         return new JsonResult(new { code = 1, msg = "删除失败!" });
@@ -271,7 +294,7 @@ namespace ShipWeb.Controllers
                     return NotFound();
                 }
                 //先删除服务器上的再删除本地的
-                //int resutl = manager.DeveiceDelete(Embedded.Id, ManagerHelp.ShipId);
+                //int resutl = manager.DeveiceDelete(Embedded.Id, base.user.ShipId);
                 //if (resutl == 0)
                 //{
                     var cameras = _context.Camera.Where(c => c.DeviceId == Embedded.Id).ToList();

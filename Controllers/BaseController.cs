@@ -13,7 +13,7 @@ namespace ShipWeb.Controllers
 {
     public class BaseController : Controller
     {
-        public User user;
+        public UserToken user;
         /// <summary>  
         /// 请求过滤处理
         ///</summary> 
@@ -27,7 +27,7 @@ namespace ShipWeb.Controllers
                 return;
             }
             string urlstr = HttpContext.Session.GetString(browsertoken);
-            user = JsonConvert.DeserializeObject<User>(urlstr);
+            user = JsonConvert.DeserializeObject<UserToken>(urlstr);
             base.OnActionExecuting(filterContext);
             //byte[] result;
             //filterContext.HttpContext.Session.TryGetValue("uid", out result);

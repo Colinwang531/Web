@@ -13,8 +13,6 @@ namespace ShipWeb.Tool
     public class ManagerHelp
     {
         private static ManagerHelp _manager = null;
-        //船ID
-        public static string ShipId = "";
         /// <summary>
         /// 组件ID（组件注册成功后返回的ID）
         /// </summary>
@@ -23,33 +21,16 @@ namespace ShipWeb.Tool
         /// <summary>
         /// 是否显示返回陆地端菜单
         /// </summary>
-        public static bool IsShowLandHome = false;
-        /// <summary>
-        /// 显示登陆名称
-        /// </summary>
-        //public static string LoginName = "";
-        /// <summary>
-        /// 是否有设置权限
-        /// </summary>
-        //public static bool IsSet = true;
+        //public static bool IsShowLandHome = false;
         /// <summary>
         /// 查询报警信息权限
         /// </summary>
         public static bool IsShowAlarm = true;
-        //public static Dictionary<int, string> components;
-        private static object ShipId_Lock = new object(); //锁同步
         private static object Cid_Lock = new object(); //锁同步
         //int aa;
         //单例控制dealer只有一个。
         public ManagerHelp()
         {
-            lock (ShipId_Lock)
-            {
-                if (ShipId == null)
-                {
-                    _manager = new ManagerHelp();
-                }
-            }
             lock (Cid_Lock)
             {
                 if (Cid == null)

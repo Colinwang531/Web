@@ -30,9 +30,8 @@ namespace ShipWeb.Controllers
         /// <returns></returns>
         public IActionResult Index()
         {
-            HttpContext.Session.Remove("uid");
-            ManagerHelp.ShipId = "";
-            ManagerHelp.IsShowLandHome = false;
+            HttpContext.Response.Cookies.Delete("token");
+            HttpContext.Session.Clear();
             return View();
         }
 
@@ -63,10 +62,18 @@ namespace ShipWeb.Controllers
                 var ship = _context.Ship.FirstOrDefault();
                 if (ship != null)
                 {
-                    ManagerHelp.ShipId = ship.Id;
                     flag = true;
                 }
-                string userStr = JsonConvert.SerializeObject(usersModel);
+                //缓存用户数据
+                UserToken ut = new UserToken()
+                {
+                    Id = usersModel.Id,
+                    Name = usersModel.Name,
+                    EnableConfigure = usersModel.EnableConfigure,
+                    Enablequery = usersModel.Enablequery,
+                    ShipId = ship!=null? ship.Id:""
+                };
+                string userStr = JsonConvert.SerializeObject(ut);
                 string browsertoken = HttpContext.Request.Cookies["token"];
                 if (browsertoken == null)
                 {
@@ -97,11 +104,6 @@ namespace ShipWeb.Controllers
             HttpContext.Response.Cookies.Delete("token");
             HttpContext.Session.Clear();
 
-
-            //消除缓存
-            //HttpContext.Session.Remove("uid");
-            ManagerHelp.ShipId = "";
-            ManagerHelp.IsShowLandHome = false;
             InitManger.Exit();
             return RedirectToAction(nameof(Index));
         }

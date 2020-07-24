@@ -16,14 +16,14 @@ namespace ShipWeb
             {
                 try
                 {
-                    //心跳
+                    //报警
                     InitManger.Alarm();
                 }
                 catch (Exception ex)
                 {
                     //LogHelper.Error(ex.Message);
                 }
-                await Task.Delay(1000*3, stoppingToken);//单位秒
+                await Task.Delay(1000*60*30, stoppingToken);//单位秒
             }
         }
     }

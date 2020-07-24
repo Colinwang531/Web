@@ -49,10 +49,8 @@ namespace ShipWeb
             services.AddAntiforgery(o => o.HeaderName = "XSRF-TOKEN");
             //×¢²áÐÄÌø
             services.AddSingleton<IHostedService, HeartService>();
-            ////×¢²á±¨¾¯
-            //services.AddSingleton<IHostedService, AlarmService>();
-            ////×¢²á×é¼þ
-            //services.AddScoped<InitManger>();
+            //×¢²á±¨¾¯
+            services.AddSingleton<IHostedService, AlarmService>();
             services.AddCors();
         }
 

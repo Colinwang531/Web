@@ -118,13 +118,12 @@ namespace ShipWeb
                 {
                     using (var context = new MyContext())
                     {
-                        string shipId = "";
-                        var ship = context.Ship.FirstOrDefault();
-                        if (ship != null)
+                        var ship = context.Ship.ToList();
+                        foreach (var itship in ship)
                         {
-                            shipId = ship.Id;
+                            string shipId = itship.Id;
                             string identity = Guid.NewGuid().ToString();
-                            ProtoBuffer.Models.Alarm alarm = manager.AlarmStart(identity);
+                            ProtoBuffer.Models.Alarm alarm = manager.AlarmStart(shipId);
                             if (alarm != null)
                             {
                                 if (alarm.alarminfo.type == ProtoBuffer.Models.AlarmInfo.Type.ATTENDANCE_IN || alarm.alarminfo.type == ProtoBuffer.Models.AlarmInfo.Type.ATTENDANCE_OUT)
@@ -138,14 +137,16 @@ namespace ShipWeb
                                         ShipId = shipId,
                                         Time = Convert.ToDateTime(alarm.time),
                                         CrewId = alarm.alarminfo.uid,
-                                        attendancePictures = new List<AttendancePicture>() {
-                                         new AttendancePicture (){
-                                             AttendanceId=identity,
-                                             Id=Guid.NewGuid().ToString(),
-                                             Picture= Encoding.UTF8.GetBytes(alarm.picture),
-                                             ShipId=shipId
-                                         }
-                                }
+                                        attendancePictures = new List<AttendancePicture>()
+                                        {
+                                            new AttendancePicture ()
+                                            {
+                                                 AttendanceId=identity,
+                                                 Id=Guid.NewGuid().ToString(),
+                                                 Picture= Encoding.UTF8.GetBytes(alarm.picture),
+                                                 ShipId=shipId
+                                            }
+                                        }
                                     };
                                     context.Attendance.Add(attendance);
                                     #endregion
@@ -164,7 +165,7 @@ namespace ShipWeb
                                         {
                                             AlarmId = identity,
                                             Id = Guid.NewGuid().ToString(),
-                                            Shipid = ManagerHelp.ShipId,
+                                            Shipid = shipId,
                                             Type = (AlarmType)alarm.alarminfo.type,
                                             Uid = alarm.alarminfo.uid,
                                             alarmPositions = new List<Models.AlarmPosition>()
@@ -179,7 +180,7 @@ namespace ShipWeb
                                             Models.AlarmPosition position = new Models.AlarmPosition()
                                             {
                                                 AlarmInfoId = model.alarmInfo.Id,
-                                                ShipId = ManagerHelp.ShipId,
+                                                ShipId = shipId,
                                                 Id = Guid.NewGuid().ToString(),
                                                 H = item.h,
                                                 W = item.w,
@@ -195,9 +196,8 @@ namespace ShipWeb
                                 context.SaveChanges();
                             }
                         }
-
                     }
-                   
+
                 }, TaskCreationOptions.LongRunning);
             }
             catch (Exception ex)

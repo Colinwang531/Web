@@ -23,6 +23,7 @@ namespace ShipWeb.Controllers
         }
         public IActionResult Index()
         {
+            ViewBag.IsLandHome = base.user.IsLandHome;
             return View();
         }
 
@@ -85,6 +86,7 @@ namespace ShipWeb.Controllers
         }
         private List<AttendanceViewModel> GetData(SearchAttendanceViewModel model, int pageIndex, int pageSize,out int total) 
         {
+            string shipId = base.user.ShipId;
             List<AttendanceViewModel> list = new List<AttendanceViewModel>();
             if (model==null)
             {
@@ -93,7 +95,7 @@ namespace ShipWeb.Controllers
             total = 0;
             var Attdata = from a in _context.Attendance
                        join b in _context.Crew on a.CrewId equals b.Id
-                       where (model.Name != "" ? b.Name.Contains(model.Name) : 1 == 1)
+                       where a.ShipId== shipId && (model.Name != "" ? b.Name.Contains(model.Name) : 1 == 1)
                        select new 
                        { 
                         a.Time,

@@ -63,8 +63,12 @@ namespace ShipWeb.Models
         /// </summary>
         FIGHT = 4,
         /// <summary>
-        /// 人脸
+        /// 考勤入
         /// </summary>
-        FACE = 5
+        ATTENDANCE_IN = 5,
+        /// <summary>
+        /// 考勤出
+        /// </summary>
+        ATTENDANCE_OUT=6
     }
 }

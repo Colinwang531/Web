@@ -42,7 +42,7 @@
                 { field: 'nickname', title: '设备别名', align: 'center', width: 120 },
                 {
                     field: 'enable', title: '设备状态', align: 'center', width: 120, templet: function (e) {
-                        return e.enable==1 ? "开启" : "关闭";
+                        return e.enable? "开启" : "关闭";
                     }
                 },
                 { fixed: 'right', title: '操作', toolbar: '#userBar', width: 220, align: 'center' }
@@ -152,7 +152,7 @@
                 port: parseInt(frm.field.port),
                 type: parseInt(frm.field.type),
                 factory: parseInt(frm.field.factory),
-                enable: parseInt(frm.field.enable),
+                enable: frm.field.enable == 1 ? true : false,
                 id: frm.field.id,
             };
             $.ajax({

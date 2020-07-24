@@ -27,11 +27,12 @@ namespace ShipWeb.Controllers
         {
             ViewBag.id = id.Trim();
             ViewBag.IsSet = base.user.EnableConfigure;
+            ViewBag.IsLandHome = base.user.IsLandHome;
             return View();
         }
         public IActionResult Load(string id)
         {
-            if (ManagerHelp.IsShowLandHome)
+            if (base.user.IsLandHome)
             {
                 return LandLoad(id);
             }
@@ -50,7 +51,7 @@ namespace ShipWeb.Controllers
         /// <returns></returns>
         private IActionResult LandLoad(string did) 
         {
-            var emdList=manager.DeviceQuery(ManagerHelp.ShipId, did);
+            var emdList=manager.DeviceQuery(base.user.ShipId, did);
             var cams = emdList.Count>0?emdList[0].camerainfos:new List<ProtoBuffer.Models.CameraInfo> ();
             var list = from a in cams
                        select new
@@ -75,7 +76,7 @@ namespace ShipWeb.Controllers
                 try
                 {
                     //陆地端远程修改摄像机信息
-                    if (ManagerHelp.IsShowLandHome)
+                    if (base.user.IsLandHome)
                     {
                         ProtoBuffer.Models.DeviceInfo emb = new ProtoBuffer.Models.DeviceInfo()
                         {
@@ -88,7 +89,7 @@ namespace ShipWeb.Controllers
                                },
                             did = did
                         };
-                        var code = manager.DeveiceUpdate(emb, did, ManagerHelp.ShipId);
+                        var code = manager.DeveiceUpdate(emb, did, base.user.ShipId);
                         return new JsonResult(new { code = code, msg = code == 1 ? "数据修改失败" : "数据修改成功" });
                     }
 
@@ -117,7 +118,7 @@ namespace ShipWeb.Controllers
                         };
                         Task.Factory.StartNew(state =>
                         {
-                            manager.DeveiceUpdate(emb, embModel.Id,ManagerHelp.ShipId);
+                            manager.DeveiceUpdate(emb, embModel.Id,base.user.ShipId);
                         }, TaskCreationOptions.LongRunning);
                         _context.Update(camera);
                         _context.SaveChangesAsync();

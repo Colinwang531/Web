@@ -41,8 +41,8 @@
         <div class="layui-side layui-bg-black">
             <div class="layui-side-scroll">
                 <!-- 左侧导航区域 -->
-                <ul class="layui-nav layui-nav-tree" lay-filter="test">
-                    @if (ShipWeb.Tool.ManagerHelp.IsShowLandHome)
+                <ul class="layui-nav layui-nav-tree" lay-filter="test">                    
+                    @if(ViewBag.IsLandHome)
                     {
                         <li class="layui-nav-item"><a href="/Home/LandHome"><red>返回</red> </a></li>
                     }

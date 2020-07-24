@@ -43,13 +43,24 @@
                     if (tb.length > 0) {
                         for (var i = 0; i < tb.length; i++) {
                             html += '<tr>';
-                            html += '<td>' + tb[i].name + '</td>';                          
-                            if (tb[i].flag == 1) {
-                                html += '<td>SAIL(航行)</td>';
-                            }else {
-                                html += '<td>PORT(停港)</td>';
+                            html += '<td>' + tb[i].name + '</td>';
+                            if (tb[i].line) {
+                                if (tb[i].flag) {
+                                    html += '<td>在线(航行)</td>';
+                                } else {
+                                    html += '<td>在线(停港)</td>';
+                                }
+                                html += '<td><a class="layui-btn layui-btn-primary layui-btn-xs" href="/Device/Index?isShow=true&id=' + tb[i].id + '">详情</a></td>';
+                            } else {
+                                html += '<td>离线</td>';
+                                html += '<td></td>';
                             }
-                            html += '<td><a class="layui-btn layui-btn-primary layui-btn-xs" href="/Device/Index?isShow=true&id=' + tb[i].id + '">详情</a></td>';
+                            //if (tb[i].flag == 1) {
+                            //    html += '<td>SAIL(航行)</td>';
+                            //}else {
+                            //    html += '<td>PORT(停港)</td>';
+                            //}
+                            //html += '<td><a class="layui-btn layui-btn-primary layui-btn-xs" href="/Device/Index?isShow=true&id=' + tb[i].id + '">详情</a></td>';
                             html += '</tr>';
                         }
                     }

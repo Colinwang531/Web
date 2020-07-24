@@ -30,7 +30,7 @@ namespace ShipWeb.ProtoBuffer
             using (var _context = new MyContext())
             {
                 //string cid = Process.GetCurrentProcess().Id.ToString();
-                if (identity.Length > 1)
+                if (identity.Split(',').Length > 1)
                 {
                     string id = identity.Split(',')[0];
                     string shipId = identity.Split(',')[1];
@@ -61,13 +61,13 @@ namespace ShipWeb.ProtoBuffer
         /// 查询所有设备
         /// </summary>
         /// <returns></returns>
-        public static List<DeviceInfo> EmbeddedQuery(string shipId,DeviceInfo info, string did = "")
+        public static List<DeviceInfo> DeviceQuery(string shipId,DeviceInfo info, string did = "")
         {
             using (var _context = new MyContext())
             {
                 List<DeviceInfo> list = new List<DeviceInfo>();
                 //查询设备信息
-                List<ShipWeb.Models.Device> devList = GetDevice(info);               
+                List<ShipWeb.Models.Device> devList = GetDevice(shipId, info);               
                 if (!string.IsNullOrEmpty(did))
                 {
                     devList = devList.Where(c => c.Id == did).ToList();
@@ -109,11 +109,11 @@ namespace ShipWeb.ProtoBuffer
                 return list;
             }
         }
-        private static List<ShipWeb.Models.Device> GetDevice(DeviceInfo info) 
+        private static List<ShipWeb.Models.Device> GetDevice(string shipId,DeviceInfo info) 
         {
             using (var context=new MyContext())
             {
-                var device = context.Device.Where(c=>1==1);
+                var device = context.Device.Where(c=>c.ShipId==shipId);
                 if (info != null)
                 {
                     device=device.Where(c => c.Enable == info.enable);
@@ -142,7 +142,13 @@ namespace ShipWeb.ProtoBuffer
             }
             
         }
-        public static int EmbeddedAdd(string shipId,DeviceInfo protoModel)
+        /// <summary>
+        /// 添加设备
+        /// </summary>
+        /// <param name="shipId"></param>
+        /// <param name="protoModel"></param>
+        /// <returns></returns>
+        public static int DeviceAdd(string shipId,DeviceInfo protoModel)
         {
             using (var _context = new MyContext())
             {
@@ -159,6 +165,7 @@ namespace ShipWeb.ProtoBuffer
                         Password = protoModel.password,
                         Port = protoModel.port,
                         ShipId = shipId,
+                        Enable=protoModel.enable,
                         type = (ShipWeb.Models.Device.Type)protoModel.type
                     };
                     if (protoModel.camerainfos!=null&&protoModel.camerainfos.Count > 0)
@@ -194,7 +201,7 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="protoModel"></param>
         /// <returns></returns>
-        public static int EmbeddedUpdate(string shipId,string did, DeviceInfo protoModel) 
+        public static int DeviceUpdate(string shipId,string did, DeviceInfo protoModel) 
         {
             using (var _context = new MyContext())
             {
@@ -211,6 +218,7 @@ namespace ShipWeb.ProtoBuffer
                         model.Password = protoModel.password;
                         model.Port = protoModel.port;
                         model.type = (ShipWeb.Models.Device.Type)protoModel.type;
+                        model.Enable = protoModel.enable;
                         _context.Device.Update(model);
                     }                    
                     if (protoModel.camerainfos!=null&&protoModel.camerainfos.Count > 0)
@@ -240,7 +248,7 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="did"></param>
         /// <returns></returns>
-        public static int EmbeddedDelete(string shipId,string did) 
+        public static int DeviceDelete(string shipId,string did) 
         {
             using (var _context = new MyContext())
             {
@@ -274,7 +282,7 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="uid"></param>
         /// <returns></returns>
-        public static List<CrewInfo> EmployeeQuery(string shipId,string uid = "")
+        public static List<CrewInfo> CrewQuery(string shipId,string uid = "")
         {
             using (var _context = new MyContext())
             {
@@ -310,7 +318,7 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="protoModel"></param>
         /// <returns>0：成功 1:失败 2:数据重复</returns>
-        public static int EmployeeAdd(string shipId,CrewInfo protoModel)
+        public static int CrewAdd(string shipId,CrewInfo protoModel)
         {
             using (var _context = new MyContext())
             {
@@ -357,7 +365,7 @@ namespace ShipWeb.ProtoBuffer
         /// <param name="uid"></param>
         /// <param name="protoModel"></param>
         /// <returns>0：成功 1:失败 2:数据重复</returns>
-        public static int EmployeeUpdate(string shipId, CrewInfo protoModel)
+        public static int CrewUpdate(string shipId, CrewInfo protoModel)
         {
             using (var _context = new MyContext())
             {
@@ -421,7 +429,7 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="uid"></param>
         /// <returns></returns>
-        public static int EmployeeDelete(string shipId,string uid) 
+        public static int CrewDelete(string shipId,string uid) 
         {
             using (var _context = new MyContext())
             {
@@ -577,13 +585,19 @@ namespace ShipWeb.ProtoBuffer
                 try
                 {
                     if (protoModel!=null)
-                    {
+                    {                       
                         if (protoModel.cid.Split(',') .Length>1)
                         {
                             string id = protoModel.cid.Split(',')[0];
                             string cid = protoModel.cid.Split(',')[1];
+                            var data = _context.Algorithm.FirstOrDefault(c => c.ShipId == shipId && c.Cid == cid && (c.Type == AlgorithmType.ATTENDANCE_IN || c.Type == AlgorithmType.ATTENDANCE_OUT));
+                           
                             var algo = _context.Algorithm.FirstOrDefault(c => c.Id == id);
                             if (algo == null) return 1;
+                            if (data != null && data.Id != algo.Id)
+                            {
+                                return 2;
+                            }
                             algo.GPU = protoModel.gpu;
                             algo.DectectFirst = protoModel.dectectfirst;
                             algo.DectectSecond = protoModel.dectectsecond;
@@ -595,6 +609,11 @@ namespace ShipWeb.ProtoBuffer
                         }
                         else
                         {
+                            var data = _context.Algorithm.FirstOrDefault(c => c.ShipId == shipId && c.Cid == protoModel.cid && (c.Type == AlgorithmType.ATTENDANCE_IN || c.Type == AlgorithmType.ATTENDANCE_OUT));
+                            if (data != null)
+                            {
+                                return 2;
+                            }
                             ShipWeb.Models.Algorithm model = new ShipWeb.Models.Algorithm()
                             {
                                 Cid = protoModel.cid,
@@ -678,6 +697,20 @@ namespace ShipWeb.ProtoBuffer
             catch (Exception ex)
             {
                 return 1;
+            }
+        }
+
+        /// <summary>
+        /// 查询船状态
+        /// </summary>
+        /// <param name="shipId"></param>
+        /// <returns></returns>
+        public static Ship StatusQuery(string shipId) 
+        {
+            using (var context=new MyContext())
+            {
+                var ship = context.Ship.FirstOrDefault(c => c.Id == shipId);
+                return ship; 
             }
         }
     }

@@ -31,8 +31,9 @@ namespace ShipWeb.Controllers
             ViewBag.IsShowLayout = isShow;//显示报警的框架
             if (!string.IsNullOrEmpty(shipid))
             {
-                ManagerHelp.ShipId = shipid;
+                base.user.ShipId = shipid;
             }
+            ViewBag.IsLandHome = base.user.IsLandHome;
             ViewBag.LoginName = base.user.Name;
             return View();
         }
@@ -51,7 +52,7 @@ namespace ShipWeb.Controllers
             try
             {
                 int total = 0;
-                var list = GetDate(null, pageIndex, pageSize, out total);
+                var list = GetDate(new SearchAlarmViewModel() { ShipId = base.user.ShipId }, pageIndex, pageSize, out total);
                 var result = new
                 {
                     code = 0,
@@ -82,6 +83,7 @@ namespace ShipWeb.Controllers
             {
                 var model = JsonConvert.DeserializeObject<SearchAlarmViewModel>(searchModel);
                 int total = 0;
+                model.ShipId = base.user.ShipId;
                 var list = GetDate(model, pageIndex, pageSize, out total);
                 var result = new
                 {

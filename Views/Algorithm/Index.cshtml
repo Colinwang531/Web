@@ -138,12 +138,12 @@
                 dataType: "json",
                 contentType: "application/json;charset=utf-8",
                 success: function (res) {
-                    if (res.code == 1) {
-                        layer.msg(res.msg, { icon: 2 });
-                    } else {
+                    if (res.code == 0) {
                         layer.msg("保存成功", { icon: 1 });
                         tableIns.reload();
                         layer.closeAll();
+                    } else {
+                        layer.msg(res.msg, { icon: 2 });
                     }
                     $("#btnSubmit").removeAttr('disabled').removeClass(DISABLED);
                 }

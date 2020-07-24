@@ -22,16 +22,18 @@ namespace ShipWeb.Controllers
         public IActionResult Index()
         {
             ViewBag.IsSet = base.user.EnableConfigure;
+            ViewBag.IsLandHome = base.user.IsLandHome;
             return View();
         }
         public IActionResult Load() 
         {
-            if (ManagerHelp.IsShowLandHome)
+            if (base.user.IsLandHome)
             {
                return LandLoad();
             }
-            var algor = _context.Algorithm.ToList();
-            var camera = _context.Camera.ToList();
+            string shipId = base.user.ShipId;
+            var algor = _context.Algorithm.Where(c=>c.ShipId==shipId).ToList();
+            var camera = _context.Camera.Where(c => c.ShipId == shipId).ToList();
             var data = from a in algor
                        join b in camera on a.Cid equals b.Id
                        select new
@@ -56,7 +58,7 @@ namespace ShipWeb.Controllers
         }
         public IActionResult LandLoad() 
         {
-            var protoDate=manager.AlgorithmQuery(ManagerHelp.ShipId);
+            var protoDate=manager.AlgorithmQuery(base.user.ShipId);
             var data = from a in protoDate
                        select new
                        {
@@ -70,7 +72,7 @@ namespace ShipWeb.Controllers
                            DectectSecond=a.dectectsecond,
                            Track=a.track
                        };
-            var device = manager.DeviceQuery(ManagerHelp.ShipId);
+            var device = manager.DeviceQuery(base.user.ShipId);
             List<Camera> cameras = new List<Camera>();
             foreach (var item in device)
             {
@@ -97,21 +99,34 @@ namespace ShipWeb.Controllers
         {
             try
             {
+                string shipId = base.user.ShipId;
+                if (shipId == "")
+                {
+                    return new JsonResult(new { code = 1, msg = "船不存在，无法添加数据" });
+                }
                 var viewModel = JsonConvert.DeserializeObject<AlgorithmViewModel>(model);
                 if (viewModel != null)
                 {
-                    if (ManagerHelp.IsShowLandHome)
+                    
+                    if (base.user.IsLandHome)
                     {
                         ProtoBuffer.Models.AlgorithmInfo algorithm = GetProtoAlgorithm(viewModel);
-                        int res=manager.AlgorithmSet(ManagerHelp.ShipId, algorithm);
-                        return new JsonResult(new { code = res, msg = res != 0 ? "数据修改失败" : "" });
+                        int res=manager.AlgorithmSet(shipId, algorithm);
+                        return new JsonResult(new { code = res, msg = res != 0 ? res==2? "一个摄像机只能设置考勤入或考勤出" : "数据修改失败" : "" });
                     }
+                    //找出此摄像机下否有考勤数据
+                    var data = _context.Algorithm.FirstOrDefault(c => c.ShipId == shipId && c.Cid == viewModel.Cid && (c.Type == AlgorithmType.ATTENDANCE_IN || c.Type == AlgorithmType.ATTENDANCE_OUT));                   
                     if (!string.IsNullOrEmpty(viewModel.Id))
                     {
+                        //查看数据是否存在
                         var algo = _context.Algorithm.FirstOrDefault(c => c.Id == viewModel.Id);
                         if (algo == null)
                         {
                             return new JsonResult(new { code = 1, msg = "此数据不存在" });
+                        }
+                        if (data != null && data.Id != algo.Id)
+                        {
+                            return new JsonResult(new { code = 1, msg = "一个摄像机只能设置考勤入或考勤出" });
                         }
                         algo.GPU = viewModel.GPU;
                         algo.Type = (AlgorithmType)viewModel.Type;
@@ -124,6 +139,10 @@ namespace ShipWeb.Controllers
                     }
                     else
                     {
+                        if (data != null)
+                        {
+                            return new JsonResult(new { code = 1, msg = "一个摄像机只能设置考勤入或考勤出" });
+                        }
                         Algorithm algo = new Algorithm()
                         {
                             Id = Guid.NewGuid().ToString(),
@@ -134,13 +153,13 @@ namespace ShipWeb.Controllers
                             DectectFirst = viewModel.DectectFirst,
                             DectectSecond =viewModel.DectectSecond,
                             Track =viewModel.Track,
-                            ShipId = ManagerHelp.ShipId
+                            ShipId = base.user.ShipId
                         };
                         _context.Algorithm.Add(algo);
                     }
                     //Task.Factory.StartNew(state => {
                     //    ProtoBuffer.Models.AlgorithmInfo algorithm = GetProtoAlgorithm(viewModel);
-                    //    int res = manager.AlgorithmSet(ManagerHelp.ShipId, algorithm);
+                    //    int res = manager.AlgorithmSet(base.user.ShipId, algorithm);
                     //}, TaskCreationOptions.LongRunning);
                   
                     _context.SaveChanges();

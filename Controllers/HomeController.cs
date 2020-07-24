@@ -26,18 +26,23 @@ namespace ShipWeb.Controllers
 
         public IActionResult LandHome()
         {
-            //byte[] by = HttpContext.Session.Get("uid");
-            //string uid = Encoding.UTF8.GetString(by);
-            //ViewBag.isAdmin = uid.ToLower() == "admin" ? true : false;
-            //var user = _context.User.FirstOrDefault(c => c.Id == uid);
-            //ViewBag.IsSetShip = user != null ? user.EnableConfigure : false;
-            //ViewBag.IsShow = user != null ? user.Enablequery : false;
             ViewBag.IsSetShip = base.user.EnableConfigure;
             ViewBag.IsShow = base.user.Enablequery;
             ViewBag.isAdmin=base.user.Id== "admin" ? true : false;
             ViewBag.LoginName = base.user.Name;
-            ManagerHelp.ShipId = "";
-            ManagerHelp.IsShowLandHome = true;
+            string browsertoken = HttpContext.Request.Cookies["token"];
+            if (browsertoken != null)
+            {
+                string urlstr = HttpContext.Session.GetString(browsertoken);
+                user = JsonConvert.DeserializeObject<UserToken>(urlstr);
+                user.ShipId = "";
+                user.IsLandHome = true;
+                string userStr = JsonConvert.SerializeObject(user);
+                //将请求的url注册
+                HttpContext.Session.SetString(browsertoken, userStr);
+                //写入浏览器token
+                HttpContext.Response.Cookies.Append("token", browsertoken);
+            }
             ManagerHelp.IsShowAlarm = false;
             return View();
         }

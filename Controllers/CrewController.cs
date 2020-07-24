@@ -39,6 +39,7 @@ namespace ShipWeb.Controllers
         {
             picBytes = new Dictionary<string, byte[]>();
             ViewBag.IsSet = base.user.EnableConfigure;
+            ViewBag.IsLandHome = base.user.IsLandHome;
             return View();
         }
         /// <summary>
@@ -47,12 +48,12 @@ namespace ShipWeb.Controllers
         /// <returns></returns>
         public IActionResult Load()
         {
-            if (ManagerHelp.IsShowLandHome)
+            if (base.user.IsLandHome)
             {
                 return LandLoad();
             }
-
-            var data = _context.Crew.Where(c => c.ShipId == ManagerHelp.ShipId).ToList();
+            string shipId = base.user.ShipId;
+            var data = _context.Crew.Where(c => c.ShipId == shipId).ToList();
             var ids = string.Join(',', data.Select(c => c.Id));
             var Pics = _context.CrewPicture.Where(c => ids.Contains(c.CrewId)).ToList();
             foreach (var item in data)
@@ -87,7 +88,7 @@ namespace ShipWeb.Controllers
             {
                 code = 0,
                 data = dataShow,
-                isSet = !string.IsNullOrEmpty(ManagerHelp.ShipId) ? base.user.EnableConfigure : false
+                isSet = !string.IsNullOrEmpty(shipId) ? base.user.EnableConfigure : false
             };
             return new JsonResult(result);
         }
@@ -97,14 +98,14 @@ namespace ShipWeb.Controllers
         /// <returns></returns>
         private IActionResult LandLoad()
         {
-            var data = manager.CrewQuery(ManagerHelp.ShipId);
+            var data = manager.CrewQuery(base.user.ShipId);
             var dataShow = from a in data
                            select new
                            {
                                a.job,
                                a.name,
                                id = a.uid,
-                               ShipId = ManagerHelp.ShipId,
+                               ShipId = base.user.ShipId,
                                employeePictures = from b in a.pictures
                                                   select new
                                                   {
@@ -116,7 +117,7 @@ namespace ShipWeb.Controllers
             {
                 code = 0,
                 data = dataShow,
-                isSet = !string.IsNullOrEmpty(ManagerHelp.ShipId) ? base.user.EnableConfigure : false
+                isSet = !string.IsNullOrEmpty(base.user.ShipId) ? base.user.EnableConfigure : false
             };
             return new JsonResult(result);
         }
@@ -164,13 +165,17 @@ namespace ShipWeb.Controllers
             {
                 if (ModelState.IsValid)
                 {
+                    if (base.user.ShipId == "")
+                    {
+                        return new JsonResult(new { code = 1, msg = "船不存在，无法添加数据" });
+                    }
                     List<string> ids = new List<string>();
                     if (picIds != null)
                     {
                         ids = picIds.Split(',').ToList();
                     }
                     #region 陆地端添加/修改船员
-                    if (ManagerHelp.IsShowLandHome)
+                    if (base.user.IsLandHome)
                     {
                         ShipWeb.ProtoBuffer.Models.CrewInfo emp = new ShipWeb.ProtoBuffer.Models.CrewInfo()
                         {
@@ -195,7 +200,7 @@ namespace ShipWeb.Controllers
                                     }
                                 }
                             }
-                            code = manager.CrewAdd(emp, ManagerHelp.ShipId);
+                            code = manager.CrewAdd(emp, base.user.ShipId);
                         }
                         else
                         {
@@ -214,7 +219,7 @@ namespace ShipWeb.Controllers
                                     emp.pictures.Add(Encoding.UTF8.GetBytes(item));
                                 }
                             }
-                            int result = manager.CrewUpdate(emp, ManagerHelp.ShipId);
+                            int result = manager.CrewUpdate(emp, base.user.ShipId);
                             code = result;
                         }
                         //清除已经上传了的图片
@@ -289,7 +294,7 @@ namespace ShipWeb.Controllers
                             Job = job,
                             Name = name,
                             Id = identity,
-                            ShipId = ManagerHelp.ShipId
+                            ShipId = base.user.ShipId
                         };
                         //添加图片
                         if (picBytes.Count > 0 && ids.Count > 0)
@@ -303,7 +308,7 @@ namespace ShipWeb.Controllers
                                     {
                                         Id = item,
                                         CrewId = identity,
-                                        ShipId = ManagerHelp.ShipId,
+                                        ShipId = base.user.ShipId,
                                         Picture = picBytes.Where(c => c.Key == item).FirstOrDefault().Value
                                     };
                                     list.Add(pic);
@@ -348,13 +353,13 @@ namespace ShipWeb.Controllers
             try
             {
                 //陆地端远程删除船员
-                if (ManagerHelp.IsShowLandHome)
+                if (base.user.IsLandHome)
                 {
                     if (id == null)
                     {
                         return NotFound();
                     }
-                    manager.CrewDelete(id, ManagerHelp.ShipId);
+                    manager.CrewDelete(id, base.user.ShipId);
                     return new JsonResult(new { code = 0, msg = "删除成功!" });
                 }
                 if (id == null)
