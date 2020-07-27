@@ -590,14 +590,17 @@ namespace ShipWeb.ProtoBuffer
                         {
                             string id = protoModel.cid.Split(',')[0];
                             string cid = protoModel.cid.Split(',')[1];
-                            var data = _context.Algorithm.FirstOrDefault(c => c.ShipId == shipId && c.Cid == cid && (c.Type == AlgorithmType.ATTENDANCE_IN || c.Type == AlgorithmType.ATTENDANCE_OUT));
                            
                             var algo = _context.Algorithm.FirstOrDefault(c => c.Id == id);
                             if (algo == null) return 1;
-                            if (data != null && data.Id != algo.Id)
+                            if (protoModel.type == AlgorithmInfo.Type.ATTENDANCE_IN || protoModel.type == AlgorithmInfo.Type.ATTENDANCE_OUT)
                             {
-                                return 2;
-                            }
+                                var data = _context.Algorithm.FirstOrDefault(c => c.ShipId == shipId && c.Cid == cid && (c.Type == AlgorithmType.ATTENDANCE_IN || c.Type == AlgorithmType.ATTENDANCE_OUT));
+                                if (data != null && data.Id != algo.Id)
+                                {
+                                    return 2;
+                                }
+                            }                           
                             algo.GPU = protoModel.gpu;
                             algo.DectectFirst = protoModel.dectectfirst;
                             algo.DectectSecond = protoModel.dectectsecond;
@@ -609,11 +612,15 @@ namespace ShipWeb.ProtoBuffer
                         }
                         else
                         {
-                            var data = _context.Algorithm.FirstOrDefault(c => c.ShipId == shipId && c.Cid == protoModel.cid && (c.Type == AlgorithmType.ATTENDANCE_IN || c.Type == AlgorithmType.ATTENDANCE_OUT));
-                            if (data != null)
+                            if (protoModel.type == AlgorithmInfo.Type.ATTENDANCE_IN || protoModel.type == AlgorithmInfo.Type.ATTENDANCE_OUT)
                             {
-                                return 2;
+                                var data = _context.Algorithm.FirstOrDefault(c => c.ShipId == shipId && c.Cid == protoModel.cid && (c.Type == AlgorithmType.ATTENDANCE_IN || c.Type == AlgorithmType.ATTENDANCE_OUT));
+                                if (data != null)
+                                {
+                                    return 2;
+                                }
                             }
+                           
                             ShipWeb.Models.Algorithm model = new ShipWeb.Models.Algorithm()
                             {
                                 Cid = protoModel.cid,

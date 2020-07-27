@@ -38,7 +38,7 @@ namespace ShipWeb.ProtoBuffer.Models
 			/// <SUMMARY>
 			/// 考勤出
 			/// </SUMMARY>
-			ATTENDANCE_OUT = 5
+			ATTENDANCE_OUT = 6
 		}
 		/// <summary>
 		/// 算法类型

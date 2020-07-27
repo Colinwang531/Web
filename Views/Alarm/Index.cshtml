@@ -9,6 +9,8 @@
 <link href="~/layui/css/layui.css" rel="stylesheet" />
 <script src="~/lib/jquery/dist/jquery.js"></script>
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/pdf/html2canvas.min.js"></script>
+<script src="~/pdf/jspdf.debug.js"></script>
 <script src="~/layui/layui.js"></script>
 <script type="text/javascript">
     layui.use(['form', 'table', 'layer', 'laydate'], function (obj) {
@@ -92,7 +94,7 @@
             return html;
         }
         form.on("submit(query)", function (obj) {
-            var data = {              
+            var data = {
                 name: obj.field.name,
                 type: parseInt(obj.field.type),
                 startTime: obj.field.startTime,
@@ -116,8 +118,73 @@
             });
             return false;
         });
+        var last_counts = $('.counts:last').text();
+        form.on("submit(export)", function (obj) {
+            //// 将 id 为 contents 的 div 渲染成 canvas
+            //html2canvas($("#divExport"),{
+            //    // 渲染完成时调用，获得 canvas
+            //    onrendered: function (canvas) {
+            //        // 从 canvas 提取图片数据
+            //        var imgData = canvas.toDataURL('image/jpeg');
 
+            //        // 因为我要在每页都加上特定的图片，所以要先将图片转化为base64格式（可以参考这个网站：http://tool.css-js.com/base64.html）
+            //        var img1_base = '~';
+            //        var img2_base = '~';
+            //        var img3_base = '~';
 
+            //        //初始化pdf，设置相应格式（单位为pt,导出a4纸的大小）
+            //        var doc = new jsPDF("p", "pt", "a4");
+
+            //        //图片的位置和尺寸（图片,left,top,width,high）
+            //        doc.addImage(img1_base, 10, 5, 90, 50);
+            //        doc.addImage(img2_base, 450, 5, 130, 50);
+
+            //        // 初始导出的页面为270（根据引入的图片和每行表格的高度设置）
+            //        var img_high = 270;
+            //        for (var i = 1; i < last_counts; i++) {
+            //            // 然后每增加一行加20的高（因为我的表格是分页的，每页最多26行，所以最高为750）
+            //            img_high += 20
+            //        }
+            //        doc.addImage(imgData, 10, 65, 580, img_high);
+            //        // 页尾再加上一个图片
+            //        doc.addImage(img3_base, 450, 780, 120, 40);
+            //        //输出保存命名为bill的pdf
+            //        doc.save('bill.pdf');
+            //    },
+            //    // 导出的pdf默认背景颜色为黑色，所以要设置颜色为白（根据自己的需求设置）
+            //    //background: '#FFF'
+            //})
+            var doc = new jsPDF();
+            var tb = table.cache.alarmTable;
+            var width = doc.internal.pageSize.width;
+            var height = doc.internal.pageSize.height;
+            $("img").each(function () {
+                var url = this.src;
+
+                doc.addImage(url, 'JPEG', 15, 0, 180, 180);
+                doc.addPage();
+            });
+            doc.save('Test.pdf');
+            //for (var i = 0; i < tb.length; i++) {
+            //    doc.setFont("courier");
+            //    doc.setFontType("normal");
+            //    var type = "未带安全帽";
+            //    if (tb[i].type==2) {
+            //        type = "打电话";
+            //    } else if (tb[i].type == 3) {
+            //        type = "睡觉";
+            //    } else if (tb[i].type == 4) {
+            //        type = "打架";
+            //    }
+            //    doc.text(20, 30, "报警类型：" + type + "<br/> 报警区域：" + tb[i].nickName);
+               
+            //    var imgData = imgUrl(tb[i].picture, tb[i].w, tb[i].h, tb[i].x, tb[i].y, createPDF);
+
+            //    doc.addImage(imgData, 'JPEG', 15, 40, 180, 180);
+            //}
+            //doc.save('Test.pdf');
+        });
+     
         function Drawing(pic, w, h, x, y, imgId) {
             var canvas = document.createElement("canvas");
             var cxt = canvas.getContext("2d");
@@ -134,6 +201,7 @@
                 $('#' + imgId).attr("src", imgData);
             }
         }
+
     });
     function showBigImage(e) {
         layui.use('layer', function () { //独立版的layer无需执行这一句
@@ -157,7 +225,7 @@
 </script>
 <div style="margin:20px;width:96%">
     <form class="layui-form" action="" id="dataFrm" lay-filter="dataFrm">
-        <div class="layui-form-item">           
+        <div class="layui-form-item">
             <label class="layui-form-label">摄像机名称</label>
             <div class="layui-input-inline" style="width:100px">
                 <input name="name" class="layui-input" type="text" placeholder="请输入" autocomplete="off">
@@ -182,217 +250,9 @@
                 <input name="endTime" class="layui-input" id="dtEndTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off" readonly>
             </div>
             <button class="layui-btn" type="submit" lay-submit="" lay-filter="query">查询</button>
+            <button class="layui-btn" type="submit" lay-submit="" lay-filter="export">导出</button>
         </div>
     </form>
     <table class="layui-table" id="alarmTable" layer-filter="alarmTable"></table>
 </div>
 
-
-
-
-
-@*<script type="text/javascript">
-    var page = 1; //设置首页页码
-    var limit = 13; //设置一页显示的条数
-    var total; //总条数
-    $(document).ready(function () {
-        loadData();
-        getdate();
-    });
-    //初使化
-    function loadData() {
-        var dt = new Date();
-        console.log("请求后台开始" + dt);
-        $.ajax({
-            url: "/Alarm/Load",
-            type: "get",
-            data: {
-                pageIndex: page,
-                pageSize: limit
-            },
-            dataType: "json",
-            contentType: "application/json;charset=utf-8",
-            success: function (res) {
-                var dt1 = new Date();
-                console.log("已经获取数据" + dt1);
-                if (res.code == 0) {
-                    var tb = res.data;
-                    total = res.count;
-                    LoadHtml(tb);
-                    getPage();
-                }
-            }
-        });
-    }
-    function LoadHtml(tb) {
-        var html = "";
-        if (tb.length > 0) {
-            for (var i = 0; i < tb.length; i++) {
-                html += '<tr>';
-                html += '<td>' + tb[i].time + '</td>';
-                html += '<td>' + tb[i].cid + '</td>';
-                html += '<td>' + tb[i].nickName + '</td>';
-                if (tb[i].type == 1) {
-                    html += '<td><img style="width:800px;height:30px" ondblclick="showBigImage(this)"  src="data:image/jpeg;base64,' + tb[i].picture + '"/></td>';
-                    html += '<td></td>';
-                    html += '<td></td>';
-                    html += '<td></td>';
-                }
-                else if (tb[i].type == 2) {
-                    html += '<td></td>';
-                    html += '<td><img style="width:800px;height:30px"  ondblclick="showBigImage(this)"  src="data:image/jpeg;base64,' + tb[i].picture + '"/></td>';
-                    html += '<td></td>';
-                    html += '<td></td>';
-                } else if (tb[i].type == 3) {
-                    html += '<td></td>';
-                    html += '<td></td>';
-                    html += '<td><img style="width:800px;height:30px" ondblclick="showBigImage(this)"  src="data:image/jpeg;base64,' + tb[i].picture + '"/></td>';
-                    html += '<td></td>';
-                } else {
-                    html += '<td></td>';
-                    html += '<td></td>';
-                    html += '<td></td>';
-                    html += '<td><img style="width:800px;height:30px"  ondblclick="showBigImage(this)" src="data:image/jpeg;base64,' + tb[i].picture + '"/></td>';
-                }
-            }
-        }
-
-        $("#tblist").html(html);
-    }
-    function showBigImage(e) {
-        layui.use('layer', function () { //独立版的layer无需执行这一句
-            var $ = layui.jquery, layer = layui.layer; //独立版的layer无需执行这一句
-            var x = document.documentElement.clientWidth / 6;
-            var y = document.documentElement.clientHeight / 6;
-            var windowW = 960;
-            var windowH = 540;
-            layer.open({
-                type: 1,
-                offset: [y + "px", x + "px"],
-                title: false,
-                closeBtn: true,
-                id: 'LAY_layuipro',
-                shadeClose: true, //点击阴影关闭
-                area: [windowW + 'px', windowH + 'px'], //宽高
-                content: "<img style=\"position: absolute;width:100%;height:100%\" src=" + $(e).attr('src') + " />"
-            });
-        });
-    }
-    function Query(pageIndex, isRefresh = true) {
-        var cid = $("#txtUid").val();
-        var name = $("#txtName").val();
-        var type = $("#slType").val();
-        var startTime = $("#dtStartTime").val();
-        var endTime = $("#dtEndTime").val();
-        var data = {
-            cid: cid,
-            name: name,
-            type: parseInt(type),
-            startTime: startTime,
-            endTime: endTime,
-            pageIndex: pageIndex,
-            pageSize: limit
-        }
-        $.ajax({
-            url: "/Alarm/QueryPage",
-            data: data,
-            type: "get",
-            dataType: "json",
-            contentType: "application/json;chartset=utf-8",
-            success: function (res) {
-                if (res.code == 0) {
-                    total = res.count;
-                    var tb = res.data;
-                    LoadHtml(tb);
-                    if (isRefresh) {
-                        getPage();
-                    }
-                }
-            }
-        })
-    }
-    //时间控件
-    function getdate() {
-        layui.use('laydate', function () {
-            var laydate = layui.laydate;
-            var layer = layui.layer;
-            laydate.render({
-                elem: '#dtStartTime',
-                type: 'date'
-            });
-        });
-        layui.use('laydate', function () {
-            var laydate = layui.laydate;
-            var layer = layui.layer;
-            laydate.render({
-                elem: '#dtEndTime',
-                type: 'date'
-            });
-        })
-    };
-    //分页处理
-    function getPage() {
-        layui.use('laypage', function () {
-            var laypage = layui.laypage;
-            var layer = layui.layer;
-            laypage.render({
-                elem: 'pages',
-                count: total, //数据总数，从服务端得到
-                limit: limit,
-                jump: function (obj, first) {
-                    page = obj.curr; //改变当前页码
-                    limit = obj.limit;
-                    if (!first) {
-                        Query(page, false);
-                    }
-                }
-            });
-        });
-    }
-</script>
-
-<div style="margin:20px;width:96%">
-    <div class="layui-form-item">
-        <label class="layui-form-label">编号</label>
-        <div class="layui-input-inline" style="width:100px">
-            <input id="txtUid" class="layui-input" type="text" placeholder="请输入" autocomplete="off" lay-verify="required">
-        </div>
-        <label class="layui-form-label">名称</label>
-        <div class="layui-input-inline" style="width:100px">
-            <input id="txtName" class="layui-input" type="text" placeholder="请输入" autocomplete="off" lay-verify="required">
-        </div>
-        <label class="layui-form-label">类型</label>
-        <select id="slType" class="layui-form-label" style="width:100px">
-            <option value="0">请选择</option>
-            <option value="1">睡觉</option>
-            <option value="2">打架</option>
-            <option value="3">安全帽</option>
-            <option value="4">手机</option>
-        </select>
-        <label class="layui-form-label">时间起</label>
-        <div class="layui-input-inline" style="width:100px">
-            <input name="date" class="layui-input" id="dtStartTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off">
-        </div>
-        <label class="layui-form-label">时间止</label>
-        <div class="layui-input-inline" style="width:100px">
-            <input name="date" class="layui-input" id="dtEndTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off">
-        </div>
-        <button class="layui-btn" type="submit" onclick="Query(1)">查询</button>
-    </div>
-    <table class="layui-table">
-        <thead>
-            <tr>
-                <th style="width:180px">报警时间</th>
-                <th style="width:120px">摄像机编号</th>
-                <th style="width:150px">摄像机名称</th>
-                <th>睡觉</th>
-                <th>打架</th>
-                <th>安全帽</th>
-                <th>手机</th>
-            </tr>
-        </thead>
-        <tbody id="tblist">
-        </tbody>
-    </table>
-    <div id="pages" class="center"></div>
-</div>*@

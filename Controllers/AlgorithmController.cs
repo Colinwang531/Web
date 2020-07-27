@@ -113,9 +113,7 @@ namespace ShipWeb.Controllers
                         ProtoBuffer.Models.AlgorithmInfo algorithm = GetProtoAlgorithm(viewModel);
                         int res=manager.AlgorithmSet(shipId, algorithm);
                         return new JsonResult(new { code = res, msg = res != 0 ? res==2? "一个摄像机只能设置考勤入或考勤出" : "数据修改失败" : "" });
-                    }
-                    //找出此摄像机下否有考勤数据
-                    var data = _context.Algorithm.FirstOrDefault(c => c.ShipId == shipId && c.Cid == viewModel.Cid && (c.Type == AlgorithmType.ATTENDANCE_IN || c.Type == AlgorithmType.ATTENDANCE_OUT));                   
+                    }                
                     if (!string.IsNullOrEmpty(viewModel.Id))
                     {
                         //查看数据是否存在
@@ -124,9 +122,13 @@ namespace ShipWeb.Controllers
                         {
                             return new JsonResult(new { code = 1, msg = "此数据不存在" });
                         }
-                        if (data != null && data.Id != algo.Id)
-                        {
-                            return new JsonResult(new { code = 1, msg = "一个摄像机只能设置考勤入或考勤出" });
+                        if (viewModel.Type == (int)AlgorithmType.ATTENDANCE_IN || viewModel.Type == (int)AlgorithmType.ATTENDANCE_OUT)
+                        { //找出此摄像机下否有考勤数据
+                            var data = _context.Algorithm.FirstOrDefault(c => c.ShipId == shipId && c.Cid == viewModel.Cid && (c.Type == AlgorithmType.ATTENDANCE_IN || c.Type == AlgorithmType.ATTENDANCE_OUT));
+                            if (data != null && data.Id != algo.Id )
+                            {
+                                return new JsonResult(new { code = 1, msg = "一个摄像机只能设置考勤入或考勤出" });
+                            }
                         }
                         algo.GPU = viewModel.GPU;
                         algo.Type = (AlgorithmType)viewModel.Type;
@@ -139,10 +141,16 @@ namespace ShipWeb.Controllers
                     }
                     else
                     {
-                        if (data != null)
+                        if (viewModel.Type == (int)AlgorithmType.ATTENDANCE_IN || viewModel.Type == (int)AlgorithmType.ATTENDANCE_OUT)
                         {
-                            return new JsonResult(new { code = 1, msg = "一个摄像机只能设置考勤入或考勤出" });
+                            //找出此摄像机下否有考勤数据
+                            var data = _context.Algorithm.FirstOrDefault(c => c.ShipId == shipId && c.Cid == viewModel.Cid && (c.Type == AlgorithmType.ATTENDANCE_IN || c.Type == AlgorithmType.ATTENDANCE_OUT));
+                            if (data != null)
+                            {
+                                return new JsonResult(new { code = 1, msg = "一个摄像机只能设置考勤入或考勤出" });
+                            }
                         }
+                        
                         Algorithm algo = new Algorithm()
                         {
                             Id = Guid.NewGuid().ToString(),
@@ -171,6 +179,32 @@ namespace ShipWeb.Controllers
             {
                 return new JsonResult(new { code = 1, msg = "数据保存失败!" + ex.Message });
             }
+        }
+        public IActionResult Query(string type, string cid)
+        {
+            string shipId = base.user.ShipId;
+            int agotype = string.IsNullOrEmpty(type) ? 0 : Convert.ToInt32(type);
+            var data = from a in _context.Algorithm
+                       join b in _context.Camera on a.Cid equals b.Id
+                       where a.ShipId==shipId&&(agotype>0 ? a.Type == (AlgorithmType)agotype:1==1) &&(!string.IsNullOrEmpty(cid)? a.Cid == cid:1==1) 
+                       select new
+                       {
+                           a.Id,
+                           a.Type,
+                           a.GPU,
+                           a.Similar,
+                           a.Cid,
+                           b.NickName,
+                           a.DectectFirst,
+                           a.DectectSecond,
+                           a.Track
+                       };
+            var result = new
+            {
+                code = 0,
+                data = data.ToList()
+            };
+            return new JsonResult(result);
         }
         /// <summary>
         /// 处理protoBuf消息实体
