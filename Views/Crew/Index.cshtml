@@ -6,6 +6,15 @@
 <link href="~/layui/css/layui.css" rel="stylesheet" />
 <script src="~/layui/layui.js"></script>
 <script src="~/lib/jquery/dist/jquery.js"></script>
+<style>
+    .layui-table-cell {
+        display: table-cell;
+        vertical-align: middle;
+    }
+    .layui-table img {
+        max-width: 120px
+    }
+</style>
 <script type="text/javascript">
     var uploadFiles;
     var upnum = 0;//记录上传后返回的数量
@@ -20,30 +29,33 @@
             elem: '#userTable',   //渲染的目标对象
             url: '/Crew/Load', //数据接口
             toolbar: "#userToolBar",   //表格的工具条
+            defaultToolbar: [],
+            width: 1200,
+            cellMinWidth:150,
             page: false,  //是否启用分页
             cols: [[   //列表数据
-                { field: 'name', title: '船员名称', width: 220, sort: true, align: 'center' },
-                { field: 'job', title: '工作内容', align: 'center', width: 220 },
+                { field: 'name', title: '船员名称', width: 150, unresize: true },
+                { field: 'job', title: '工作内容', width: 200, unresize: true },
                 {
-                    field: 'employeePictures', title: '船员图片', align: 'center', width: 320, templet: function (d) {
+                    field: 'employeePictures', title: '船员图片', minWidth:300, unresize: true, templet: function (d) {
                         var pics = d.employeePictures;
                         var html = "";
                         if (pics.length > 0) {
                             for (var j = 0; j < pics.length; j++) {
-                                html += '<img style="width:50px;height:30px" ondblclick="showBigImage(this)" src="data:image/jpeg;base64,' + pics[j].picture + '"/>&nbsp;&nbsp;&nbsp'
+                                html += '<img style="width:120px;height:80px" ondblclick="showBigImage(this)" src="data:image/jpeg;base64,' + pics[j].picture + '"/>&nbsp;&nbsp;&nbsp'
                             }
                         }
                         return html;
                     }
                 },
-                { fixed: 'right', title: '操作', toolbar: '#userBar', width: 220, align: 'center' }
+                { fixed: 'right', title: '操作',width:200, toolbar: '#userBar', align: 'center' }
             ]],
             done: function (res) {
                 if (res.isSet == true) {
                     $("#userToolBar").hide();
                 }
                 // 隐藏列
-                $(".layui-table-tool-self").css("display", "none");
+                //$(".layui-table-tool-self").css("display", "none");
             }
         });
 

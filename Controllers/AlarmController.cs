@@ -16,23 +16,34 @@ using ShipWeb.Models;
 using ShipWeb.Tool;
 using System.Text;
 using System.Net.WebSockets;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using System.Diagnostics;
+using DinkToPdf;
+using DinkToPdf.Contracts;
+using ShipWeb.Interface;
+using Newtonsoft.Json.Schema;
 
 namespace ShipWeb.Controllers
 {
     public class AlarmController : BaseController
     {
         private MyContext _context;
-        public AlarmController(MyContext context)
+        private IConverter _converter;
+        private IPDFService _PDFService;
+        public AlarmController(MyContext context, IConverter converter, IPDFService pDFService)
         {
             _context = context;
+            _converter = converter;
+            _PDFService = pDFService;
         }
-        public IActionResult Index(bool isShow,string shipid="")
+        public IActionResult Index(bool isShow, string shipid = "")
         {
             ViewBag.IsShowLayout = isShow;//显示报警的框架
             if (!string.IsNullOrEmpty(shipid))
             {
                 base.user.ShipId = shipid;
             }
+            ViewBag.src = "/Alarm/Index?isShow=false";
             ViewBag.IsLandHome = base.user.IsLandHome;
             ViewBag.LoginName = base.user.Name;
             return View();
@@ -101,6 +112,36 @@ namespace ShipWeb.Controllers
             }
 
         }
+
+        /// <summary>
+        /// 导出
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="type"></param>
+        /// <param name="startTime"></param>
+        /// <param name="endTime"></param>
+        /// <returns></returns>
+        public IActionResult ExportPdf(string shipId,string name,int type,string startTime,string endTime)
+        {
+            int total = 0;
+            SearchAlarmViewModel model = new SearchAlarmViewModel()
+            {
+                Name = name,
+                EndTime = endTime,
+                StartTime = startTime,
+                Type = type,
+                ShipId=shipId
+            };
+            shipId = string.IsNullOrEmpty(shipId) ? base.user.ShipId : shipId;
+            var ship = _context.Ship.Where(c =>c.Id==shipId).FirstOrDefault();
+            var list = GetDate(model, 1, 1000000, out total);
+            string time = startTime + "~" + endTime; 
+            string html =ManagerHelp.GetHtml(list, time,ship.Name);          
+            //生成PDF
+            var pdfBytes = _PDFService.CreatePDF(html);
+
+            return File(pdfBytes, "application/pdf", "报警信息.pdf");
+        }
         /// <summary>
         /// 陆地端查询报警信息
         /// </summary>
@@ -121,7 +162,7 @@ namespace ShipWeb.Controllers
                     pageIndex = pageIndex,
                     pageSize = pageSize,
                     count = total
-                };            
+                };
                 return new JsonResult(result);
             }
             catch (Exception ex)
@@ -163,21 +204,10 @@ namespace ShipWeb.Controllers
                 model = new SearchAlarmViewModel();
             }
             //查询船信息
-            var ship = _context.Ship.Where(c => (model.ShipId == "" ? 1 == 1 : c.Id == model.ShipId)).ToList();
+            var ship = _context.Ship.Where(c => (string.IsNullOrEmpty(model.ShipId) ? 1 == 1 : c.Id == model.ShipId)).ToList();
             var shipIds = string.Join(',', ship.Select(c => c.Id));
-            var alarmData = from a in _context.Alarm
-                            join b in _context.AlarmInfo on a.Id equals b.AlarmId
-                            where shipIds.Contains(a.ShipId) && (b.Type != AlarmType.ATTENDANCE_IN && b.Type != AlarmType.ATTENDANCE_OUT) && (model.Type == 0 ? 1 == 1 : b.Type == (AlarmType)model.Type)
-                            select new
-                            {
-                                a.Id,
-                                a.Cid,
-                                a.Picture,
-                                a.Time,
-                                b.Type,
-                                a.ShipId,
-                                infoId = b.Id
-                            };
+            var alarmData = _context.Alarm.Where(c => shipIds.Contains(c.ShipId) && (c.Type != Alarm.AlarmType.ATTENDANCE_IN && c.Type != Alarm.AlarmType.ATTENDANCE_OUT) && (model.Type == 0 ? 1 == 1 : c.Type == (Alarm.AlarmType)model.Type));
+
             if (!(string.IsNullOrEmpty(model.StartTime)) && !(string.IsNullOrEmpty(model.EndTime)))
             {
                 DateTime dtStart = DateTime.Parse(model.StartTime);
@@ -197,14 +227,14 @@ namespace ShipWeb.Controllers
             var alarm = alarmData.ToList();
             var cids = string.Join(',', alarm.Select(c => c.Cid));
             //查询摄像机信息
-            var camera = _context.Camera.Where(c => (model.Name == "" ? 1 == 1 : c.NickName.Contains(model.Name)) && cids.Contains(c.Id)).ToList();
-            var infoIds = string.Join(',', alarm.Select(c => c.infoId));
+            var camera = _context.Camera.Where(c => (string.IsNullOrEmpty(model.Name) ? 1 == 1 : c.NickName.Contains(model.Name)) && cids.Contains(c.Id)).ToList();
+            var ids = string.Join(',', alarm.Select(c => c.Id));
             //查询位置信息
-            var pics = _context.AlarmPosition.Where(c => infoIds.Contains(c.AlarmInfoId)).ToList();
+            var pics = _context.AlarmPosition.Where(c => ids.Contains(c.AlarmId)).ToList();
             //组合数据
             var data = from a in alarm
                        join b in camera on a.Cid equals b.Id
-                       join c in pics on a.infoId equals c.AlarmInfoId
+                       join c in pics on a.Id equals c.AlarmId
                        join d in ship on a.ShipId equals d.Id
                        select new
                        {

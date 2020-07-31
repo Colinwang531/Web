@@ -17,39 +17,39 @@
         var DISABLED = 'layui-btn-disabled';
         var tableIns = table.render({
             elem: '#userTable',   //渲染的目标对象
+            width:1600,
             url: '/Device/Load', //数据接口
             toolbar: "#userToolBar",   //表格的工具条
+            defaultToolbar: [],
             page: false,  //是否启用分页
             cols: [[   //列表数据
                 {
-                    field: 'factory', title: '设备厂商', width: 120, sort: true, templet: function (e) {
+                    field: 'factory', title: '设备厂商', templet: function (e) {
                         if (e.factory == 1) return "海康";
                         else if (e.factory == 2) return "大华";
                         else if (e.factory == 3) return "伊顿";
                     }
                 },
                 {
-                    field: 'type', title: '设备类型', width: 120, sort: true, align: 'center', templet: function (e) {
+                    field: 'type', title: '设备类型', align: 'center', templet: function (e) {
                         if (e.type == 1) return "DVR";
                         else if (e.type == 2) return "NVR";
                         else if (e.type == 3) return "IPC";
                     }
                 },
-                { field: 'name', title: '设备登陆名称', align: 'center', width: 200 },
-                { field: 'password', title: '设备登陆密码', align: 'center', width: 200 },
-                { field: 'ip', title: '设备登陆IP', align: 'center', width: 150 },
-                { field: 'port', title: '设备登陆端口', align: 'center', width: 120 },
-                { field: 'nickname', title: '设备别名', align: 'center', width: 120 },
+                { field: 'name', title: '设备登陆名称', align: 'center' },
+                { field: 'password', title: '设备登陆密码', align: 'center' },
+                { field: 'ip', title: '设备登陆IP', align: 'center' },
+                { field: 'port', title: '设备登陆端口', align: 'center'},
+                { field: 'nickname', title: '设备别名', align: 'center' },
                 {
-                    field: 'enable', title: '设备状态', align: 'center', width: 120, templet: function (e) {
+                    field: 'enable', title: '设备状态', align: 'center', templet: function (e) {
                         return e.enable? "开启" : "关闭";
                     }
                 },
-                { fixed: 'right', title: '操作', toolbar: '#userBar', width: 220, align: 'center' }
+                { fixed: 'right', title: '操作', toolbar: '#userBar', align: 'center' }
             ]],
             done: function (res) {
-                // 隐藏列
-                $(".layui-table-tool-self").css("display", "none");
             }
         });
         //监听头部工具栏事件

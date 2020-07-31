@@ -17,7 +17,7 @@ namespace ShipWeb.Helpers
                 //1. 设置当前目录为基础目录
                 .SetBasePath(Directory.GetCurrentDirectory())
                 //2. 加载json文件 
-                .Add(new JsonConfigurationSource { Path = "appsettings.json", ReloadOnChange = true, Optional = true })
+                .Add(new JsonConfigurationSource { Path = "appsettings.json", ReloadOnChange = true, Optional = true })                
                 .Build();
         }
 

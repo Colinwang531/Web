@@ -8,7 +8,16 @@
 <script src="~/layui/layui.js"></script>
 <script src="~/lib/jquery/dist/jquery.js"></script>
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
+<style>
+    .layui-table-cell {
+        display: table-cell;
+        vertical-align: middle;
+    }
 
+    .layui-table img {
+        max-width: 120px
+    }
+</style>
 <script type="text/javascript">
     layui.use(['form', 'table', 'layer', 'laydate'], function (obj) {
         var $ = layui.$;
@@ -29,6 +38,7 @@
         table.render({
             elem: '#alarmTable',
             loading: true, //翻页加loading
+            width:700,
             url: "/Attendance/Load", //数据接口
             request: {
                 pageName: 'pageIndex',//页码的参数名称，默认：page
@@ -39,14 +49,14 @@
                 { field: 'time', title: '打卡时间', width: 200 },
                 { field: 'behavior', title: '考勤', width: 120 },
                 {
-                    field: 'type', title: '略缩图', width: 150, templet: function (e) {
-                        var html = '<img style="width:800px;height:30px" ondblclick="showBigImage(this)"  src="data:image/jpeg;base64,' + e.picture + '"/>';
+                    field: 'type', title: '略缩图',templet: function (e) {
+                        var html = '<img style="height:80px" ondblclick="showBigImage(this)"  src="data:image/jpeg;base64,' + e.picture + '"/>';
                         return html;
                     }
                 }
             ]],
-            limit: 10,
-            limits: [10, 20, 30, 40, 50],
+            limit: 5,
+            limits: [5, 10, 20, 40, 50],
             page: {
                 groups: 5 //只显示 5 个连续页码
             }, done: function (res) {

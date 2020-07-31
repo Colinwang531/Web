@@ -13,25 +13,13 @@ namespace ShipWeb.ProtoBuffer.Models
     [ProtoContract]
     public class Alarm
     {
-        /// <summary>
-        /// 摄像机ID标识
-        /// </summary>
+        public enum Command
+        {
+            NOTIFY = 1
+        }
         [ProtoMember(1)]
-        public string cid { get; set; }
-        /// <summary>
-        /// 报警时间
-        /// </summary>
-        [ProtoMember(2)]        
-        public string time { get; set; }
-        /// <summary>
-        /// 报警实时图片，以JEPG格式封装；
-        /// </summary>
-        [ProtoMember(3)]
-        public string picture { get; set; }
-        /// <summary>
-        /// 报警信息
-        /// </summary>
-        [ProtoMember(4)]
+        public Command command = Command.NOTIFY;
+        [ProtoMember(2)]
         public AlarmInfo alarminfo { get; set; }
     }
 }

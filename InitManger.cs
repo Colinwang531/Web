@@ -123,20 +123,21 @@ namespace ShipWeb
                         {
                             string shipId = itship.Id;
                             string identity = Guid.NewGuid().ToString();
-                            ProtoBuffer.Models.Alarm alarm = manager.AlarmStart(shipId);
-                            if (alarm != null)
+                            ProtoBuffer.Models.Alarm protoalarm = manager.AlarmStart(shipId);
+                            if (protoalarm != null)
                             {
-                                if (alarm.alarminfo.type == ProtoBuffer.Models.AlarmInfo.Type.ATTENDANCE_IN || alarm.alarminfo.type == ProtoBuffer.Models.AlarmInfo.Type.ATTENDANCE_OUT)
+                                var alarm = protoalarm.alarminfo;
+                                if (alarm.type == ProtoBuffer.Models.AlarmInfo.Type.ATTENDANCE_IN || alarm.type == ProtoBuffer.Models.AlarmInfo.Type.ATTENDANCE_OUT)
                                 {
                                     #region 考勤信息入库
                                     ShipWeb.Models.Attendance attendance = new Attendance()
                                     {
-                                        Behavior = alarm.alarminfo.type == ProtoBuffer.Models.AlarmInfo.Type.ATTENDANCE_IN ? 0 : 1,
+                                        Behavior = alarm.type == ProtoBuffer.Models.AlarmInfo.Type.ATTENDANCE_IN ? 0 : 1,
                                         Id = identity,
                                         CameraId = alarm.cid,
                                         ShipId = shipId,
                                         Time = Convert.ToDateTime(alarm.time),
-                                        CrewId = alarm.alarminfo.uid,
+                                        CrewId = alarm.uid,
                                         attendancePictures = new List<AttendancePicture>()
                                         {
                                             new AttendancePicture ()
@@ -161,17 +162,10 @@ namespace ShipWeb
                                         Time = Convert.ToDateTime(alarm.time),
                                         ShipId = shipId,
                                         Cid = alarm.cid,
-                                        alarmInfo = new Models.AlarmInfo()
-                                        {
-                                            AlarmId = identity,
-                                            Id = Guid.NewGuid().ToString(),
-                                            Shipid = shipId,
-                                            Type = (AlarmType)alarm.alarminfo.type,
-                                            Uid = alarm.alarminfo.uid,
-                                            alarmPositions = new List<Models.AlarmPosition>()
-                                        }
+                                        Type = (ShipWeb.Models.Alarm.AlarmType)alarm.type,
+                                        Uid = alarm.uid
                                     };
-                                    var replist = alarm.alarminfo.position;
+                                    var replist = alarm.position;
                                     if (replist.Count > 0)
                                     {
                                         foreach (var item in replist)
@@ -179,7 +173,7 @@ namespace ShipWeb
 
                                             Models.AlarmPosition position = new Models.AlarmPosition()
                                             {
-                                                AlarmInfoId = model.alarmInfo.Id,
+                                                AlarmId = model.Id,
                                                 ShipId = shipId,
                                                 Id = Guid.NewGuid().ToString(),
                                                 H = item.h,
@@ -187,7 +181,7 @@ namespace ShipWeb
                                                 X = item.x,
                                                 Y = item.y
                                             };
-                                            model.alarmInfo.alarmPositions.Add(position);
+                                            model.alarmPositions.Add(position);
                                         }
                                     }
                                     context.Alarm.Add(model);

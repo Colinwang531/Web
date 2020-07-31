@@ -1297,12 +1297,19 @@ namespace ShipWeb.ProtoBuffer
         /// <param name="msg"></param>
         private void SendMessage(MSG msg)
         {
-            byte[] byt = ProtoBufHelp.Serialize<MSG>(msg);
-            NetMQMessage mqmsg = new NetMQMessage();
-            mqmsg.AppendEmptyFrame();
-            mqmsg.Append(byt);
-            //发送注册请求
-            dealer.SendMultipartMessage(mqmsg);
+            try
+            {
+                byte[] byt = ProtoBufHelp.Serialize<MSG>(msg);
+                NetMQMessage mqmsg = new NetMQMessage();
+                mqmsg.AppendEmptyFrame();
+                mqmsg.Append(byt);
+                //发送注册请求
+                dealer.SendMultipartMessage(mqmsg);
+            }
+            catch (Exception)
+            {
+
+            }
         }
 
         /// <summary>

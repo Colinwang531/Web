@@ -8,17 +8,13 @@
 <script src="~/lib/jquery/dist/jquery.js"></script>
 <script src="~/layui/layui.js"></script>
 <style>
-
-    /*.layui-table-cell {
-        width:100%;
-        height: auto;
-        white-space: normal;
+    .layui-table-cell {
+        display: table-cell;
+        vertical-align: middle;
     }
-
     .layui-table img {
-        max-width: 200px
-    }*/
-   
+        max-width: 120px
+    }
 </style>
 <script type="text/javascript">
     layui.use(['form', 'table', 'layer', 'laydate'], function (obj) {
@@ -41,17 +37,19 @@
             elem: '#alarmTable',
             loading: true, //翻页加loading
             url: "/Alarm/LoadAlarm", //数据接口
+            cellMinWidth: 150,
+            width:1600,
             request: {
                 pageName: 'pageIndex',//页码的参数名称，默认：page
                 limitName: 'pageSize' //每页数据量的参数名，默认：limit
             },
             cols: [[
-                { field: 'name', title: '船舶', width: 100 },
-                { field: 'time', title: '报警时间', width: 180 },
+                { field: 'name', title: '船舶', unresize: true },
+                { field: 'time', title: '报警时间', unresize: true},
                 //{ field: 'cid', title: '摄像机编号', width: 120 },
-                { field: 'nickName', title: '摄像机名称', width: 150 },
+                { field: 'nickName', title: '摄像机名称' , unresize: true},
                 {
-                    field: 'type', title: '睡觉',width:230, templet: function (e) {
+                    field: 'type', title: '睡觉', unresize: true, templet: function (e) {
                         if (e.type == 3) {                            
                             var id = "sleep" + e.LAY_INDEX;
                             var url = Drawing(e.picture, e.w, e.h, e.x, e.y, id);
@@ -61,7 +59,7 @@
                     }
                 },
                 {
-                    field: 'type', title: '打架', width: 230,   templet: function (e) {
+                    field: 'type', title: '打架', unresize: true, templet: function (e) {
                         if (e.type == 4) {
                             var id = "fight" + e.LAY_INDEX;
                             var url = Drawing(e.picture, e.w, e.h, e.x, e.y, id);
@@ -70,7 +68,7 @@
                     }
                 },
                 {
-                    field: 'type', title: '安全帽', width: 230,  templet: function (e) {
+                    field: 'type', title: '安全帽', unresize: true, templet: function (e) {
                         if (e.type == 1) {
                             var id = "helmet" + e.LAY_INDEX;
                             var url = Drawing(e.picture, e.w, e.h, e.x, e.y, id);
@@ -79,7 +77,7 @@
                     }
                 },
                 {
-                    field: 'type', title: '手机', width: 230, templet: function (e) {
+                    field: 'type', title: '手机', unresize: true, templet: function (e) {
                         if (e.type == 2) {
                             var id = "phone" + e.LAY_INDEX;
                             var url = Drawing(e.picture, e.w, e.h, e.x, e.y, id);
@@ -88,8 +86,8 @@
                     }
                 }
             ]],
-            limit: 10,
-            limits: [10, 20, 30, 40, 50],
+            limit: 5,
+            limits: [5, 10, 20, 40, 50],
             page: {
                 groups: 5 //只显示 5 个连续页码
             }, done: function (res) {
@@ -109,7 +107,7 @@
         });
         function LoadImg(id) {
             //var html = '<img style="width:800px;height:30px" ondblclick="showBigImage(this)"  src="data:image/jpeg;base64,' + pic + '"/>';
-            var html = '<img style="width:200px;height:150px" id="' + id + '" ondblclick="showBigImage(this)" />';
+            var html = '<img style="width:120px;height:80px" id="' + id + '" ondblclick="showBigImage(this)" />';
             return html;
         }
         form.on("submit(query)", function (obj) {
@@ -177,26 +175,38 @@
             });
         });
     }
+    function Export() {
+        var name = $("#txtName").val();
+        var type = $("#slType").val();
+        var shipId = $("#slShip").val();
+        var starttime = $("#dtStartTime").val();
+        var endtime = $("#dtEndTime").val();
+        if (shipId=="") {
+            layer.msg("请选择您要导出的船", { icon: 2 });
+            return false;
+        }
+        if (starttime == "" || endtime == "") {
+            layer.msg("请选择您要导出的时间段", { icon: 2 });
+            return false;
+        }
+        window.location.href = "/Alarm/ExportPdf?shipId=" + shipId + "&name=" + name + "&type=" + parseInt(type) + "&startTime=" + starttime + "&endTime=" + endtime;
+    }
 </script>
 <div style="margin:20px;width:96%">
     <form class="layui-form" action="" id="dataFrm" lay-filter="dataFrm">
         <div class="layui-form-item">
             <label class="layui-form-label">船名称</label>
             <div class="layui-input-inline">
-                <select name="ship" id="slShip" style="width:100px">
+                <select name="ship" id="slShip" style="width: 100px ">
                 </select>
             </div>
-            @*<label class="layui-form-label">摄像机编号</label>
-            <div class="layui-input-inline" style="width:100px">
-                <input name="cid" class="layui-input" type="text" placeholder="请输入" autocomplete="off">
-            </div>*@
             <label class="layui-form-label">摄像机名称</label>
             <div class="layui-input-inline" style="width:100px">
-                <input name="name" class="layui-input" type="text" placeholder="请输入" autocomplete="off">
+                <input name="name" id="txtName" class="layui-input" type="text" placeholder="请输入" autocomplete="off">
             </div>
             <label class="layui-form-label">报警类型</label>
             <div class="layui-input-inline">
-                <select name="type" style="width:100px">
+                <select name="type" id="slType" style="width:100px">
                     <option value="0">请选择</option>
                     <option value="1">安全帽</option>
                     <option value="2">手机</option>
@@ -214,6 +224,7 @@
                 <input name="endTime" class="layui-input" id="dtEndTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off" readonly>
             </div>
             <button class="layui-btn" type="submit" lay-submit="" lay-filter="query">查询</button>
+            <a href="#" onclick="Export()" class="layui-btn">导出</a>
         </div>
     </form>
     <table class="layui-table" id="alarmTable" layer-filter="alarmTable"></table>

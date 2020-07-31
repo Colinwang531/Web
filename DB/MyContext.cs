@@ -30,7 +30,6 @@ namespace ShipWeb.DB
             modelBuilder.Entity<Crew>();
             modelBuilder.Entity<CrewPicture>();
             modelBuilder.Entity<Alarm>();
-            modelBuilder.Entity<AlarmInfo>();
             modelBuilder.Entity<AlarmPosition>();
             modelBuilder.Entity<Attendance>();
             modelBuilder.Entity<AttendancePicture>();
@@ -74,10 +73,6 @@ namespace ShipWeb.DB
         /// 报警
         /// </summary>
         public DbSet<Alarm> Alarm { get; set; }
-        /// <summary>
-        /// 报警信息
-        /// </summary>
-        public DbSet<AlarmInfo> AlarmInfo { get; set; }
         /// <summary>
         /// 报警位置
         /// </summary>

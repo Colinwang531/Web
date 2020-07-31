@@ -9,9 +9,17 @@
 <link href="~/layui/css/layui.css" rel="stylesheet" />
 <script src="~/lib/jquery/dist/jquery.js"></script>
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
-<script src="~/pdf/html2canvas.min.js"></script>
-<script src="~/pdf/jspdf.debug.js"></script>
 <script src="~/layui/layui.js"></script>
+<style>
+    .layui-table-cell {
+        display: table-cell;
+        vertical-align: middle;
+    }
+    .layui-table img {
+        max-width: 120px
+    }
+
+</style>
 <script type="text/javascript">
     layui.use(['form', 'table', 'layer', 'laydate'], function (obj) {
         var $ = layui.$;
@@ -38,10 +46,10 @@
                 limitName: 'pageSize' //每页数据量的参数名，默认：limit
             },
             cols: [[
-                { field: 'time', title: '报警时间', width: 180 },
-                { field: 'nickName', title: '摄像机名称', width: 150 },
+                { field: 'time', title: '报警时间' },
+                { field: 'nickName', title: '摄像机名称' },
                 {
-                    field: 'type', title: '安全帽', width: 150, templet: function (e) {
+                    field: 'type', title: '安全帽', templet: function (e) {
                         if (e.type == 1) {
                             var id = "helmet" + e.LAY_INDEX;
                             var url = Drawing(e.picture, e.w, e.h, e.x, e.y, id);
@@ -50,7 +58,7 @@
                     }
                 },
                 {
-                    field: 'type', title: '手机', width: 150, templet: function (e) {
+                    field: 'type', title: '手机',  templet: function (e) {
                         if (e.type == 2) {
                             var id = "phone" + e.LAY_INDEX;
                             var url = Drawing(e.picture, e.w, e.h, e.x, e.y, id);
@@ -59,7 +67,7 @@
                     }
                 },
                 {
-                    field: 'type', title: '睡觉', width: 150, templet: function (e) {
+                    field: 'type', title: '睡觉',  templet: function (e) {
                         if (e.type == 3) {
                             var id = "sleep" + e.LAY_INDEX;
                             var url = Drawing(e.picture, e.w, e.h, e.x, e.y, id);
@@ -69,7 +77,7 @@
                     }
                 },
                 {
-                    field: 'type', title: '打架', width: 150, templet: function (e) {
+                    field: 'type', title: '打架',  templet: function (e) {
                         if (e.type == 4) {
                             var id = "fight" + e.LAY_INDEX;
                             var url = Drawing(e.picture, e.w, e.h, e.x, e.y, id);
@@ -78,8 +86,8 @@
                     }
                 }
             ]],
-            limit: 10,
-            limits: [10, 20, 30, 40, 50],
+            limit: 5,
+            limits: [5, 10, 20, 40, 50],
             page: {
                 groups: 5 //只显示 5 个连续页码
             }, done: function (res) {
@@ -90,7 +98,7 @@
         });
         function LoadImg(id) {
             //var html = '<img style="width:800px;height:30px" ondblclick="showBigImage(this)"  src="data:image/jpeg;base64,' + pic + '"/>';
-            var html = '<img style="width:200px;height:30px" id="' + id + '" ondblclick="showBigImage(this)" />';
+            var html = '<img style="height:80px" id="' + id + '" ondblclick="showBigImage(this)" />';
             return html;
         }
         form.on("submit(query)", function (obj) {
@@ -118,73 +126,22 @@
             });
             return false;
         });
-        var last_counts = $('.counts:last').text();
         form.on("submit(export)", function (obj) {
-            //// 将 id 为 contents 的 div 渲染成 canvas
-            //html2canvas($("#divExport"),{
-            //    // 渲染完成时调用，获得 canvas
-            //    onrendered: function (canvas) {
-            //        // 从 canvas 提取图片数据
-            //        var imgData = canvas.toDataURL('image/jpeg');
-
-            //        // 因为我要在每页都加上特定的图片，所以要先将图片转化为base64格式（可以参考这个网站：http://tool.css-js.com/base64.html）
-            //        var img1_base = '~';
-            //        var img2_base = '~';
-            //        var img3_base = '~';
-
-            //        //初始化pdf，设置相应格式（单位为pt,导出a4纸的大小）
-            //        var doc = new jsPDF("p", "pt", "a4");
-
-            //        //图片的位置和尺寸（图片,left,top,width,high）
-            //        doc.addImage(img1_base, 10, 5, 90, 50);
-            //        doc.addImage(img2_base, 450, 5, 130, 50);
-
-            //        // 初始导出的页面为270（根据引入的图片和每行表格的高度设置）
-            //        var img_high = 270;
-            //        for (var i = 1; i < last_counts; i++) {
-            //            // 然后每增加一行加20的高（因为我的表格是分页的，每页最多26行，所以最高为750）
-            //            img_high += 20
-            //        }
-            //        doc.addImage(imgData, 10, 65, 580, img_high);
-            //        // 页尾再加上一个图片
-            //        doc.addImage(img3_base, 450, 780, 120, 40);
-            //        //输出保存命名为bill的pdf
-            //        doc.save('bill.pdf');
-            //    },
-            //    // 导出的pdf默认背景颜色为黑色，所以要设置颜色为白（根据自己的需求设置）
-            //    //background: '#FFF'
-            //})
-            var doc = new jsPDF();
-            var tb = table.cache.alarmTable;
-            var width = doc.internal.pageSize.width;
-            var height = doc.internal.pageSize.height;
-            $("img").each(function () {
-                var url = this.src;
-
-                doc.addImage(url, 'JPEG', 15, 0, 180, 180);
-                doc.addPage();
-            });
-            doc.save('Test.pdf');
-            //for (var i = 0; i < tb.length; i++) {
-            //    doc.setFont("courier");
-            //    doc.setFontType("normal");
-            //    var type = "未带安全帽";
-            //    if (tb[i].type==2) {
-            //        type = "打电话";
-            //    } else if (tb[i].type == 3) {
-            //        type = "睡觉";
-            //    } else if (tb[i].type == 4) {
-            //        type = "打架";
+            window.location.href = "/Alarm/ExportPdf";
+            //$.ajax({
+            //    url: "/Alarm/ExportPdf",
+            //    //data: {},
+            //    type: "get",
+            //    //dataType: "json",
+            //    contentType: "application/pdf",
+            //    success: function (res) {
+            //        debugger;
+            //        //var aa = res;
             //    }
-            //    doc.text(20, 30, "报警类型：" + type + "<br/> 报警区域：" + tb[i].nickName);
-               
-            //    var imgData = imgUrl(tb[i].picture, tb[i].w, tb[i].h, tb[i].x, tb[i].y, createPDF);
-
-            //    doc.addImage(imgData, 'JPEG', 15, 40, 180, 180);
-            //}
-            //doc.save('Test.pdf');
+            //})
+            //return false;
         });
-     
+
         function Drawing(pic, w, h, x, y, imgId) {
             var canvas = document.createElement("canvas");
             var cxt = canvas.getContext("2d");
@@ -222,17 +179,28 @@
             });
         });
     }
+    function Export() {
+        var name = $("#txtName").val();
+        var type = $("#slType").val();
+        var starttime = $("#dtStartTime").val();
+        var endtime = $("#dtEndTime").val();
+        if (starttime == "" || endtime == "") {
+            layer.msg("请选择您要导出的时间段", { icon: 2 });
+            return false;
+        }
+        window.location.href = "/Alarm/ExportPdf?name=" + name + "&type=" + parseInt(type) + "&startTime=" + starttime + "&endTime=" + endtime;
+    }
 </script>
 <div style="margin:20px;width:96%">
     <form class="layui-form" action="" id="dataFrm" lay-filter="dataFrm">
         <div class="layui-form-item">
             <label class="layui-form-label">摄像机名称</label>
             <div class="layui-input-inline" style="width:100px">
-                <input name="name" class="layui-input" type="text" placeholder="请输入" autocomplete="off">
+                <input name="name" id="txtName" class="layui-input" maxlength="20" type="text" placeholder="请输入" autocomplete="off">
             </div>
             <label class="layui-form-label">报警类型</label>
             <div class="layui-input-inline">
-                <select name="type" style="width:100px">
+                <select name="type" id="slType" style="width: 100px">
                     <option value="0">请选择</option>
                     <option value="1">安全帽</option>
                     <option value="2">手机</option>
@@ -250,7 +218,7 @@
                 <input name="endTime" class="layui-input" id="dtEndTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off" readonly>
             </div>
             <button class="layui-btn" type="submit" lay-submit="" lay-filter="query">查询</button>
-            <button class="layui-btn" type="submit" lay-submit="" lay-filter="export">导出</button>
+            <a href="#"  onclick="Export()" class="layui-btn">导出</a>
         </div>
     </form>
     <table class="layui-table" id="alarmTable" layer-filter="alarmTable"></table>

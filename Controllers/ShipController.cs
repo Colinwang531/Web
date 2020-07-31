@@ -168,15 +168,14 @@ namespace ShipWeb.Controllers
                 }
                 #region 船舶端修改船状态
                 if (!string.IsNullOrEmpty(id))
-                {
-                   
+                {                   
                     var ship = _context.Ship.FirstOrDefault(c => c.Id == id);
                     if (ship != null)
                     {
                         ship.Name = name;
                         ship.type = (Ship.Type)type;
                         //航行类型为：自动时，默认状态为停港
-                        ship.Flag = type == 0 ? false : true;
+                        ship.Flag = type == 1 ? true : false;
                     }
                     _context.Ship.Update(ship);
                     _context.SaveChanges();
@@ -185,12 +184,16 @@ namespace ShipWeb.Controllers
                         type = ShipWeb.ProtoBuffer.Models.StatusRequest.Type.SAIL,
                         flag = type
                     };
-                    var result= manager.StatussSet(sr, ship.Id);
-                    if (result.result==0)
+                    if (type==(int)Ship.Type.AUTO)
                     {
-                        ship.Flag = result.flag;
-                        _context.Ship.Update(ship);
-                        _context.SaveChanges();
+                        var result = manager.StatussSet(sr, ship.Id);
+                        if (result.result == 0)
+                        {
+                            ship.Flag = result.flag;
+                            _context.Ship.Update(ship);
+                            _context.SaveChanges();
+                        }
+
                     }
                     if (ship.Name != name)
                     {

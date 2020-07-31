@@ -33,7 +33,7 @@ namespace ShipWeb.Models
         /// <summary>
         /// 报警信息ID
         /// </summary>
-        public string AlarmInfoId { get; set; }
+        public string AlarmId { get; set; }
         /// <summary>
         /// 船表主键id
         /// </summary>

@@ -46,6 +46,7 @@ namespace ShipWeb.Controllers
                 //陆地端过来不显示报警信息
                 ManagerHelp.IsShowAlarm = false;
                 ViewBag.LoginName = base.user.Name;
+                ViewBag.src = "/Device/Index";
             }
             ViewBag.IsLandHome = base.user.IsLandHome;
             ViewBag.IsShowLayout = isShow;

@@ -1,10 +1,13 @@
 ﻿
+using ShipWeb.Helpers;
+using ShipWeb.Models;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -51,7 +54,7 @@ namespace ShipWeb.Tool
         /// <returns></returns>
         public static byte[] DrawAlarm(byte[] bytes, int x, int y, int w, int h)
         {
-            byte[] byt = Convert.FromBase64String(Encoding.UTF8.GetString(bytes));
+            byte[] byt = bytes; //Convert.FromBase64String(Encoding.UTF8.GetString(bytes));
             try
             {
                 using (var stream = new MemoryStream(byt, 0, byt.Length, false, true))
@@ -67,6 +70,57 @@ namespace ShipWeb.Tool
             {
                 return byt;
             }
+        }
+        /// <summary>
+        /// 组合Html
+        /// </summary>
+        /// <param name="list"></param>
+        /// <param name="time"></param>
+        /// <returns></returns>
+        public static string GetHtml(List<AlarmViewModel> list, string time,string shipName) 
+        {
+            string commpany= AppSettingHelper.GetSectionValue("Company");
+            var sb = new StringBuilder();
+            sb.Append(@"<html>
+                            <head>
+                              <meta charset='UTF-8'>
+                              <title></title>   
+                            <style> 
+                                table{
+    	                            cellspacing='0',
+                                    cellpadding = '0'
+                                }
+                                table td
+                                {
+                                  border-right:1px solid #666;border-top:1px solid #666
+                                } 
+                            </style>
+                            </head>
+                              <body>
+                                <div></div>
+                                <table style='width:100%;font-size:20px;border:1px solid #666'>
+                                  <tr style='background-color:dimgrey;height: 50px;'>
+                                    <th>船名</th>                                 
+                                    <th>所属公司</th>                                 
+                                    <th>报警时间</th>
+                                  </tr>
+                                  <tr style='height: 40px;'>
+                                    <td>" + shipName + @"</td>
+                                    <td>" + commpany + @"</td>
+                                    <td>" + time + "</td></tr> </table>");
+            foreach (var item in list)
+            {
+                string typeView = "未配带安全帽";
+                if (item.Type == 2) typeView = "打电话";
+                if (item.Type == 3) typeView = "睡觉";
+                if (item.Type == 4) typeView = "打架";
+                sb.AppendLine("<label style='font-size:26px'>报警类型： " + typeView + "</label><br/>");
+                sb.AppendLine("<label style='font-size:26px'>报警区域： " + item.NickName + "</label><br/>");
+                byte[] pic = DrawAlarm(item.Picture, item.X, item.Y, item.W, item.H);
+                sb.AppendLine("<img style='width: 960px; height: 540px'  src='data:image/jpeg;base64," + Convert.ToBase64String(pic) + "'/><br/>");
+            }
+            sb.AppendLine("</body> </html>");
+            return sb.ToString();
         }
     }
 }

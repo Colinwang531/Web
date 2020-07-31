@@ -14,25 +14,26 @@
         var DISABLED = 'layui-btn-disabled';
         var tableIns = table.render({
             elem: '#userTable',   //渲染的目标对象
+            width:800,
             url: '/User/Load', //数据接口
             toolbar: "#userToolBar",   //表格的工具条
+            defaultToolbar: [],
             page: false,  //是否启用分页
             cols: [[   //列表数据
-                { field: 'name', title: '用户名', width: 220, sort: true, align: 'center' },
+                { field: 'name', title: '用户名', align: 'center' },
                 {
-                    field: 'enableConfigure', title: '配置权限标识', align: 'center', width: 220, templet: function (d) {
+                    field: 'enableConfigure', title: '配置权限标识', align: 'center', templet: function (d) {
                         return d.enableConfigure == true ? '是' : '否';
                     }
                 },
                 {
-                    field: 'enablequery', title: '配置查询标识', align: 'center', width: 220, templet: function (d) {
+                    field: 'enablequery', title: '配置查询标识', align: 'center', templet: function (d) {
                         return d.enablequery == true ? '是' : '否';
                     }
                 },
-                { fixed: 'right', title: '操作', toolbar: '#userBar', width: 220, align: 'center' }
+                { fixed: 'right', title: '操作', toolbar: '#userBar', align: 'center' }
             ]],
             done: function () {
-
             }
         });
         //监听头部工具栏事件

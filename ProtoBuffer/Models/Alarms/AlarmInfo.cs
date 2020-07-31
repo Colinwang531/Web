@@ -43,8 +43,27 @@ namespace ShipWeb.ProtoBuffer.Models
 		[ProtoMember (1)]
 		public Type type = Type.SLEEP;
 		[ProtoMember(2)]
-		public List<AlarmPosition> position { get; set; }
+		/// <summary>
+		/// 摄像机ID
+		/// </summary>
+		public string cid { get; set; }
+
 		[ProtoMember(3)]
+		/// <summary>
+		/// 报警时间
+		/// </summary>
+		public string time { get; set; }
+
+		[ProtoMember(4)]
+		/// <summary>
+		/// 报警图片
+		/// </summary>
+		public string picture { get; set; }
+
+		[ProtoMember(5)]
+		public List<AlarmPosition> position { get; set; }
+
+		[ProtoMember(6)]
 		public string uid { get; set; }
     }
 	/// <summary>

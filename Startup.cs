@@ -18,6 +18,9 @@ using Microsoft.Extensions.FileProviders;
 using System.IO;
 using Microsoft.AspNetCore.Mvc;
 using ShipWeb.Helpers;
+using DinkToPdf.Contracts;
+using DinkToPdf;
+using ShipWeb.Interface;
 
 namespace ShipWeb
 {
@@ -51,7 +54,10 @@ namespace ShipWeb
             services.AddSingleton<IHostedService, HeartService>();
             //×¢²á±¨¾¯
             services.AddSingleton<IHostedService, AlarmService>();
-            services.AddCors();
+            //DinkToPdf×¢Èë
+            services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
+            services.AddTransient<IPDFService, PDFService>();
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
