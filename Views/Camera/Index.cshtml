@@ -12,6 +12,7 @@
         var $ = layui.$;
         var table = layui.table;
         var form = layui.form;
+        var DISABLED = 'layui-btn-disabled';
         var layIndex;
         var tableIns = table.render({
             elem: "#tbCamers",
@@ -53,6 +54,7 @@
             }
         });
         form.on("submit(doSubmit)", function (frm) {
+            $('#btnSubmit').attr('disabled', 'disabled').addClass(DISABLED);
             var data = {
                 id: frm.field.id,
                 did: $("#hidEmb").val(),
@@ -66,6 +68,7 @@
                 datatype: "json",
                 contenttype: "application/json;chartset=utf-8",
                 success: function (res) {
+                    $("#btnSubmit").removeAttr('disabled').removeClass(DISABLED);
                     if (res.code == 0) {
                         layer.msg("数据保存成功", { icon: 1 });
                         tableIns.reload();

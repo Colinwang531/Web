@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using NetMQ;
 using ProtoBuf;
 using ShipWeb.DB;
@@ -17,9 +18,12 @@ namespace ShipWeb.Controllers
     {
         private readonly MyContext _context;
         private ProtoBuffer.ProtoManager manager = new ProtoBuffer.ProtoManager();
-        public CameraController(MyContext context)
+        private int timeout = 5000;//请求超时时间 单位秒
+        private ILogger<CameraController> _logger;
+        public CameraController(MyContext context, ILogger<CameraController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         // GET: Cameras
@@ -89,23 +93,26 @@ namespace ShipWeb.Controllers
                                },
                             did = did
                         };
-                        var code = manager.DeveiceUpdate(emb, did, base.user.ShipId);
-                        return new JsonResult(new { code = code, msg = code == 1 ? "数据修改失败" : "数据修改成功" });
+                        new TaskFactory().StartNew(() => {
+                            var code = manager.DeveiceUpdate(emb, did, base.user.ShipId);
+                            return new JsonResult(new { code = code, msg = code == 1 ? "数据修改失败" : "数据修改成功" });
+                        }).Wait(timeout);
                     }
-
-                    Camera camera = _context.Camera.FirstOrDefault(c => c.Id == id);
-                    if (camera == null)
+                    else
                     {
-                        return new JsonResult(new { code = 1, msg = "数据不存在" });
-                    }
-                    camera.NickName = nickName;
-                    camera.Enalbe = enalbe == "1" ? true : false;
-                    var embModel = _context.Device.FirstOrDefault(e => e.Id == camera.DeviceId);
-                    if (embModel != null)
-                    {
-                        ProtoBuffer.Models.DeviceInfo emb = new ProtoBuffer.Models.DeviceInfo()
+                        Camera camera = _context.Camera.FirstOrDefault(c => c.Id == id);
+                        if (camera == null)
                         {
-                            camerainfos = new List<ProtoBuffer.Models.CameraInfo>() {
+                            return new JsonResult(new { code = 1, msg = "数据不存在" });
+                        }
+                        camera.NickName = nickName;
+                        camera.Enalbe = enalbe == "1" ? true : false;
+                        var embModel = _context.Device.FirstOrDefault(e => e.Id == camera.DeviceId);
+                        if (embModel != null)
+                        {
+                            ProtoBuffer.Models.DeviceInfo emb = new ProtoBuffer.Models.DeviceInfo()
+                            {
+                                camerainfos = new List<ProtoBuffer.Models.CameraInfo>() {
                                  new ProtoBuffer.Models.CameraInfo(){
                                  cid=camera.Id,
                                  index=camera.Index,
@@ -114,18 +121,26 @@ namespace ShipWeb.Controllers
                                  nickname=camera.NickName
                                  }
                                },
-                            did = embModel.IP
+                                did = embModel.IP
+                            };
+                            new TaskFactory().StartNew(() =>
+                            {
+                                int result = manager.DeveiceUpdate(emb, embModel.Id, base.user.ShipId);
+                                if (result == 0)
+                                {
+                                    _context.Update(camera);
+                                    _context.SaveChangesAsync();
+                                    return new JsonResult(new { code = 0, msg = "数据修改成功" });
+                                }
+                                return new JsonResult(new { code = 1, msg = "数据修改失败" });
+                            }).Wait(timeout);
                         };
-                        Task.Factory.StartNew(state =>
-                        {
-                            manager.DeveiceUpdate(emb, embModel.Id,base.user.ShipId);
-                        }, TaskCreationOptions.LongRunning);
-                        _context.Update(camera);
-                        _context.SaveChangesAsync();
-                    };
+                    }
+                    return new JsonResult(new { code = 1, msg = "请求超时。。。" });
                 }
                 catch (Exception ex)
                 {
+                    _logger.LogError("修改摄像机信息失败", "Save(" + id + "," + did + "," + nickName + "," + enalbe + ")");
                     return new JsonResult(new { code = 1, msg = "数据保存失败！" + ex.Message });
                 }
 

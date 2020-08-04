@@ -11,14 +11,17 @@ using Microsoft.AspNetCore.Mvc.Filters;
 using System.Security;
 using System.Runtime.InteropServices;
 using System.Threading;
+using ShipWeb.DB;
+using ShipWeb.Tool;
+using Microsoft.Extensions.Logging;
 
 namespace ShipWeb.ProtoBuffer
 {
     public class ProtoManager
     {
-        private static DealerSocket dealer = null;
+        public static DealerSocket dealer = null;
         private static object dealer_Lock = new object(); //锁同步
-        public static string IP = "tcp://192.168.0.2:61001";//接收从main入口过来的url
+        public static string IP = "tcp://192.168.0.22:61001";//接收从main入口过来的url
         private static ProtoBDManager dbManager = new ProtoBDManager();
         //int aa;
         //单例控制dealer只有一个。
@@ -63,8 +66,46 @@ namespace ShipWeb.ProtoBuffer
                 }
             };
             if (!string.IsNullOrEmpty(cid)) msg.component.componentrequest.componentinfo.cid = cid;
-            retult = DataMessage(msg, dealer);
+            SendMessage(msg);
+            //Task.Factory.StartNew(state => {
+            //    ReceiveMessage(dealer);
+            //}, TaskCreationOptions.LongRunning);
+            //retult = DataMessage(msg, dealer);
             return retult;
+        }
+        /// <summary>
+        /// 心跳
+        /// </summary>
+        /// <param name="identity"></param>
+        /// <param name="type"></param>
+        /// <param name="name"></param>
+        /// <param name="cid"></param>
+        public void Heart(string identity, ComponentInfo.Type type, string name = "组件1", string cid = "")
+        {
+            ComponentResponse retult = new ComponentResponse();
+            dealer.Options.Identity = Encoding.UTF8.GetBytes(identity);
+
+            //组件注册消息整理
+            MSG msg = new MSG()
+            {
+                type = MSG.Type.COMPONENT,
+                timestamp = ProtoBufHelp.TimeSpan(),
+                sequence = 1,
+                component = new Component()
+                {
+                    command = Component.Command.SIGNIN_REQ,
+                    componentrequest = new ComponentRequest()
+                    {
+                        componentinfo = new ComponentInfo()
+                        {
+                            type = type,
+                            cname = name
+                        },
+                    }
+                }
+            };
+            if (!string.IsNullOrEmpty(cid)) msg.component.componentrequest.componentinfo.cid = cid;
+            SendMessage(msg);
         }
         /// <summary>
         /// 递归处理消息
@@ -127,7 +168,7 @@ namespace ShipWeb.ProtoBuffer
             {
                 type = MSG.Type.COMPONENT,
                 timestamp = ProtoBufHelp.TimeSpan(),
-                sequence = 3,
+                sequence = 1,
                 component = new Component()
                 {
                     command = Component.Command.SIGNOUT_REQ,
@@ -158,7 +199,7 @@ namespace ShipWeb.ProtoBuffer
             {
                 type = MSG.Type.COMPONENT,
                 timestamp = ProtoBufHelp.TimeSpan(),
-                sequence = 5,
+                sequence = 1,
                 component = new Component()
                 {
                     command = Component.Command.QUERY_REP
@@ -212,9 +253,9 @@ namespace ShipWeb.ProtoBuffer
         private int ConfigureSetMessage(MSG msg, DealerSocket dealer)
         {
             int result = 1;
-            //SendMessage(msg);
-            //MSG revMsg = ReceiveMessage(dealer);
-            MSG revMsg = msg;
+            SendMessage(msg);
+            MSG revMsg = ReceiveMessage(dealer);
+            //MSG revMsg = msg;
             if (revMsg.type == MSG.Type.ALGORITHM)
             {
                 Algorithm algMsg = revMsg.algorithm;
@@ -272,9 +313,9 @@ namespace ShipWeb.ProtoBuffer
         private List<AlgorithmInfo> ConfigureMessage(MSG msg, DealerSocket dealer)
         {
             List<AlgorithmInfo> list = new List<AlgorithmInfo>();
-            //SendMessage(msg);
-            //MSG revMsg = ReceiveMessage(dealer);
-            MSG revMsg = msg;
+            SendMessage(msg);
+            MSG revMsg = ReceiveMessage(dealer);
+            //MSG revMsg = msg;
             if (revMsg.type == MSG.Type.ALGORITHM)
             {
                 Algorithm algMsg = revMsg.algorithm;
@@ -346,9 +387,9 @@ namespace ShipWeb.ProtoBuffer
         private List<CrewInfo> EmployeeMessage(MSG msg, DealerSocket dealer)
         {
             List<CrewInfo> list = new List<CrewInfo>();
-            //SendMessage(msg);
-            //MSG revMsg = ReceiveMessage(dealer);
-            MSG revMsg = msg;
+            SendMessage(msg);
+            MSG revMsg = ReceiveMessage(dealer);
+            //MSG revMsg = msg;
             if (revMsg.type == MSG.Type.CREW)
             {
                 Crew crewMsg = revMsg.crew;
@@ -414,9 +455,9 @@ namespace ShipWeb.ProtoBuffer
         private int CrewAddMessage(MSG msg, DealerSocket dealer)
         {
             int result = 1;
-            //SendMessage(msg);
-            //MSG revMsg = ReceiveMessage(dealer);
-            MSG revMsg = msg;
+            SendMessage(msg);
+            MSG revMsg = ReceiveMessage(dealer);
+            //MSG revMsg = msg;
             if (revMsg.type == MSG.Type.CREW)
             {
                 Crew crewMsg = revMsg.crew;
@@ -479,9 +520,9 @@ namespace ShipWeb.ProtoBuffer
         private int CrewUpdateMessage(MSG msg, DealerSocket dealer)
         {
             int result = 1;
-            //SendMessage(msg);
-            //MSG revMsg = ReceiveMessage(dealer);
-            MSG revMsg = msg;
+            SendMessage(msg);
+            MSG revMsg = ReceiveMessage(dealer);
+            //MSG revMsg = msg;
             if (revMsg.type == MSG.Type.CREW)
             {
                 Crew crewMsg = revMsg.crew;
@@ -545,9 +586,9 @@ namespace ShipWeb.ProtoBuffer
         private int CrewDeleteMessage(MSG msg, DealerSocket dealer)
         {
             int result = 1;
-            //SendMessage(msg);
-            //MSG revMsg = ReceiveMessage(dealer);
-            MSG revMsg = msg;
+            SendMessage(msg);
+            MSG revMsg = ReceiveMessage(dealer);
+            //MSG revMsg = msg;
             if (revMsg.type == MSG.Type.CREW)
             {
                 Crew crewMsg = revMsg.crew;
@@ -615,9 +656,9 @@ namespace ShipWeb.ProtoBuffer
         private List<DeviceInfo> DeviceMessage(MSG msg, DealerSocket dealer)
         {
             List<DeviceInfo> list = new List<DeviceInfo>();
-            //SendMessage(msg);
-            //MSG revMsg = ReceiveMessage(dealer);
-            MSG revMsg = msg;
+            SendMessage(msg);
+            MSG revMsg = ReceiveMessage(dealer);
+            //MSG revMsg = msg;
             if (revMsg.type == MSG.Type.DEVICE)
             {
                 Device devMsg = revMsg.device;
@@ -625,7 +666,7 @@ namespace ShipWeb.ProtoBuffer
                 {
                     if (devMsg.deviceresponse.result == 0)
                     {
-                        return list = devMsg.deviceresponse.embedded;
+                        return list = devMsg.deviceresponse.deviceinfos;
                     }
                 }
                 else if (devMsg.command == Device.Command.QUERY_REQ)
@@ -645,7 +686,7 @@ namespace ShipWeb.ProtoBuffer
                             deviceresponse = new DeviceResponse()
                             {
                                 did = did,
-                                embedded = list,
+                                deviceinfos = list,
                                 result = 0
                             }
                         }
@@ -678,15 +719,16 @@ namespace ShipWeb.ProtoBuffer
                     }
                 }
             };
+            //SendMessage(msg);
             result = DeveiceAddMessage(msg, dealer);
             return result;
         }
         private DeviceResponse DeveiceAddMessage(MSG msg, DealerSocket dealer)
         {
             DeviceResponse result = new DeviceResponse();
-            //SendMessage(msg);
-           // MSG revMsg = ReceiveMessage(dealer);
-            MSG revMsg = msg;
+            SendMessage(msg);
+            MSG revMsg = ReceiveMessage(dealer);
+            //MSG revMsg = msg;
             if (revMsg.type == MSG.Type.DEVICE)
             {
                 Device devMsg = revMsg.device;
@@ -753,9 +795,9 @@ namespace ShipWeb.ProtoBuffer
         private int DeveiceUpdateMessage(MSG msg, DealerSocket dealer)
         {
             int result = 1;
-            //SendMessage(msg);
-            //MSG revMsg = ReceiveMessage(dealer);
-            MSG revMsg = msg;
+            SendMessage(msg);
+            MSG revMsg = ReceiveMessage(dealer);
+            //MSG revMsg = msg;
             if (revMsg.type == MSG.Type.DEVICE)
             {
                 Device devMsg = revMsg.device;
@@ -817,9 +859,9 @@ namespace ShipWeb.ProtoBuffer
         private int DeveiceDeleteMessage(MSG msg, DealerSocket dealer)
         {
             int result = 1;
-            //SendMessage(msg);
-            //MSG revMsg = ReceiveMessage(dealer);
-            MSG revMsg = msg;
+            SendMessage(msg);
+            MSG revMsg = ReceiveMessage(dealer);
+            //MSG revMsg = msg;
             if (revMsg.type == MSG.Type.DEVICE)
             {
                 Device devMsg = revMsg.device;
@@ -863,11 +905,12 @@ namespace ShipWeb.ProtoBuffer
         /// <returns></returns>
         public StatusResponse StatussSet(StatusRequest request, string identity)
         {
+            StatusResponse result = new StatusResponse();
             dealer.Options.Identity = Encoding.UTF8.GetBytes(identity);
             MSG msg = new MSG()
             {
                 type = MSG.Type.STATUS,
-                sequence = 5,
+                sequence = 3,
                 timestamp = ProtoBufHelp.TimeSpan(),
                 status = new Status()
                 {
@@ -875,15 +918,16 @@ namespace ShipWeb.ProtoBuffer
                     statusrequest = request
                 }
             };
-            var result = StatusSetMessage(msg, dealer);
+            //SendMessage(msg);
+            result = StatusSetMessage(msg, dealer);
             return result;
         }
         private StatusResponse StatusSetMessage(MSG msg, DealerSocket dealer) 
         {
             StatusResponse result = new StatusResponse();
-            //SendMessage(msg);
-            //MSG revMsg = ReceiveMessage(dealer);
-            MSG revMsg = msg;
+            SendMessage(msg);
+            MSG revMsg = ReceiveMessage(dealer);
+            //MSG revMsg = msg;
             if (revMsg.type == MSG.Type.STATUS)
             {
                 Status staMsg = revMsg.status;
@@ -928,7 +972,7 @@ namespace ShipWeb.ProtoBuffer
             MSG msg = new MSG()
             {
                 type = MSG.Type.STATUS,
-                sequence = 5,
+                sequence = 3,
                 timestamp = ProtoBufHelp.TimeSpan(),
                 status = new Status()
                 {
@@ -941,9 +985,9 @@ namespace ShipWeb.ProtoBuffer
         private StatusResponse StatusQueryMessage(MSG msg, DealerSocket dealer) 
         {
             StatusResponse result = new StatusResponse();
-            //SendMessage(msg);
-            //MSG revMsg = ReceiveMessage(dealer);
-            MSG revMsg = msg;
+            SendMessage(msg);
+            MSG revMsg = ReceiveMessage(dealer);
+            //MSG revMsg = msg;
             if (revMsg.type == MSG.Type.STATUS)
             {
                 Status staMsg = revMsg.status;
@@ -1306,9 +1350,41 @@ namespace ShipWeb.ProtoBuffer
                 //发送注册请求
                 dealer.SendMultipartMessage(mqmsg);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+              
+            }
+            //dealer.ReceiveReady += Dealer_ReceiveReady;
+        }
 
+        private void Dealer_ReceiveReady(object sender, NetMQSocketEventArgs e)
+        {
+            List<byte[]> list = e.Socket.ReceiveMultipartBytes();
+            List<byte> byteSource = new List<byte>();
+            foreach (var item in list)
+            {
+                byteSource.AddRange(item);
+            }
+            byte[] mory = byteSource.ToArray();
+            MSG revmsg = ProtoBufHelp.DeSerialize<MSG>(mory);
+            if (revmsg.type == MSG.Type.ALARM)
+            {
+                ProtoBDManager.AlarmAdd(revmsg);
+            }
+            else if (revmsg.type == MSG.Type.COMPONENT)
+            {
+                byte[] by = dealer.Options.Identity;
+                string shipId = Encoding.UTF8.GetString(by);
+                ProtoBDManager.ComponentAdd(revmsg.component.componentresponse.cid, "组件1", shipId);
+            }
+            else if (revmsg.type == MSG.Type.DEVICE)
+            {
+                byte[] by = dealer.Options.Identity;
+                string shipId = Encoding.UTF8.GetString(by);
+                if (revmsg.device.command == Device.Command.NEW_REQ)
+                {
+                    ProtoBDManager.DeviceAdd(shipId, revmsg.device.deviceresponse.deviceinfos[0]);
+                }
             }
         }
 
@@ -1317,7 +1393,7 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="dealer"></param>
         /// <returns></returns>
-        private MSG ReceiveMessage(DealerSocket dealer)
+        public MSG ReceiveMessage(DealerSocket dealer)
         {
             bool flag = true;
             StringBuilder sb = new StringBuilder();
@@ -1342,8 +1418,11 @@ namespace ShipWeb.ProtoBuffer
             }
             byte[] mory = byteSource.ToArray();
             MSG revmsg = ProtoBufHelp.DeSerialize<MSG>(mory);
+            if (revmsg.type == MSG.Type.ALARM)
+            {
+                ProtoBDManager.AlarmAdd(revmsg);
+            }
             return revmsg;
         }
-
     }
 }

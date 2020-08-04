@@ -1,8 +1,10 @@
-﻿using Org.BouncyCastle.Crypto.Tls;
+﻿using Org.BouncyCastle.Asn1.X509;
+using Org.BouncyCastle.Crypto.Tls;
 using Org.BouncyCastle.Ocsp;
 using ShipWeb.DB;
 using ShipWeb.Models;
 using ShipWeb.ProtoBuffer.Models;
+using ShipWeb.Tool;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -57,6 +59,32 @@ namespace ShipWeb.ProtoBuffer
             }
         }
 
+        public static void ComponentAdd(string cid,string name,string shipId) 
+        {
+            using (var context = new MyContext())
+            {
+                var comp = context.Component.FirstOrDefault(c => c.ShipId == shipId);
+                if (comp == null)
+                {
+                    ShipWeb.Models.Component model = new ShipWeb.Models.Component()
+                    {
+                        Id = cid,
+                        Name = name,
+                        Type = ShipWeb.Models.Component.ComponentType.WEB,
+                        ShipId = shipId
+                    };
+                    ManagerHelp.Cid =cid;
+                    context.Component.Add(model);
+                    context.SaveChanges();
+                }
+                else
+                {
+                    ManagerHelp.Cid = comp.Id;
+                }
+
+            }
+           
+        }
         /// <summary>
         /// 查询所有设备
         /// </summary>
@@ -719,6 +747,126 @@ namespace ShipWeb.ProtoBuffer
                 var ship = context.Ship.FirstOrDefault(c => c.Id == shipId);
                 return ship; 
             }
+        }
+        /// <summary>
+        /// 报警考勤入库
+        /// </summary>
+        /// <param name="msg"></param>
+        /// <param name="cid"></param>
+        public static void AlarmAdd(MSG msg)
+        {
+            using (var context = new MyContext())
+            {
+                var ship = context.Component.FirstOrDefault(c => c.Id == ManagerHelp.Cid);
+                string shipId = ship.Id;
+                string identity = Guid.NewGuid().ToString();
+                if (msg != null && msg.type == MSG.Type.ALARM && msg.alarm != null)
+                {
+                    var alarm = msg.alarm.alarminfo;
+                    if (alarm.type == ProtoBuffer.Models.AlarmInfo.Type.ATTENDANCE_IN || alarm.type == ProtoBuffer.Models.AlarmInfo.Type.ATTENDANCE_OUT)
+                    {
+                        #region 考勤信息入库
+                        ShipWeb.Models.Attendance attendance = new Attendance()
+                        {
+                            Behavior = alarm.type == ProtoBuffer.Models.AlarmInfo.Type.ATTENDANCE_IN ? 0 : 1,
+                            Id = identity,
+                            CameraId = alarm.cid,
+                            ShipId = shipId,
+                            Time = Convert.ToDateTime(alarm.time),
+                            CrewId = alarm.uid,
+                            attendancePictures = new List<AttendancePicture>()
+                                        {
+                                            new AttendancePicture ()
+                                            {
+                                                 AttendanceId=identity,
+                                                 Id=Guid.NewGuid().ToString(),
+                                                 Picture= Encoding.UTF8.GetBytes(alarm.picture),
+                                                 ShipId=shipId
+                                            }
+                                        }
+                        };
+                        context.Attendance.Add(attendance);
+                        #endregion
+                    }
+                    else
+                    {
+                        #region 报警信息入库
+                        ShipWeb.Models.Alarm model = new ShipWeb.Models.Alarm()
+                        {
+                            Id = identity,
+                            Picture = Encoding.UTF8.GetBytes(alarm.picture),
+                            Time = Convert.ToDateTime(alarm.time),
+                            ShipId = shipId,
+                            Cid = alarm.cid,
+                            Type = (ShipWeb.Models.Alarm.AlarmType)alarm.type,
+                            Uid = alarm.uid
+                        };
+                        var replist = alarm.position;
+                        if (replist.Count > 0)
+                        {
+                            foreach (var item in replist)
+                            {
+
+                                ShipWeb.Models.AlarmPosition position = new ShipWeb.Models.AlarmPosition()
+                                {
+                                    AlarmId = model.Id,
+                                    ShipId = shipId,
+                                    Id = Guid.NewGuid().ToString(),
+                                    H = item.h,
+                                    W = item.w,
+                                    X = item.x,
+                                    Y = item.y
+                                };
+                                model.alarmPositions.Add(position);
+                            }
+                        }
+                        context.Alarm.Add(model);
+                        #endregion
+                    }
+                    context.SaveChanges();
+                }
+            }
+        }
+
+        /// <summary>
+        /// 查询船舶端报警消息
+        /// </summary>
+        /// <param name="dtStart"></param>
+        /// <param name="endTime"></param>
+        /// <returns>protobuf报警消息</returns>
+        public static List<AlarmInfo> GetAlarmInfo(string shipId,DateTime dtStart, DateTime dtEnd) 
+        {
+            List<AlarmInfo> list = new List<AlarmInfo>();
+            using (var context=new MyContext())
+            {
+                var alarms = context.Alarm.Where(c => c.ShipId == shipId && c.Time >= dtStart && c.Time <= dtEnd).ToList();
+                var ids = string.Join(',', alarms.Select(c => c.Id));
+                var postions = context.AlarmPosition.Where(c => ids.Contains(c.AlarmId)).ToList();
+                foreach (var item in alarms)
+                {
+                    AlarmInfo info=new AlarmInfo()
+                    {
+                        cid = item.Cid,
+                        time = item.Time.ToString("yyyy-MM-dd HH24:mm:ss"),
+                        type = (AlarmInfo.Type)item.Type,
+                        position = new List<Models.AlarmPosition>(),
+                        picture=Encoding.UTF8.GetString(item.Picture)
+                    };
+                    var pos = postions.Where(c => c.AlarmId == item.Id);
+                    foreach (var poitem in pos)
+                    {
+                        info.position.Add(new Models.AlarmPosition()
+                        {
+                             w=poitem.W,
+                             h=poitem.H,
+                             x=poitem.X,
+                             y=poitem.Y
+                        });
+                    }
+                    list.Add(info);
+                }
+            }
+            return list;
         }
     }
 }

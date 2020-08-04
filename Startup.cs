@@ -86,6 +86,7 @@ namespace ShipWeb
                     name: "default",
                     pattern: "{controller=Login}/{action=Index}/{id?}");
             });
+            
             app.UseCors();
         }
     }

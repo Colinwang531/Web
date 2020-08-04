@@ -24,17 +24,14 @@ namespace ShipWeb
         /// </summary>
         public static void Init()
         {
-            using (var context=new MyContext())
+            using (var context = new MyContext())
             {
                 var comList = context.Component.ToList();
-                if (comList.Count == 0)
-                {
-                    Component();
-                }
-                else
+                if (comList.Count>0)
                 {
                     ManagerHelp.Cid = comList[0].Id;
                 }
+                Component();
             }
         }
         /// <summary>
@@ -42,12 +39,10 @@ namespace ShipWeb
         /// </summary>
         private static void Component()
         {
-            Task.Factory.StartNew(state =>
-            {
+            Task.Factory.StartNew(state => {
                 using (var context = new MyContext())
                 {
                     //发送组件注册
-                    string iditity = Guid.NewGuid().ToString();
                     var ship = context.Ship.FirstOrDefault();
                     string shipId = Guid.NewGuid().ToString();
                     if (ship == null)
@@ -67,37 +62,142 @@ namespace ShipWeb
                         shipId = ship.Id;
                     }
                     string name = "组件1";
-                    var protoId = iditity + "," + shipId;
-                    ComponentResponse rep = manager.ComponentStart(iditity, ComponentInfo.Type.WEB, name);
-                    if (rep != null && rep.result == 0)
+                    manager.ComponentStart(shipId, ComponentInfo.Type.WEB, name, ManagerHelp.Cid);
+                    if (string.IsNullOrEmpty(ManagerHelp.Cid))
                     {
-                        Models.Component model = new Models.Component()
+                        //超时时间 等10秒
+                        int timeout = 10000;
+                        new TaskFactory().StartNew(() => {
+                            var msg = manager.ReceiveMessage(ProtoManager.dealer);
+                            ComponentResponse rep = msg.component.componentresponse;
+                            if (rep != null && rep.result == 0)
+                            {
+                                var comp = context.Component.FirstOrDefault(c => c.ShipId == shipId);
+                                if (comp == null)
+                                {
+                                    Models.Component model = new Models.Component()
+                                    {
+                                        Id = rep.cid,
+                                        Name = name,
+                                        Type = Models.Component.ComponentType.WEB,
+                                        ShipId = shipId
+                                    };
+                                    ManagerHelp.Cid = rep.cid;
+                                    context.Component.Add(model);
+                                    context.SaveChanges();
+                                }
+                            }
+                            else
+                            {
+                                //注册失败后继续发送注册请求
+                                Component(); 
+                            }
+                        }).Wait(timeout);
+                        //超时后继续注册
+                        Component();
+                    }
+                    using (var cont = new MyContext())
+                    {
+                        //注册成功推送状态
+                        var shipdb = cont.Ship.FirstOrDefault();
+                        StatusRequest request = new StatusRequest()
                         {
-                            Id = iditity,
-                            Name = name,
-                            Type = Models.Component.ComponentType.WEB,
-                            ShipId = shipId
+                            type = StatusRequest.Type.SAIL,
+                            flag = (int)shipdb.type
                         };
-                        ManagerHelp.Cid = rep.cid;
-
-                        context.Component.Add(model);
-                        context.SaveChanges();
+                        manager.StatussSet(request, shipdb.Id);
+                        //发送设备信息
+                        int result=GetDevice();
+                        if (result==0)
+                        {
+                            //发送算法信息
+                            GetAlgorithm();
+                        }
                     }
                 }
             }, TaskCreationOptions.LongRunning);
+        }
+        /// <summary>
+        /// 设备请求
+        /// </summary>
+        private static int GetDevice() 
+        {
+            int result = 0;
+            using (var context=new MyContext())
+            {
+                var dev = context.Device.ToList();
+                var ids = string.Join(',', dev.Select(c => c.Id));
+                var cam = context.Camera.Where(c => ids.Contains(c.DeviceId)).ToList();
+                foreach (var item in dev)
+                {
+                    ProtoBuffer.Models.DeviceInfo emb = new ProtoBuffer.Models.DeviceInfo()
+                    {
+                        ip = item.IP,
+                        name = item.Name,
+                        password = item.Password,
+                        port = item.Port,
+                        nickname = item.Nickname,
+                        factory = (ProtoBuffer.Models.DeviceInfo.Factory)item.factory,
+                        type = (ProtoBuffer.Models.DeviceInfo.Type)item.type,
+                        enable = item.Enable,
+                        did = item.Id
+                    };
+                    var cts = cam.Where(c => c.DeviceId == item.Id);
+                    emb.camerainfos = new List<CameraInfo>();
+                    foreach (var camera in cts)
+                    {
+                        emb.camerainfos.Add(new CameraInfo()
+                        {
+                            cid = camera.Id,
+                            index = camera.Index,
+                            enable = camera.Enalbe,
+                            ip = camera.IP,
+                            nickname = camera.NickName
+                        });
+                    }
+                    var res=manager.DeveiceAdd(emb, item.Id);
+                    if (res.result!=0)
+                    {
+                        result = res.result;
+                    }
+                }
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// 算法请求
+        /// </summary>
+        private static void GetAlgorithm() 
+        {
+            using (var context=new MyContext())
+            {
+                var algo = context.Algorithm.ToList();
+                foreach (var model in algo)
+                {
+                    ProtoBuffer.Models.AlgorithmInfo info = new ProtoBuffer.Models.AlgorithmInfo()
+                    {
+                        cid = model.Cid,
+                        gpu = model.GPU,
+                        similar = (float)model.Similar,
+                        dectectfirst = (float)model.DectectFirst,
+                        dectectsecond = (float)model.DectectSecond,
+                        track = (float)model.Track,
+                        type = (ProtoBuffer.Models.AlgorithmInfo.Type)model.Type
+                    };
+                    manager.AlgorithmSet(model.Id, info);
+                }
+            }
         }
         /// <summary>
         /// 心跳查询
         /// </summary>
         public static void HeartBeat()
         {
-            Task.Factory.StartNew(state =>
+            if (!string.IsNullOrEmpty(ManagerHelp.Cid))
             {
-                if (!string.IsNullOrEmpty(ManagerHelp.Cid))
-                {
-                    ComponentResponse rep = manager.ComponentStart(ManagerHelp.Cid, ComponentInfo.Type.WEB, "", ManagerHelp.Cid);
-                }
-            }, TaskCreationOptions.LongRunning);
+                manager.Heart(ManagerHelp.Cid, ComponentInfo.Type.WEB, "", ManagerHelp.Cid);
+            }
         }
         /// <summary>
         /// 组件退出

@@ -15,9 +15,9 @@
         load();
         form.on("select(type)", function (data) {
             if (data.value == 1) {
-                $("#txtStatus").val("航行");
+                $("#txtStatus").html("航行");
             } else {
-                $("#txtStatus").val("停港");
+                $("#txtStatus").html("停港");
             }
         });
         //监听提交
@@ -63,7 +63,7 @@
                                 "type": res.data.type
                             });
                             var status = res.data.flag ? "航行" : "停港";
-                            $("#txtStatus").val(status);
+                            $("#txtStatus").html(status);
                             form.render();
                         }
                         if (res.isSet) {
@@ -106,9 +106,7 @@
         <div>
             <div class="layui-inline">
                 <label class="layui-form-label">默认状态：</label>
-                <div class="layui-input-inline">
-                    <input type="text" id="txtStatus" readonly="readonly" autocomplete="off" class="layui-input" style="background-color:#EEEEEE">
-                </div>
+                <label id="txtStatus" class="layui-form-label" style="text-align:left"></label>
             </div>
         </div>
         <div class="layui-form-item">

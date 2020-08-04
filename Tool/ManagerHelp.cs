@@ -84,27 +84,51 @@ namespace ShipWeb.Tool
             sb.Append(@"<html>
                             <head>
                               <meta charset='UTF-8'>
-                              <title></title>   
-                            <style> 
-                                table{
-    	                            cellspacing='0',
-                                    cellpadding = '0'
-                                }
-                                table td
-                                {
-                                  border-right:1px solid #666;border-top:1px solid #666
-                                } 
-                            </style>
+                              <title></title>
+                                <style>
+                                    table{
+                                        border-collapse: collapse;
+                                        border-spacing: 0;
+    	                                border-color: grey;
+		                                border-left:1px solid #666;
+		                                border-bottom:1px solid #666;
+		                                border-top:1px solid #666;
+                                        background-color: #eee;
+		                                width:100%;
+		                                font-size: 26px
+                                    }
+                                    table td 
+                                    {
+                                        border-right:1px solid #666;
+		                                border-top:1px solid #666;
+                                        background-color: #fff;
+		                                text-algin:center;
+		                                padding-left: 20px;
+                                    } 
+                                    table th
+                                    {
+                                        border-right:1px solid #666;
+                                        border-top:1px solid #666;
+		                                text-align: left;
+		                                height:50px;
+		                                padding-left: 20px;
+                                    }
+                                    table tr {
+                                        transition: all.3s;
+		                                height:40px;
+                                        -webkit-transition: all.3s;
+                                    }
+                                </style>                    
                             </head>
                               <body>
                                 <div></div>
-                                <table style='width:100%;font-size:20px;border:1px solid #666'>
-                                  <tr style='background-color:dimgrey;height: 50px;'>
+                                <table>
+                                  <tr>
                                     <th>船名</th>                                 
                                     <th>所属公司</th>                                 
                                     <th>报警时间</th>
                                   </tr>
-                                  <tr style='height: 40px;'>
+                                  <tr>
                                     <td>" + shipName + @"</td>
                                     <td>" + commpany + @"</td>
                                     <td>" + time + "</td></tr> </table>");

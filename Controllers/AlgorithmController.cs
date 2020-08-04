@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Org.BouncyCastle.Asn1.Cms;
 using ShipWeb.DB;
 using ShipWeb.Models;
 using ShipWeb.ProtoBuffer;
@@ -15,9 +17,12 @@ namespace ShipWeb.Controllers
     {
         private MyContext _context;
         private ProtoManager manager=new ProtoManager ();
-        public AlgorithmController(MyContext context) 
+        private int timeout = 5000;//超时时间
+        private ILogger<AlgorithmController> _logger;
+        public AlgorithmController(MyContext context, ILogger<AlgorithmController> logger) 
         {
-            _context = context;        
+            _context = context;
+            _logger = logger;
         }
         public IActionResult Index()
         {
@@ -107,76 +112,88 @@ namespace ShipWeb.Controllers
                 var viewModel = JsonConvert.DeserializeObject<AlgorithmViewModel>(model);
                 if (viewModel != null)
                 {
-                    
                     if (base.user.IsLandHome)
                     {
                         ProtoBuffer.Models.AlgorithmInfo algorithm = GetProtoAlgorithm(viewModel);
-                        int res=manager.AlgorithmSet(shipId, algorithm);
-                        return new JsonResult(new { code = res, msg = res != 0 ? res==2? "一个摄像机只能设置考勤入或考勤出" : "数据修改失败" : "" });
-                    }                
-                    if (!string.IsNullOrEmpty(viewModel.Id))
-                    {
-                        //查看数据是否存在
-                        var algo = _context.Algorithm.FirstOrDefault(c => c.Id == viewModel.Id);
-                        if (algo == null)
+                        new TaskFactory().StartNew(() =>
                         {
-                            return new JsonResult(new { code = 1, msg = "此数据不存在" });
-                        }
-                        if (viewModel.Type == (int)AlgorithmType.ATTENDANCE_IN || viewModel.Type == (int)AlgorithmType.ATTENDANCE_OUT)
-                        { //找出此摄像机下否有考勤数据
-                            var data = _context.Algorithm.FirstOrDefault(c => c.ShipId == shipId && c.Cid == viewModel.Cid && (c.Type == AlgorithmType.ATTENDANCE_IN || c.Type == AlgorithmType.ATTENDANCE_OUT));
-                            if (data != null && data.Id != algo.Id )
-                            {
-                                return new JsonResult(new { code = 1, msg = "一个摄像机只能设置考勤入或考勤出" });
-                            }
-                        }
-                        algo.GPU = viewModel.GPU;
-                        algo.Type = (AlgorithmType)viewModel.Type;
-                        algo.Similar = viewModel.Similar;
-                        algo.Cid = viewModel.Cid;
-                        algo.DectectFirst =viewModel.DectectFirst;
-                        algo.DectectSecond = viewModel.DectectSecond;
-                        algo.Track =viewModel.Track;
-                        _context.Algorithm.Update(algo);
+                            int res = manager.AlgorithmSet(shipId, algorithm);
+                            return new JsonResult(new { code = res, msg = res != 0 ? res == 2 ? "一个摄像机只能设置考勤入或考勤出" : "数据修改失败" : "" });
+                        }).Wait(timeout);
                     }
                     else
                     {
-                        if (viewModel.Type == (int)AlgorithmType.ATTENDANCE_IN || viewModel.Type == (int)AlgorithmType.ATTENDANCE_OUT)
+                        if (!string.IsNullOrEmpty(viewModel.Id))
                         {
-                            //找出此摄像机下否有考勤数据
-                            var data = _context.Algorithm.FirstOrDefault(c => c.ShipId == shipId && c.Cid == viewModel.Cid && (c.Type == AlgorithmType.ATTENDANCE_IN || c.Type == AlgorithmType.ATTENDANCE_OUT));
-                            if (data != null)
+                            //查看数据是否存在
+                            var algo = _context.Algorithm.FirstOrDefault(c => c.Id == viewModel.Id);
+                            if (algo == null)
                             {
-                                return new JsonResult(new { code = 1, msg = "一个摄像机只能设置考勤入或考勤出" });
+                                return new JsonResult(new { code = 1, msg = "此数据不存在" });
                             }
+                            if (viewModel.Type == (int)AlgorithmType.ATTENDANCE_IN || viewModel.Type == (int)AlgorithmType.ATTENDANCE_OUT)
+                            { //找出此摄像机下否有考勤数据
+                                var data = _context.Algorithm.FirstOrDefault(c => c.ShipId == shipId && c.Cid == viewModel.Cid && (c.Type == AlgorithmType.ATTENDANCE_IN || c.Type == AlgorithmType.ATTENDANCE_OUT));
+                                if (data != null && data.Id != algo.Id)
+                                {
+                                    return new JsonResult(new { code = 1, msg = "一个摄像机只能设置考勤入或考勤出" });
+                                }
+                            }
+                            algo.GPU = viewModel.GPU;
+                            algo.Type = (AlgorithmType)viewModel.Type;
+                            algo.Similar = viewModel.Similar;
+                            algo.Cid = viewModel.Cid;
+                            algo.DectectFirst = viewModel.DectectFirst;
+                            algo.DectectSecond = viewModel.DectectSecond;
+                            algo.Track = viewModel.Track;
+                            _context.Algorithm.Update(algo);
                         }
-                        
-                        Algorithm algo = new Algorithm()
+                        else
                         {
-                            Id = Guid.NewGuid().ToString(),
-                            Cid=viewModel.Cid,
-                            GPU = viewModel.GPU,
-                            Type = (AlgorithmType)viewModel.Type,
-                            Similar =viewModel.Similar,
-                            DectectFirst = viewModel.DectectFirst,
-                            DectectSecond =viewModel.DectectSecond,
-                            Track =viewModel.Track,
-                            ShipId = base.user.ShipId
-                        };
-                        _context.Algorithm.Add(algo);
-                    }
-                    //Task.Factory.StartNew(state => {
-                    //    ProtoBuffer.Models.AlgorithmInfo algorithm = GetProtoAlgorithm(viewModel);
-                    //    int res = manager.AlgorithmSet(base.user.ShipId, algorithm);
-                    //}, TaskCreationOptions.LongRunning);
-                  
-                    _context.SaveChanges();
-                }
-                return new JsonResult(new { code = 0 });
+                            if (viewModel.Type == (int)AlgorithmType.ATTENDANCE_IN || viewModel.Type == (int)AlgorithmType.ATTENDANCE_OUT)
+                            {
+                                //找出此摄像机下否有考勤数据
+                                var data = _context.Algorithm.FirstOrDefault(c => c.ShipId == shipId && c.Cid == viewModel.Cid && (c.Type == AlgorithmType.ATTENDANCE_IN || c.Type == AlgorithmType.ATTENDANCE_OUT));
+                                if (data != null)
+                                {
+                                    return new JsonResult(new { code = 1, msg = "一个摄像机只能设置考勤入或考勤出" });
+                                }
+                            }
 
+                            Algorithm algo = new Algorithm()
+                            {
+                                Id = Guid.NewGuid().ToString(),
+                                Cid = viewModel.Cid,
+                                GPU = viewModel.GPU,
+                                Type = (AlgorithmType)viewModel.Type,
+                                Similar = viewModel.Similar,
+                                DectectFirst = viewModel.DectectFirst,
+                                DectectSecond = viewModel.DectectSecond,
+                                Track = viewModel.Track,
+                                ShipId = base.user.ShipId
+                            };
+                            _context.Algorithm.Add(algo);
+                        }
+                        new TaskFactory().StartNew(() =>
+                        {
+                            ProtoBuffer.Models.AlgorithmInfo algorithm = GetProtoAlgorithm(viewModel);
+                            int res = manager.AlgorithmSet(base.user.ShipId, algorithm);
+                            if (res == 0)
+                            {
+                                _context.SaveChanges();
+                                return new JsonResult(new { code = 0 });
+                            }
+                            return new JsonResult(new { code = 1, msg = "数据保存失败!" });
+                        }).Wait(timeout);
+
+                    }
+                    return new JsonResult(new { code = 1, msg = "请求超时。。。" });
+                }
+                return new JsonResult(new { code = 1, msg = "处理界面数据失败" });
             }
             catch (Exception ex)
             {
+                _logger.LogError("保存算法配置失败", model);
                 return new JsonResult(new { code = 1, msg = "数据保存失败!" + ex.Message });
             }
         }

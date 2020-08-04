@@ -50,40 +50,73 @@
         })
     }
 </script>
-<body style="height:100%;width:100%; position: relative;">
-    <div style=" position: absolute;top: 39%;left: 40%;margin-left: -40px;margin-top: -39px;">
-        <div class="layui-inline">
-            <table style="margin: 0 auto;height:350px">
-                <tr>
-                    <td colspan="2">
-                        <img src="~/images/timg.jpg" style="width:300px;height:150px" />
-                    </td>
-                </tr>
-                <tr>
-                    <td align="center">用户名</td>
-                    <td><input type="text" name="username" id="txtName" lay-verify="required" placeholder="请输入" autocomplete="off" class="layui-input"></td>
-                </tr>
-                <tr>
-                    <td align="center">密码</td>
-                    <td> <input type="password" name="password" lay-verify="pass" placeholder="请输入密码" id="txtPwd" autocomplete="off" class="layui-input"></td>
-                </tr>
-                <tr>
-                    <td align="center">类型</td>
-                    <td>
-                        <div class="layui-input-inline">
-                            <select id="slType" style="height:38px;border:1px solid #fff;width:150px">
-                                <option value="1">船舶</option>
-                                <option value="2" selected="selected">陆地</option>
-                            </select>
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="2" style="text-align:center">
-                        <input type="submit" value="确定" class="layui-btn" onclick="Login()" />
-                    </td>
-                </tr>
-            </table>
+<style>
+    body {
+        height: 100%;
+        width: 100%;
+        background-image: url('images/LoginBackground.jpg');
+        background-size: cover;
+    }
+
+    table {
+        border-collapse: collapse;
+        border-spacing: 0;
+        width: 500px;
+        font-size: 26px;        
+        border-color: grey;
+        border: 1px solid #666;
+    }
+
+    table tr {
+        height: 70px;
+    }
+    .btn {
+        background: url('images/Loginbtn.png') no-repeat;
+        border: none;
+        width: 80%;
+        height: 80px;
+        font-size: 26px;
+        color: black;
+        background-size: 100% 100%;
+    }
+
+</style>
+<body style="height: 100%;width: 100%;position: relative; ">
+    <div style=" position: absolute;top: 20%;left: 40%;margin-left: -40px;margin-top: -39px;">
+        <div style="text-align:center;padding-bottom:20px">
+            <img style="width:150px;height:150px" src="~/images/LoginHead.jpg" />
         </div>
+        <table>
+            <tr style="height:25px">
+                <td colspan="2">
+                </td>
+            </tr>
+            <tr>
+                <td align="center" style="width:150px">用户名</td>
+                <td><input type="text" name="username" id="txtName" style="width:80%" class="layui-input"></td>
+            </tr>
+            <tr>
+                <td align="center">密码</td>
+                <td> <input type="password" id="txtPwd" name="password" style="width:80%" class="layui-input"></td>
+            </tr>
+            <tr>
+                <td align="center">类型</td>
+                <td>
+                    <div class="layui-input-inline">
+                        <select id="slType" style="height:38px;border:1px solid #fff;width:150px">
+                            <option value="1">船舶</option>
+                            <option value="2" selected="selected">陆地</option>
+                        </select>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" style="text-align:center;padding-bottom:30px;padding-top:30px">
+                    @*<input type="submit" value="确&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;定" class="btn" onclick="Login()" />*@
+                    <button type="submit"class="btn" onclick="Login()">确&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;定</button>
+                </td>
+            </tr>
+        </table>
+
     </div>
 </body>

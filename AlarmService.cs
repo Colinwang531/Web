@@ -17,7 +17,7 @@ namespace ShipWeb
                 try
                 {
                     //报警
-                    InitManger.Alarm();
+                    //InitManger.Alarm();
                 }
                 catch (Exception ex)
                 {

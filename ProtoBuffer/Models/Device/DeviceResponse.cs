@@ -14,6 +14,6 @@ namespace ShipWeb.ProtoBuffer.Models
         [ProtoMember(2)]
         public string did { get; set; }
         [ProtoMember(3)]
-        public List<DeviceInfo> embedded { get; set; }
+        public List<DeviceInfo> deviceinfos { get; set; }
     }
 }
