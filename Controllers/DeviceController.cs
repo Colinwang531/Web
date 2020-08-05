@@ -113,6 +113,8 @@ namespace ShipWeb.Controllers
         {
             try
             {
+                int code = 1;
+                string msg = "";
                 if (ModelState.IsValid)
                 {
                     if (base.user.ShipId == "")
@@ -126,7 +128,6 @@ namespace ShipWeb.Controllers
                         ProtoBuffer.Models.DeviceInfo emb = GetProtoDevice(model);
                         new TaskFactory().StartNew(() =>
                         {
-                            int code = 1;
                             if (!string.IsNullOrEmpty(model.Id))
                             {
                                 code = manager.DeveiceUpdate(emb, model.Id, base.user.ShipId);
@@ -147,7 +148,7 @@ namespace ShipWeb.Controllers
                                 var result = manager.DeveiceAdd(emb, base.user.ShipId);
                                 code = result.result;
                             }
-                            return new JsonResult(new { code = code, msg = code == 0 ? "数据保存成功" : "数据保存失败" });
+                            msg = code == 0 ? "" : "数据保存失败";
 
                         }).Wait(timeout);
                     }
@@ -176,9 +177,9 @@ namespace ShipWeb.Controllers
                                 {
                                     _context.Device.Update(device);
                                     _context.SaveChanges();
-                                    return new JsonResult(new { code = 0, msg = "数据修改成功!" });
                                 }
-                                return new JsonResult(new { code = 1, msg = "数据修改失败!" });
+                                code = result;
+                                msg = result != 0 ? "数据修改失败!" : "";
                             }).Wait(timeout);
                             #endregion
                         }
@@ -251,17 +252,20 @@ namespace ShipWeb.Controllers
                                     }
                                     _context.Device.Add(device);
                                     _context.SaveChangesAsync();
-                                    return new JsonResult(new { code = 0, msg = "数据保存成功!" });
+                                    code = 0;
                                 }
-                                return new JsonResult(new { code = 1, msg = "数据保存失败!" });
+                                else
+                                {
+                                    msg = "数据修改失败!";
+                                }
                             }).Wait(timeout);
                             #endregion
                             #endregion
                         }
-                    }
-                   
+                    }                   
                 }
-                return new JsonResult(new { code = 1, msg = "请求超时。。。" });
+                msg = (code == 1 && msg == "") ? "请求超时。。。" : msg;
+                return new JsonResult(new { code = code, msg = msg });
             }
             catch (Exception ex)
             {
@@ -303,16 +307,14 @@ namespace ShipWeb.Controllers
                 {
                     return NotFound();
                 }
+                int code = 1;
+                string msg = "";
                 //陆地端删除设备
                 if (base.user.IsLandHome)
                 {
                     new TaskFactory().StartNew(() => {
-                        int result = manager.DeveiceDelete(id, base.user.ShipId);
-                        if (result != 0)
-                        {
-                            return new JsonResult(new { code = 1, msg = "删除失败!" });
-                        }
-                        return new JsonResult(new { code = 0 });
+                        code = manager.DeveiceDelete(id, base.user.ShipId);
+                        msg = code != 0 ? "删除数据失败" : "";
                     }).Wait(timeout);                   
                 }
                 else
@@ -344,13 +346,13 @@ namespace ShipWeb.Controllers
                             //删除设备表
                             _context.Device.Remove(device);
                             _context.SaveChanges();
-
-                            return new JsonResult(new { code = 0, msg = "删除成功!" });
+                            code = 0;
                         }
-                        return new JsonResult(new { code = 1, msg = "删除失败!" });
+                        msg = code != 0 ? "删除数据失败" : "";
                     }).Wait(timeout);
-                }              
-                return new JsonResult(new { code = 1, msg = "请求超时。。。" });
+                }
+                msg = (code == 1 && msg == "") ? "请求超时。。。" : msg;
+                return new JsonResult(new { code = code, msg = msg });
             }
             catch (Exception ex)
             {

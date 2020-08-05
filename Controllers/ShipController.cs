@@ -90,43 +90,45 @@ namespace ShipWeb.Controllers
                         Name = item.Name,
                         Line=false//默认离线
                     };
-                    new TaskFactory().StartNew(() => {
-                        #region 测试数据
-                        //ProtoBuffer.Models.ComponentResponse rep = new ProtoBuffer.Models.ComponentResponse()
-                        //{
-                        //    result = 0,
-                        //    componentinfos = new List<ProtoBuffer.Models.ComponentInfo>()
-                        // {
-                        //     new ProtoBuffer.Models.ComponentInfo ()
-                        //     {
-                        //        type= ProtoBuffer.Models.ComponentInfo.Type.WEB
-                        //     }
-                        // }
-                        //};
-                        #endregion
-                        ProtoBuffer.Models.ComponentResponse rep = manager.ComponentQuery(item.Id);
-                        if (rep.result == 0)
-                        {
-                            var info = rep.componentinfos.Where(c => c.type == ProtoBuffer.Models.ComponentInfo.Type.WEB);
-                            if (info.Count() > 0)
-                            {
-                                model.Line = true;//在线
-                                ProtoBuffer.Models.StatusResponse strep = manager.StatusQuery(item.Id);
-                                if (strep.result == 0)
-                                {
-                                    model.Name = strep.name;
-                                    model.flag = strep.flag;
-                                    //从船舶端过来的船名与陆地端不同时，更改陆地端的船名
-                                    if (item.Name != strep.name)
-                                    {
-                                        item.Name = strep.name;
-                                        _context.Ship.Update(item);
-                                        _context.SaveChanges();
-                                    }
-                                }
-                            }
-                        }
-                    }).Wait(timeout);                  
+                    model.Line = true;
+                    model.flag = item.Flag;
+                    //new TaskFactory().StartNew(() => {
+                    //    #region 测试数据
+                    //    //ProtoBuffer.Models.ComponentResponse rep = new ProtoBuffer.Models.ComponentResponse()
+                    //    //{
+                    //    //    result = 0,
+                    //    //    componentinfos = new List<ProtoBuffer.Models.ComponentInfo>()
+                    //    // {
+                    //    //     new ProtoBuffer.Models.ComponentInfo ()
+                    //    //     {
+                    //    //        type= ProtoBuffer.Models.ComponentInfo.Type.WEB
+                    //    //     }
+                    //    // }
+                    //    //};
+                    //    #endregion
+                    //    ProtoBuffer.Models.ComponentResponse rep = manager.ComponentQuery(item.Id);
+                    //    if (rep.result == 0)
+                    //    {
+                    //        var info = rep.componentinfos.Where(c => c.type == ProtoBuffer.Models.ComponentInfo.Type.WEB);
+                    //        if (info.Count() > 0)
+                    //        {
+                    //            model.Line = true;//在线
+                    //            ProtoBuffer.Models.StatusResponse strep = manager.StatusQuery(item.Id);
+                    //            if (strep.result == 0)
+                    //            {
+                    //                model.Name = strep.name;
+                    //                model.flag = strep.flag;
+                    //                //从船舶端过来的船名与陆地端不同时，更改陆地端的船名
+                    //                if (item.Name != strep.name)
+                    //                {
+                    //                    item.Name = strep.name;
+                    //                    _context.Ship.Update(item);
+                    //                    _context.SaveChanges();
+                    //                }
+                    //            }
+                    //        }
+                    //    }
+                    //}).Wait(timeout);                  
                     list.Add(model);
                 }
                 var result = new

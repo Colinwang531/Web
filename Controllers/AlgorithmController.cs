@@ -112,13 +112,16 @@ namespace ShipWeb.Controllers
                 var viewModel = JsonConvert.DeserializeObject<AlgorithmViewModel>(model);
                 if (viewModel != null)
                 {
+                    int code = 1;
+                    string msg = "";
                     if (base.user.IsLandHome)
                     {
                         ProtoBuffer.Models.AlgorithmInfo algorithm = GetProtoAlgorithm(viewModel);
                         new TaskFactory().StartNew(() =>
                         {
                             int res = manager.AlgorithmSet(shipId, algorithm);
-                            return new JsonResult(new { code = res, msg = res != 0 ? res == 2 ? "一个摄像机只能设置考勤入或考勤出" : "数据修改失败" : "" });
+                            code = res;
+                            msg = res != 0 ? res == 2 ? "一个摄像机只能设置考勤入或考勤出" : "数据修改失败" : "";
                         }).Wait(timeout);
                     }
                     else
@@ -159,7 +162,6 @@ namespace ShipWeb.Controllers
                                     return new JsonResult(new { code = 1, msg = "一个摄像机只能设置考勤入或考勤出" });
                                 }
                             }
-
                             Algorithm algo = new Algorithm()
                             {
                                 Id = Guid.NewGuid().ToString(),
@@ -181,13 +183,16 @@ namespace ShipWeb.Controllers
                             if (res == 0)
                             {
                                 _context.SaveChanges();
-                                return new JsonResult(new { code = 0 });
+                                code = 0;
                             }
-                            return new JsonResult(new { code = 1, msg = "数据保存失败!" });
+                            else
+                            {
+                                msg = "数据保存失败";
+                            }
                         }).Wait(timeout);
-
                     }
-                    return new JsonResult(new { code = 1, msg = "请求超时。。。" });
+                    msg = (code == 1 && msg == "") ? "请求超时。。。" : msg;
+                    return new JsonResult(new { code = code, msg =msg });
                 }
                 return new JsonResult(new { code = 1, msg = "处理界面数据失败" });
             }

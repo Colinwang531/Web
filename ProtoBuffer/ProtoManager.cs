@@ -1348,46 +1348,13 @@ namespace ShipWeb.ProtoBuffer
                 mqmsg.AppendEmptyFrame();
                 mqmsg.Append(byt);
                 //发送注册请求
-                dealer.SendMultipartMessage(mqmsg);
+                bool flag=dealer.TrySendMultipartMessage(mqmsg);
             }
             catch (Exception ex)
             {
               
             }
-            //dealer.ReceiveReady += Dealer_ReceiveReady;
         }
-
-        private void Dealer_ReceiveReady(object sender, NetMQSocketEventArgs e)
-        {
-            List<byte[]> list = e.Socket.ReceiveMultipartBytes();
-            List<byte> byteSource = new List<byte>();
-            foreach (var item in list)
-            {
-                byteSource.AddRange(item);
-            }
-            byte[] mory = byteSource.ToArray();
-            MSG revmsg = ProtoBufHelp.DeSerialize<MSG>(mory);
-            if (revmsg.type == MSG.Type.ALARM)
-            {
-                ProtoBDManager.AlarmAdd(revmsg);
-            }
-            else if (revmsg.type == MSG.Type.COMPONENT)
-            {
-                byte[] by = dealer.Options.Identity;
-                string shipId = Encoding.UTF8.GetString(by);
-                ProtoBDManager.ComponentAdd(revmsg.component.componentresponse.cid, "组件1", shipId);
-            }
-            else if (revmsg.type == MSG.Type.DEVICE)
-            {
-                byte[] by = dealer.Options.Identity;
-                string shipId = Encoding.UTF8.GetString(by);
-                if (revmsg.device.command == Device.Command.NEW_REQ)
-                {
-                    ProtoBDManager.DeviceAdd(shipId, revmsg.device.deviceresponse.deviceinfos[0]);
-                }
-            }
-        }
-
         /// <summary>
         /// 接收数据
         /// </summary>

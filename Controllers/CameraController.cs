@@ -79,6 +79,8 @@ namespace ShipWeb.Controllers
             {
                 try
                 {
+                    int code = 1;
+                    string msg = "";
                     //陆地端远程修改摄像机信息
                     if (base.user.IsLandHome)
                     {
@@ -94,8 +96,9 @@ namespace ShipWeb.Controllers
                             did = did
                         };
                         new TaskFactory().StartNew(() => {
-                            var code = manager.DeveiceUpdate(emb, did, base.user.ShipId);
-                            return new JsonResult(new { code = code, msg = code == 1 ? "数据修改失败" : "数据修改成功" });
+                            var res = manager.DeveiceUpdate(emb, did, base.user.ShipId);
+                            code = res;
+                            msg = code == 1 ? "数据修改失败" : "";
                         }).Wait(timeout);
                     }
                     else
@@ -130,13 +133,17 @@ namespace ShipWeb.Controllers
                                 {
                                     _context.Update(camera);
                                     _context.SaveChangesAsync();
-                                    return new JsonResult(new { code = 0, msg = "数据修改成功" });
+                                    code = 0;
                                 }
-                                return new JsonResult(new { code = 1, msg = "数据修改失败" });
+                                else
+                                {
+                                    msg = "数据修改失败";
+                                }
                             }).Wait(timeout);
                         };
                     }
-                    return new JsonResult(new { code = 1, msg = "请求超时。。。" });
+                    msg = (code == 1 && msg == "") ? "请求超时。。。" : msg;
+                    return new JsonResult(new { code = code, msg = msg });
                 }
                 catch (Exception ex)
                 {

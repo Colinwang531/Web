@@ -6,6 +6,11 @@
 <script src="~/layui/layui.js"></script>
 <link href="~/layui/css/layui.css" rel="stylesheet" />
 <script src="~/lib/jquery/dist/jquery.js"></script>
+<style>
+    .layui-form-select dl {
+        max-height: 200px;
+    }
+</style>
 <script type="text/javascript">
     layui.use(['table', 'form'], function () {
         var $ = layui.$;
@@ -62,7 +67,7 @@
                     type: 1,
                     title: '新增算法',
                     content: $("#divSaveOrUpdate"),
-                    area: ["400px", "500px"],
+                    area: ["660px", "380px"],
                     success: function () {
                         $("#btnSubmit").removeAttr('disabled').removeClass(DISABLED);
                         $("#dataFrm")[0].reset();
@@ -81,9 +86,9 @@
             if (obj.event == "edit") {
                 layer.open({
                     type: 1,
-                    title: '编辑算法',
+                    title: '修改算法',
                     content: $("#divSaveOrUpdate"),
-                    area: ["400px", "500px"],
+                    area: ["660px", "380px"],
                     success: function (res) {
                         SetCSS(data.type);
                         $("#hidId").val(data.id);
@@ -98,30 +103,34 @@
                 })
                 form.render();
             } else if (obj.event == "del") {
-                layer.confirm('真的删除行么', function (index) {
-                    obj.del();
-                    layer.close(index);
-                    $.ajax({
-                        url: "/Algorithm/Delete",
-                        type: "get",
-                        dataType: "json",
-                        data: { id: data.id },
-                        contentType: "application/json;chartset=utf-8",
-                        success: function (res) {
-                            if (res.code == 1) {
-                                layer.msg(res.msg, { icon: 2 });
-                            } else {
-                                layer.msg("删除成功", { icon: 1 });
-                                tableIns.reload();
+                layer.confirm("是否确认删除？", {
+                    icon: 3,
+                    btn: ["确定", "取消"],
+                    btnAlign: 'c', //按钮居中
+                    yes: function (index) {
+                        obj.del();
+                        layer.close(index);
+                        $.ajax({
+                            url: "/Algorithm/Delete",
+                            type: "get",
+                            dataType: "json",
+                            data: { id: data.id },
+                            contentType: "application/json;chartset=utf-8",
+                            success: function (res) {
+                                if (res.code == 1) {
+                                    layer.msg(res.msg, { icon: 2 });
+                                } else {
+                                    layer.msg("删除成功", { icon: 1 });
+                                    tableIns.reload();
+                                }
                             }
-                        }
-                    });
-                });
+                        });
+                    }
+                });   
             }
         });
         //保存
-        form.on("submit(doSubmit)", function (frm) {
-           
+        form.on("submit(doSubmit)", function (frm) {           
             $('#btnSubmit').attr('disabled', 'disabled').addClass(DISABLED);
             var data = {
                 id: frm.field.id,
@@ -216,7 +225,6 @@
                 $("#txtThreshold_2").attr("disabled", "disabled").css("background-color", "#EEEEEE");
                 $("#txtThreshold_2").val("");
             }
-            form.render('select');
         }
 
     });
@@ -254,6 +262,16 @@
                     </select>
                 </div>
             </div>
+
+            <div class="layui-inline">
+                <label class="layui-form-label">摄像机：</label>
+                <div class="layui-input-inline">
+                    <select name="camera" id="slCamera" class="layui-input" lay-verify="required">
+                        <option value="">请选择</option>
+                    </select>
+                </div>
+            </div>
+
         </div>
         <div class="layui-form-item">
             <div class="layui-inline">
@@ -262,6 +280,19 @@
                     <input type="text" name="dectectFirst" id="txtThreshold_1" lay-verify="threshold" autocomplete="off" class="layui-input">
                 </div>
             </div>
+            <div class="layui-inline">
+                <label class="layui-form-label">GPU</label>
+                <div class="layui-input-inline">
+                    <select name="gpu" id="slgpu" lay-verify="required">
+                        <option value="">请选择</option>
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
             <div class="layui-inline">
                 <label class="layui-form-label">检测阀值2</label>
                 <div class="layui-input-inline">
@@ -274,29 +305,7 @@
                     <input type="text" name="track" id="txtTrack" lay-verify="threshold" autocomplete="off" class="layui-input">
                 </div>
             </div>
-        </div>
-        <div class="layui-form-item">
-            <div class="layui-inline">
-                <label class="layui-form-label">摄像机：</label>
-                <div class="layui-input-inline">
-                    <select name="camera" id="slCamera" class="layui-input" lay-verify="required">
-                        <option value="">请选择</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-        <div class="layui-form-item">
-            <div class="layui-inline">
-                <label class="layui-form-label">GPU</label>
-                <div class="layui-input-inline">
-                    <select name="gpu" id="slgpu" lay-verify="required">
-                        <option value="">请选择</option>
-                        <option value="0">0</option>
-                        <option value="1">1</option>
-                    </select>
-                </div>
-            </div>
-        </div>
+        </div> 
         <div class="layui-form-item">
             <div class="layui-inline">
                 <label class="layui-form-label">相似度</label>
@@ -305,10 +314,10 @@
                 </div>
             </div>
         </div>
-        <div class="layui-form-item" style="text-align:center">
-            <div class="layui-input-block">
-                <button type="submit" id="btnSubmit" class="layui-btn layui-btn-normal layui-btn-sm layui-icon layui-icon-release" lay-filter="doSubmit" lay-submit="">提交</button>
-                <button type="button" id="txtReset"class="layui-btn layui-btn-warm layui-btn-sm layui-icon layui-icon-refresh">重置</button>
+        <div class="layui-form-item" style="text-align:center;margin-top:30px">
+            <div class="layui-input-block"  style="margin:0 auto">
+                <button type="submit" id="btnSubmit" class="layui-btn layui-btn-normal" lay-filter="doSubmit" lay-submit="">提交</button>
+                <button type="button" id="txtReset" class="layui-btn layui-btn-warm">重置</button>
             </div>
         </div>
     </form>
