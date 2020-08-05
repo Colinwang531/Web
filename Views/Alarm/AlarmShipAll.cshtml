@@ -44,7 +44,7 @@
                 limitName: 'pageSize' //每页数据量的参数名，默认：limit
             },
             cols: [[
-                { field: 'name', title: '船舶', unresize: true },
+                { field: 'name', title: '船舶名称', unresize: true },
                 { field: 'time', title: '报警时间', unresize: true},
                 //{ field: 'cid', title: '摄像机编号', width: 120 },
                 { field: 'nickName', title: '摄像机名称' , unresize: true},
@@ -87,7 +87,7 @@
                 }
             ]],
             limit: 5,
-            limits: [5, 10, 20, 40, 50],
+            limits: [5, 10, 20, 40],
             page: {
                 groups: 5 //只显示 5 个连续页码
             }, done: function (res) {
@@ -195,7 +195,7 @@
 <div style="margin:20px;width:96%">
     <form class="layui-form" action="" id="dataFrm" lay-filter="dataFrm">
         <div class="layui-form-item">
-            <label class="layui-form-label">船名称</label>
+            <label class="layui-form-label">船舶名称</label>
             <div class="layui-input-inline">
                 <select name="ship" id="slShip" style="width: 100px ">
                 </select>
@@ -215,11 +215,11 @@
                 </select>
             </div>
 
-            <label class="layui-form-label">时间起</label>
+            <label class="layui-form-label">报警时间起</label>
             <div class="layui-input-inline" style="width:100px">
                 <input name="startTime" class="layui-input" id="dtStartTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off" readonly>
             </div>
-            <label class="layui-form-label">时间止</label>
+            <label class="layui-form-label">报警时间止</label>
             <div class="layui-input-inline" style="width:100px">
                 <input name="endTime" class="layui-input" id="dtEndTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off" readonly>
             </div>

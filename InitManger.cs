@@ -12,6 +12,7 @@ using System.Text;
 using System.IO;
 using ShipWeb.ProtoBuffer;
 using ShipWeb.ProtoBuffer.Models;
+using NuGet.Frameworks;
 
 namespace ShipWeb
 {
@@ -196,7 +197,8 @@ namespace ShipWeb
         {
             if (!string.IsNullOrEmpty(ManagerHelp.Cid))
             {
-                manager.Heart(ManagerHelp.Cid, ComponentInfo.Type.WEB, "", ManagerHelp.Cid);
+                string identity = Guid.NewGuid().ToString();
+                manager.Heart(identity, ComponentInfo.Type.WEB, "", ManagerHelp.Cid);
             }
         }
         /// <summary>

@@ -67,7 +67,7 @@
                             form.render();
                         }
                         if (res.isSet) {
-                            var html = ' <button type="submit" class="layui-btn layui-btn-normal layui-btn-sm layui-icon layui-icon-release" lay-filter="doSubmit" lay-submit="">提交</button>';
+                            var html = ' <button type="submit" class="layui-btn layui-btn-normal" lay-filter="doSubmit" lay-submit="">提交</button>';
                             $("#divShow").html(html);
                         }
                     }
@@ -83,7 +83,7 @@
         <input name="id" id="hidId" type="hidden" class="layui-input" />
         <div class="layui-form-item" style="margin-top: 20px;">
             <div class="layui-inline">
-                <label class="layui-form-label">船名称：</label>
+                <label class="layui-form-label">船舶名称：</label>
                 <div class="layui-input-inline">
                     <input type="text" id="txtName" name="name" required maxlength="20" lay-verify="required" autocomplete="off" class="layui-input">
                 </div>
