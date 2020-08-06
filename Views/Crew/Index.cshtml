@@ -31,13 +31,13 @@
             toolbar: "#userToolBar",   //表格的工具条
             defaultToolbar: [],
             width: 1200,
-            cellMinWidth:150,
+            cellMinWidth: 150,
             page: false,  //是否启用分页
             cols: [[   //列表数据
                 { field: 'name', title: '船员名称', width: 150, unresize: true },
                 { field: 'job', title: '工作内容', width: 200, unresize: true },
                 {
-                    field: 'employeePictures', title: '船员图片', minWidth:300, unresize: true, templet: function (d) {
+                    field: 'employeePictures', title: '船员图片', minWidth: 300, unresize: true, templet: function (d) {
                         var pics = d.employeePictures;
                         var html = "";
                         if (pics.length > 0) {
@@ -48,14 +48,12 @@
                         return html;
                     }
                 },
-                { fixed: 'right', title: '操作',width:200, toolbar: '#userBar', align: 'center' }
+                { fixed: 'right', title: '操作', width: 200, toolbar: '#userBar', align: 'center' }
             ]],
             done: function (res) {
                 if (res.isSet == true) {
                     $("#userToolBar").hide();
                 }
-                // 隐藏列
-                //$(".layui-table-tool-self").css("display", "none");
             }
         });
 
@@ -67,15 +65,14 @@
                         type: 1,
                         title: '新增船员',
                         content: $("#divAddOrUpdate"),
-                        area: ['780px', '600px'],
+                        area: ['760px', '600px'],
                         success: function (index) {
                             $("#btnSubmit").removeAttr('disabled').removeClass(DISABLED);
                             $("#hidId").val("");
-                            $("#hidPicIds").val("");
                             clearFile();
                             //清空表单数据
                             $("#dataFrm")[0].reset();
-                            $('#demo2').html("");
+                            $('#uploader-list').html("");
                             url = "employees/addEmployees.action";
                         }
                     });
@@ -115,26 +112,18 @@
                     type: 1,
                     title: '修改用户',
                     content: $("#divAddOrUpdate"),
-                    area: ['780px', '600px'],
+                    area: ['760px', '600px'],
                     success: function (index) {
                         form.val("dataFrm", data);
-                        $("#hidPicIds").val("");
                         clearFile();
                         var pics = data.employeePictures;
-                        var html = "";
-                        var picIds = "";
+                        $('#uploader-list').html("");
                         if (pics.length > 0) {
                             for (var j = 0; j < pics.length; j++) {
-                                html += '<img style="width:200px;height:180px" ondblclick="showBigImage(this)" src="data:image/jpeg;base64,' + pics[j].picture + '"/>&nbsp;&nbsp;&nbsp'
-                                if (j == 0) {
-                                    picIds = pics[j].id;
-                                } else {
-                                    picIds += "," + pics[j].id;
-                                }
+                                var src = "data:image/jpeg;base64," + pics[j].picture;
+                                AddImage(src, pics[j].id);
                             }
                         }
-                        $("#hidPicIds").val(picIds);
-                        $('#demo2').html(html);
                         url = "employees/updateEmployees.action";
                     },
                     yes: function () {
@@ -154,19 +143,14 @@
             choose: function (obj) {
                 uploadFiles = obj.pushFile();
                 var len = getJsonLength(uploadFiles);
-                var ids = $("#hidPicIds").val();
-                var frmLeng = 0;//查询已显示的图片
-                //只有修改的时候才需要判断显示了几张图片。
-                if (ids != "" ) {
-                    frmLeng = ids.split(',').length;
-                }
+                var frmLeng = $(".file-iteme .info").length;
                 if (parseInt(len) + parseInt(frmLeng) > 3) {
                     layer.msg("上传的图片不能大于3张", { icon: 2 });
                     clearFile();
                     return false;
                 } else {
                     obj.preview(function (index, file, result) {
-                        $('#demo2').append('<img width="200px" height="180px" src="' + result + '" name="image" alt="' + file.name + '" class="form-imgage">&nbsp;&nbsp;&nbsp')
+                        AddImage(result, file.name);
                     });
                 }
                 upflag = false;//正在上传
@@ -179,15 +163,14 @@
             },
             done: function (res) {
                 upnum++;
-                if (res.code == 0) {
-                    var ids = $("#hidPicIds").val();
-                    if (ids == "") {
-                        ids = res.data
-                    } else {
-                        ids += "," + res.data;
-                    }
-                    $("#hidPicIds").val(ids);
-                }
+                if (res.code==0) {
+                    $(".file-iteme .info").each(function (index, item) {
+                        var name = $(this).text();
+                        if (name == res.data.name) {
+                            $(this).text(res.data.id);
+                        }
+                    })
+                }              
                 var len = getJsonLength(uploadFiles);
                 if (upnum == len) {
                     upflag = true;
@@ -204,11 +187,21 @@
                 return false;
             }
             $('#btnSubmit').attr('disabled', 'disabled').addClass(DISABLED);
+            var picIds = "";
+            var i = 0;
+            $(".file-iteme .info").each(function () {
+                i++;
+                if (i == $(".file-iteme .info").length) {
+                    picIds += $(this).text();
+                } else {
+                    picIds += $(this).text() + ",";
+                }
+            });
             var data = {
                 id: frm.field.id,
                 name: frm.field.name,
                 job: frm.field.job,
-                picIds: frm.field.picIds
+                picIds: picIds
             };
             $.ajax({
                 url: "/Crew/Save",
@@ -228,9 +221,31 @@
                 }
             });
             return false;
-        });
-        //删除图片
+        });       
+        $(document).on("mouseenter mouseleave", ".file-iteme", function (event) {
+            if (event.type === "mouseenter") {
+                //鼠标悬浮
+                $(this).children(".handle").fadeIn("fast");
 
+            } else if (event.type === "mouseleave") {
+                //鼠标离开
+                $(this).children(".handle").hide();
+            }
+        });
+        //加载图片
+        function AddImage(src, name) {
+            $('#uploader-list').append(
+                '<div id="" class="file-iteme">' +
+                '<div class="handle"><i class="layui-icon layui-icon-delete"></i></div>' +
+                '<img style="width: 200px;height: 180px;" src=' +src + '>' +
+                '<div class="info" style="display:none">' + name + '</div>' +
+                '</div>'
+            );
+        }
+        // 删除图片
+        $(document).on("click", ".file-iteme .handle", function (event) {
+            $(this).parent().remove();
+        });      
     });
     function DelPic() {
         layer.confirm("确定要全部清空吗？", {
@@ -242,8 +257,7 @@
                     url: "/Crew/DeleteImg/",
                     success: function (res) {
                         if (res.code == 0) {
-                            $("#demo2").html("");
-                            $("#hidPicIds").val("");
+                            $("#uploader-list").html("");
                             clearFile();
                             layer.close(index);
                         } else {
@@ -291,27 +305,54 @@
     }
 
 </script>
+<style type="text/css">
+    .uploader-list {
+        margin-left: -15px;
+    }
+    .uploader-list .handle {
+            position: relative;
+            background-color: black;
+            color: white;
+            filter: alpha(Opacity=80);
+            opacity: 0.5;
+            /*width: 100px;*/
+            text-align: right;
+            height: 28px;
+            margin-bottom: -28px;
+            display: none;
+        }
+    .uploader-list .handle i {
+                margin-right: 5px;
+            }
+    .uploader-list .handle i:hover {
+                    cursor: pointer;
+                }
+    .uploader-list .file-iteme {
+            margin: 12px 0 0 15px;
+            padding: 1px;
+            float: left;
+        }
+</style>
 <div style="margin:20px;width:96%">
     <h1>船员信息</h1>
     <hr />
     <table class="layui-table" id="userTable" lay-filter="userTable"></table>
     @if (ViewBag.IsSet)
     {
-    <div style="display: none;" id="userToolBar">
-        <button type="button" class="layui-btn layui-btn-sm" lay-event="add">增加</button>
-    </div>
-    <div id="userBar" style="display: none;">
-        <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
-        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
-    </div>
+        <div style="display: none;" id="userToolBar">
+            <button type="button" class="layui-btn layui-btn-sm" lay-event="add">增加</button>
+        </div>
+        <div id="userBar" style="display: none;">
+            <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+            <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+        </div>
     }
 
 </div>
 <div id="divAddOrUpdate" style="display:none">
     <form class="layui-form" action="" id="dataFrm" lay-filter="dataFrm">
         <input name="id" id="hidId" type="hidden" class="layui-input" />
-        <input id="hidPicIds" name="picIds" type="hidden" class="layui-input" />
-        <div class="layui-form-item"style="margin-top:20px">
+        <div class="layui-form-item" style="margin-top:20px">
             <div class="layui-inline">
                 <label class="layui-form-label">船员名称：</label>
                 <div class="layui-input-inline">
@@ -330,20 +371,20 @@
         <div class="layui-form-item">
             <div class="layui-inline">
                 <div class="layui-upload" style="width:710px;margin-left:30px">
-                    <input type="hidden" name="ScrollingGraph" id="ScrollingGraph" />
-                    <button class="layui-btn" id="test2" type="button">多图片上传</button>
-                    <button type="button" class="layui-btn layui-btn-danger" onclick="DelPic()">删除</button>
-                    <blockquote class="layui-elem-quote layui-quote-nm" style="margin-top: 10px;">
+                    <button type="button" class="layui-btn" id="test2">多图片上传</button>&nbsp;&nbsp;&nbsp;&nbsp;
+                    <button type="button" class="layui-btn layui-btn-danger" onclick="DelPic()">清空图片</button>
+                    <blockquote class="layui-elem-quote layui-quote-nm" style="margin-top: 10px;width: 90%">
                         预览图：
-                        <div class="layui-upload-list" id="demo2" style="height:200px">
+                        <div class="layui-upload-list uploader-list" style="overflow: auto;height:200px" id="uploader-list">
                         </div>
                     </blockquote>
                 </div>
             </div>
+         
         </div>
         <div class="layui-form-item">
             <div class="layui-input-block" id="divShow">
-                <button type="submit"id="btnSubmit"  class="layui-btn layui-btn-normal " lay-filter="doSubmit" lay-submit="">提交</button>
+                <button type="submit" id="btnSubmit" class="layui-btn layui-btn-normal " lay-filter="doSubmit" lay-submit="">提交</button>
             </div>
         </div>
     </form>

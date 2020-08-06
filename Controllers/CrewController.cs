@@ -141,7 +141,12 @@ namespace ShipWeb.Controllers
                 byte[] by = Encoding.UTF8.GetBytes(base64);
                 string identity = Guid.NewGuid().ToString();
                 picBytes.Add(identity, by);
-                return Json(new { code = 0, data = identity, msg = "上传成功" });
+                var data = new
+                {
+                    id = identity,
+                    name = imgFile.FileName
+                };
+                return Json(new { code = 0, data = data, msg = "上传成功" });
                 #endregion
             }
             catch (Exception ex)
@@ -276,7 +281,7 @@ namespace ShipWeb.Controllers
                         var delPicList = picList.Where(c => c.CrewId == id && !dbIds.Contains(c.Id)).ToList();
                         if (delPicList.Count > 0)
                         {
-                            _context.CrewPicture.RemoveRange(picList);
+                            _context.CrewPicture.RemoveRange(delPicList);
                         }
                         _context.Crew.Update(employee);
                         #endregion

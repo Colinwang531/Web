@@ -441,7 +441,7 @@ namespace ShipWeb.ProtoBuffer
                         var delPicList = pics.Where(c => !dbIds.Contains(c.Id)).ToList();
                         if (delPicList.Count > 0)
                         {
-                            _context.CrewPicture.RemoveRange(pics);
+                            _context.CrewPicture.RemoveRange(delPicList);
                         }
                         _context.Crew.Update(model);
                         _context.SaveChanges();
