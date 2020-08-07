@@ -34,7 +34,7 @@ namespace ShipWeb.Controllers
             ViewBag.port = AppSettingHelper.GetSectionValue("Video:port");
             ViewBag.username = AppSettingHelper.GetSectionValue("Video:username");
             ViewBag.password = AppSettingHelper.GetSectionValue("Video:password");
-            ViewBag.autoPlay = AppSettingHelper.GetSectionValue("Video:autoPlay");            
+            ViewBag.autoPlay = AppSettingHelper.GetSectionValue("Video:autoPlay").ToLower();            
             return View();
         }
 

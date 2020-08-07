@@ -151,24 +151,24 @@
                                                 <button type="button" class="layui-btn layui-btn-normal" onclick="clickStartRecord('realplay');">开始录像</button>
                                                 <button type="button" class="layui-btn layui-btn-danger" onclick="clickStopRecord('realplay');">停止录像</button>
                                             </div>
+                                            <div class="layui-inline" style="margin-left:15px;">
+                                                <label class="layui-form-label">分辨率</label>
+                                                <div class="layui-input-inline" style="width:82px">
+                                                    <input type="text" id="resolutionWidth" name="resolutionWidth" autocomplete="off" class="layui-input" />
+                                                </div>
+                                                <div class="layui-input-inline" style="width:5px;padding-top:5px">x</div>
+                                                <div class="layui-input-inline" style="width:82px">
+                                                    <input type="text" id="resolutionHeight" name="resolutionHeight" autocomplete="off" class="layui-input" />
+                                                </div>
+                                                <button type="button" class="layui-btn" onclick="clickDeviceCapturePic();">设备抓图</button>
+                                            </div>
                                             <div class="layui-inline">
                                                 <button type="button" class="layui-btn layui-btn-normal" onclick="clickEnableEZoom();">启用电子放大</button>
                                                 <button type="button" class="layui-btn layui-btn-danger" onclick="clickDisableEZoom();">禁用电子放大</button>
                                                 <button type="button" class="layui-btn layui-btn-normal" onclick="clickEnable3DZoom();">启用3D放大</button>
                                                 <button type="button" class="layui-btn layui-btn-danger" onclick="clickDisable3DZoom();">禁用3D放大</button>
                                                 <button type="button" class="layui-btn" onclick="clickFullScreen();">全屏</button>
-                                            </div>
-                                            <div class="layui-inline">
-                                                <label class="layui-form-label">分辨率</label>
-                                                <div class="layui-input-inline">
-                                                    <input type="text" id="resolutionWidth" name="resolutionWidth" autocomplete="off" class="layui-input" />
-                                                </div>
-                                                <div class="layui-input-inline" style="width:5px;padding-top:5px">x</div>
-                                                <div class="layui-input-inline">
-                                                    <input type="text" id="resolutionHeight" name="resolutionHeight" autocomplete="off" class="layui-input" />
-                                                </div>
-                                                <button type="button" class="layui-btn" onclick="clickDeviceCapturePic();">设备抓图</button>
-                                            </div>
+                                            </div>                                           
                                         </div>
                                     </div>
                                 </fieldset>
@@ -595,12 +595,17 @@
 <script src="~/video/cn/demo.js?version=20200805029"></script>
 <script>
     $(function () {
-        //是否自动登录播放
-        if ('@ViewBag.autoPlay')
+        //是否自动登录预览
+        if (@ViewBag.autoPlay)
         {
-            clickLogin();
             setTimeout(function () {
-                clickStartRealPlay()
+                //登录
+                clickLogin();
+                //预览
+                setTimeout(function () {
+                    clickStartRealPlay()
+                }, 300);
+
             }, 300);
         }
 
