@@ -22,7 +22,7 @@ namespace ShipWeb.Models
         /// <summary>
         /// 是否启用设备，true表示启动设备，false表示停用设备
         /// </summary>
-        public bool Enalbe { get; set; }
+        public bool Enable { get; set; }
         /// <summary>
         /// 摄像机别名
         /// </summary>

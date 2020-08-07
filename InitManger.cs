@@ -151,7 +151,7 @@ namespace ShipWeb
                         {
                             cid = camera.Id,
                             index = camera.Index,
-                            enable = camera.Enalbe,
+                            enable = camera.Enable,
                             ip = camera.IP,
                             nickname = camera.NickName
                         });

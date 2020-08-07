@@ -1,6 +1,6 @@
 ﻿
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Index2";
     if (!ViewBag.IsShowLayout)
     {
         Layout = null;
@@ -8,21 +8,47 @@
 }
 <link href="~/layui/css/layui.css" rel="stylesheet" />
 <script src="~/layui/layui.js"></script>
+<div style="margin:20px;width:96%">
+    <table class="layui-hide" id="deviceTable" lay-filter="deviceTable"></table>
+    @if (ViewBag.IsSet)
+    {
+    <div style="display: none;" id="userToolBar">
+        <button type="button" class="layui-btn layui-btn-sm" id="btnAdd" lay-event="add">增加</button>
+    </div>
+    <div id="userBar" style="display: none;">
+        <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+    </div>
+    <div id="camerBar" lay-filter="camerBar" style="display: none;">
+            <a class="layui-btn layui-btn-xs" lay-event="camEdit">修改</a>
+     </div>
+    }
+
+</div>
 <script type="text/javascript">
     layui.use(['form', 'table'], function () {
         var $ = layui.$;
         var table = layui.table;
         var form = layui.form;
-        var mainIndex;
         var DISABLED = 'layui-btn-disabled';
-        var tableIns = table.render({
-            elem: '#userTable',   //渲染的目标对象
-            width:1600,
+        //执行一个 table 实例
+        var tableIns=table.render({
+            elem: '#deviceTable',   //渲染的目标对象
+            width: 1600,
             url: '/Device/Load', //数据接口
             toolbar: "#userToolBar",   //表格的工具条
             defaultToolbar: [],
             page: false,  //是否启用分页
-            cols: [[   //列表数据
+            cols: [[ //表头
+                {
+                    field: 'nickname',
+                    title: '设备别名',
+                    minWidth: 100,
+                    event: 'collapse',
+                    templet: function (d) {
+                        return '<div style="position: relative;\n' + '    padding: 0 10px 0 20px;">' + d.nickname + '<i style="left: 0px;" lay-tips="展开" class="layui-icon layui-colla-icon layui-icon-right"></i></div>'
+                    }
+                },
                 {
                     field: 'factory', title: '设备厂商', templet: function (e) {
                         if (e.factory == 1) return "海康";
@@ -40,20 +66,18 @@
                 { field: 'name', title: '设备登陆名称', align: 'center' },
                 { field: 'password', title: '设备登陆密码', align: 'center' },
                 { field: 'ip', title: '设备登陆IP', align: 'center' },
-                { field: 'port', title: '设备登陆端口', align: 'center'},
-                { field: 'nickname', title: '设备别名', align: 'center' },
+                { field: 'port', title: '设备登陆端口', align: 'center' },
                 {
                     field: 'enable', title: '设备状态', align: 'center', templet: function (e) {
-                        return e.enable? "开启" : "关闭";
+                        return e.enable ? "开启" : "关闭";
                     }
                 },
                 { fixed: 'right', title: '操作', toolbar: '#userBar', align: 'center' }
-            ]],
-            done: function (res) {
-            }
+            ]]
         });
+
         //监听头部工具栏事件
-        table.on("toolbar(userTable)", function (obj) {
+        table.on("toolbar(deviceTable)", function (obj) {
             switch (obj.event) {
                 case 'add':
                     mainIndex = layer.open({
@@ -73,22 +97,46 @@
                     break;
             };
         });
-        form.verify({
-            ip: [
-                /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/
-                , 'IP地址不符合规则'
-            ],
-            port: function (value) {
-                var reg = /^\d+$/;
-                if (!new RegExp(reg).test(value) || value.indexOf(" ") != -1 || value.length>5) {
-                    return '端口号不能超过5位正整数';
-                }
-            }
-        });
         //监听工具条
-        table.on('tool(userTable)', function (obj) {
+        table.on('tool(deviceTable)', function (obj) {
             var data = obj.data;
-            if (obj.event === 'del') {
+            if (obj.event === 'collapse') {
+                var data = obj.data;
+                var trObj = layui.$(this).parent('tr'); //当前行
+                var accordion = false //开启手风琴，那么在进行折叠操作时，始终只会展现当前展开的表格。
+                var content = '<table></table>' //内容
+                //表格行折叠方法
+                collapseTable({
+                    elem: trObj,
+                    accordion: accordion,
+                    content: content,
+                    success: function (trObjChildren, index) { //成功回调函数
+                        //trObjChildren 展开tr层DOM
+                        //index 当前层索引
+                        trObjChildren.find('table').attr("id", index);
+                        table.render({
+                            elem: "#" + index,
+                            width: 900,
+                            cellMinWidth: 100,
+                            cols: [[
+                                { field: "id", title: "id", hide: true, width: 50 },
+                                { field: "deviceId", title: "id", hide: true, width: 50 },
+                                { field: "index", title: "摄像机序号", width: 150 },
+                                {
+                                    field: "enable", title: "摄像机状态", width: 150, templet: function (e) {
+                                        return e.enable ? "开启" : "停用";
+                                    }
+                                },
+                                { field: "nickName", title: "摄像机别名", width: 200 },
+                                { field: "ip", title: "摄像机IP", width: 180 },
+                                { fixed: 'right', title: '操作', toolbar: '#camerBar', align: 'center' }
+                            ]],
+                            data: data.cameraModelList
+                        });
+                    }
+                });
+            }
+            else if (obj.event === 'del') {
                 layer.confirm("是否确认删除？", {
                     icon: 3,
                     btn: ["确定", "取消"],
@@ -112,8 +160,9 @@
                             }
                         });
                     }
-                });    
-            } else if (obj.event === 'edit') {
+                });
+            }
+            else if (obj.event === 'edit') {
                 //layer.alert('编辑行：<br>' + JSON.stringify(data))
                 mainIndex = layer.open({
                     type: 1,
@@ -123,7 +172,7 @@
                     success: function (index) {
                         form.val("dataFrm", data);
 
-                        $("#txtEnable").val(data.enable?1:0);
+                        $("#txtEnable").val(data.enable ? 1 : 0);
                         form.render();
                         //url = "employees/updateEmployees.action";
                     },
@@ -131,21 +180,84 @@
                         layer.closeAll();
                     }
                 });
-            } else if (obj.event === 'detail') {
-                window.location.href = "/Camera/Index?id=" + obj.data.id;
-                @*mainIndex = layer.open({
-                    type: 1,
-                    title: '设备下摄像机明细',
-                    content: @RedirectResult("/Cameras/Index"),
-                    area: ['800px', '600px'],
-                    success: function (index) {
-                    },
-                    yes: function () {
-                        layer.closeAll();
-                    }
-                });*@
             }
-        });
+            else if (obj.event === 'camEdit') {
+                var camdata = this.parentNode.parentNode.parentNode;
+                var trObj = layui.$(this).parent('tr'); //当前行
+                layIndex = layer.open({
+                    type: 1,
+                    title: "修改摄像机",
+                    content: $("#divCamUpdate"),
+                    area: ["360px", "240px"],
+                    success: function (index) {
+                        $("#dataCamFrm")[0].reset();
+                        form.val("dataCamFrm", {
+                            "id": camdata.cells[0].firstChild.innerHTML,
+                            "did": camdata.cells[1].firstChild.innerHTML,
+                            "enable": camdata.cells[3].firstChild.innerHTML == "开启"? true: false,
+                            "nickName":camdata.cells[4].firstChild.innerHTML
+                        });
+                    }
+                });
+                var childtable = this.offsetParent.offsetParent.offsetParent.offsetParent.offsetParent.offsetParent.firstChild.id;
+                setFormValue(obj, childtable);
+            }
+        });      
+        function collapseTable(options) {
+            var trObj = options.elem;
+            if (!trObj) return;
+            var accordion = options.accordion,
+                success = options.success,
+                content = options.content || '';
+            var tableView = trObj.parents('.layui-table-view'); //当前表格视图
+            var id = tableView.attr('lay-id'); //当前表格标识
+            var index = trObj.data('index'); //当前行索引
+            var leftTr = tableView.find('.layui-table-fixed.layui-table-fixed-l tr[data-index="' + index + '"]'); //左侧当前固定行
+            var rightTr = tableView.find('.layui-table-fixed.layui-table-fixed-r tr[data-index="' + index + '"]'); //右侧当前固定行
+            var colspan = trObj.find('td').length; //获取合并长度
+            var trObjChildren = trObj.next(); //展开行Dom
+            var indexChildren = id + '-' + index + '-children'; //展开行索引
+            var leftTrChildren = tableView.find('.layui-table-fixed.layui-table-fixed-l tr[data-index="' + indexChildren + '"]'); //左侧展开固定行
+            var rightTrChildren = tableView.find('.layui-table-fixed.layui-table-fixed-r tr[data-index="' + indexChildren + '"]'); //右侧展开固定行
+            var lw = leftTr.width() + 15; //左宽
+            var rw = rightTr.width() + 15; //右宽
+            //不存在就创建展开行
+            if (trObjChildren.data('index') != indexChildren) {
+                //装载HTML元素
+                var tr = '<tr data-index="' + indexChildren + '"><td colspan="' + colspan + '"><div style="height: auto;padding-left:' + lw + 'px;padding-right:' + rw + 'px" class="layui-table-cell">' + content + '</div></td></tr>';
+                trObjChildren = trObj.after(tr).next().hide(); //隐藏展开行
+                var fixTr = '<tr data-index="' + indexChildren + '"></tr>';//固定行
+                leftTrChildren = leftTr.after(fixTr).next().hide(); //左固定
+                rightTrChildren = rightTr.after(fixTr).next().hide(); //右固定
+            }
+            //展开|折叠箭头图标
+            trObj.find('td[lay-event="collapse"] i.layui-colla-icon').toggleClass("layui-icon-right layui-icon-down");
+            //显示|隐藏展开行
+            trObjChildren.toggle();
+            //开启手风琴折叠和折叠箭头
+            if (accordion) {
+                trObj.siblings().find('td[lay-event="collapse"] i.layui-colla-icon').removeClass("layui-icon-down").addClass("layui-icon-right");
+                trObjChildren.siblings('[data-index$="-children"]').hide(); //展开
+                rightTrChildren.siblings('[data-index$="-children"]').hide(); //左固定
+                leftTrChildren.siblings('[data-index$="-children"]').hide(); //右固定
+            }
+            success(trObjChildren, indexChildren); //回调函数
+            heightChildren = trObjChildren.height(); //展开高度固定
+            rightTrChildren.height(heightChildren + 115).toggle(); //左固定
+            leftTrChildren.height(heightChildren + 115).toggle(); //右固定
+        }
+        form.verify({
+            ip: [
+                /^(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])\.(\d{1,2}|1\d\d|2[0-4]\d|25[0-5])$/
+                , 'IP地址不符合规则'
+            ],
+            port: function (value) {
+                var reg = /^\d+$/;
+                if (!new RegExp(reg).test(value) || value.indexOf(" ") != -1 || value.length > 5) {
+                    return '端口号不能超过5位正整数';
+                }
+            }
+        });        
         //表单提交
         form.on("submit(doSubmit)", function (frm) {
             $('#btnSubmit').attr('disabled', 'disabled').addClass(DISABLED);
@@ -179,30 +291,53 @@
             });
             return false;
         });
-
+        function setFormValue(obj, camdata) {
+            form.on("submit(doCamSubmit)", function (camFrm) {
+                $('#btnSubmit').attr('disabled', 'disabled').addClass(DISABLED);
+                var data = {
+                    id: camFrm.field.id,
+                    did: camFrm.field.did,
+                    nickName: camFrm.field.nickName,
+                    enable: camFrm.field.enable
+                }
+                $.ajax({
+                    url: "/Device/CamSave",
+                    data: data,
+                    type: "get",
+                    datatype: "json",
+                    contenttype: "application/json;chartset=utf-8",
+                    success: function (res) {
+                        $("#btnSubmit").removeAttr('disabled').removeClass(DISABLED);
+                        if (res.code == 0) {
+                            layer.msg("数据保存成功", { icon: 1 });
+                            tableIns.reload();
+                            //修改成功修改表格数据不进行跳转
+                            //setTimeout(function () {
+                            //    var flag = camFrm.field.enable == "1" ? true : false;
+                            //    var cameras = obj.data.cameraModelList;
+                            //    for (var i = 0; i < cameras.length; i++) {
+                            //        if (cameras[i].id == camFrm.field.id) {
+                            //            cameras[i].enable = flag;
+                            //            cameras[i].nickName = camFrm.field.nickName;
+                            //        }
+                            //    }
+                            //    obj.update({
+                            //        cameraModelList: cameras
+                            //    });
+                            //    table.reload(camdata);
+                            //    layer.closeAll();//关闭所有的弹出层
+                            //}, 1000);
+                        } else {
+                            layer.msg(res.msg, { icon: 2 })
+                        }
+                    }
+                });
+                return false;
+            })
+        }
+      
     });
 </script>
-<div style="margin:20px;width:96%">
-    <h1>设备列表</h1>
-    <hr />
-
-    <table class="layui-table" id="userTable" lay-filter="userTable"></table>
-    @if (ViewBag.IsSet)
-    {
-        <div style="display: none;" id="userToolBar">
-            <button type="button" class="layui-btn layui-btn-sm" id="btnAdd" lay-event="add">增加</button>
-        </div>
-    }
-
-    <div id="userBar" style="display: none;">
-        <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="detail">详情</a>
-        @if (ViewBag.IsSet)
-        {
-            <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
-            <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
-        }
-    </div>
-</div>
 <div id="divAddOrUpdate" style="display:none;margin-top:20px">
     <form class="layui-form" action="" id="dataFrm" lay-filter="dataFrm">
         <input name="id" id="hidId" type="hidden" class="layui-input" />
@@ -275,9 +410,36 @@
             </div>
         </div>
         <div class="layui-form-item" style="text-align:center;margin-top:30px">
-            <div class="layui-input-block" id="divShow"  style="margin:0 auto">
+            <div class="layui-input-block" id="divShow" style="margin:0 auto">
                 <button type="submit" id="btnSubmit" class="layui-btn layui-btn-normal" lay-filter="doSubmit" lay-submit="">提交</button>
                 <button type="reset" class="layui-btn layui-btn-warm">重置</button>
+            </div>
+        </div>
+    </form>
+
+</div>
+<div id="divCamUpdate" style="display:none;margin-top:20px">
+    <form class="layui-form" action="" id="dataCamFrm" lay-filter="dataCamFrm">
+        <input name="id" id="hidId" type="hidden" class="layui-input" />
+        <input type="hidden" name="did" value="" class="layui-input" />
+        <div class="layui-form-item">
+            <label class="layui-form-label" style="width:100px">摄像机状态：</label>
+            <div class="layui-input-inline">
+                <div class="layui-input-inline">
+                    <input type="radio" name="enable" value="1" title="开启" class="layui-input">
+                    <input type="radio" name="enable" value="2" title="停用" class="layui-input" checked="checked">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label" style="width:100px">摄像机别名：</label>
+            <div class="layui-input-inline" style="width:200px">
+                <input type="text" name="nickName" maxlength="20" lay-verify="required" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item" style="margin-top:30px;text-align:center">
+            <div class="layui-input-block" id="divShow" style="margin:0 auto">
+                <button type="submit" class="layui-btn layui-btn-normal" lay-filter="doCamSubmit" lay-submit="">提交</button>
             </div>
         </div>
     </form>

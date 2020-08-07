@@ -73,7 +73,7 @@ namespace ShipWeb.Controllers
             };
             return new JsonResult(result);
         }
-        public IActionResult Save(string id,string did,string nickName,string enalbe)
+        public IActionResult Save(string id,string did,string nickName,string enable)
         {
             if (ModelState.IsValid)
             {
@@ -89,7 +89,7 @@ namespace ShipWeb.Controllers
                             camerainfos = new List<ProtoBuffer.Models.CameraInfo>() {
                                  new ProtoBuffer.Models.CameraInfo(){
                                  cid=id,
-                                 enable=enalbe == "1" ? true : false,
+                                 enable=enable == "1" ? true : false,
                                  nickname=nickName
                                  }
                                },
@@ -109,7 +109,7 @@ namespace ShipWeb.Controllers
                             return new JsonResult(new { code = 1, msg = "数据不存在" });
                         }
                         camera.NickName = nickName;
-                        camera.Enalbe = enalbe == "1" ? true : false;
+                        camera.Enable = enable == "1" ? true : false;
                         var embModel = _context.Device.FirstOrDefault(e => e.Id == camera.DeviceId);
                         if (embModel != null)
                         {
@@ -119,7 +119,7 @@ namespace ShipWeb.Controllers
                                  new ProtoBuffer.Models.CameraInfo(){
                                  cid=camera.Id,
                                  index=camera.Index,
-                                 enable=camera.Enalbe,
+                                 enable=camera.Enable,
                                  ip=camera.IP,
                                  nickname=camera.NickName
                                  }
@@ -147,7 +147,7 @@ namespace ShipWeb.Controllers
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError("修改摄像机信息失败", "Save(" + id + "," + did + "," + nickName + "," + enalbe + ")");
+                    _logger.LogError("修改摄像机信息失败", "Save(" + id + "," + did + "," + nickName + "," + enable + ")");
                     return new JsonResult(new { code = 1, msg = "数据保存失败！" + ex.Message });
                 }
 

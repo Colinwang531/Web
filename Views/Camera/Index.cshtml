@@ -22,8 +22,8 @@
             cols: [[
                 { field: "index", title: "摄像机序号", width: 100 },
                 {
-                    field: "enalbe", title: "启用设备", width: 100, templet: function (e) {
-                        return e.enalbe ? "开启" : "停用";
+                    field: "enable", title: "启用设备", width: 100, templet: function (e) {
+                        return e.enable ? "开启" : "停用";
                     }
                 },
                 { field: "nickName", title: "摄像机别名", width: 200 },
@@ -59,7 +59,7 @@
                 id: frm.field.id,
                 did: $("#hidEmb").val(),
                 nickName: frm.field.nickName,
-                enalbe: frm.field.enalbe
+                enable: frm.field.enable
             }
             $.ajax({
                 url: "/Camera/Save",
@@ -104,8 +104,8 @@
                 <label class="layui-form-label" style="width:100px">摄像机状态：</label>
                 <div class="layui-input-inline">
                     <div class="layui-input-inline">
-                        <input type="radio" name="enalbe" value="1" title="开启" class="layui-input">
-                        <input type="radio" name="enalbe" value="2" title="禁用" class="layui-input" checked="checked">
+                        <input type="radio" name="enable" value="1" title="开启" class="layui-input">
+                        <input type="radio" name="enable" value="2" title="禁用" class="layui-input" checked="checked">
                     </div>
                 </div>
         </div>

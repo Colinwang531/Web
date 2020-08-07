@@ -125,7 +125,7 @@ namespace ShipWeb.ProtoBuffer
                         CameraInfo cam = new CameraInfo()
                         {
                             cid =it.Id,
-                            enable = it.Enalbe,
+                            enable = it.Enable,
                             index = it.Index,
                             ip = it.IP,
                             nickname = it.NickName                             
@@ -207,7 +207,7 @@ namespace ShipWeb.ProtoBuffer
                             ShipWeb.Models.Camera cam = new ShipWeb.Models.Camera()
                             {
                                 DeviceId = id,
-                                Enalbe = item.enable,
+                                Enable = item.enable,
                                 Id = Guid.NewGuid().ToString(),
                                 Index = item.index,
                                 IP = item.ip,
@@ -259,7 +259,7 @@ namespace ShipWeb.ProtoBuffer
                             if (camList.Where(c => c.Id == item.cid).Any())
                             {
                                 var carmera = camList.FirstOrDefault(c => c.Id == item.cid);
-                                carmera.Enalbe = item.enable;
+                                carmera.Enable = item.enable;
                                 carmera.NickName = item.nickname;
                                 _context.Camera.Update(carmera);
                             }

@@ -387,9 +387,9 @@ namespace ShipWeb.ProtoBuffer
         private List<CrewInfo> EmployeeMessage(MSG msg, DealerSocket dealer)
         {
             List<CrewInfo> list = new List<CrewInfo>();
-            SendMessage(msg);
-            MSG revMsg = ReceiveMessage(dealer);
-            //MSG revMsg = msg;
+            //SendMessage(msg);
+            //MSG revMsg = ReceiveMessage(dealer);
+            MSG revMsg = msg;
             if (revMsg.type == MSG.Type.CREW)
             {
                 Crew crewMsg = revMsg.crew;
@@ -455,9 +455,9 @@ namespace ShipWeb.ProtoBuffer
         private int CrewAddMessage(MSG msg, DealerSocket dealer)
         {
             int result = 1;
-            SendMessage(msg);
-            MSG revMsg = ReceiveMessage(dealer);
-            //MSG revMsg = msg;
+            //SendMessage(msg);
+            //MSG revMsg = ReceiveMessage(dealer);
+            MSG revMsg = msg;
             if (revMsg.type == MSG.Type.CREW)
             {
                 Crew crewMsg = revMsg.crew;
@@ -520,9 +520,9 @@ namespace ShipWeb.ProtoBuffer
         private int CrewUpdateMessage(MSG msg, DealerSocket dealer)
         {
             int result = 1;
-            SendMessage(msg);
-            MSG revMsg = ReceiveMessage(dealer);
-            //MSG revMsg = msg;
+            //SendMessage(msg);
+            //MSG revMsg = ReceiveMessage(dealer);
+            MSG revMsg = msg;
             if (revMsg.type == MSG.Type.CREW)
             {
                 Crew crewMsg = revMsg.crew;
@@ -656,9 +656,9 @@ namespace ShipWeb.ProtoBuffer
         private List<DeviceInfo> DeviceMessage(MSG msg, DealerSocket dealer)
         {
             List<DeviceInfo> list = new List<DeviceInfo>();
-            SendMessage(msg);
-            MSG revMsg = ReceiveMessage(dealer);
-            //MSG revMsg = msg;
+            //SendMessage(msg);
+            //MSG revMsg = ReceiveMessage(dealer);
+            MSG revMsg = msg;
             if (revMsg.type == MSG.Type.DEVICE)
             {
                 Device devMsg = revMsg.device;
@@ -726,9 +726,9 @@ namespace ShipWeb.ProtoBuffer
         private DeviceResponse DeveiceAddMessage(MSG msg, DealerSocket dealer)
         {
             DeviceResponse result = new DeviceResponse();
-            SendMessage(msg);
-            MSG revMsg = ReceiveMessage(dealer);
-            //MSG revMsg = msg;
+            //SendMessage(msg);
+            //MSG revMsg = ReceiveMessage(dealer);
+            MSG revMsg = msg;
             if (revMsg.type == MSG.Type.DEVICE)
             {
                 Device devMsg = revMsg.device;
@@ -795,9 +795,9 @@ namespace ShipWeb.ProtoBuffer
         private int DeveiceUpdateMessage(MSG msg, DealerSocket dealer)
         {
             int result = 1;
-            SendMessage(msg);
-            MSG revMsg = ReceiveMessage(dealer);
-            //MSG revMsg = msg;
+            //SendMessage(msg);
+            //MSG revMsg = ReceiveMessage(dealer);
+            MSG revMsg = msg;
             if (revMsg.type == MSG.Type.DEVICE)
             {
                 Device devMsg = revMsg.device;
@@ -859,9 +859,9 @@ namespace ShipWeb.ProtoBuffer
         private int DeveiceDeleteMessage(MSG msg, DealerSocket dealer)
         {
             int result = 1;
-            SendMessage(msg);
-            MSG revMsg = ReceiveMessage(dealer);
-            //MSG revMsg = msg;
+            //SendMessage(msg);
+            //MSG revMsg = ReceiveMessage(dealer);
+            MSG revMsg = msg;
             if (revMsg.type == MSG.Type.DEVICE)
             {
                 Device devMsg = revMsg.device;

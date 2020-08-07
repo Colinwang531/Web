@@ -54,69 +54,82 @@
     body {
         height: 100%;
         width: 100%;
-        background-image: url('images/LoginBackground.jpg');
+        background-image: url('images/background.png');
         background-size: cover;
     }
 
     table {
         border-collapse: collapse;
         border-spacing: 0;
-        width: 500px;
-        font-size: 26px;        
-        border-color: grey;
-        border: 1px solid #666;
+        width: 450px;
+        font-size: 16px;
+        background-color: white
     }
 
-    table tr {
-        height: 70px;
-    }
+        table tr {
+            height: 70px;
+        }
     .btn {
-        background: url('images/Loginbtn.png') no-repeat;
+        background-color: #01469E;
         border: none;
-        width: 80%;
-        height: 80px;
-        font-size: 26px;
-        color: black;
+        width: 82%;
+        height: 46px;
+        font-size: 18px;
+        color: #FFFFFF;
         background-size: 100% 100%;
+        margin-left:40px;
     }
-
 </style>
-<body style="height: 100%;width: 100%;position: relative; ">
-    <div style=" position: absolute;top: 20%;left: 40%;margin-left: -40px;margin-top: -39px;">
-        <div style="text-align:center;padding-bottom:20px">
-            <img style="width:150px;height:150px" src="~/images/LoginHead.jpg" />
+<body class="layui-layout-body" style="height: 100%;width: 100%;position: relative; ">
+
+    <div style=" position: absolute;top: 25%;left: 42%;margin-left: -42px;margin-top: -25px;">
+        <div class="layui-form-item" style="margin-top: 20px;margin-bottom:30px">
+            <div class="layui-inline">
+                <img style="width:85px;height:35px;float:left" src="~/images/Logo.png" />
+                <label style="font-size:32px;font:normal;font-family:FZCuHeiSongS-B-GB;margin-left:10px;width:300px;color:white;font-weight:bold">禹创智能科技</label>
+            </div>
         </div>
         <table>
             <tr style="height:25px">
-                <td colspan="2">
-                </td>
-            </tr>
-            <tr>
-                <td align="center" style="width:150px">用户名</td>
-                <td><input type="text" name="username" id="txtName" style="width:80%" class="layui-input"></td>
-            </tr>
-            <tr>
-                <td align="center">密码</td>
-                <td> <input type="password" id="txtPwd" name="password" style="width:80%" class="layui-input"></td>
-            </tr>
-            <tr>
-                <td align="center">类型</td>
                 <td>
-                    <div class="layui-input-inline">
-                        <select id="slType" style="height:38px;border:1px solid #fff;width:150px">
-                            <option value="1">船舶</option>
-                            <option value="2" selected="selected">陆地</option>
-                        </select>
-                    </div>
                 </td>
             </tr>
             <tr>
-                <td colspan="2" style="text-align:center;padding-bottom:30px;padding-top:30px">
-                    @*<input type="submit" value="确&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;定" class="btn" onclick="Login()" />*@
-                    <button type="submit"class="btn" onclick="Login()">确&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;定</button>
+                <td>
+                    <label style="font-size:24px;font:normal;margin-left:40px;font-weight:bold">用户登录</label>
+                   
+                </td>
+            </tr>
+            <tr>
+                <td><input type="text" name="username" id="txtName" maxlength="20" placeholder="请输入用户名" style="width:82%;margin-left:40px;height:48px;padding-left:16px" class="layui-input"></td>
+            </tr>
+            <tr>
+                <td> <input type="password" id="txtPwd" name="password" maxlength="32" placeholder="请输入密码"  style="width:82%;margin-left:40px;height:48px;padding-left:16px" class="layui-input"></td>
+            </tr>
+            <tr>
+                <td>
+                    <select id="slType" style="height:38px;border:1px solid #fff;width:150px;margin-left:40px">
+                        <option value="1">船舶</option>
+                        <option value="2" selected="selected">陆地</option>
+                    </select>
+
+                </td>
+            </tr>
+            <tr>
+                <td style="padding-bottom:73px;padding-top:30px">
+                    <button type="submit" class="btn" onclick="Login()">登录</button>
                 </td>
             </tr>
         </table>
 
     </div>
+    <div style="position: fixed;bottom:36px;height:44px;text-align:center;width:100%;">
+        <div>
+            <label style="color:#ffffff;font-size:14px;font-weight:bold">技术支持：四川凯普顿信息技术股份有限公司</label>
+        </div>
+        <div style="padding-top:8px">
+            <label style="color:#ffffff;font-size:12px;">版权所有 © 2005–2020 Captain, Inc. 保留全部权利。Powered by Captain</label>
+        </div>
+    </div>
+
 </body>
