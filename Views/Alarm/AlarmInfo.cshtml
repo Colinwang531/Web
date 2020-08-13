@@ -1,0 +1,70 @@
+﻿
+@{
+    ViewData["Title"] = "AlarmInfo";
+    if (!ViewBag.IsShowLayout)
+    {
+        Layout = null;
+    }
+}
+<link href="~/layui/css/layui.css" rel="stylesheet" />
+<script src="~/lib/jquery/dist/jquery.js"></script>
+<style>
+    img {
+        width: 100px;
+        height: 100px;
+        margin-top: 81px;
+        margin-bottom: 24px;
+    }
+
+    .card {
+        text-align: center;
+        width: 350px;
+        height: 368px;
+        border: 1px solid rgba(221, 221, 221, 1);
+        float: left;
+        margin-left: 41px;
+        border-radius: 8px;
+    }
+</style>
+<script type="text/javascript">
+    function Detail(type) {
+        window.location.href = "/Alarm/AlarmList?type=" + type + "&isShip=@ViewBag.IsShip";
+    }
+</script>
+
+<div style="margin: 30px; width: 96%">
+    <input type="hidden" id="hidIsShip" value="@ViewBag.IsShip" />
+    <div style="margin-top:102px;margin-bottom:94px;text-align:center">
+        <label style="font-family:STZhongsong;font-weight:bold;width:300px;font:normal;font-size:28px;">报警信息</label>
+    </div>
+    <div style="text-align:center">
+        <div class="layui-card card" onclick="Detail(3)">
+            <div class="layui-card-body">
+                <img src="~/images/alarm/sleep.png" /><br />
+                <label style="font-family:STZhongsong;font-weight:bold;width:300px;font:normal;font-size:24px;">睡觉</label><br /><br />
+                <label style="color:#8C8C8C;font-size:16px;margin-top:32px">共记 @ViewBag.sleep 项</label>
+            </div>
+        </div>
+        <div class="layui-card card" onclick="Detail(4)">
+            <div class="layui-card-body">
+                <img src="~/images/alarm/fight.png" /><br />
+                <label style="font-family:STZhongsong;font-weight:bold;width:300px;font:normal;font-size:24px;">打架</label><br /><br />
+                <label style="color:#8C8C8C;font-size:16px;margin-top:32px">共记 @ViewBag.fight 项</label>
+            </div>
+        </div>
+        <div class="layui-card card" onclick="Detail(1)">
+            <div class="layui-card-body">
+                <img src="~/images/alarm/helmet.png" /><br />
+                <label style="font-family:STZhongsong;font-weight:bold;width:300px;font:normal;font-size:24px;">安全帽</label><br /><br />
+                <label style="color:#8C8C8C;font-size:16px;margin-top:32px">共记 @ViewBag.helmet 项</label>
+            </div>
+        </div>
+        <div class="layui-card card" onclick="Detail(2)">
+            <div class="layui-card-body">
+                <img src="~/images/alarm/phone.png" /><br />
+                <label style="font-family:STZhongsong;font-weight:bold;width:300px;font:normal;font-size:24px;">玩手机</label><br /><br />
+                <label style="color:#8C8C8C;font-size:16px;margin-top:32px">共记 @ViewBag.phone 项</label>
+            </div>
+        </div>
+    </div>
+</div>

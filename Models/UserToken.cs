@@ -31,6 +31,10 @@ namespace ShipWeb.Models
         /// </summary>
         public string ShipId { get; set; }
         /// <summary>
+        /// 船名
+        /// </summary>
+        public string ShipName { get; set; }
+        /// <summary>
         /// true:陆地端 false:船舶端
         /// </summary>
         public bool IsLandHome { get; set; }

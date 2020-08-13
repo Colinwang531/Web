@@ -43,31 +43,66 @@ namespace ShipWeb.Controllers
             {
                 base.user.ShipId = shipid;
             }
-            ViewBag.src = "/Alarm/Index?isShow=false";
+          
             ViewBag.IsLandHome = base.user.IsLandHome;
             ViewBag.LoginName = base.user.Name;
+            ViewBag.ShipName = base.user.ShipName;
             return View();
         }
         public IActionResult AlarmShipAll()
         {
             return View();
         }
+        public IActionResult AlarmInfo(bool flag=false,bool isShip=false) 
+        {
+            var sleep = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.SLEEP).ToList();
+            var fight = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.FIGHT).ToList();
+            var helmet = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.HELMET).ToList();
+            var phone = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.PHONE).ToList();
+            ViewBag.sleep = sleep.Count; 
+            ViewBag.fight = fight.Count;
+            ViewBag.helmet = helmet.Count;
+            ViewBag.phone = phone.Count;
+            ViewBag.IsShowLayout = flag;
+            ViewBag.IsShip = isShip;
+            if (isShip)
+            {
+                ViewBag.src = "/Alarm/AlarmInfo?flag=false&isShip="+isShip;
+                ViewBag.layuithis = "alarm";
+                ViewBag.IsLandHome = false;
+            }
+            return View();
+        }
+        public IActionResult AlarmList(string type,bool flag=false,bool isShip=false) 
+        {
+            string name = "打架";
+            if (type == "1") name = "安全帽";
+            else if (type == "2") name = "打电话";
+            else if (type == "3") name = "睡觉";
+            ViewBag.TypeName = name;
+            ViewBag.type = type;
+            ViewBag.IsShowLayout = flag;
+            ViewBag.IsShip = isShip;
+            return View();
+        }
+
         /// <summary>
         /// 船舶端查询报警信息
         /// </summary>
         /// <param name="pageIndex"></param>
         /// <param name="pageSize"></param>
         /// <returns></returns>
-        public IActionResult Load(int pageIndex, int pageSize)
+        public IActionResult Load(int pageIndex, int pageSize,int type)
         {
             try
             {
                 int total = 0;
-                var list = GetDate(new SearchAlarmViewModel() { ShipId = base.user.ShipId }, pageIndex, pageSize, out total);
+                var list = GetDate(new SearchAlarmViewModel() { ShipId = base.user.ShipId, Type=type }, pageIndex, pageSize, out total);
                 var result = new
                 {
                     code = 0,
                     data = list,
+                    ship = _context.Ship.ToList(),
                     pageIndex = pageIndex,
                     pageSize = pageSize,
                     count = total

@@ -44,6 +44,22 @@ namespace ShipWeb.Controllers
             };
             return new JsonResult(result);
         }
+        /// <summary>
+        /// 查询用户信息
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public IActionResult Search(string name) 
+        {
+            var data = _context.User.Where(c => c.Id != "admin"&&string.IsNullOrEmpty(name)?1==1:c.Name.Contains(name)).ToList();
+            var result = new
+            {
+                code = 0,
+                data = data,
+                isSet = base.user.EnableConfigure
+            };
+            return new JsonResult(result);
+        }
         public IActionResult Save(string users) {
             var model = JsonConvert.DeserializeObject<Models.User>(users);
             if (model!=null)

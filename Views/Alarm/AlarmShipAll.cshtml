@@ -44,6 +44,7 @@
                 limitName: 'pageSize' //每页数据量的参数名，默认：limit
             },
             cols: [[
+                { type: 'numbers', title: "序号", width: 100 },
                 { field: 'name', title: '船舶名称', unresize: true },
                 { field: 'time', title: '报警时间', unresize: true},
                 //{ field: 'cid', title: '摄像机编号', width: 120 },
@@ -91,6 +92,8 @@
             page: {
                 groups: 5 //只显示 5 个连续页码
             }, done: function (res) {
+                $('#page').css('text-align', 'right');  // 分页右对齐
+                $('.layui-table-page').css('text-align', 'right');  // 数据表格分页右对齐
                 var sl = res.ship;
                 if (sl.length > 0) {
                     var slHtml = '<option value="">请选择</option>';
@@ -192,8 +195,9 @@
         window.location.href = "/Alarm/ExportPdf?shipId=" + shipId + "&name=" + name + "&type=" + parseInt(type) + "&startTime=" + starttime + "&endTime=" + endtime;
     }
 </script>
-<div style="margin:20px;width:96%">
-    <form class="layui-form" action="" id="dataFrm" lay-filter="dataFrm">
+<div style="margin-left:30px;width:90%">
+    <label style="font-family:STZhongsong;font-weight:bold;width:300px;font:normal;font-size:28px;">报警信息</label>
+    <form class="layui-form"style="margin-top:45px"  action="" id="dataFrm" lay-filter="dataFrm">
         <div class="layui-form-item">
             <label class="layui-form-label">船舶名称</label>
             <div class="layui-input-inline">
@@ -223,8 +227,8 @@
             <div class="layui-input-inline" style="width:100px">
                 <input name="endTime" class="layui-input" id="dtEndTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off" readonly>
             </div>
-            <button class="layui-btn" type="submit" lay-submit="" lay-filter="query">查询</button>
-            <a href="#" onclick="Export()" class="layui-btn">导出</a>
+            <button class="layui-btn" type="submit" lay-submit="" lay-filter="query" style="background-color:#2F6BFF">查询</button>
+            <a href="#" onclick="Export()" class="layui-btn" style="background-color:#2F6BFF">导出</a>
         </div>
     </form>
     <table class="layui-table" id="alarmTable" layer-filter="alarmTable"></table>

@@ -38,4 +38,11 @@
     <Folder Include="wwwroot\video\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Update="wwwroot\images\user.png">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

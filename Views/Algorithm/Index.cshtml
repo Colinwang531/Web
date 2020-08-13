@@ -20,9 +20,9 @@
         var tableIns = table.render({
             elem: '#algoTable',
             url: '/Algorithm/Load',
-            toolbar: '#userToolBar',
             defaultToolbar: [],
             cols: [[
+                { type: 'numbers', title: "序号", width: 100 },
                 {
                     field: 'type', title: "算法类型",  templet: function (e) {
                         if (e.type == 1) return "安全帽";
@@ -61,25 +61,23 @@
                 form.render();
             }
         })
-        table.on("toolbar(algoTable)", function (obj) {
-            if (obj.event == "add") {
-                layer.open({
-                    type: 1,
-                    title: '新增算法',
-                    content: $("#divSaveOrUpdate"),
-                    area: ["660px", "380px"],
-                    success: function () {
-                        $("#btnSubmit").removeAttr('disabled').removeClass(DISABLED);
-                        $("#dataFrm")[0].reset();
-                        $("#hidId").val("");
-                        $("#selType").val("");
-                        $("#slCamera").val("");
-                        $("#slgpu").val("");
-                        form.render();
-                        SetCSS(1);
-                    }
-                });
-            }
+        $("#btnAdd").click(function(){
+            layer.open({
+                type: 1,
+                title: '新增算法',
+                content: $("#divSaveOrUpdate"),
+                area: ["660px", "380px"],
+                success: function () {
+                    $("#btnSubmit").removeAttr('disabled').removeClass(DISABLED);
+                    $("#dataFrm")[0].reset();
+                    $("#hidId").val("");
+                    $("#selType").val("");
+                    $("#slCamera").val("");
+                    $("#slgpu").val("");
+                    form.render();
+                    SetCSS(1);
+                }
+            });
         });
         table.on("tool(algoTable)", function (obj) {
             var data = obj.data;
@@ -229,20 +227,39 @@
 
     });
 </script>
-<div style="margin:20px;width:96%">
-    <table class="layui-hide" id="algoTable" lay-filter="algoTable" ></table>
-    @if (ViewBag.IsSet)
-    {
-    <div style="display:none" id="userToolBar">
-        <button class="layui-btn layui-btn-sm" lay-event="add">增加</button>
-    </div>
-    <div style="display:none" id="userBar">
-        <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
-        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
-    </div>
-
+<style>
+    button {
+        width: 150px;
+        height: 40px;
     }
+</style>
+<div >
+    <div style="margin-left:30px;margin-top:30px;width:98%">
+        <label style="font-family:STZhongsong;font-weight:bold;width:300px;font:normal;font-size:28px;">算法配置</label>
+        <form class="layui-form" action="" id="serachFrm" lay-filter="serachFrm" style="margin-top:45px">
+            @if (ViewBag.IsSet)
+            {
+                <button type="button" class="layui-btn" style="width:126px;height:40px" id="btnAdd">新增算法</button>
+            }
 
+            @*<div class="demoTable" style="float:right;">
+            <div class="layui-inline" style="float:left">
+                <input type="text" name="year" id="txtName" placeholder="请输入用户名" class="layui-input" style="height:36px;width:288px">
+            </div>
+            <img src="/images/sousuo.png" style="width:32px;height:32px;margin-left:10px" id="imgbtn">
+        </div>*@
+        </form>
+        <table class="layui-hide" id="algoTable" lay-filter="algoTable"></table>
+        @if (ViewBag.IsSet)
+        {
+            <div style="display:none" id="userBar">
+                <a style="color:#2F6BFF" lay-event="edit">编辑</a>
+                <a style="color:#8C8C8C;margin-left:50px" lay-event="del">删除</a>
+            </div>
+
+        }
+    </div>
+    
 </div>
 <div style="display:none" id="divSaveOrUpdate">
     <form class="layui-form" id="dataFrm" layer-filter="dataFrm" action="">
@@ -316,7 +333,7 @@
         </div>
         <div class="layui-form-item" style="text-align:center;margin-top:30px">
             <div class="layui-input-block"  style="margin:0 auto">
-                <button type="submit" id="btnSubmit" class="layui-btn layui-btn-normal" lay-filter="doSubmit" lay-submit="">提交</button>
+                <button type="submit" id="btnSubmit" class="layui-btn" lay-filter="doSubmit" lay-submit="">提交</button>
                 <button type="button" id="txtReset" class="layui-btn layui-btn-warm">重置</button>
             </div>
         </div>

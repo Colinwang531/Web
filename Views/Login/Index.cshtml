@@ -34,10 +34,10 @@
                 if (res.code == 1) {
                     alert(res.msg);
                 } else {
-                    var type = $("#slType").val(); //$(':radio[name="rdo"]:checked').val();
+                    var type = $("#slType").val(); //$(':radio[name="rdo"]:checked').val();                   
                     if (type == 1) {
                         if (res.flag) {
-                            window.location.href = "/Alarm/Index?isShow=true";//如果船存在就跳到报警页面
+                            window.location.href = "/Alarm/AlarmInfo?flag=true&isShip=true";//如果船存在就跳到报警页面
                         }
                         else {
                             window.location.href = "/Ship/Edit?isShow=true";//船不存在就先添加船
@@ -63,7 +63,8 @@
         border-spacing: 0;
         width: 450px;
         font-size: 16px;
-        background-color: white
+        background-color: white;
+        border-radius: 8px;
     }
 
         table tr {
@@ -82,7 +83,7 @@
 </style>
 <body class="layui-layout-body" style="height: 100%;width: 100%;position: relative; ">
 
-    <div style=" position: absolute;top: 25%;left: 42%;margin-left: -42px;margin-top: -25px;">
+    <div style=" position: absolute;top: 25%;left: 42%;margin-left: -42px;margin-top: -25px; ">
         <div class="layui-form-item" style="margin-top: 20px;margin-bottom:30px">
             <div class="layui-inline">
                 <img style="width:85px;height:35px;float:left" src="~/images/Logo.png" />

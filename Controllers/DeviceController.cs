@@ -31,7 +31,7 @@ namespace ShipWeb.Controllers
         }
 
        
-        public IActionResult Index(bool isShow=false,string id="")
+        public IActionResult Index(bool isShow=false,string id="",string shipName="")
         {
             if (!string.IsNullOrEmpty(id))
             {
@@ -42,6 +42,7 @@ namespace ShipWeb.Controllers
                     user = JsonConvert.DeserializeObject<UserToken>(urlstr);
                     user.ShipId = id;
                     user.IsLandHome = true;
+                    user.ShipName = shipName;
                     string userStr = JsonConvert.SerializeObject(user);
                     //将请求的url注册
                     HttpContext.Session.SetString(browsertoken, userStr);
@@ -51,7 +52,9 @@ namespace ShipWeb.Controllers
                 //陆地端过来不显示报警信息
                 ManagerHelp.IsShowAlarm = false;
                 ViewBag.LoginName = base.user.Name;
+                ViewBag.ShipName = base.user.ShipName; 
                 ViewBag.src = "/Device/Index";
+                ViewBag.layuithis = "device";
             }
             ViewBag.IsLandHome = base.user.IsLandHome;
             ViewBag.IsShowLayout = isShow;

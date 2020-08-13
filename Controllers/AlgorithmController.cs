@@ -61,24 +61,27 @@ namespace ShipWeb.Controllers
             };
             return new JsonResult(result);
         }
-        public IActionResult LandLoad() 
+        public IActionResult LandLoad()
         {
-            var protoDate=manager.AlgorithmQuery(base.user.ShipId);
+            List<Camera> cameras = new List<Camera>();
+            List<ProtoBuffer.Models.AlgorithmInfo> protoDate = new List<ProtoBuffer.Models.AlgorithmInfo>();
+            new TaskFactory().StartNew(() => {
+                 protoDate = manager.AlgorithmQuery(base.user.ShipId);              
+            }).Wait(timeout);
             var data = from a in protoDate
                        select new
                        {
-                           id=a.cid.Split(',')[0],
-                           cid=a.cid.Split(',')[1],
-                           Type=a.type,
-                           GPU=a.gpu,
-                           Similar=a.similar,
-                           NickName=a.cid.Split(',')[2],
-                           DectectFirst=a.dectectfirst,
-                           DectectSecond=a.dectectsecond,
-                           Track=a.track
+                           id = a.cid.Split(',')[0],
+                           cid = a.cid.Split(',')[1],
+                           Type = a.type,
+                           GPU = a.gpu,
+                           Similar = a.similar,
+                           NickName = a.cid.Split(',')[2],
+                           DectectFirst = a.dectectfirst,
+                           DectectSecond = a.dectectsecond,
+                           Track = a.track
                        };
             var device = manager.DeviceQuery(base.user.ShipId);
-            List<Camera> cameras = new List<Camera>();
             foreach (var item in device)
             {
                 var camList = item.camerainfos;
