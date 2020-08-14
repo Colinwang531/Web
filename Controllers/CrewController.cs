@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Hosting;
 using Org.BouncyCastle.Crypto.Tls;
 using ProtoBuf;
@@ -46,14 +47,25 @@ namespace ShipWeb.Controllers
         /// 加载船员列表
         /// </summary>
         /// <returns></returns>
-        public IActionResult Load()
+        public IActionResult Load(int pageIndex, int pageSize)
         {
+            ViewBag.IsLandHome = false;
             if (base.user.IsLandHome)
             {
+                ViewBag.IsLandHome = true;
                 return LandLoad();
             }
+            else
+            {
+                return Search("",pageIndex,pageSize);
+            }            
+        }
+        public IActionResult Search(string name, int pageIndex, int pageSize)
+        {
             string shipId = base.user.ShipId;
-            var data = _context.Crew.Where(c => c.ShipId == shipId).ToList();
+            var datacrew = _context.Crew.Where(c => c.ShipId == shipId && string.IsNullOrEmpty(name) ? 1 == 1 : c.Name.Contains(name)).ToList();
+            int count = datacrew.Count();
+            var data = datacrew.Skip((pageIndex - 1) * pageSize).Take(pageSize);
             var ids = string.Join(',', data.Select(c => c.Id));
             var Pics = _context.CrewPicture.Where(c => ids.Contains(c.CrewId)).ToList();
             foreach (var item in data)
@@ -88,6 +100,9 @@ namespace ShipWeb.Controllers
             {
                 code = 0,
                 data = dataShow,
+                count = count,
+                pageIndex=pageIndex,
+                pageSize=pageSize,
                 isSet = !string.IsNullOrEmpty(shipId) ? base.user.EnableConfigure : false
             };
             return new JsonResult(result);
@@ -117,6 +132,7 @@ namespace ShipWeb.Controllers
             {
                 code = 0,
                 data = dataShow,
+                count= data.Count(),
                 isSet = !string.IsNullOrEmpty(base.user.ShipId) ? base.user.EnableConfigure : false
             };
             return new JsonResult(result);

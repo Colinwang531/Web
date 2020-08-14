@@ -1,137 +1,71 @@
 ﻿
-
 @{
     Layout = null;
 }
+
 <link href="~/layui/css/layui.css" rel="stylesheet" />
 <script src="~/layui/layui.js"></script>
 <script src="~/lib/jquery/dist/jquery.js"></script>
 <style>
-    .layui-table-cell {
-        display: table-cell;
-        vertical-align: middle;
+    .card {
+        text-align: left;
+        width: 270px;
+        height: 340px;
+        border: 1px solid rgba(221, 221, 221, 1);
+        float: left;
+        margin-left: 38px;
+        margin-top: 38px;
+        border-radius: 8px;
     }
-    .layui-table img {
-        max-width: 120px
+    .layui-this {
+        color: #2F6BFF;
     }
+</style>
+<style type="text/css">
+    .uploader-list {
+        margin-left: -15px;
+    }
+        .uploader-list .handle {
+            position: relative;
+            background-color: black;
+            color: white;
+            filter: alpha(Opacity=80);
+            opacity: 0.5;
+            /*width: 100px;*/
+            text-align: right;
+            height: 28px;
+            margin-bottom: -28px;
+            display: none;
+        }
+            .uploader-list .handle i {
+                margin-right: 5px;
+            }
+                .uploader-list .handle i:hover {
+                    cursor: pointer;
+                }
+
+        .uploader-list .file-iteme {
+            margin: 12px 0 0 15px;
+            padding: 1px;
+            float: left;
+        }
 </style>
 <script type="text/javascript">
     var uploadFiles;
     var upnum = 0;//记录上传后返回的数量
     var upflag = true;//判断文件是否上传完
-    layui.use(['upload', 'form', 'table'], function () {
+    var crewData = null;
+    var DISABLED = 'layui-btn-disabled';
+    var limit = 5;
+    var page = 1;
+    var count = 0;
+    layui.use(['upload', 'form', 'element', 'layer'], function () {
         var $ = layui.jquery;
         var upload = layui.upload;
         var form = layui.form;
-        var table = layui.table;
-        var DISABLED = 'layui-btn-disabled';
-        var tableIns = table.render({
-            elem: '#userTable',   //渲染的目标对象
-            url: '/Crew/Load', //数据接口
-            toolbar: "#userToolBar",   //表格的工具条
-            defaultToolbar: [],
-            width: 1200,
-            cellMinWidth: 150,
-            page: false,  //是否启用分页
-            cols: [[   //列表数据
-                { field: 'name', title: '船员名称', width: 150, unresize: true },
-                { field: 'job', title: '工作内容', width: 200, unresize: true },
-                {
-                    field: 'employeePictures', title: '船员图片', minWidth: 300, unresize: true, templet: function (d) {
-                        var pics = d.employeePictures;
-                        var html = "";
-                        if (pics.length > 0) {
-                            for (var j = 0; j < pics.length; j++) {
-                                html += '<img style="width:120px;height:80px" ondblclick="showBigImage(this)" src="data:image/jpeg;base64,' + pics[j].picture + '"/>&nbsp;&nbsp;&nbsp'
-                            }
-                        }
-                        return html;
-                    }
-                },
-                { fixed: 'right', title: '操作', width: 200, toolbar: '#userBar', align: 'center' }
-            ]],
-            done: function (res) {
-                if (res.isSet == true) {
-                    $("#userToolBar").hide();
-                }
-            }
-        });
-
-        //监听头部工具栏事件
-        table.on("toolbar(userTable)", function (obj) {
-            switch (obj.event) {
-                case 'add':
-                    mainIndex = layer.open({
-                        type: 1,
-                        title: '新增船员',
-                        content: $("#divAddOrUpdate"),
-                        area: ['760px', '600px'],
-                        success: function (index) {
-                            $("#btnSubmit").removeAttr('disabled').removeClass(DISABLED);
-                            $("#hidId").val("");
-                            clearFile();
-                            //清空表单数据
-                            $("#dataFrm")[0].reset();
-                            $('#uploader-list').html("");
-                            url = "employees/addEmployees.action";
-                        }
-                    });
-                    break;
-            };
-        });
-        //监听工具条
-        table.on('tool(userTable)', function (obj) {
-            var data = obj.data;
-            if (obj.event === 'del') {
-                layer.confirm("确定要全部清空吗？", {
-                    icon: 3,
-                    btn: ["确定", "取消"],
-                    btnAlign: 'c', //按钮居中
-                    yes: function (index) {
-                        obj.del();
-                        layer.close(index);
-                        $.ajax({
-                            url: "/Crew/Delete",
-                            type: "get",
-                            dataType: "json",
-                            data: { id: data.id },
-                            contentType: "application/json;chartset=utf-8",
-                            success: function (res) {
-                                if (res.code == 1) {
-                                    layer.msg(res.msg, { icon: 2 });
-                                } else {
-                                    tableIns.reload();
-                                    layer.msg("数据删除成功", { icon: 1 });
-                                }
-                            }
-                        });
-                    }
-                });
-            } else if (obj.event === 'edit') {
-                mainIndex = layer.open({
-                    type: 1,
-                    title: '修改船员',
-                    content: $("#divAddOrUpdate"),
-                    area: ['760px', '600px'],
-                    success: function (index) {
-                        form.val("dataFrm", data);
-                        clearFile();
-                        var pics = data.employeePictures;
-                        $('#uploader-list').html("");
-                        if (pics.length > 0) {
-                            for (var j = 0; j < pics.length; j++) {
-                                var src = "data:image/jpeg;base64," + pics[j].picture;
-                                AddImage(src, pics[j].id);
-                            }
-                        }
-                        url = "employees/updateEmployees.action";
-                    },
-                    yes: function () {
-                        layer.closeAll();
-                    }
-                });
-            }
-        });
+        var element = layui.element;
+        var layer = layui.layer;
+        Load();
         //多图片上传
         upload.render({
             elem: '#test2',
@@ -163,14 +97,14 @@
             },
             done: function (res) {
                 upnum++;
-                if (res.code==0) {
+                if (res.code == 0) {
                     $(".file-iteme .info").each(function (index, item) {
                         var name = $(this).text();
                         if (name == res.data.name) {
                             $(this).text(res.data.id);
                         }
                     })
-                }              
+                }
                 var len = getJsonLength(uploadFiles);
                 if (upnum == len) {
                     upflag = true;
@@ -213,7 +147,7 @@
                     if (res.code == 0) {
                         layer.msg("保存成功", { icon: 1 });
                         layer.closeAll();
-                        tableIns.reload();
+                        Load();
                     } else {
                         layer.msg(res.msg, { icon: 2 });
                     }
@@ -222,53 +156,30 @@
             });
             return false;
         });       
-        $(document).on("mouseenter mouseleave", ".file-iteme", function (event) {
-            if (event.type === "mouseenter") {
-                //鼠标悬浮
-                $(this).children(".handle").fadeIn("fast");
-
-            } else if (event.type === "mouseleave") {
-                //鼠标离开
-                $(this).children(".handle").hide();
-            }
+        $("#btnAdd").click(function () {
+            layer.open({
+                type: 1,
+                title: '新增船员',
+                content: $("#divAddOrUpdate"),
+                area: ['670px', '600px'],
+                success: function (index) {
+                    $("#btnSubmit").removeAttr('disabled').removeClass(DISABLED);
+                    $("#hidId").val("");
+                    clearFile();
+                    //清空表单数据
+                    $("#dataFrm")[0].reset();
+                    $('#uploader-list').html("");
+                }
+            });
         });
-        //加载图片
-        function AddImage(src, name) {
-            $('#uploader-list').append(
-                '<div id="" class="file-iteme">' +
-                '<div class="handle"><i class="layui-icon layui-icon-delete"></i></div>' +
-                '<img style="width: 200px;height: 180px;" src=' +src + '>' +
-                '<div class="info" style="display:none">' + name + '</div>' +
-                '</div>'
-            );
-        }
-        // 删除图片
-        $(document).on("click", ".file-iteme .handle", function (event) {
-            $(this).parent().remove();
-        });      
-    });
-    function DelPic() {
-        layer.confirm("确定要全部清空吗？", {
-            icon: 3,
-            btn: ["确定", "取消"],
-            btnAlign: 'c', //按钮居中
-            yes: function (index) {
-                $.ajax({
-                    url: "/Crew/DeleteImg/",
-                    success: function (res) {
-                        if (res.code == 0) {
-                            $("#uploader-list").html("");
-                            clearFile();
-                            layer.close(index);
-                        } else {
-                            layer.msg(res.msg, { icon: 2 });
-                        }
-                    }
-                });
-
-            }
+        $("#imgbtn").click(function () {
+            page = 1;           
+            Search();
+            form.render();
+            return false;
         });
-    }
+        
+    })
     //清空上传的图片
     function clearFile() {
         for (let x in uploadFiles) {
@@ -284,6 +195,78 @@
         }
         return jsonLength;
     }
+    function Load() {
+        $.ajax({
+            url: "/Crew/Load",
+            data: { pageIndex:page, pageSize:limit },
+            type: "get",
+            dataType: "json",
+            contentType: "application/json;chartset=utf-8",
+            success: function (res) {
+                if (res.code == 0) {
+                    count = res.count;
+                    var dt = res.data;
+                    crewData = res.data
+                    ShowData(dt);
+                }
+            }
+        });
+    }
+    function ShowData(dt)
+    {
+        var html = "";
+        if (dt.length>0) {
+            for (var i = 0; i < dt.length; i++) {
+                var pics = dt[i].employeePictures;
+                var src = "/images/ship/crewhead.png";
+                if (pics.length > 0) {
+                    src = "data:image/jpeg;base64," + pics[0].picture;
+                }
+                html += '<div class="layui-card card" style = "float:left;margin-top:20px;margin-left:30px;text-align:center;">';
+                html += '    <div style="float:right;width:100%;margin-top: 10px">';
+                html += '        <ul class="layui-nav" style="background-color: #ffffff;float: right;padding: 0;">';
+                html += '             <li class="layui-nav-item">';
+                html += '                 <a href="javascript:;">';
+                html += '                    <img style="width:24px;height:24px" src="/images/ellipsis.png" />';
+                html += '                </a>';
+                html += '                <dl class="layui-nav-child" style="box-shadow: 0;top: 24px;">';
+                html += "                    <dd><a href='javascript:;' style='font-size:12px;color:#8C8C8C' onclick=\"Edit('" + dt[i].id + "')\">编辑</a></dd>";
+                html += "                    <dd><a href='javascript:;' style='font-size:12px;color:#8C8C8C'onclick=\"Del('" + dt[i].id + "')\">删除</a></dd>";
+                html += '                </dl>';
+                html += '            </li>';
+                html += '        </ul>';
+                html += '    </div>';
+                html += '    <div style="float:left;width:100%">';
+                html += '        <img style="width:160px;height:190px" ondblclick="showBigImage(this)" src="' + src + '"/><br /><br />';
+                html += '        <label style="font-weight:bold;font:normal;font-size:20px;color:#101010">' + dt[i].name + '</label><br />';
+                html += '        <div style="margin-top: 10px;">';
+                html += '          <label style="font-size:14px;color:#8C8C8C">工作内容：' + dt[i].job + '</label>';
+                html += '        </div>';
+                html += '    </div>';
+                html += '</div>';
+            }
+        } else {
+            html = '<div style="text-align: center;margin-top: 50px;">没有数据<div></div></div>';
+        }       
+        $("#divbody").html(html);
+        layui.element.init();//初始化
+        layui.use("laypage", function () {
+            var laypage = layui.laypage;
+            laypage.render({
+                elem: 'page',
+                count: count,
+                limit: limit,
+                curr: page,
+                theme: '#2F6BFF',
+                jump: function (obj, first) {
+                    if (!first) {
+                        page = obj.curr;
+                        Search();
+                    }
+                }
+            });
+        })
+    }    
     function showBigImage(e) {
         layui.use('layer', function () { //独立版的layer无需执行这一句
             var $ = layui.jquery, layer = layui.layer; //独立版的layer无需执行这一句
@@ -303,51 +286,125 @@
             });
         });
     }
-
-</script>
-<style type="text/css">
-    .uploader-list {
-        margin-left: -15px;
-    }
-    .uploader-list .handle {
-            position: relative;
-            background-color: black;
-            color: white;
-            filter: alpha(Opacity=80);
-            opacity: 0.5;
-            /*width: 100px;*/
-            text-align: right;
-            height: 28px;
-            margin-bottom: -28px;
-            display: none;
-        }
-    .uploader-list .handle i {
-                margin-right: 5px;
-            }
-    .uploader-list .handle i:hover {
-                    cursor: pointer;
+    function Edit(id) {
+        $('#uploader-list').html("");
+        layer.open({
+            type: 1,
+            title: '修改船员',
+            content: $("#divAddOrUpdate"),
+            area: ['670px', '600px'],
+            success: function (index) {
+                $("#btnSubmit").removeAttr('disabled').removeClass(DISABLED);
+                for (var i = 0; i < crewData.length; i++) {
+                    if (crewData[i].id == id) {
+                        $("#hidId").val(id);
+                        $("#txtName").val(crewData[i].name);
+                        $("#txtJob").val(crewData[i].job);
+                        var pics = crewData[i].employeePictures;
+                        for (var j = 0; j < pics.length; j++) {
+                            var src = "data:image/jpeg;base64," + pics[j].picture;
+                            AddImage(src, pics[j].id);
+                        }
+                        break;
+                    }
                 }
-    .uploader-list .file-iteme {
-            margin: 12px 0 0 15px;
-            padding: 1px;
-            float: left;
-        }
-</style>
-<div style="margin:20px;width:96%">
-    <h1>船员信息</h1>
-    <hr />
-    <table class="layui-table" id="userTable" lay-filter="userTable"></table>
-    @if (ViewBag.IsSet)
-    {
-        <div style="display: none;" id="userToolBar">
-            <button type="button" class="layui-btn layui-btn-sm" lay-event="add">增加</button>
-        </div>
-        <div id="userBar" style="display: none;">
-            <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
-            <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
-        </div>
+            }
+        });
+      
     }
+    function Del(id) {
+        layer.confirm("是否确认删除？？", {
+            icon: 3,
+            btn: ["确定", "取消"],
+            btnAlign: 'c', //按钮居中
+            yes: function (index) {
+                $.ajax({
+                    url: "/Crew/Delete",
+                    type: "get",
+                    dataType: "json",
+                    data: { id: id },
+                    contentType: "application/json;chartset=utf-8",
+                    success: function (res) {
+                        if (res.code == 1) {
+                            layer.msg(res.msg, { icon: 2 });
+                        } else {
+                            Load();
+                            layer.msg("数据删除成功", { icon: 1 });
+                        }
+                    }
+                });
+            }
+        });
+    }
+    //加载图片
+    function AddImage(src, name) {
+        var upload = layui.upload;
+        $('#uploader-list').append(
+            '<div id="" class="file-iteme" style="float:left;margin-left:10px">' +
+            '<div class="handle"><i class="layui-icon layui-icon-delete"></i></div>' +
+            '<img style="width: 160px;height: 190px;" src=' + src + '>' +
+            '<div class="info" style="display:none">' + name + '</div>' +
+            '</div>'
+        );
+    }
+    $(document).on("mouseenter mouseleave", ".file-iteme", function (event) {
+        if (event.type === "mouseenter") {
+            //鼠标悬浮
+            $(this).children(".handle").fadeIn("fast");
 
+        } else if (event.type === "mouseleave") {
+            //鼠标离开
+            $(this).children(".handle").hide();
+        }
+    });
+    // 删除图片
+    $(document).on("click", ".file-iteme .handle", function (event) {
+        $(this).parent().remove();
+    }); 
+
+    function Search() {
+        $.ajax({
+            url: "/Crew/Search",
+            data: { name: $("#txtSearchName").val(), pageIndex: page, pageSize: limit },
+            type: "get",
+            dataType: "json",
+            contentType: "application/json;chartset=utf-8",
+            success: function (res) {                
+                if (res.code == 0) {
+                    count = res.count;
+                    page = res.pageIndex;
+                    var dt = res.data;
+                    ShowData(dt, count);
+                } else {
+                    var html = '<div style="text-align: center;margin-top: 50px;">没有数据<div></div></div>';
+                    $("#divbody").html(html);
+                }
+            }
+        });
+    }
+</script>
+<div style="width:96%;">
+    <div style="margin-left:30px;margin-top:30px">
+        <label style="font-family:STZhongsong;font-weight:bold;width:300px;font:normal;font-size:28px;">船员信息</label>
+        <form class="layui-form" action="" id="serachFrm" lay-filter="serachFrm" style="margin-top:30px">
+            <button type="button" class="layui-btn" style="width:126px;height:40px" id="btnAdd">增加船员</button>
+            @if (!ViewBag.IsLandHome)
+            {
+                <div class="demoTable" style="float:right;">
+                    <div class="layui-inline" style="float:left">
+                        <input type="text" name="year" id="txtSearchName" placeholder="请输入船员名称" class="layui-input" style="height:36px;width:288px">
+                    </div>
+                    <img src="/images/sousuo.png" style="width:32px;height:32px;margin-left:10px" id="imgbtn">
+                </div>
+            }
+        </form>
+    </div>
+    <div id="divbody" style="width:100%;height:auto;margin-top: 10px;">
+    </div>
+    @if (!ViewBag.IsLandHome)
+    {
+        <div id="page" style="float:right;width:100%;"></div>
+    }
 </div>
 <div id="divAddOrUpdate" style="display:none">
     <form class="layui-form" action="" id="dataFrm" lay-filter="dataFrm">
@@ -356,7 +413,7 @@
             <div class="layui-inline">
                 <label class="layui-form-label">船员名称：</label>
                 <div class="layui-input-inline">
-                    <input type="text" id="txtName" name="name" maxlength="20" lay-verify="required" autocomplete="off" class="layui-input">
+                    <input type="text" id="txtName" name="name" maxlength="20" style="width:552px" lay-verify="required" autocomplete="off" class="layui-input">
                 </div>
             </div>
         </div>
@@ -364,27 +421,30 @@
             <div class="layui-inline">
                 <label class="layui-form-label">工作内容：</label>
                 <div class="layui-input-inline">
-                    <input type="text" id="txtJob" name="job" maxlength="50" lay-verify="required" autocomplete="off" class="layui-input">
+                    <input type="text" id="txtJob" name="job" maxlength="50" style="width:552px;" lay-verify="required" autocomplete="off" class="layui-input">
                 </div>
             </div>
         </div>
         <div class="layui-form-item">
             <div class="layui-inline">
-                <div class="layui-upload" style="width:710px;margin-left:30px">
-                    <button type="button" class="layui-btn" id="test2">多图片上传</button>&nbsp;&nbsp;&nbsp;&nbsp;
-                    <button type="button" class="layui-btn layui-btn-danger" onclick="DelPic()">清空图片</button>
-                    <blockquote class="layui-elem-quote layui-quote-nm" style="margin-top: 10px;width: 90%">
-                        预览图：
-                        <div class="layui-upload-list uploader-list" style="overflow: auto;height:200px" id="uploader-list">
+                <label class="layui-form-label">船员图片：</label>
+                <div class="layui-input-inline">
+                    <div class="layui-upload">
+                        <div style="width:300px">
+                            <button type="button" class="layui-btn" id="test2">图片上传</button>
+                            <label style="color:#8C8C8C;font-size:12px;margin-left:20px;width:200px">要求：上传3张图片</label>
                         </div>
-                    </blockquote>
-                </div>
+                        <div class="layui-upload-list uploader-list" style="float:left;width:550px" id="uploader-list">
+                        </div>
+                    </div>                   
+                </div>               
             </div>
-         
+
         </div>
         <div class="layui-form-item">
-            <div class="layui-input-block" id="divShow">
-                <button type="submit" id="btnSubmit" class="layui-btn layui-btn-normal " lay-filter="doSubmit" lay-submit="">提交</button>
+            <div class="layui-input-block" id="divShow" style="margin-top:50px">
+                <button type="submit" id="btnSubmit" class="layui-btn " lay-filter="doSubmit" style="width:150px;height:40px" lay-submit="">提交</button>
+                <button type="reset" class="layui-btn layui-btn-warm"style="width:150px;height:40px">重置</button>
             </div>
         </div>
     </form>

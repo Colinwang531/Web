@@ -8,38 +8,27 @@
 }
 <link href="~/layui/css/layui.css" rel="stylesheet" />
 <script src="~/layui/layui.js"></script>
-<div style="margin:20px;width:96%">
-    <table class="layui-hide" id="deviceTable" lay-filter="deviceTable"></table>
-    @if (ViewBag.IsSet)
-    {
-    <div style="display: none;" id="userToolBar">
-        <button type="button" class="layui-btn layui-btn-sm" id="btnAdd" lay-event="add">增加</button>
-    </div>
-    <div id="userBar" style="display: none;">
-        <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
-        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
-    </div>
-    <div id="camerBar" lay-filter="camerBar" style="display: none;">
-            <a class="layui-btn layui-btn-xs" lay-event="camEdit">修改</a>
-     </div>
+<style>
+    button {
+        width: 150px;
+        height: 40px;
     }
-
-</div>
+</style>
 <script type="text/javascript">
     layui.use(['form', 'table'], function () {
         var $ = layui.$;
         var table = layui.table;
         var form = layui.form;
         var DISABLED = 'layui-btn-disabled';
+        var width = window.screen.availWidth - 80;
         //执行一个 table 实例
-        var tableIns=table.render({
+        var tableIns = table.render({
             elem: '#deviceTable',   //渲染的目标对象
-            width: 1600,
             url: '/Device/Load', //数据接口
-            toolbar: "#userToolBar",   //表格的工具条
-            defaultToolbar: [],
             page: false,  //是否启用分页
+            width: width,
             cols: [[ //表头
+                { type: 'numbers', title: "序号", width: 100 },
                 {
                     field: 'nickname',
                     title: '设备别名',
@@ -116,22 +105,26 @@
                         trObjChildren.find('table').attr("id", index);
                         table.render({
                             elem: "#" + index,
-                            width: 900,
-                            cellMinWidth: 100,
+                            cellMinWidth: 120,
+                            width: (width - 150),
                             cols: [[
-                                { field: "id", title: "id", hide: true, width: 50 },
-                                { field: "deviceId", title: "id", hide: true, width: 50 },
-                                { field: "index", title: "摄像机序号", width: 150 },
+                                { type: 'numbers', title: "序号", width: 100 },
+                                { field: "id", title: "id", hide: true },
+                                { field: "deviceId", title: "id", hide: true },
+                                { field: "index", title: "摄像机序号" },
                                 {
-                                    field: "enable", title: "摄像机状态", width: 150, templet: function (e) {
+                                    field: "enable", title: "摄像机状态", templet: function (e) {
                                         return e.enable ? "开启" : "停用";
                                     }
                                 },
-                                { field: "nickName", title: "摄像机别名", width: 200 },
-                                { field: "ip", title: "摄像机IP", width: 180 },
+                                { field: "nickName", title: "摄像机别名" },
+                                { field: "ip", title: "摄像机IP" },
                                 { fixed: 'right', title: '操作', toolbar: '#camerBar', align: 'center' }
                             ]],
-                            data: data.cameraModelList
+                            data: data.cameraModelList,
+                            done: function () {
+
+                            }
                         });
                     }
                 });
@@ -194,15 +187,15 @@
                         form.val("dataCamFrm", {
                             "id": camdata.cells[0].firstChild.innerHTML,
                             "did": camdata.cells[1].firstChild.innerHTML,
-                            "enable": camdata.cells[3].firstChild.innerHTML == "开启"? true: false,
-                            "nickName":camdata.cells[4].firstChild.innerHTML
+                            "enable": camdata.cells[3].firstChild.innerHTML == "开启" ? true : false,
+                            "nickName": camdata.cells[4].firstChild.innerHTML
                         });
                     }
                 });
                 var childtable = this.offsetParent.offsetParent.offsetParent.offsetParent.offsetParent.offsetParent.firstChild.id;
                 setFormValue(obj, childtable);
             }
-        });      
+        });
         function collapseTable(options) {
             var trObj = options.elem;
             if (!trObj) return;
@@ -219,7 +212,7 @@
             var indexChildren = id + '-' + index + '-children'; //展开行索引
             var leftTrChildren = tableView.find('.layui-table-fixed.layui-table-fixed-l tr[data-index="' + indexChildren + '"]'); //左侧展开固定行
             var rightTrChildren = tableView.find('.layui-table-fixed.layui-table-fixed-r tr[data-index="' + indexChildren + '"]'); //右侧展开固定行
-            var lw = leftTr.width() + 15; //左宽
+            var lw = leftTr.width() + 100; //左宽
             var rw = rightTr.width() + 15; //右宽
             //不存在就创建展开行
             if (trObjChildren.data('index') != indexChildren) {
@@ -257,7 +250,7 @@
                     return '端口号不能超过5位正整数';
                 }
             }
-        });        
+        });
         //表单提交
         form.on("submit(doSubmit)", function (frm) {
             $('#btnSubmit').attr('disabled', 'disabled').addClass(DISABLED);
@@ -335,9 +328,44 @@
                 return false;
             })
         }
-      
+        $("#btnAdd").click(function () {
+            layer.open({
+                type: 1,
+                title: '新增设备',
+                content: $("#divAddOrUpdate"),
+                area: ['650px', '370px'],
+                success: function (index) {
+                    $("#btnSubmit").removeAttr('disabled').removeClass(DISABLED);
+                    $("#hidId").val("");
+                    //清空表单数据
+                    $("#dataFrm")[0].reset();
+                    $("#txtEnable").val(1);
+                    form.render();
+                }
+            });
+        });
     });
 </script>
+<div>
+    <div style="margin-top:30px;margin-left:30px;width:98%">
+        <label style="font-family:STZhongsong;font-weight:bold;width:300px;font:normal;font-size:28px;">设备列表</label>
+        <form style="margin-top:36px;margin-bottom:30px" class="layui-form" action="" id="serachFrm" lay-filter="serachFrm">
+            <button type="button" class="layui-btn" id="btnAdd" style="width:136px;height:40px">增加设备</button>
+        </form>
+        <table class="layui-hide" id="deviceTable" lay-filter="deviceTable"></table>
+        @if (ViewBag.IsSet)
+        {
+
+            <div id="userBar" style="display: none;">
+                <a style="color:#2F6BFF" lay-event="edit">编辑</a>
+                <a style="color:#8C8C8C;margin-left:50px" lay-event="del">删除</a>
+            </div>
+            <div id="camerBar" lay-filter="camerBar" style="display: none;">
+                <a style="color:#2F6BFF" lay-event="camEdit">编辑</a>
+            </div>
+        }
+    </div>
+</div>
 <div id="divAddOrUpdate" style="display:none;margin-top:20px">
     <form class="layui-form" action="" id="dataFrm" lay-filter="dataFrm">
         <input name="id" id="hidId" type="hidden" class="layui-input" />
@@ -411,7 +439,7 @@
         </div>
         <div class="layui-form-item" style="text-align:center;margin-top:30px">
             <div class="layui-input-block" id="divShow" style="margin:0 auto">
-                <button type="submit" id="btnSubmit" class="layui-btn layui-btn-normal" lay-filter="doSubmit" lay-submit="">提交</button>
+                <button type="submit" id="btnSubmit" class="layui-btn" lay-filter="doSubmit" lay-submit="">提交</button>
                 <button type="reset" class="layui-btn layui-btn-warm">重置</button>
             </div>
         </div>
@@ -439,7 +467,7 @@
         </div>
         <div class="layui-form-item" style="margin-top:30px;text-align:center">
             <div class="layui-input-block" id="divShow" style="margin:0 auto">
-                <button type="submit" class="layui-btn layui-btn-normal" lay-filter="doCamSubmit" lay-submit="">提交</button>
+                <button type="submit" class="layui-btn" lay-filter="doCamSubmit" lay-submit="">提交</button>
             </div>
         </div>
     </form>

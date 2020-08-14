@@ -13,89 +13,187 @@
     <title>@ViewBag.Title</title>
     <link href="/css/main.css" rel="stylesheet" />
     <link href="/scripts/layui/css/layui.css" rel="stylesheet" />
-</head>
-<body class="layui-layout-body">   
-    <div class="layui-layout layui-layout-admin">
-        <div class="layui-header">
-            <div class="layui-logo">禹创智能科技</div>
-            <ul class="layui-nav layui-layout-left">
-            </ul>
-            <ul class="layui-nav layui-layout-right">
-                <li class="layui-nav-item">
-                    欢迎您：@ViewBag.LoginName
-                    @*<a href="javascript:;">
-                        <img src="~/images/head/user.png" class="layui-nav-img">
-                        小福泥
-                    </a>
-                    <dl class="layui-nav-child">
-                        <dd><a href="">基本资料</a></dd>
-                        <dd><a href="">安全设置</a></dd>
-                    </dl>*@
-                </li>
-                <li class="layui-nav-item"><a href="/Login/SignOut">退出</a></li>
-            </ul>
-        </div>
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <style>
+        #ulLeft {
+            list-style-type: none;
+        }
 
-        <div class="layui-side layui-bg-black">
-            <div class="layui-side-scroll">
-                <!-- 左侧导航区域 -->
-                <ul class="layui-nav layui-nav-tree" lay-filter="test">
+            #ulLeft li {
+                padding: 12px 0px;
+                margin-left: 40px;
+            }
+
+                #ulLeft li a {
+                    color: #8C8C8C;
+                    font-size: 16px;
+                }
+
+        ul li a img {
+            width: 28px;
+            height: 28px;
+            margin-right: 16px;
+        }
+    </style>
+</head>
+<body class="layui-layout-body" >
+    <div class="layui-layout layui-layout-admin">
+        <div class="layui-header" style="background-color:#171F46;height:80px">
+            <div style="margin-left:40px;padding-top:22px">
+                <label style="font-family:STZhongsong;width:300px;font:normal;font-size:24px;color:#FFFFFF;">@ViewBag.ShipName</label>
+                <div style="float:right;margin-right:20px">
                     @if (ViewBag.IsLandHome)
                     {
-                        <li class="layui-nav-item"><a href="/Home/LandHome"><red>返回</red> </a></li>
+                    <a href="/Home/LandHome"><img style="width:24px;height:24px;" src="~/images/ship/close.png" /></a>
                     }
-                    <li class="layui-nav-item device @(ViewBag.src=="/Device/Index"?"layui-this":"")"><a href="#">设备</a></li><!--/Embedded/Index-->
-                    <li class="layui-nav-item algorithm"><a href="#">算法配置</a></li>
-                    <li class="layui-nav-item crew"><a href="#">船员</a></li>
-                    <li class="layui-nav-item ship"><a href="#">航行设置</a></li><!--/Ship/Edit-->
+                    else
+                    {
+                    <div style="margin-top: 10px;">
+                        <a href="/Login/SignOut" style="color:white;margin-right:50px">退出</a>
+                    </div>
+                    }
+                </div>
+            </div>
+
+        </div>
+        <div class="layui-side" style="background-color: #ffffff;margin-top: 20px;border-right:1px solid #EEEEEE">
+            <div class="layui-side-scroll" style="height:90%">
+                <ul id="ulLeft">
+                    <li id="device">
+                        @if(ViewBag.layuithis=="device"){
+                        <a href="#" style="font-weight:bold;color:#">
+                            <img src="~/images/ship/device1.png" />设备
+                        </a>
+                    }else{
+                        <a href="#">
+                            <img src="~/images/ship/device.png" />设备
+                        </a>
+                    }
+                    </li>
+
+                    <li id="algorithm">
+                        <a href="#">
+                            <img src="~/images/ship/algorithm.png" />算法配置
+                        </a>
+                    </li>
+                    <li id="crew">
+                        <a href="#">
+                            <img src="~/images/ship/crew.png" />船员
+                        </a>
+                    </li>
+                    <li id="ship">
+                        <a href="#">
+                            <img src="~/images/ship/shipstatus.png" />航行设置
+                        </a>
+                    </li>
                     @if (ShipWeb.Tool.ManagerHelp.IsShowAlarm)
                     {
-                        <li class="layui-nav-item alarm @(ViewBag.src=="/Alarm/Index?isShow=false"?"layui-this":"")"><a href="#">报警</a></li>
-                        <li class="layui-nav-item attendance"><a href="#">考勤</a></li>
+                    <li id="alarm">
+                        @if(ViewBag.layuithis=="alarm"){
+                        <a href="#" style="color:#005DFF;font-weight:bold">
+                            <img src="~/images/ship/alarm1.png" />报警
+                        </a>
+                            }else{
+                        <a href="#">
+                            <img src="~/images/ship/alarm.png" />报警
+                        </a>
+                                }
+                    </li>
+                    <li id="attendance">
+                        <a href="#" >
+                            <img src="~/images/ship/attendance.png" />考勤
+                        </a>
+                    </li>
                     }
-                    <li class="layui-nav-item video"><a href="#">视频监控</a></li>
+                    <li id="video">
+                        <a href="#">
+                            <img src="~/images/ship/video.png" />视频监控
+                        </a>
+                    </li>
+
                 </ul>
             </div>
         </div>
 
-        <div class="layui-body">
-            <iframe id="frm" src="@ViewBag.src" style="width:100%;height:98%">
+        <div class="layui-body"style="background-color:#FFFFFF;top: 80px;bottom: 0;">
+            <iframe id="frm" src="@ViewBag.src" style="width:98%;height:97%;background-color:white" frameborder="0" border="0" marginwidth="0" marginheight="0">
                 <!-- 内容主体区域 -->
                 @RenderBody()
-            </iframe>           
+            </iframe>
         </div>
 
-        <div class="layui-footer">底部信息 @($"{ShipWeb.Tool.DateTimeExtentions.ToCstTime(DateTime.Now).ToString("yyyy-MM-dd HH:mm:ss")}") , 您好 King Yu 禹创智能科技</div>
+        <div class="layui-footer" style="background-color:#FFFFFF"></div>
     </div>
     <script src="/scripts/layui/layui.js" type="text/javascript"></script>
     <script src="/scripts/layui/global.js" type="text/javascript"></script>
-    <script>
-        layui.use('element', function () {
-            var $ = layui.jquery
-                , element = layui.element;
-            $(".device").click(function () {
+    <script type="text/javascript">
+        $(function () {
+            $("#device").click(function () {
                 $("#frm").attr("src", "/Device/Index")
+                ClearStyle();
+                $("#device a").attr("style", "font-weight:bold;color:#005DFF;");
+                $("#device a img").attr("src", "/images/ship/device1.png");
             });
-            $(".algorithm").click(function () {
-                $("#frm").attr("src", "/Algorithm/Index")
+            $("#algorithm").click(function () {
+                $("#frm").attr("src", "/Algorithm/Index");
+                ClearStyle();
+                $("#algorithm a").attr("style", "font-weight:bold;color:#005DFF;");
+                $("#algorithm a img").attr("src", "/images/ship/algorithm1.png");
             });
-            $(".crew").click(function () {
+            $("#crew").click(function () {
                 $("#frm").attr("src", "/Crew/Index")
+                ClearStyle();
+                $("#crew a").attr("style", "font-weight:bold;color:#005DFF;");
+                $("#crew a img").attr("src", "/images/ship/crew1.png");
             });
-            $(".ship").click(function () {
+            $("#ship").click(function () {
                 $("#frm").attr("src", "/Ship/Edit")
+                ClearStyle();
+                $("#ship a").attr("style", "font-weight:bold;color:#005DFF;");
+                $("#ship a img").attr("src", "/images/ship/shipstatus1.png");
             });
-            $(".alarm").click(function () {                
-                $("#frm").attr("src", "/Alarm/Index?isShow=false")
+            $("#alarm").click(function () {
+                $("#frm").attr("src", "/Alarm/AlarmInfo?flag=false&isShip=true")
+                ClearStyle();
+                $("#alarm a").attr("style", "font-weight:bold;color:#005DFF;");
+                $("#alarm a img").attr("src", "/images/ship/alarm1.png");
             });
-            $(".attendance").click(function () {
+            $("#attendance").click(function () {
                 $("#frm").attr("src", "/Attendance/Index")
+                ClearStyle();
+                $("#attendance a").attr("style", "font-weight:bold;color:#005DFF;");
+                $("#attendance a img").attr("src", "/images/ship/attendance1.png");
             });
-            $(".video").click(function () {
+            $("#video").click(function () {
                 $("#frm").attr("src", "/Video/Index")
+                ClearStyle();
+                $("#video a").attr("style", "font-weight:bold;color:#005DFF;");
+                $("#video a img").attr("src", "/images/ship/video1.png");
             });
         });
-        
+        //清除左侧菜单样式
+        function ClearStyle() {
+            $("#device a").removeAttr("style");
+            $("#device a img").attr("src", "/images/ship/device.png");
+              
+            $("#algorithm a").removeAttr("style");
+            $("#algorithm a img").attr("src", "/images/ship/algorithm.png");
+              
+            $("#crew a").removeAttr("style");
+            $("#crew a img").attr("src", "/images/ship/crew.png");
+               
+            $("#ship a").removeAttr("style");
+            $("#ship a img").attr("src", "/images/ship/shipstatus.png");
+               
+            $("#alarm a").removeAttr("style");
+            $("#alarm a img").attr("src", "/images/ship/alarm.png");
+              
+            $("#attendance a").removeAttr("style");
+            $("#attendance a img").attr("src", "/images/ship/attendance.png");
+               
+            $("#video a").removeAttr("style");
+            $("#video a img").attr("src", "/images/ship/video.png");
+        }      
     </script>
 </body>
 </html>

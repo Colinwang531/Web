@@ -7,8 +7,29 @@
 <link href="~/layui/css/layui.css" rel="stylesheet" />
 <script src="~/lib/jquery/dist/jquery.js"></script>
 <script src="~/layui/layui.js"></script>
-<script type="text/javascript">
+<style>
+    .shipcard {
+        width: 300px;
+        height: 288px;
+        border: 1px solid rgba(221, 221, 221, 1);
+        float: left;
+        margin-left: 25px;
+        border-radius: 8px;
+    }
+    ul li img {
+        width: 32px;
+        height: 32px;
+        float: left;
+        margin-left: 20px;
+        margin-top: 10px;
+    }
 
+    ul li {
+        height: 55px;
+    }
+
+</style>
+<script type="text/javascript">
     layui.use(['element', 'table', 'form'], function () {
         var $ = layui.jquery
         var element = layui.element;
@@ -16,7 +37,7 @@
         $(".alarm").click(function () {
             $("#divBody").show();
             $("#divShip").hide();
-            $("#ifBody").attr("src", "/Alarm/AlarmShipAll")
+            $("#ifBody").attr("src", "/Alarm/AlarmInfo")
         });
         $(".ship").click(function () {
             ShowShip();
@@ -38,36 +59,43 @@
             contentType: "application/json;chartset=utf-8",
             success: function (res) {
                 if (res.code == 0) {
-                    var html = "";
                     var tb = res.data;
-                    if (tb.length > 0) {
-                        for (var i = 0; i < tb.length; i++) {
-                            html += '<tr>';
-                            html += '<td>' + tb[i].name + '</td>';
-                            if (tb[i].line) {
-                                if (tb[i].flag) {
-                                    html += '<td>在线(航行)</td>';
-                                } else {
-                                    html += '<td>在线(停港)</td>';
-                                }
-                                html += '<td><a class="layui-btn layui-btn-primary layui-btn-xs" href="/Device/Index?isShow=true&id=' + tb[i].id + '">详情</a></td>';
-                            } else {
-                                html += '<td>离线</td>';
-                                html += '<td></td>';
-                            }
-                            //if (tb[i].flag == 1) {
-                            //    html += '<td>SAIL(航行)</td>';
-                            //}else {
-                            //    html += '<td>PORT(停港)</td>';
-                            //}
-                            //html += '<td><a class="layui-btn layui-btn-primary layui-btn-xs" href="/Device/Index?isShow=true&id=' + tb[i].id + '">详情</a></td>';
-                            html += '</tr>';
-                        }
-                    }
-                    $("#tbList").html(html);
+                    ShipHtml(tb);
                 }
             }
         });
+    }
+    function ShipHtml(tb) {
+        var html = "";
+        if (tb.length > 0) {
+            for (var i = 0; i < tb.length; i++) {
+                var event = tb[i].line ? "onclick=Detail('" + tb[i].id + "','" + tb[i].name + "')" : "";
+                html += "<div class='layui-card shipcard'" + event + ">";
+                html += '    <img style="width:300px;height:170px;border-radius: 8px 8px 0 0;" src="/images/ship.jpg" /><br />';
+                html += '    <div style="margin-left:24px;margin-top:20px">';
+                html += '        <label style="font-family:STZhongsong;font-weight:bold;font:normal;font-size:18px;color:#101010">' + tb[i].name + '</label><br />';
+                html += '<div style="margin-top: 20px;">';
+                if (tb[i].line) {
+                    html += ' <div style="border-radius: 60px;width:8px;height:8px;background-color:#19BE6B;margin-right:15px;float:left;margin-top: 8px;"></div>';
+                    html += ' <label style="font-size:16px;color:#101010">在线</label>';
+                    if (tb[i].flag) {
+                        html += '        <div style="float:right;width:50px">航行</div>';
+                    } else {
+                        html += '        <div style="float:right;width:50px">停港</div>';
+                    }
+                } else {
+                    html += ' <div style="border-radius: 60px;width:8px;height:8px;background-color:#8C8C8C;margin-right:15px;float:left;margin-top: 8px;"></div>';
+                    html += ' <label style="font-size:16px;color:#101010">离线</label>';
+                }
+                html += '       </div>';
+                html += '    </div>';
+                html += ' </div>';
+            }
+        }
+        $("#divShipBody").html(html);
+    }
+    function Detail(id, name) {
+        window.location.href = "/Device/Index?isShow=true&id=" + id + "&shipName=" + name;
     }
     function EditPwd() {
         layui.use(['layer', 'form'], function () {
@@ -122,76 +150,87 @@
                 return false;
             })
         });
-       
+
     }
 </script>
-<div class="layui-layout layui-layout-admin">
-    <div class="layui-header" style="background-color:#393D49">
-        <div class="layui-logo">禹创智能科技</div>
-        <ul class="layui-nav layui-layout-right">
-            <li class="layui-nav-item">
-                <a href="javascript:;">
-                    欢迎您：@ViewBag.LoginName
-                </a>
-                @if (!ViewBag.isAdmin)
-                {
-                    <dl class="layui-nav-child">
-                        <dd><a href="javascript:;" onclick="EditPwd()">修改密码</a></dd>
-                    </dl>
-                }
-            </li>
-            <li class="layui-nav-item"><a href="/Login/SignOut">退出</a></li>
-        </ul>
-    </div>
-
-    <div style="margin-top:10px;width:200px;float:left">
-        <div class="layui-side layui-bg-black">
+<div > 
+    <div style="width:200px;float:left;">
+        <div class="layui-side" style="background-color:#171F46">
             <div class="layui-side-scroll">
                 <!-- 左侧导航区域 -->
-                <ul class="layui-nav layui-nav-tree" lay-filter="test">
+                <ul class="layui-nav layui-nav-tree" style="margin-top:106px;background-color:#171F46" lay-filter="test">
                     @if (ViewBag.IsShow)
                     {
-                        <li class="layui-nav-item alarm layui-this"><a href="#">报警</a></li>
+                        <li class="layui-nav-item alarm layui-this">
+                            <img src="~/images/alarm.png" /><a href="#">报警</a>
+                        </li>
                     }
                     @if (ViewBag.IsSetShip)
                     {
-                        <li class="layui-nav-item ship"><a href="#">船舶信息</a></li>
+                        <li class="layui-nav-item ship">
+                            <img  src="~/images/shipmenu.png" />
+                            <a href="#">船舶信息</a>
+                        </li>
                     }
                     @if (ViewBag.isAdmin)
                     {
-                        <li class="layui-nav-item user"><a href="#">用户信息</a></li>
+                        <li class="layui-nav-item user">
+                            <img src="~/images/user.png" /><a href="#">用户信息</a>
+                        </li>
                     }
                 </ul>
             </div>
         </div>
     </div>
-    <div style="float:left;margin-top:10px">
-        @if(ViewBag.isAdmin||ViewBag.IsShow){
-        <div id="divBody" class="layui-body">
-            <iframe id="ifBody" src="/Alarm/AlarmShipAll" style="width:100%;height:100%"></iframe>
+    <div class="layui-body">
+        <div>
+            <div style="float:left;height:60px;padding-top:28px;margin-left: 20px;">
+                <img style="width:76px;height:32px;margin-left:10px;float:left" src="~/images/Logo.png" />
+                <div style="width:300px">
+                    <label style="font-size:22px;font:normal;font-family:FZCuHeiSongS-B-GB;margin-left:10px;color:#101010;">禹创智能科技</label>
+                </div>
+            </div>
+            <div style="float:right;background-color:white;margin-top:15px">
+                <ul class="layui-nav" style="float:left;background-color:white">
+                    <li class="layui-nav-item">
+                        <a href="javascript:;" style="color:#393d49">
+                            <img style="width:36px;height:36px;margin-right:10px" src="/images/head/head.png" />
+                            @ViewBag.LoginName
+                        </a>
+                        @if (!ViewBag.isAdmin)
+                        {
+                            <dl class="layui-nav-child">
+                                <dd><a href="javascript:;" onclick="EditPwd()">修改密码</a></dd>
+                            </dl>
+                        }
+                        <dl class="layui-nav-child">
+                            <dd><a href="/Login/SignOut">退出</a></dd>
+                        </dl>
+                    </li>
+                </ul>
+            </div>
         </div>
+        <hr />
+        @if (ViewBag.isAdmin || ViewBag.IsShow)
+        {
+            <div id="divBody">
+                <iframe id="ifBody" src="/Alarm/AlarmInfo" style="width:100%;height:88%;"frameborder="0" border="0" marginwidth="0" marginheight="0"></iframe>
+            </div>
         }
-        @if(ViewBag.IsSetShip){
-        <div id="divShip" style="display:none;margin-left:20px;">
-            <table class="layui-table">
-                <thead>
-                    <tr>
-                        <th style="width:200px">船舶名称</th>
-                        <th style="width:200px">船舶状态</th>
-                        <th style="width:200px">操作</th>
-                    </tr>
-                </thead>
-                <tbody id="tbList">
-                </tbody>
-            </table>
+        @if (ViewBag.IsSetShip)
+        {
+       <div id="divShip" style="display:none;width:90%">
+        <label style="font-family:STZhongsong;font-weight:bold;width:300px;margin-left:30px;font:normal;font-size:28px;">船舶信息</label>
+        <div id="divShipBody" style="margin-top:45px;margin-left: 10px">          
         </div>
+    </div>
         }
     </div>
-    <div class="layui-footer">底部信息 @($"{ShipWeb.Tool.DateTimeExtentions.ToCstTime(DateTime.Now).ToString("yyyy-MM-dd HH:mm:ss")}") , 您好 King Yu 禹创智能科技</div>
+    @*<div class="layui-footer">底部信息 @($"{ShipWeb.Tool.DateTimeExtentions.ToCstTime(DateTime.Now).ToString("yyyy-MM-dd HH:mm:ss")}") , 您好 King Yu 禹创智能科技</div>*@
 </div>
 
 <div style="display: none;" id="saveDiv">
-    <form class="layui-form" action="" id="dataFrm" lay-filter="dataFrm">
+    <form class="layui-form" style="border:0" action="" id="dataFrm" lay-filter="dataFrm">
         <div class="layui-form-item" style="margin-top:20px">
             <div class="layui-inline">
                 <label class="layui-form-label">原始密码：</label>

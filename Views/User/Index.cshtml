@@ -14,12 +14,12 @@
         var DISABLED = 'layui-btn-disabled';
         var tableIns = table.render({
             elem: '#userTable',   //渲染的目标对象
-            width:800,
             url: '/User/Load', //数据接口
-            toolbar: "#userToolBar",   //表格的工具条
+            //toolbar: "#userToolBar",   //表格的工具条
             defaultToolbar: [],
             page: false,  //是否启用分页
             cols: [[   //列表数据
+                { type: 'numbers',title:"序号" ,width:100},
                 { field: 'name', title: '用户名', align: 'center' },
                 {
                     field: 'enableConfigure', title: '配置权限标识', align: 'center', templet: function (d) {
@@ -36,25 +36,7 @@
             done: function () {
             }
         });
-        //监听头部工具栏事件
-        table.on("toolbar(userTable)", function (obj) {
-            switch (obj.event) {
-                case 'add':
-                    mainIndex = layer.open({
-                        type: 1,
-                        title: '新增用户',
-                        content: $("#saveOrUpdateDiv"),
-                        area: ['500px', '400px'],
-                        success: function (index) {
-                            $("#hidId").val("");
-                            //清空表单数据
-                            $("#dataFrm")[0].reset();
-                            url = "user/addUser.action";
-                        }
-                    });
-                    break;
-            };
-        });
+      
         //监听工具条
         table.on('tool(userTable)', function (obj) {
             var data = obj.data;
@@ -89,7 +71,7 @@
                     type: 1,
                     title: '修改用户',
                     content: $("#saveOrUpdateDiv"),
-                    area: ['500px', '400px'],
+                    area: ['500px', '430px'],
                     success: function (index) {
                         form.val("dataFrm", data);
                         $("#txtxpwd").val("");
@@ -102,6 +84,31 @@
                 });
             }
         });
+        $("#btnAdd").click(function () {
+            layer.open({
+                type: 1,
+                title: '新增用户',
+                content: $("#saveOrUpdateDiv"),
+                area: ['500px', '430px'],
+                success: function (index) {
+                    $("#hidId").val("");
+                    //清空表单数据
+                    $("#dataFrm")[0].reset();
+                    url = "user/addUser.action";
+                }
+            });
+        });
+        $("#imgbtn").click(function () {
+            var name = $("#txtName").val();
+            table.reload("userTable", {
+                url: "/User/Search",
+                where: {
+                    name: name
+                },
+                done: function () {
+                }
+            })
+        })
         //保存
         form.on("submit(doSubmit)", function (viewobj) {
             $('#btnSubmit').attr('disabled', 'disabled').addClass(DISABLED);
@@ -155,24 +162,33 @@
             //    , '密码必须6到12位，且不能出现空格'
             //]
         });
-
     });
+   
 </script>
-<div style="margin:20px;width:96%">
-    <h1>用户管理</h1>
-    <hr />
-    <table class="layui-hide" id="userTable" lay-filter="userTable"></table>
-    <div style="display: none;" id="userToolBar">
-        <button type="button" class="layui-btn layui-btn-sm" lay-event="add">增加</button>
-        @*<button type="button" class="layui-btn layui-btn-sm" lay-event="batchDelete">批量删除</button>*@
-    </div>
-
-    <div id="userBar" style="display: none;">
-        <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
-        <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
-    </div>
-
-
+<style>
+    button {
+        width:150px;
+        height:40px;
+    }   
+</style>
+<div style="width:96%;">
+    <div style="margin-left:30px;margin-top:30px">
+        <label style="font-family:STZhongsong;font-weight:bold;width:300px;font:normal;font-size:28px;">用户信息</label>
+        <form class="layui-form" action="" id="serachFrm" lay-filter="serachFrm" style="margin-top:45px">
+            <button type="button" class="layui-btn" style="width:126px;height:40px" id="btnAdd">新增用户</button>
+            <div class="demoTable" style="float:right;">
+                <div class="layui-inline" style="float:left">
+                    <input type="text" name="year" id="txtName" placeholder="请输入用户名" class="layui-input" style="height:36px;width:288px">
+                </div>
+                <img src="/images/sousuo.png" style="width:32px;height:32px;margin-left:10px" id="imgbtn">
+            </div>
+        </form>
+        <table id="userTable" class="layui-table" lay-filter="userTable" style="margin-top:34px"></table>
+        <div id="userBar" style="display: none;">
+            <a style="color:#2F6BFF" lay-event="edit">编辑</a>
+            <a style="color:#8C8C8C;margin-left:50px" lay-event="del">删除</a>
+        </div>
+    </div>  
     <div style="display: none;" id="saveOrUpdateDiv">
         <form class="layui-form" action="" id="dataFrm" lay-filter="dataFrm">
             <input name="id" id="hidId" type="hidden" />
@@ -180,39 +196,40 @@
                 <div class="layui-inline">
                     <label class="layui-form-label">用户名：</label>
                     <div class="layui-input-inline">
-                        <input type="text" id="txtUserame" name="name" lay-reqtext="用户名是必填项" maxlength="20" lay-verify="required" autocomplete="off" class="layui-input">
+                        <input type="text" id="txtUserame" name="name" lay-reqtext="用户名是必填项" style="width:360px" maxlength="20" lay-verify="required" autocomplete="off" class="layui-input">
                     </div>
                 </div>
             </div>
-            <div class="layui-form-item">
-                <div class="layui-inline">
-                    <label class="layui-form-label">配置：</label>
-                    <div class="layui-input-inline">
-                        <input type="checkbox" id="ck1" name="enableConfigure" title="配置权限标识">
-                        <input type="checkbox" id="ck2" name="enablequery" title="配置查询标识">
-                    </div>
-                </div>
-            </div>
+
             <div class="layui-form-item">
                 <div class="layui-inline">
                     <label class="layui-form-label">新密码：</label>
                     <div class="layui-input-inline">
-                        <input type="password" id="txtxpwd" maxlength="32" lay-verify="pass" autocomplete="off" class="layui-input">
+                        <input type="password" id="txtxpwd" maxlength="32" lay-verify="pass" autocomplete="off" style="width:360px" class="layui-input">
+                        <div class="layui-form-mid layui-word-aux" style="font-size:12px">请填写6到12位密码</div>
                     </div>
-                    <div class="layui-form-mid layui-word-aux">请填写6到12位密码</div>
                 </div>
             </div>
             <div class="layui-form-item">
                 <div class="layui-inline">
                     <label class="layui-form-label">确认密码：</label>
                     <div class="layui-input-inline">
-                        <input type="password" id="txtspwd" maxlength="32" lay-verify="passSure" autocomplete="off" class="layui-input">
+                        <input type="password" id="txtspwd" maxlength="32" lay-verify="passSure" style="width:360px" autocomplete="off" class="layui-input">
                     </div>
                 </div>
             </div>
-            <div class="layui-form-item" style="text-align: center;margin-top:30px">
-                <div class="layui-input-block"  style="margin:0 auto">
-                    <button type="submit" id="btnSubmit" class="layui-btn layui-btn-normal" lay-filter="doSubmit" lay-submit="">提交</button>
+            <div class="layui-form-item">
+                    <label class="layui-form-label">配置：</label>
+                    <div class="layui-input-block" style="height:40px">
+                        <input type="checkbox" id="ck1" name="enableConfigure" lay-skin="primary" title="权限标识">
+                        <input type="checkbox" id="ck2" name="enablequery" lay-skin="primary" title="查询标识">
+                    </div>
+            
+               
+            </div>
+            <div class="layui-form-item" style="text-align: center;margin-top:42px">
+                <div class="layui-input-block" style="margin:0 auto">
+                    <button type="submit" id="btnSubmit" class="layui-btn" lay-filter="doSubmit" lay-submit="">提交</button>
                     <button type="reset" class="layui-btn layui-btn-warm">重置</button>
                 </div>
 

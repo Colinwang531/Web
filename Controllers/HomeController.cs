@@ -26,9 +26,10 @@ namespace ShipWeb.Controllers
 
         public IActionResult LandHome()
         {
+
             ViewBag.IsSetShip = base.user.EnableConfigure;
             ViewBag.IsShow = base.user.Enablequery;
-            ViewBag.isAdmin=base.user.Id== "admin" ? true : false;
+            ViewBag.isAdmin = base.user.Id == "admin" ? true : false;
             ViewBag.LoginName = base.user.Name;
             string browsertoken = HttpContext.Request.Cookies["token"];
             if (browsertoken != null)
@@ -44,6 +45,7 @@ namespace ShipWeb.Controllers
                 HttpContext.Response.Cookies.Append("token", browsertoken);
             }
             ManagerHelp.IsShowAlarm = false;
+
             return View();
         }
     }

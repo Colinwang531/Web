@@ -1,0 +1,248 @@
+﻿
+@{
+    ViewData["Title"] = "AlarmList";
+    if (!ViewBag.IsShowLayout)
+    {
+        Layout = null;
+    }
+}
+<script src="~/lib/jquery/dist/jquery.js"></script>
+<script src="~/layui/layui.js"></script>
+<link href="~/layui/css/layui.css" rel="stylesheet" />
+<style>
+    .card {
+        text-align: left;
+        width: 508px;
+        height: 166px;
+        border: 1px solid rgba(221, 221, 221, 1);
+        float: left;
+        margin-left: 30px;
+        margin-top: 30px;
+        border-radius: 8px;
+    }
+</style>
+<script type="text/javascript">
+    var limit = 9;
+    var page = 1;
+    var count = 0;
+    layui.use(['layer', 'form', 'laydate'], function () {
+        var layer = layui.layer;
+        var form = layui.form;
+        var laydate = layui.laydate;
+        Load();
+        form.render();
+        laydate.render({
+            elem: '#dtStartTime',
+            type: 'date'
+        });
+        laydate.render({
+            elem: '#dtEndTime',
+            type: 'date'
+        });
+        form.on("submit(query)", function (obj) {
+            page = 1;
+            var data = {
+                shipId: obj.field.ship,
+                name: obj.field.name,
+                type: $("#hidtype").val(),
+                startTime: obj.field.startTime,
+                endTime: obj.field.endTime
+            }
+            Search(data);
+            form.render();
+            return false;
+        });
+    });
+    function Load() {
+        $.ajax({
+            url: "/Alarm/Load",
+            data: { pageIndex: page, pageSize: limit, type: $("#hidtype").val() },
+            type: "get",
+            dataType: "json",
+            contentType: "application/json;chartset=utf-8",
+            success: function (res) {
+                if (res.code == 0) {
+                    count = res.count;
+                    page = res.pageIndex;
+                    var dt = res.data;
+                    ShowData(dt, count);
+                    var sl = res.ship;
+                    if (sl.length > 0) {
+                        var slHtml = '<option value="">请选择</option>';
+                        for (var i = 0; i < sl.length; i++) {
+                            slHtml += '<option value="' + sl[i].id + '">' + sl[i].name + '</option>'
+                        }
+                        $("#slShip").html(slHtml);
+                        layui.use('form', function () {
+                            var form = layui.form;
+                            form.render();
+                        });
+                    }
+                   
+                }
+            }
+        });
+    }
+    function ShowData(dt,count) {
+        var html = "";
+        for (var i = 0; i < dt.length; i++) {
+            var typename = "打架";
+            if (dt[i].type == 1) typename = "安全帽";
+            else if (dt[i].type == "2") typename = "打电话";
+            else if (dt[i].type == "3") typename = "睡觉";
+            var imgId = "img" + i;
+            html += '<div class="layui-card card">';
+            html += '       <div style="float:left;margin: 24px;">';
+            html += '        <img style="width:210px;height:118px;border-radius: 8px;s" id="' + imgId + '" ondblclick="showBigImage(this)" />';
+            html += '       </div>';
+            html += '       <div style="float:left;margin-top:24px">';
+            html += '           <label style="font-weight:bold;font:normal;font-size:18px;color:#005DFF">' + dt[i].name + '</label><br /><br />';
+            html += '           <label style="font-size:12px;color:#8C8C8C">报警类型：' + typename + '</label><br />';
+            html += '           <label style="font-size:12px;color:#8C8C8C">摄像机名称：' + dt[i].nickName + '</label><br />';
+            html += '           <label style="font-size:12px;color:#8C8C8C">报警时间：' + dt[i].time + '</label><br />';
+            html += '       </div>';
+            html += '</div>';
+            Drawing(dt[i].picture, dt[i].w, dt[i].h, dt[i].x, dt[i].y, imgId);
+        }
+        $("#divdata").html(html);
+        layui.use("laypage", function () {
+            var laypage = layui.laypage;
+            laypage.render({
+                elem: 'page',
+                count: count,
+                limit: limit,
+                curr: page,
+                theme: '#2F6BFF',
+                jump: function (obj, first) {
+                    if (!first) {
+                        page = obj.curr;
+                        var data = {
+                            shipId: $("#slShip").val(),
+                            name: $("#txtName").val(),
+                            type: $("#hidtype").val(),
+                            startTime: $("#dtStartTime").val(),
+                            endTime: $("#dtEndTime").val(),
+                        }
+                        Search(data);
+                    }
+                }
+            });
+        })
+    }
+    function Drawing(pic, w, h, x, y, imgId) {
+        var canvas = document.createElement("canvas");
+        var cxt = canvas.getContext("2d");
+        var img = new Image();
+        img.src = "data:image/jpeg;base64," + pic;
+        img.onload = function () {
+            canvas.width = this.width;
+            canvas.height = this.height;
+            cxt.drawImage(this, 0, 0, this.width, this.height);
+            cxt.strokeStyle = "red"; // 图形边框的样式
+            cxt.lineWidth = 2; // 设置图形边框的宽度
+            cxt.strokeRect(x, y, w, h); // 绘制矩形边框
+            var imgData = canvas.toDataURL("image/jpeg");
+            $('#' + imgId).attr("src", imgData);
+        }
+    }
+    function showBigImage(e) {
+        layui.use('layer', function () { //独立版的layer无需执行这一句
+            var $ = layui.jquery, layer = layui.layer; //独立版的layer无需执行这一句
+            var x = document.documentElement.clientWidth / 6;
+            var y = document.documentElement.clientHeight / 6;
+            var windowW = 960;
+            var windowH = 540;
+            layer.open({
+                type: 1,
+                offset: [y + "px", x + "px"],
+                title: false,
+                closeBtn: true,
+                id: 'LAY_layuipro',
+                shadeClose: true, //点击阴影关闭
+                area: [windowW + 'px', windowH + 'px'], //宽高
+                content: "<img style=\"position: absolute;width:100%;height:100%\" src=" + $(e).attr('src') + " />"
+            });
+        });
+    }
+    function Export() {
+        var name = $("#txtName").val();
+        var type = $("#slType").val();
+        var shipId = $("#slShip").val();
+        var starttime = $("#dtStartTime").val();
+        var endtime = $("#dtEndTime").val();
+        if (shipId == "") {
+            layer.msg("请选择您要导出的船", { icon: 2 });
+            return false;
+        }
+        if (starttime == "" || endtime == "") {
+            layer.msg("请选择您要导出的时间段", { icon: 2 });
+            return false;
+        }
+        window.location.href = "/Alarm/ExportPdf?shipId=" + shipId + "&name=" + name + "&type=" + parseInt(type) + "&startTime=" + starttime + "&endTime=" + endtime;
+    }
+    function Search(data) {
+        $.ajax({
+            url: "/Alarm/SearchAlarm",
+            data: { searchModel: JSON.stringify(data), pageIndex: page, pageSize: limit },
+            type: "get",
+            dataType: "json",
+            contentType: "application/json;chartset=utf-8",
+            success: function (res) {
+                if (res.code == 0) {
+                    count = res.count;
+                    page = res.pageIndex;
+                    var dt = res.data;
+                    ShowData(dt, count);                   
+                } else {
+                    $("#divdata").html("没有数据");
+                }
+            }
+        });
+    }
+</script>
+<input type="hidden" id="hidtype" value="@ViewBag.type" />
+<div style="width:96%;margin-top:30px">
+    <div style="margin-left:30px">
+        <label style="font-family:STZhongsong;font-weight:bold;width:300px;font:normal;font-size:28px;">报警信息</label>
+        <div style="float:right">
+            <a href="/Alarm/AlarmInfo?flag=@ViewBag.IsShowLayout" style="font-size:14px;color:#005DFF">返回上级</a>
+        </div>
+        <div style="margin-top:30px">
+            <label style="color:#005DFF;font-size:14px;">报警类型：@ViewBag.TypeName</label>
+        </div>
+    </div>
+    <form class="layui-form" style="margin-top:31px" action="" id="dataFrm" lay-filter="dataFrm">
+        <div class="layui-form-item">
+            @if (!ViewBag.IsShip)
+            {
+                <label class="layui-form-label">船舶名称</label>
+                <div class="layui-input-inline">
+                    <select name="ship" id="slShip" style="width: 208px ">
+                        <option value="">请选择</option>
+                    </select>
+                </div>
+            }
+
+            <label class="layui-form-label">摄像机名称</label>
+            <div class="layui-input-inline">
+                <input name="name" id="txtName" class="layui-input" type="text" placeholder="请输入" autocomplete="off" style="width: 208px ">
+            </div>
+            <label class="layui-form-label">报警时间起</label>
+            <div class="layui-input-inline">
+                <input name="startTime" class="layui-input" id="dtStartTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off" style="width: 208px " readonly>
+            </div>
+            <label class="layui-form-label">报警时间止</label>
+            <div class="layui-input-inline">
+                <input name="endTime" class="layui-input" id="dtEndTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off" style="width: 208px " readonly>
+            </div>
+            <div style="float:right">
+                <button class="layui-btn" type="submit" lay-submit="" lay-filter="query" style="background-color:#2F6BFF;width:98px;font-size:12px">搜索</button>
+                <a href="#" onclick="Export()" class="layui-btn" style="background-color:#2F6BFF;width:98px;font-size:12px">导出</a>
+            </div>
+        </div>
+    </form>
+    <div id="divdata" style="width:100%;height:auto">     
+    </div>
+    <div id="page"style="float:right;width:100%"></div>
+</div>
+

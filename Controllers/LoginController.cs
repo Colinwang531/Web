@@ -60,9 +60,11 @@ namespace ShipWeb.Controllers
                 ManagerHelp.IsShowAlarm = usersModel.Id.ToLower() == "admin" ? true : usersModel.Enablequery;
                 bool flag = false;//判断船是否存在
                 var ship = _context.Ship.FirstOrDefault();
+                string shipName = "";
                 if (ship != null)
                 {
                     flag = true;
+                    shipName = ship.Name;
                 }
                 //缓存用户数据
                 UserToken ut = new UserToken()
@@ -71,6 +73,7 @@ namespace ShipWeb.Controllers
                     Name = usersModel.Name,
                     EnableConfigure = usersModel.EnableConfigure,
                     Enablequery = usersModel.Enablequery,
+                    ShipName=shipName,
                     ShipId = ship!=null? ship.Id:""
                 };
                 string userStr = JsonConvert.SerializeObject(ut);
