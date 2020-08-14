@@ -43,20 +43,16 @@ namespace ShipWeb.Controllers
             ViewBag.IsLandHome = base.user.IsLandHome;
             return View();
         }
-        public IActionResult Index1() {
-            picBytes = new Dictionary<string, byte[]>();
-            ViewBag.IsSet = base.user.EnableConfigure;
-            ViewBag.IsLandHome = base.user.IsLandHome;
-            return View();
-        }
         /// <summary>
         /// 加载船员列表
         /// </summary>
         /// <returns></returns>
         public IActionResult Load(int pageIndex, int pageSize)
         {
+            ViewBag.IsLandHome = false;
             if (base.user.IsLandHome)
             {
+                ViewBag.IsLandHome = true;
                 return LandLoad();
             }
             else
@@ -136,6 +132,7 @@ namespace ShipWeb.Controllers
             {
                 code = 0,
                 data = dataShow,
+                count= data.Count(),
                 isSet = !string.IsNullOrEmpty(base.user.ShipId) ? base.user.EnableConfigure : false
             };
             return new JsonResult(result);

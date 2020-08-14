@@ -369,8 +369,7 @@
             type: "get",
             dataType: "json",
             contentType: "application/json;chartset=utf-8",
-            success: function (res) {
-                
+            success: function (res) {                
                 if (res.code == 0) {
                     count = res.count;
                     page = res.pageIndex;
@@ -389,17 +388,23 @@
         <label style="font-family:STZhongsong;font-weight:bold;width:300px;font:normal;font-size:28px;">船员信息</label>
         <form class="layui-form" action="" id="serachFrm" lay-filter="serachFrm" style="margin-top:30px">
             <button type="button" class="layui-btn" style="width:126px;height:40px" id="btnAdd">增加船员</button>
-            <div class="demoTable" style="float:right;">
-                <div class="layui-inline" style="float:left">
-                    <input type="text" name="year" id="txtSearchName" placeholder="请输入船员名称" class="layui-input" style="height:36px;width:288px">
+            @if (!ViewBag.IsLandHome)
+            {
+                <div class="demoTable" style="float:right;">
+                    <div class="layui-inline" style="float:left">
+                        <input type="text" name="year" id="txtSearchName" placeholder="请输入船员名称" class="layui-input" style="height:36px;width:288px">
+                    </div>
+                    <img src="/images/sousuo.png" style="width:32px;height:32px;margin-left:10px" id="imgbtn">
                 </div>
-                <img src="/images/sousuo.png" style="width:32px;height:32px;margin-left:10px" id="imgbtn">
-            </div>
+            }
         </form>
     </div>
-    <div id="divbody" style="width:100%;height:auto">
+    <div id="divbody" style="width:100%;height:auto;margin-top: 10px;">
     </div>
-    <div id="page" style="float:right;width:100%"></div>
+    @if (!ViewBag.IsLandHome)
+    {
+        <div id="page" style="float:right;width:100%;"></div>
+    }
 </div>
 <div id="divAddOrUpdate" style="display:none">
     <form class="layui-form" action="" id="dataFrm" lay-filter="dataFrm">

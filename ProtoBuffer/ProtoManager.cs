@@ -1348,7 +1348,7 @@ namespace ShipWeb.ProtoBuffer
                 mqmsg.AppendEmptyFrame();
                 mqmsg.Append(byt);
                 //发送注册请求
-                bool flag=dealer.TrySendMultipartMessage(mqmsg);
+                //bool flag=dealer.TrySendMultipartMessage(mqmsg);
             }
             catch (Exception ex)
             {

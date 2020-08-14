@@ -16,8 +16,8 @@
         height: 166px;
         border: 1px solid rgba(221, 221, 221, 1);
         float: left;
-        margin-left: 38px;
-        margin-top: 38px;
+        margin-left: 30px;
+        margin-top: 30px;
         border-radius: 8px;
     }
 </style>
@@ -93,7 +93,7 @@
             var imgId = "img" + i;
             html += '<div class="layui-card card">';
             html += '       <div style="float:left;margin: 24px;">';
-            html += '        <img style="width:210px;height:118px" id="' + imgId + '" ondblclick="showBigImage(this)" />';
+            html += '        <img style="width:210px;height:118px;border-radius: 8px;s" id="' + imgId + '" ondblclick="showBigImage(this)" />';
             html += '       </div>';
             html += '       <div style="float:left;margin-top:24px">';
             html += '           <label style="font-weight:bold;font:normal;font-size:18px;color:#005DFF">' + dt[i].name + '</label><br /><br />';
@@ -192,15 +192,7 @@
                     count = res.count;
                     page = res.pageIndex;
                     var dt = res.data;
-                    ShowData(dt, count);
-                    //var sl = res.ship;
-                    //if (sl.length > 0) {
-                    //    var slHtml = '<option value="">请选择</option>';
-                    //    for (var i = 0; i < sl.length; i++) {
-                    //        slHtml += '<option value="' + sl[i].id + '">' + sl[i].name + '</option>'
-                    //    }
-                    //    $("#slShip").html(slHtml);
-                    //}
+                    ShowData(dt, count);                   
                 } else {
                     $("#divdata").html("没有数据");
                 }
@@ -209,14 +201,16 @@
     }
 </script>
 <input type="hidden" id="hidtype" value="@ViewBag.type" />
-<div style="width:96%;margin-left:30px;margin-top:30px">
-    <div style="margin-bottom:20px">
+<div style="width:96%;margin-top:30px">
+    <div style="margin-left:30px">
         <label style="font-family:STZhongsong;font-weight:bold;width:300px;font:normal;font-size:28px;">报警信息</label>
         <div style="float:right">
             <a href="/Alarm/AlarmInfo?flag=@ViewBag.IsShowLayout" style="font-size:14px;color:#005DFF">返回上级</a>
         </div>
+        <div style="margin-top:30px">
+            <label style="color:#005DFF;font-size:14px;">报警类型：@ViewBag.TypeName</label>
+        </div>
     </div>
-    <label style="color:#005DFF;font-size:14px;">报警类型：@ViewBag.TypeName</label>
     <form class="layui-form" style="margin-top:31px" action="" id="dataFrm" lay-filter="dataFrm">
         <div class="layui-form-item">
             @if (!ViewBag.IsShip)
@@ -247,20 +241,7 @@
             </div>
         </div>
     </form>
-    <div id="divdata" style="width:100%;height:auto">
-        @*<div class="layui-card card" style="float:left">
-                <div class="layui-card-body">
-                    <div style="width:210px;height:118px;float:left">
-                        <img src="~/images/user.png" />
-                    </div>
-                    <div>
-                        <label style="font-weight:bold;font:normal;font-size:18px;color:#005DFF">船1</label><br />
-                        <label style="font-size:12px;color:#8C8C8C">报警类型：睡觉</label><br />
-                        <label style="font-size:12px;color:#8C8C8C">摄像机名称：睡觉</label><br />
-                        <label style="font-size:12px;color:#8C8C8C">报警时间：睡觉</label><br />
-                    </div>
-                </div>
-            </div>*@
+    <div id="divdata" style="width:100%;height:auto">     
     </div>
     <div id="page"style="float:right;width:100%"></div>
 </div>

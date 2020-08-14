@@ -236,18 +236,11 @@
 <div >
     <div style="margin-left:30px;margin-top:30px;width:98%">
         <label style="font-family:STZhongsong;font-weight:bold;width:300px;font:normal;font-size:28px;">算法配置</label>
-        <form class="layui-form" action="" id="serachFrm" lay-filter="serachFrm" style="margin-top:45px">
+        <form class="layui-form" action="" id="serachFrm" lay-filter="serachFrm" style="margin-top:30px;margin-bottom:30px">
             @if (ViewBag.IsSet)
             {
                 <button type="button" class="layui-btn" style="width:126px;height:40px" id="btnAdd">新增算法</button>
             }
-
-            @*<div class="demoTable" style="float:right;">
-            <div class="layui-inline" style="float:left">
-                <input type="text" name="year" id="txtName" placeholder="请输入用户名" class="layui-input" style="height:36px;width:288px">
-            </div>
-            <img src="/images/sousuo.png" style="width:32px;height:32px;margin-left:10px" id="imgbtn">
-        </div>*@
         </form>
         <table class="layui-hide" id="algoTable" lay-filter="algoTable"></table>
         @if (ViewBag.IsSet)

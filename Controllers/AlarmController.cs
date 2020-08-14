@@ -36,23 +36,6 @@ namespace ShipWeb.Controllers
             _converter = converter;
             _PDFService = pDFService;
         }
-        public IActionResult Index(bool isShow, string shipid = "")
-        {
-            ViewBag.IsShowLayout = isShow;//显示报警的框架
-            if (!string.IsNullOrEmpty(shipid))
-            {
-                base.user.ShipId = shipid;
-            }
-          
-            ViewBag.IsLandHome = base.user.IsLandHome;
-            ViewBag.LoginName = base.user.Name;
-            ViewBag.ShipName = base.user.ShipName;
-            return View();
-        }
-        public IActionResult AlarmShipAll()
-        {
-            return View();
-        }
         public IActionResult AlarmInfo(bool flag=false,bool isShip=false) 
         {
             var sleep = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.SLEEP).ToList();
@@ -70,6 +53,7 @@ namespace ShipWeb.Controllers
                 ViewBag.src = "/Alarm/AlarmInfo?flag=false&isShip="+isShip;
                 ViewBag.layuithis = "alarm";
                 ViewBag.IsLandHome = false;
+                ViewBag.ShipName = base.user.ShipName;
             }
             return View();
         }
@@ -114,40 +98,7 @@ namespace ShipWeb.Controllers
                 return new JsonResult(new { code = 1, msg = "查询失败!" + ex.Message });
             }
 
-        }
-        /// <summary>
-        /// 船舶端分页查询
-        /// </summary>
-        /// <param name="cid"></param>
-        /// <param name="type"></param>
-        /// <param name="pageIndex"></param>
-        /// <param name="pageSize"></param>
-        /// <param name="pageCount"></param>
-        public IActionResult QueryPage(string searchModel, int pageIndex, int pageSize)
-        {
-            try
-            {
-                var model = JsonConvert.DeserializeObject<SearchAlarmViewModel>(searchModel);
-                int total = 0;
-                model.ShipId = base.user.ShipId;
-                var list = GetDate(model, pageIndex, pageSize, out total);
-                var result = new
-                {
-                    code = 0,
-                    data = list,
-                    pageIndex = pageIndex,
-                    pageSize = pageSize,
-                    count = total
-                };
-                return new JsonResult(result);
-            }
-            catch (Exception e)
-            {
-                return new JsonResult(new { code = 1, msg = "查询失败" });
-            }
-
-        }
-
+        }      
         /// <summary>
         /// 导出
         /// </summary>
@@ -177,35 +128,7 @@ namespace ShipWeb.Controllers
 
             return File(pdfBytes, "application/pdf", "报警信息.pdf");
         }
-        /// <summary>
-        /// 陆地端查询报警信息
-        /// </summary>
-        /// <param name="pageIndex"></param>
-        /// <param name="pageSize"></param>
-        /// <returns></returns>
-        public IActionResult LoadAlarm(int pageIndex, int pageSize)
-        {
-            try
-            {
-                int total = 0;
-                var list = GetDate(null, pageIndex, pageSize, out total);
-                var result = new
-                {
-                    code = 0,
-                    data = list,
-                    ship = _context.Ship,
-                    pageIndex = pageIndex,
-                    pageSize = pageSize,
-                    count = total
-                };
-                return new JsonResult(result);
-            }
-            catch (Exception ex)
-            {
-                return new JsonResult(new { code = 1, msg = "查询失败" + ex.Message });
-            }
-
-        }
+       
         /// <summary>
         /// 陆地端分布查询报警信息
         /// </summary>
