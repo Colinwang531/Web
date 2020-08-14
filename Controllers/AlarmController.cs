@@ -37,23 +37,27 @@ namespace ShipWeb.Controllers
             _PDFService = pDFService;
         }
         public IActionResult AlarmInfo(bool flag=false,bool isShip=false) 
-        {
-            var sleep = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.SLEEP).ToList();
-            var fight = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.FIGHT).ToList();
-            var helmet = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.HELMET).ToList();
-            var phone = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.PHONE).ToList();
-            ViewBag.sleep = sleep.Count; 
-            ViewBag.fight = fight.Count;
-            ViewBag.helmet = helmet.Count;
-            ViewBag.phone = phone.Count;
+        {    
             ViewBag.IsShowLayout = flag;
             ViewBag.IsShip = isShip;
             if (isShip)
             {
+                string shipId = base.user.ShipId;
                 ViewBag.src = "/Alarm/AlarmInfo?flag=false&isShip="+isShip;
                 ViewBag.layuithis = "alarm";
                 ViewBag.IsLandHome = false;
                 ViewBag.ShipName = base.user.ShipName;
+                ViewBag.sleep = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.SLEEP&&c.ShipId== shipId).Count();
+                ViewBag.fight = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.FIGHT && c.ShipId == shipId).Count();
+                ViewBag.helmet = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.HELMET && c.ShipId == shipId).Count();
+                ViewBag.phone = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.PHONE && c.ShipId == shipId).Count();
+            }
+            else
+            {
+                ViewBag.sleep = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.SLEEP).Count();
+                ViewBag.fight = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.FIGHT).Count();
+                ViewBag.helmet = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.HELMET).Count();
+                ViewBag.phone = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.PHONE).Count();
             }
             return View();
         }
@@ -119,6 +123,11 @@ namespace ShipWeb.Controllers
                 ShipId=shipId
             };
             shipId = string.IsNullOrEmpty(shipId) ? base.user.ShipId : shipId;
+            if (!base.user.IsLandHome)
+            {
+                shipId = base.user.ShipId;
+                model.ShipId = base.user.ShipId;
+            }
             var ship = _context.Ship.Where(c =>c.Id==shipId).FirstOrDefault();
             var list = GetDate(model, 1, 1000000, out total);
             string time = startTime + "~" + endTime; 
@@ -140,6 +149,10 @@ namespace ShipWeb.Controllers
         {
 
             var model = JsonConvert.DeserializeObject<SearchAlarmViewModel>(searchModel);
+            if (!base.user.IsLandHome)
+            {
+                model.ShipId = base.user.ShipId;
+            }
             int total = 0;
             var list = GetDate(model, pageIndex, pageSize, out total);
             var result = new
