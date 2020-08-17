@@ -61,49 +61,6 @@ namespace ShipWeb.Controllers
             ViewBag.IsSet = base.user.EnableConfigure;
             return View();
         }
-        public IActionResult Index2(bool isShow = false, string id = "") {
-            if (!string.IsNullOrEmpty(id))
-            {
-                string browsertoken = HttpContext.Request.Cookies["token"];
-                if (browsertoken != null)
-                {
-                    string urlstr = HttpContext.Session.GetString(browsertoken);
-                    user = JsonConvert.DeserializeObject<UserToken>(urlstr);
-                    user.ShipId = id;
-                    user.IsLandHome = true;
-                    string userStr = JsonConvert.SerializeObject(user);
-                    //将请求的url注册
-                    HttpContext.Session.SetString(browsertoken, userStr);
-                    //写入浏览器token
-                    HttpContext.Response.Cookies.Append("token", browsertoken);
-                }
-                //陆地端过来不显示报警信息
-                ManagerHelp.IsShowAlarm = false;
-                ViewBag.LoginName = base.user.Name;
-                ViewBag.src = "/Device/Index";
-            }
-            ViewBag.IsLandHome = base.user.IsLandHome;
-            ViewBag.IsShowLayout = isShow;
-            ViewBag.IsSet = base.user.EnableConfigure;
-            return View();
-        }
-        public IActionResult Load2()
-        {
-            
-            if (base.user.IsLandHome )
-            {
-                return LandLoad();
-            }
-            string shipId = base.user.ShipId;
-            var data = _context.Device.Where(c => c.ShipId == shipId).ToList();           
-            var result = new
-            {
-                code = 0,
-                data = data,
-                isSet = !string.IsNullOrEmpty(shipId) ?base.user.EnableConfigure : false
-            };
-            return new JsonResult(result);
-        }
         public IActionResult Load() 
         {
             string shipId = base.user.ShipId;

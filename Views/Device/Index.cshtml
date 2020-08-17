@@ -185,10 +185,10 @@
                     success: function (index) {
                         $("#dataCamFrm")[0].reset();
                         form.val("dataCamFrm", {
-                            "id": camdata.cells[0].firstChild.innerHTML,
-                            "did": camdata.cells[1].firstChild.innerHTML,
-                            "enable": camdata.cells[3].firstChild.innerHTML == "开启" ? true : false,
-                            "nickName": camdata.cells[4].firstChild.innerHTML
+                            "id": camdata.cells[1].firstChild.innerHTML,
+                            "did": camdata.cells[2].firstChild.innerHTML,
+                            "enable": camdata.cells[4].firstChild.innerHTML == "开启" ? true : false,
+                            "nickName": camdata.cells[5].firstChild.innerHTML
                         });
                     }
                 });
@@ -304,6 +304,7 @@
                         if (res.code == 0) {
                             layer.msg("数据保存成功", { icon: 1 });
                             tableIns.reload();
+                            layer.closeAll();//关闭所有的弹出层
                             //修改成功修改表格数据不进行跳转
                             //setTimeout(function () {
                             //    var flag = camFrm.field.enable == "1" ? true : false;
