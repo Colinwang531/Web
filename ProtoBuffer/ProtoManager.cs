@@ -14,6 +14,7 @@ using System.Threading;
 using ShipWeb.DB;
 using ShipWeb.Tool;
 using Microsoft.Extensions.Logging;
+using ShipWeb.Interface;
 
 namespace ShipWeb.ProtoBuffer
 {
@@ -23,6 +24,7 @@ namespace ShipWeb.ProtoBuffer
         private static object dealer_Lock = new object(); //锁同步
         public static string IP = "tcp://192.168.0.22:61001";//接收从main入口过来的url
         private static ProtoBDManager dbManager = new ProtoBDManager();
+        private static DealerService service = new DealerService();
         //int aa;
         //单例控制dealer只有一个。
         public ProtoManager()
@@ -32,6 +34,7 @@ namespace ShipWeb.ProtoBuffer
                 if (dealer == null)
                 {
                     dealer = new DealerSocket(IP);
+                    dealer.Options.Linger=new TimeSpan(0,0,30);
                 }
             }
         }
@@ -66,11 +69,9 @@ namespace ShipWeb.ProtoBuffer
                 }
             };
             if (!string.IsNullOrEmpty(cid)) msg.component.componentrequest.componentinfo.cid = cid;
+
+            //retult = DataMessage(msg, dealer,identity);
             SendMessage(msg);
-            //Task.Factory.StartNew(state => {
-            //    ReceiveMessage(dealer);
-            //}, TaskCreationOptions.LongRunning);
-            //retult = DataMessage(msg, dealer);
             return retult;
         }
         /// <summary>
@@ -106,6 +107,7 @@ namespace ShipWeb.ProtoBuffer
             };
             if (!string.IsNullOrEmpty(cid)) msg.component.componentrequest.componentinfo.cid = cid;
             SendMessage(msg);
+            //service.SendMessage(msg, identity);
         }
         /// <summary>
         /// 递归处理消息
@@ -113,11 +115,13 @@ namespace ShipWeb.ProtoBuffer
         /// <param name="msg"></param>
         /// <param name="dealer"></param>
         /// <returns></returns>
-        private ComponentResponse DataMessage(MSG msg, DealerSocket dealer)
+        private ComponentResponse DataMessage(MSG msg, DealerSocket dealer,string identity)
         {
             ComponentResponse retult = new ComponentResponse();
             SendMessage(msg);
             MSG revMsg = ReceiveMessage(dealer);
+            //service.SendMessage(msg, identity);
+            //MSG revMsg = service.ReviceMessage();
             //MSG revMsg = msg;
             if (revMsg.type == MSG.Type.COMPONENT)
             {
@@ -149,7 +153,7 @@ namespace ShipWeb.ProtoBuffer
                             }
                         }
                     };
-                  return DataMessage(msgSend, dealer);
+                  return DataMessage(msgSend, dealer,identity);
                 }
             }
             return retult;
@@ -1348,11 +1352,11 @@ namespace ShipWeb.ProtoBuffer
                 mqmsg.AppendEmptyFrame();
                 mqmsg.Append(byt);
                 //发送注册请求
-                //bool flag=dealer.TrySendMultipartMessage(mqmsg);
+                bool flag = dealer.TrySendMultipartMessage(mqmsg);
             }
             catch (Exception ex)
             {
-              
+
             }
         }
         /// <summary>

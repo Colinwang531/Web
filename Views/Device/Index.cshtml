@@ -92,7 +92,7 @@
             if (obj.event === 'collapse') {
                 var data = obj.data;
                 var trObj = layui.$(this).parent('tr'); //当前行
-                var accordion = false //开启手风琴，那么在进行折叠操作时，始终只会展现当前展开的表格。
+                var accordion = false; //开启手风琴，那么在进行折叠操作时，始终只会展现当前展开的表格。
                 var content = '<table></table>' //内容
                 //表格行折叠方法
                 collapseTable({
@@ -217,7 +217,7 @@
             //不存在就创建展开行
             if (trObjChildren.data('index') != indexChildren) {
                 //装载HTML元素
-                var tr = '<tr data-index="' + indexChildren + '"><td colspan="' + colspan + '"><div style="height: auto;padding-left:' + lw + 'px;padding-right:' + rw + 'px" class="layui-table-cell">' + content + '</div></td></tr>';
+                var tr = '<tr data-index="' + indexChildren + '"><td colspan="' + colspan + '"><div style="height: auto;background-color:#F7F7F7;padding-left:' + lw + 'px;padding-right:' + rw + 'px" class="layui-table-cell">' + content + '</div></td></tr>';
                 trObjChildren = trObj.after(tr).next().hide(); //隐藏展开行
                 var fixTr = '<tr data-index="' + indexChildren + '"></tr>';//固定行
                 leftTrChildren = leftTr.after(fixTr).next().hide(); //左固定
@@ -235,6 +235,11 @@
                 leftTrChildren.siblings('[data-index$="-children"]').hide(); //右固定
             }
             success(trObjChildren, indexChildren); //回调函数
+
+            //修改子表格中表头的背景色
+            trObjChildren.find('th').css("background-color", "#F7F7F7");
+            //修改子表格中表格的背景色
+            trObjChildren.find('tr').css("background-color", "#F7F7F7");
             heightChildren = trObjChildren.height(); //展开高度固定
             rightTrChildren.height(heightChildren + 115).toggle(); //左固定
             leftTrChildren.height(heightChildren + 115).toggle(); //右固定

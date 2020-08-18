@@ -2798,7 +2798,7 @@ a {
     font-size: 0;
     *display: inline;
     width:auto;
-    float:right;
+    float:left;
     *zoom: 1;
 }
 

@@ -93,7 +93,7 @@
             var imgId = "img" + i;
             html += '<div class="layui-card card">';
             html += '       <div style="float:left;margin: 24px;">';
-            html += '        <img style="width:210px;height:118px;border-radius: 8px;s" id="' + imgId + '" ondblclick="showBigImage(this)" />';
+            html += '        <img style="width:210px;height:118px;border-radius: 8px;" id="' + imgId + '" ondblclick="showBigImage(this)" />';
             html += '       </div>';
             html += '       <div style="float:left;margin-top:24px">';
             html += '           <label style="font-weight:bold;font:normal;font-size:18px;color:#005DFF">' + dt[i].name + '</label><br /><br />';
@@ -203,13 +203,10 @@
 <input type="hidden" id="hidtype" value="@ViewBag.type" />
 <div style="width:96%;margin-top:30px">
     <div style="margin-left:30px">
-        <label style="font-family:STZhongsong;font-weight:bold;width:300px;font:normal;font-size:28px;">报警信息</label>
+        <label style="font-family:STZhongsong;font-weight:bold;width:300px;font:normal;font-size:28px;">@ViewBag.TypeName 报警</label>
         <div style="float:right">
             <a href="/Alarm/AlarmInfo?flag=@ViewBag.IsShowLayout" style="font-size:14px;color:#005DFF">返回上级</a>
-        </div>
-        <div style="margin-top:30px">
-            <label style="color:#005DFF;font-size:14px;">报警类型：@ViewBag.TypeName</label>
-        </div>
+        </div>    
     </div>
     <form class="layui-form" style="margin-top:31px" action="" id="dataFrm" lay-filter="dataFrm">
         <div class="layui-form-item">
@@ -235,7 +232,7 @@
             <div class="layui-input-inline">
                 <input name="endTime" class="layui-input" id="dtEndTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off" style="width: 208px " readonly>
             </div>
-            <div style="float:right">
+            <div class="layui-input-inline" style="margin-left:30px;width:300px">
                 <button class="layui-btn" type="submit" lay-submit="" lay-filter="query" style="background-color:#2F6BFF;width:98px;font-size:12px">搜索</button>
                 <a href="#" onclick="Export()" class="layui-btn" style="background-color:#2F6BFF;width:98px;font-size:12px">导出</a>
             </div>
@@ -243,6 +240,6 @@
     </form>
     <div id="divdata" style="width:100%;height:auto">     
     </div>
-    <div id="page"style="float:right;width:100%"></div>
+    <div id="page"style="float:left;width:100%;margin-left:27px"></div>
 </div>
 

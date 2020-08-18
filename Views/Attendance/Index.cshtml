@@ -9,85 +9,156 @@
 <script src="~/lib/jquery/dist/jquery.js"></script>
 <script src="~/lib/jquery/dist/jquery.min.js"></script>
 <style>
-    .layui-table-cell {
+    /*.layui-table-cell {
         display: table-cell;
         vertical-align: middle;
     }
 
     .layui-table img {
         max-width: 120px
+    }*/
+    img {
+        width:180px;
+        height:180px;
+    }
+    .card {
+        text-align: left;
+        width: 420px;
+        height: 320px;
+        border: 1px solid rgba(221, 221, 221, 1);
+        float: left;
+        margin-left: 30px;
+        margin-top: 15px;
+        border-radius: 8px;
     }
 </style>
+
 <script type="text/javascript">
-    layui.use(['form', 'table', 'layer', 'laydate'], function (obj) {
+    var page = 1;
+    var limit = 8;
+    layui.use(['form', 'layer', 'laydate'], function (obj) {
         var $ = layui.$;
         var table = layui.table;
         var form = layui.form;
         var layer = layui.layer;
         var laydate = layui.laydate;
+        Load();
         var index = layer.loading; //添加laoding,0-2两种方式
         laydate.render({
-            elem: '#dtStartTime',
-            type: 'date'
-        });
-        laydate.render({
-            elem: '#dtEndTime',
-            type: 'date'
-        });
-        //第一个实例
-        table.render({
-            elem: '#alarmTable',
-            loading: true, //翻页加loading
-            width:700,
-            url: "/Attendance/Load", //数据接口
-            request: {
-                pageName: 'pageIndex',//页码的参数名称，默认：page
-                limitName: 'pageSize' //每页数据量的参数名，默认：limit
-            },
-            cols: [[
-                { field: 'name', title: '船员名称', width: 120 },
-                { field: 'time', title: '打卡时间', width: 200 },
-                { field: 'behavior', title: '考勤', width: 120 },
-                {
-                    field: 'type', title: '略缩图',templet: function (e) {
-                        var html = '<img style="height:80px" ondblclick="showBigImage(this)"  src="data:image/jpeg;base64,' + e.picture + '"/>';
-                        return html;
-                    }
-                }
-            ]],
-            limit: 5,
-            limits: [5, 10, 20,40],
-            page: {
-                groups: 5 //只显示 5 个连续页码
-            }, done: function (res) {
-                //返回数据执行回调函数
-                layer.close(index);
-                //返回数据关闭loading
-            }
-        });
+            elem: '#dtTime',
+            type: 'date',
+            value: new Date()
+        });      
         form.on("submit(query)", function (obj) {
-            var data = {
-                name: obj.field.name,
-                startTime: obj.field.startTime,
-                endTime: obj.field.endTime
-            }
-            table.reload('alarmTable', {
-                url: "/Attendance/QueryPage",
-                where: { searchModel: JSON.stringify(data) },
-                request: {
-                    pageName: 'pageIndex',//页码的参数名称，默认：page
-                    limitName: 'pageSize' //每页数据量的参数名，默认：limit
-                },
-                page: {
-                    curr: 1
-                },
-                done: function (res) {
-                    form.render();
-                }
-            });
+            Search();
             return false;
         });
     });
+    function Load() {
+        $.ajax({
+            url: "/Attendance/Load",
+            data: { pageIndex: page, pageSize: limit},
+            type: "get",
+            dataType: "json",
+            contentType: "application/json;chartset=utf-8",
+            success: function (res) {
+                if (res.code == 0) {
+                    count = res.count;
+                    page = res.pageIndex;
+                    var dt = res.data;
+                    ShowData(dt, count);
+                }
+            }
+        });
+    }
+    function ShowData(dt)
+    {
+        var html = "";
+        for (var i = 0; i < dt.length; i++) {
+            html += '<div class="layui-card card">';
+            html += '    <div style="margin-left:20px;margin-top:20px">';
+            html += '        <label style="font-weight:bold;font-size:18px">船员：' + dt[i].name + '</label><br />';
+            html += '    </div>';
+            var attd = dt[i].attendances;
+            var ru = null;//考勤入
+            var chu = null;//考勤出
+            for (var j = 0; j < attd.length; j++) {
+                if (attd[j].behavior == "入") {
+                    ru = attd[j];
+                } else if(attd[j].behavior == "出"){
+                    chu = attd[j];
+                }
+            }
+            var src = "/images/attendance.png";
+            var text = "";
+            if (ru != null) {
+                src = "data:image/jpeg;base64," + ru.picture;
+                var text = "入&nbsp;&nbsp;" + ru.time;
+            }
+            html += FaceImg(src, text);
+            text = "";
+            src = "/images/attendance.png";
+            if (chu != null) {
+                src = "data:image/jpeg;base64," + chu.picture;
+                text = "出&nbsp;&nbsp;" + chu.time;
+            }
+            html += FaceImg(src, text);
+            html += '</div>';
+        }
+        $("#divbody").html(html);
+        layui.use("laypage", function () {
+            var laypage = layui.laypage;
+            laypage.render({
+                elem: 'page',
+                count: count,
+                limit: limit,
+                curr: page,
+                theme: '#2F6BFF',
+                jump: function (obj, first) {
+                    if (!first) {
+                        page = obj.curr;
+                        Search();
+                    }
+                }
+            });
+        })
+    }
+    function Search() {
+        $.ajax({
+            url: "/Attendance/QueryPage",
+            data: { dtTime: $("#dtTime").val(), pageIndex: page, pageSize: limit },
+            type: "get",
+            dataType: "json",
+            contentType: "application/json;chartset=utf-8",
+            success: function (res) {
+                if (res.code == 0) {
+                    count = res.count;
+                    page = res.pageIndex;
+                    var dt = res.data;
+                    ShowData(dt, count);
+                }
+            }
+        });
+    }
+    function FaceImg(src, text) {
+        var html = "";
+        html += '<div style="margin-top:20px;width:180px;height:28px;margin-left:20px;float:left">';
+        html += '    <img src="' + src + '" /><br />';
+        if (text != "") {
+            html += '<div style="background-color:#F2F2F2;margin-top:16px;width:180px;padding-top:5px;height:28px">'
+            html += '<div style="border-radius: 60px;width:6px;height:6px;background-color:#19BE6B;margin-right:5px;margin-left:10px;float:left;margin-top: 8px;"></div>';
+            html += ' <label style="font-size:10px;">' + text + '</label>';
+            html+='</div>'
+
+        } else {
+            html += '<div style="background-color:#F2F2F2;margin-top:16px;width:180px;padding-top:5px;height:28px">'
+            html += '<div style="border-radius: 60px;width:6px;height:6px;background-color:#FE9702;margin-right:5px;margin-left:10px;float:left;margin-top: 8px;"></div>';
+            html += '<label  style="font-size:10px;">缺卡</label>';
+            html += '</div>'
+        }
+        html += '</div>';
+        return html;
+    }
     function showBigImage(e) {
         layui.use('layer', function () { //独立版的layer无需执行这一句
             var $ = layui.jquery, layer = layui.layer; //独立版的layer无需执行这一句
@@ -108,201 +179,33 @@
         });
     }
 </script>
-<div style="margin:20px;width:96%">
-    <form class="layui-form" action="" id="dataFrm" lay-filter="dataFrm">
-        <div class="layui-form-item">          
-            <label class="layui-form-label">船员名称</label>
-            <div class="layui-input-inline" style="width:100px">
-                <input name="name" class="layui-input" type="text" placeholder="请输入" autocomplete="off">
+<div style="width:98%">
+    <div style="margin-left:30px;margin-top:30px">
+        <label style="font-family:STZhongsong;font-weight:bold;width:300px;font:normal;font-size:28px;">考勤列表</label>
+    </div>
+    <form class="layui-form" action="" id="dataFrm" lay-filter="dataFrm" style="margin-top:30px">
+        <div class="layui-form-item">
+            <label class="layui-form-label">打卡时间</label>
+            <div class="layui-input-inline" style="width:144px">
+                <input name="startTime" class="layui-input" id="dtTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off" width="144" readonly>
             </div>
-            <label class="layui-form-label">打卡时间起</label>
-            <div class="layui-input-inline" style="width:100px">
-                <input name="startTime" class="layui-input" id="dtStartTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off" readonly>
-            </div>
-            <label class="layui-form-label">打卡时间止</label>
-            <div class="layui-input-inline" style="width:100px">
-                <input name="endTime" class="layui-input" id="dtEndTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off" readonly>
-            </div>
-            <button class="layui-btn" type="submit" lay-submit="" lay-filter="query">查询</button>
+            <button class="layui-btn" type="submit" lay-submit="" lay-filter="query" style="width:98px;height:40px">搜索</button>
         </div>
     </form>
-    <table class="layui-table" id="alarmTable" layer-filter="alarmTable"></table>
+    <div id="divbody" style="width:100%;height:auto">
+        @*<div class="layui-card card">
+                <div style="margin-left:20px;margin-top:20px">
+                    <label style="font-weight:bold;font-size:18px">船员</label><br/>
+                    <div style="margin-top:16px;margin-left:23px">
+                        <img src="/images/add.png" /><br/>
+                        <div style="margin-top:16px">
+                            <label>入：时间</label>
+                        </div>
+                    </div>
+                </div>
+            </div>*@
+    </div>
+    <div id="page" style="float:left;width:100%;margin-left:27px;"></div>
+
 </div>
 
-
-
-@*<script type="text/javascript">
-        var page = 1; //设置首页页码
-        var limit = 2; //设置一页显示的条数
-        var total; //总条数
-        $(function () {
-            loadData();
-            getdate();
-        });
-        function loadData() {
-            $.ajax({
-                url: "/Attendance/Load",
-                type: "get",
-                dataType: "json",
-                data: {
-                    pageIndex: page,
-                    pageSize: limit
-                },
-                contentType: "application/json;chartset=utf-8",
-                success: function (res) {
-                    if (res.code == 0) {
-                        total = res.count;
-                        var tb = res.data;
-                        SpliHtml(tb);
-                        getPage();
-                    }
-                }
-            });
-        }
-        //时间控件
-        function getdate() {
-            layui.use('laydate', function () {
-                var laydate = layui.laydate;
-                var layer = layui.layer;
-                laydate.render({
-                    elem: '#dtStartTime',
-                    type: 'date'
-                });
-            });
-            layui.use('laydate', function () {
-                var laydate = layui.laydate;
-                var layer = layui.layer;
-                laydate.render({
-                    elem: '#dtEndTime',
-                    type: 'date'
-                });
-            })
-        };
-        //拼接数据
-        function SpliHtml(tb) {
-            var html = "";
-            if (tb.length > 0) {
-                for (var i = 0; i < tb.length; i++) {
-                    html += '<tr>';
-                    html += '<td>' + tb[i].uid + '</td>';
-                    html += '<td>' + tb[i].name + '</td>';
-                    html += '<td>' + tb[i].time + '</td>';
-                    if (tb[i].enableAttendanceIn) {
-                        html += '<td>入</td>';
-                    } if (true) {
-                        html += '<td>出</td>';
-                    }
-                    html += '<td><img style="width:800px;height:30px"  ondblclick="showBigImage(this)"  src="data:image/jpeg;base64,' + tb[i].picture + '"/></td>';
-                }
-            }
-            $("#tblist").html(html);
-        }
-        function showBigImage(e) {
-            layui.use('layer', function () { //独立版的layer无需执行这一句
-                var $ = layui.jquery, layer = layui.layer; //独立版的layer无需执行这一句
-                var x = document.documentElement.clientWidth / 6;
-                var y = document.documentElement.clientHeight / 6;
-                var windowW = 960;
-                var windowH = 540;
-                layer.open({
-                    type: 1,
-                    offset: [y + "px", x + "px"],
-                    title: false,
-                    closeBtn: true,
-                    id: 'LAY_layuipro',
-                    shadeClose: true, //点击阴影关闭
-                    area: [windowW + 'px', windowH + 'px'], //宽高
-                    content: "<img style=\"position: absolute;width:100%;height:100%\" src=" + $(e).attr('src') + " />"
-                });
-            });
-        }
-        //分页处理
-        function getPage() {
-            layui.use('laypage', function () {
-                var laypage = layui.laypage;
-                var layer = layui.layer;
-                laypage.render({
-                    elem: 'pages',
-                    count: total, //数据总数，从服务端得到
-                    limit: limit,
-                    jump: function (obj, first) {
-                        page = obj.curr; //改变当前页码
-                        limit = obj.limit;
-                        if (!first) {
-                            Query(page, false);
-                        }
-                    }
-                });
-            });
-        }
-        //查询
-        function Query(pageIndex, isRefresh = true) {
-            var uid = $("#txtUid").val();
-            var name = $("#txtName").val();
-            var startTime = $("#dtStartTime").val();
-            var endTime = $("#dtEndTime").val();
-            var data = {
-                uid: uid,
-                name: name,
-                startTime: startTime,
-                endTime: endTime,
-                pageIndex: pageIndex,
-                pageSize: limit
-            }
-            $.ajax({
-                url: "Attendance/QueryPage",
-                data: data,
-                type: "get",
-                dataType: "json",
-                contentType: "application/json;chartset=utf-8",
-                success: function (res) {
-                    if (res.code == 0) {
-                        total = res.count;
-                        page = res.pageIndex;
-                        var tb = res.data;
-                        SpliHtml(tb);
-                        if (isRefresh) {
-                            getPage();
-                        }
-                    }
-                }
-
-            });
-
-        }
-    </script>
-    <div style="margin:20px;width:96%">
-        <div class="layui-form-item">
-            <label class="layui-form-label">编号</label>
-            <div class="layui-input-inline" style="width:100px">
-                <input id="txtUid" class="layui-input" type="text" placeholder="请输入" autocomplete="off" lay-verify="required">
-            </div>
-            <label class="layui-form-label">名称</label>
-            <div class="layui-input-inline" style="width:100px">
-                <input id="txtName" class="layui-input" type="text" placeholder="请输入" autocomplete="off" lay-verify="required">
-            </div>
-            <label class="layui-form-label">时间起</label>
-            <div class="layui-input-inline" style="width:100px">
-                <input name="date" class="layui-input" id="dtStartTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off">
-            </div>
-            <label class="layui-form-label">时间止</label>
-            <div class="layui-input-inline" style="width:100px">
-                <input name="date" class="layui-input" id="dtEndTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off">
-            </div>
-            <button class="layui-btn" type="submit" onclick="Query()">查询</button>
-        </div>
-        <table class="layui-table">
-            <thead>
-                <tr>
-                    <th>船员编号</th>
-                    <th>船员名称</th>
-                    <th>打卡时间</th>
-                    <th>考勤</th>
-                    <th>略缩图</th>
-                </tr>
-            </thead>
-            <tbody id="tblist">
-            </tbody>
-        </table>
-        <div id="pages" class="center"></div>
-    </div>*@

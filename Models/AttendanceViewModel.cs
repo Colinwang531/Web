@@ -11,6 +11,11 @@ namespace ShipWeb.Models
         /// 船员名称
         /// </summary>
         public string Name { get; set; }
+        public List<AttendanceView> attendances { get; set; }
+
+    }
+    public class AttendanceView
+    {
         /// <summary>
         /// 打卡时间
         /// </summary>

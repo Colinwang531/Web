@@ -37,7 +37,8 @@ namespace ShipWeb.Controllers
             try
             {
                 int total = 0;
-                var list = GetData(null, pageIndex, pageSize, out total);
+                DateTime dt = DateTime.UtcNow;
+                var list = GetData(dt, pageIndex, pageSize, out total);
                 var result = new
                 {
                     code = 0,
@@ -62,13 +63,17 @@ namespace ShipWeb.Controllers
         /// <param name="pageIndex">当前页</param>
         /// <param name="pageSize">每次显示条数</param>
         /// <returns></returns>
-        public IActionResult QueryPage(string searchModel, int pageIndex, int pageSize)
+        public IActionResult QueryPage(string dtTime, int pageIndex, int pageSize)
         {
             try
             {
-                var model = JsonConvert.DeserializeObject<SearchAttendanceViewModel>(searchModel);
                 int total = 0;
-                var list = GetData(model, pageIndex, pageSize, out total);
+                DateTime dt = DateTime.UtcNow;
+                if (!string.IsNullOrEmpty(dtTime))
+                {
+                    dt = DateTime.Parse(dtTime);
+                }
+                var list = GetData(dt, pageIndex, pageSize, out total);
                 var result = new
                 {
                     code = 0,
@@ -84,66 +89,45 @@ namespace ShipWeb.Controllers
                 return new JsonResult(new { code = 1, msg = "查询失败!"+ex.Message });
             }
         }
-        private List<AttendanceViewModel> GetData(SearchAttendanceViewModel model, int pageIndex, int pageSize,out int total) 
+        private List<AttendanceViewModel> GetData(DateTime dt , int pageIndex, int pageSize,out int total) 
         {
-            string shipId = base.user.ShipId;
+            string shipId = base.user.ShipId;           
+            total = _context.Crew.Count();
+            var crew = _context.Crew.ToList().Skip((pageIndex - 1) * pageSize).Take(pageSize);
+            var startTime =DateTime.Parse(dt.ToString("yyyy-MM-dd 00:00:00"));
+            var endTime = DateTime.Parse(dt.ToString("yyyy-MM-dd 23:59:59")); ;
+            var attdata = _context.Attendance.Where(c => c.Time >= startTime && c.Time <= endTime && c.ShipId == shipId).ToList();
+            var ids = string.Join(',', attdata.Select(c => c.Id));
+            var pices = _context.AttendancePicture.Where(c => ids.Contains(c.AttendanceId)).ToList();
             List<AttendanceViewModel> list = new List<AttendanceViewModel>();
-            if (model==null)
+            foreach (var item in crew)
             {
-                model = new SearchAttendanceViewModel();
-            }
-            total = 0;
-            var Attdata = from a in _context.Attendance
-                       join b in _context.Crew on a.CrewId equals b.Id
-                       where a.ShipId== shipId && (model.Name != "" ? b.Name.Contains(model.Name) : 1 == 1)
-                       select new 
-                       { 
-                        a.Time,
-                        b.Name,
-                        a.Behavior,
-                        a.Id
-                       };
-            if (!(string.IsNullOrEmpty(model.StartTime)) && !(string.IsNullOrEmpty(model.EndTime)))
-            {
-                DateTime dtStart = DateTime.Parse(model.StartTime);
-                DateTime dtEnd = DateTime.Parse(model.EndTime);
-                Attdata = Attdata.Where(c => c.Time >= dtStart && c.Time <= dtEnd);
-            }
-            else if (!(string.IsNullOrEmpty(model.StartTime)))
-            {
-                DateTime dtStart = DateTime.Parse(model.StartTime);
-                Attdata = Attdata.Where(c => c.Time >= dtStart);
-            }
-            else if (!(string.IsNullOrEmpty(model.EndTime)))
-            {
-                DateTime dtEnd = DateTime.Parse(model.EndTime);
-                Attdata = Attdata.Where(c => c.Time <= dtEnd);
-            }
-            var att = Attdata.ToList();
-            var ids = string.Join(',', att.Select(c => c.Id));
-            var pic = _context.AttendancePicture.Where(c => ids.Contains(c.AttendanceId)).ToList();
-            var data = from a in att
-                       join b in pic on a.Id equals b.AttendanceId
-                       select new
-                       {
-                           a.Id,
-                           a.Behavior,
-                           a.Name,
-                           a.Time,
-                           b.Picture
-                       };
-            total = data.Count();
-            var dataPage = data.Skip((pageIndex - 1) * pageSize).Take(pageSize);
-            foreach (var item in dataPage)
-            {
-                AttendanceViewModel avm = new AttendanceViewModel()
+                AttendanceViewModel model = new AttendanceViewModel()
                 {
-                    Behavior = item.Behavior == 0 ? "入" : "出",
                     Name = item.Name,
-                    Picture = Convert.FromBase64String(Encoding.UTF8.GetString(item.Picture)),
-                    Time = item.Time.ToString("yyyy-MM-dd HH:mm:ss")
-                };
-                list.Add(avm);
+                    attendances = new List<AttendanceView>()
+                };                ;
+                if (attdata.Where(c => c.CrewId == item.Id).Any())
+                {
+                    var attes = attdata.Where(c => c.CrewId == item.Id);
+                    foreach (var attd in attes)
+                    {
+                        AttendanceView ad = new AttendanceView()
+                        {
+                            Behavior = attd.Behavior == 0 ? "入" : "出",
+                            Time = attd.Time.ToString("yyyy-MM-dd HH:mm:ss")
+                        };
+                        if (pices.Where(c => c.AttendanceId == attd.Id).Any())
+                        {
+                            var picture = pices.Where(c => c.AttendanceId == attd.Id).FirstOrDefault().Picture;
+                            ad.Picture = Convert.FromBase64String(Encoding.UTF8.GetString(picture));
+                        }
+                        model.attendances.Add(ad);
+                    }
+
+                }
+                
+                list.Add(model);
             }
             return list;
         }
