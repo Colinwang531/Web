@@ -93,14 +93,14 @@ namespace ShipWeb.Controllers
         {
             string shipId = base.user.ShipId;           
             total = _context.Crew.Count();
-            var crew = _context.Crew.ToList().Skip((pageIndex - 1) * pageSize).Take(pageSize);
+            var crews = _context.Crew.ToList();
             var startTime =DateTime.Parse(dt.ToString("yyyy-MM-dd 00:00:00"));
             var endTime = DateTime.Parse(dt.ToString("yyyy-MM-dd 23:59:59")); ;
             var attdata = _context.Attendance.Where(c => c.Time >= startTime && c.Time <= endTime && c.ShipId == shipId).ToList();
             var ids = string.Join(',', attdata.Select(c => c.Id));
             var pices = _context.AttendancePicture.Where(c => ids.Contains(c.AttendanceId)).ToList();
-            List<AttendanceViewModel> list = new List<AttendanceViewModel>();
-            foreach (var item in crew)
+            List<AttendanceViewModel> list = new List<AttendanceViewModel>(); 
+            foreach (var item in crews)
             {
                 AttendanceViewModel model = new AttendanceViewModel()
                 {
@@ -126,10 +126,28 @@ namespace ShipWeb.Controllers
                     }
 
                 }
-                
                 list.Add(model);
             }
-            return list;
+
+            //根据打卡排列（有打卡的放在前面）           
+            var data=(from a in list
+                     orderby a.attendances.Count descending
+                     select new
+                     { 
+                        a.Name,
+                        a.attendances
+                     }).Skip((pageIndex - 1) * pageSize).Take(pageSize);
+            List<AttendanceViewModel> listpage = new List<AttendanceViewModel>();
+            foreach (var item in data)
+            {
+                listpage.Add(new AttendanceViewModel()
+                {
+                    Name = item.Name,
+                    attendances = item.attendances
+                });
+
+            }
+            return listpage;
         }
     }
 }

@@ -113,7 +113,7 @@ namespace ShipWeb.Controllers
                     //        if (info.Count() > 0)
                     //        {
                     //            model.Line = true;//在线
-                    //            ProtoBuffer.Models.StatusResponse strep = manager.StatusQuery(item.Id);
+                    //            ProtoBuffer.Models.StatusResponse strep = manager.StatusQuery();
                     //            if (strep.result == 0)
                     //            {
                     //                model.Name = strep.name;
@@ -168,13 +168,13 @@ namespace ShipWeb.Controllers
                             type = ShipWeb.ProtoBuffer.Models.StatusRequest.Type.SAIL,
                             flag = type
                         };
-                        var res = manager.StatussSet(sr, id);
+                        var res = manager.StatussSet(sr);
                         sr = new ProtoBuffer.Models.StatusRequest()
                         {
                             type = ProtoBuffer.Models.StatusRequest.Type.NAME,
                             text = name
                         };
-                        var res1 = manager.StatussSet(sr, id);
+                        var res1 = manager.StatussSet(sr);
                         if (res.result==0&&res1.result==0)
                         {
                             return new JsonResult(new { code = 0 });
@@ -207,7 +207,7 @@ namespace ShipWeb.Controllers
                             };
                             if (type == (int)Ship.Type.AUTO)
                             {
-                                var result = manager.StatussSet(sr, ship.Id);
+                                var result = manager.StatussSet(sr);
                                 if (result.result == 0)
                                 {
                                     ship.Flag = result.flag;
@@ -223,7 +223,7 @@ namespace ShipWeb.Controllers
                                     type = ProtoBuffer.Models.StatusRequest.Type.NAME,
                                     text = name
                                 };
-                                manager.StatussSet(sr, ship.Id);
+                                manager.StatussSet(sr);
                             }
                         }).Wait(timeout);
                     }

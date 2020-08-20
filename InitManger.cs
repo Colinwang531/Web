@@ -13,13 +13,16 @@ using System.IO;
 using ShipWeb.ProtoBuffer;
 using ShipWeb.ProtoBuffer.Models;
 using NuGet.Frameworks;
+using System.Security;
 
 namespace ShipWeb
 {
     public class InitManger
     {
-
-        static ProtoManager manager = new ProtoManager();
+        /// <summary>
+        /// 初使化功能是否完成
+        /// </summary>
+        public static bool IsOver = false;
         /// <summary>
         /// 初使化
         /// </summary>
@@ -63,13 +66,15 @@ namespace ShipWeb
                         shipId = ship.Id;
                     }
                     string name = "组件1";
-                    manager.ComponentStart(shipId, ComponentInfo.Type.WEB, name, ManagerHelp.Cid);
+                    ProtoManager.identity = shipId;
+                    ProtoManager manager = new ProtoManager();
+                    manager.ComponentStart(ComponentInfo.Type.WEB, name, ManagerHelp.Cid);
                     if (string.IsNullOrEmpty(ManagerHelp.Cid))
                     {
                         //超时时间 等10秒
                         int timeout = 10000;
                         new TaskFactory().StartNew(() => {
-                            var msg = manager.ReceiveMessage(ProtoManager.dealer);
+                            var msg = manager.ReceiveMessage(manager.dealer);
                             ComponentResponse rep = msg.component.componentresponse;
                             if (rep != null && rep.result == 0)
                             {
@@ -97,6 +102,7 @@ namespace ShipWeb
                         //超时后继续注册
                         Component();
                     }
+                    IsOver = true;
                     using (var cont = new MyContext())
                     {
                         //注册成功推送状态
@@ -106,7 +112,7 @@ namespace ShipWeb
                             type = StatusRequest.Type.SAIL,
                             flag = (int)shipdb.type
                         };
-                        manager.StatussSet(request, shipdb.Id);
+                        manager.StatussSet(request);
                         //发送设备信息
                         int result=GetDevice();
                         if (result==0)
@@ -124,6 +130,7 @@ namespace ShipWeb
         private static int GetDevice() 
         {
             int result = 0;
+            ProtoManager manager = new ProtoManager();
             using (var context=new MyContext())
             {
                 var dev = context.Device.ToList();
@@ -156,7 +163,7 @@ namespace ShipWeb
                             nickname = camera.NickName
                         });
                     }
-                    var res=manager.DeveiceAdd(emb, item.Id);
+                    var res=manager.DeveiceAdd(emb);
                     if (res.result!=0)
                     {
                         result = res.result;
@@ -171,6 +178,7 @@ namespace ShipWeb
         /// </summary>
         private static void GetAlgorithm() 
         {
+            ProtoManager manager = new ProtoManager();
             using (var context=new MyContext())
             {
                 var algo = context.Algorithm.ToList();
@@ -186,7 +194,7 @@ namespace ShipWeb
                         track = (float)model.Track,
                         type = (ProtoBuffer.Models.AlgorithmInfo.Type)model.Type
                     };
-                    manager.AlgorithmSet(model.Id, info);
+                    manager.AlgorithmSet(info);
                 }
             }
         }
@@ -195,10 +203,10 @@ namespace ShipWeb
         /// </summary>
         public static void HeartBeat()
         {
+            ProtoManager manager = new ProtoManager();
             if (!string.IsNullOrEmpty(ManagerHelp.Cid))
             {
-                string identity = Guid.NewGuid().ToString();
-                manager.Heart(identity, ComponentInfo.Type.WEB, "", ManagerHelp.Cid);
+                manager.Heart(ComponentInfo.Type.WEB, "", ManagerHelp.Cid);
             }
         }
         /// <summary>
@@ -206,7 +214,8 @@ namespace ShipWeb
         /// </summary>
         public static void Exit()
         {
-            manager.ComponentExit(ManagerHelp.Cid, Guid.NewGuid().ToString());
+            ProtoManager manager = new ProtoManager();
+            manager.ComponentExit(ManagerHelp.Cid);
         }
         /// <summary>
         /// 获取报警信息
@@ -218,6 +227,7 @@ namespace ShipWeb
             {
                 Task.Factory.StartNew(state =>
                 {
+                    ProtoManager manager = new ProtoManager();
                     using (var context = new MyContext())
                     {
                         var ship = context.Ship.ToList();
@@ -225,7 +235,7 @@ namespace ShipWeb
                         {
                             string shipId = itship.Id;
                             string identity = Guid.NewGuid().ToString();
-                            ProtoBuffer.Models.Alarm protoalarm = manager.AlarmStart(shipId);
+                            ProtoBuffer.Models.Alarm protoalarm = manager.AlarmStart();
                             if (protoalarm != null)
                             {
                                 var alarm = protoalarm.alarminfo;

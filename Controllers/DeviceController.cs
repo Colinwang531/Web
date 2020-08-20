@@ -104,7 +104,7 @@ namespace ShipWeb.Controllers
             List<DeviceViewModel> list = new List<DeviceViewModel>();
             new TaskFactory().StartNew(() =>
             {
-                var protoModel = manager.DeviceQuery(base.user.ShipId);
+                var protoModel = manager.DeviceQuery();
                 foreach (var item in protoModel)
                 {
                     DeviceViewModel model = new DeviceViewModel()
@@ -165,7 +165,7 @@ namespace ShipWeb.Controllers
                         {
                             if (!string.IsNullOrEmpty(model.Id))
                             {
-                                code = manager.DeveiceUpdate(emb, model.Id, base.user.ShipId);
+                                code = manager.DeveiceUpdate(emb, model.Id);
                             }
                             else
                             {
@@ -180,7 +180,7 @@ namespace ShipWeb.Controllers
                                       nickname="摄像机UU"
                                    }
                                  };
-                            var result = manager.DeveiceAdd(emb, base.user.ShipId);
+                            var result = manager.DeveiceAdd(emb);
                                 code = result.result;
                             }
                             msg = code == 0 ? "" : "数据保存失败";
@@ -338,7 +338,7 @@ namespace ShipWeb.Controllers
                             did = did
                         };
                         new TaskFactory().StartNew(() => {
-                            var res = manager.DeveiceUpdate(emb, did, base.user.ShipId);
+                            var res = manager.DeveiceUpdate(emb, did);
                             code = res;
                             msg = code == 1 ? "数据修改失败" : "";
                         }).Wait(timeout);
@@ -440,7 +440,7 @@ namespace ShipWeb.Controllers
                 if (base.user.IsLandHome)
                 {
                     new TaskFactory().StartNew(() => {
-                        code = manager.DeveiceDelete(id, base.user.ShipId);
+                        code = manager.DeveiceDelete(id);
                         msg = code != 0 ? "删除数据失败" : "";
                     }).Wait(timeout);                   
                 }

@@ -66,7 +66,7 @@ namespace ShipWeb.Controllers
             List<Camera> cameras = new List<Camera>();
             List<ProtoBuffer.Models.AlgorithmInfo> protoDate = new List<ProtoBuffer.Models.AlgorithmInfo>();
             new TaskFactory().StartNew(() => {
-                 protoDate = manager.AlgorithmQuery(base.user.ShipId);              
+                 protoDate = manager.AlgorithmQuery();              
             }).Wait(timeout);
             var data = from a in protoDate
                        select new
@@ -81,7 +81,7 @@ namespace ShipWeb.Controllers
                            DectectSecond = a.dectectsecond,
                            Track = a.track
                        };
-            var device = manager.DeviceQuery(base.user.ShipId);
+            var device = manager.DeviceQuery();
             foreach (var item in device)
             {
                 var camList = item.camerainfos;
@@ -122,7 +122,7 @@ namespace ShipWeb.Controllers
                         ProtoBuffer.Models.AlgorithmInfo algorithm = GetProtoAlgorithm(viewModel);
                         new TaskFactory().StartNew(() =>
                         {
-                            int res = manager.AlgorithmSet(shipId, algorithm);
+                            int res = manager.AlgorithmSet(algorithm);
                             code = res;
                             msg = res != 0 ? res == 2 ? "一个摄像机只能设置考勤入或考勤出" : "数据修改失败" : "";
                         }).Wait(timeout);
@@ -182,7 +182,7 @@ namespace ShipWeb.Controllers
                         new TaskFactory().StartNew(() =>
                         {
                             ProtoBuffer.Models.AlgorithmInfo algorithm = GetProtoAlgorithm(viewModel);
-                            int res = manager.AlgorithmSet(base.user.ShipId, algorithm);
+                            int res = manager.AlgorithmSet(algorithm);
                             if (res == 0)
                             {
                                 _context.SaveChanges();

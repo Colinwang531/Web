@@ -16,8 +16,11 @@ namespace ShipWeb
             {
                 try
                 {
-                    //心跳
-                    InitManger.HeartBeat();
+                    if (InitManger.IsOver)
+                    {
+                        //心跳
+                        InitManger.HeartBeat();
+                    }
                 }
                 catch (Exception ex)
                 {

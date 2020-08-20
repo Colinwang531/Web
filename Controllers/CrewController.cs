@@ -113,7 +113,7 @@ namespace ShipWeb.Controllers
         /// <returns></returns>
         private IActionResult LandLoad()
         {
-            var data = manager.CrewQuery(base.user.ShipId);
+            var data = manager.CrewQuery();
             var dataShow = from a in data
                            select new
                            {
@@ -221,7 +221,7 @@ namespace ShipWeb.Controllers
                                     }
                                 }
                             }
-                            code = manager.CrewAdd(emp, base.user.ShipId);
+                            code = manager.CrewAdd(emp);
                         }
                         else
                         {
@@ -240,7 +240,7 @@ namespace ShipWeb.Controllers
                                     emp.pictures.Add(Encoding.UTF8.GetBytes(item));
                                 }
                             }
-                            int result = manager.CrewUpdate(emp, base.user.ShipId);
+                            int result = manager.CrewUpdate(emp);
                             code = result;
                         }
                         //清除已经上传了的图片
@@ -380,7 +380,7 @@ namespace ShipWeb.Controllers
                     {
                         return NotFound();
                     }
-                    manager.CrewDelete(id, base.user.ShipId);
+                    manager.CrewDelete(id);
                     return new JsonResult(new { code = 0, msg = "删除成功!" });
                 }
                 if (id == null)

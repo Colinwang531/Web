@@ -57,7 +57,6 @@ namespace ShipWeb
             //DinkToPdf×¢Èë
             services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
             services.AddTransient<IPDFService, PDFService>();
-            services.AddTransient<IDealerService, DealerService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

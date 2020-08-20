@@ -15,17 +15,17 @@ using ShipWeb.DB;
 using ShipWeb.Tool;
 using Microsoft.Extensions.Logging;
 using ShipWeb.Interface;
+using ShipWeb.Helpers;
 
 namespace ShipWeb.ProtoBuffer
 {
     public class ProtoManager
     {
-        public static DealerSocket dealer = null;
+        public DealerSocket dealer = null;
         private static object dealer_Lock = new object(); //锁同步
-        public static string IP = "tcp://192.168.0.22:61001";//接收从main入口过来的url
+        public static string IP = AppSettingHelper.GetSectionValue("IP");// "tcp://192.168.0.22:61001";//接收从main入口过来的url
         private static ProtoBDManager dbManager = new ProtoBDManager();
-        private static DealerService service = new DealerService();
-        //int aa;
+        public static string identity = "";//DealerSocket的通讯ID全局唯一     
         //单例控制dealer只有一个。
         public ProtoManager()
         {
@@ -34,7 +34,9 @@ namespace ShipWeb.ProtoBuffer
                 if (dealer == null)
                 {
                     dealer = new DealerSocket(IP);
-                    dealer.Options.Linger=new TimeSpan(0,0,30);
+                    //等待时间10秒
+                    dealer.Options.Linger=new TimeSpan(0,0,10);
+                    dealer.Options.Identity = Encoding.UTF8.GetBytes(identity);
                 }
             }
         }
@@ -44,11 +46,9 @@ namespace ShipWeb.ProtoBuffer
         /// 发送组件注册请求
         /// </summary>
         /// <returns>组件ID</returns>
-        public ComponentResponse ComponentStart(string identity, ComponentInfo.Type type, string name = "组件1", string cid = "")
+        public ComponentResponse ComponentStart(ComponentInfo.Type type, string name = "组件1", string cid = "")
         {
             ComponentResponse retult = new ComponentResponse();
-            dealer.Options.Identity = Encoding.UTF8.GetBytes(identity);
-
             //组件注册消息整理
             MSG msg = new MSG()
             {
@@ -70,7 +70,7 @@ namespace ShipWeb.ProtoBuffer
             };
             if (!string.IsNullOrEmpty(cid)) msg.component.componentrequest.componentinfo.cid = cid;
 
-            //retult = DataMessage(msg, dealer,identity);
+            //retult = DataMessage(msg,dealer);
             SendMessage(msg);
             return retult;
         }
@@ -81,11 +81,9 @@ namespace ShipWeb.ProtoBuffer
         /// <param name="type"></param>
         /// <param name="name"></param>
         /// <param name="cid"></param>
-        public void Heart(string identity, ComponentInfo.Type type, string name = "组件1", string cid = "")
+        public void Heart( ComponentInfo.Type type, string name = "组件1", string cid = "")
         {
             ComponentResponse retult = new ComponentResponse();
-            dealer.Options.Identity = Encoding.UTF8.GetBytes(identity);
-
             //组件注册消息整理
             MSG msg = new MSG()
             {
@@ -115,7 +113,7 @@ namespace ShipWeb.ProtoBuffer
         /// <param name="msg"></param>
         /// <param name="dealer"></param>
         /// <returns></returns>
-        private ComponentResponse DataMessage(MSG msg, DealerSocket dealer,string identity)
+        private ComponentResponse DataMessage(MSG msg, DealerSocket dealer)
         {
             ComponentResponse retult = new ComponentResponse();
             SendMessage(msg);
@@ -153,7 +151,7 @@ namespace ShipWeb.ProtoBuffer
                             }
                         }
                     };
-                  return DataMessage(msgSend, dealer,identity);
+                  return DataMessage(msgSend, dealer);
                 }
             }
             return retult;
@@ -163,10 +161,8 @@ namespace ShipWeb.ProtoBuffer
         /// 发送组件退出请求
         /// </summary>
         /// <param name="cid"></param>
-        public void ComponentExit(string cid, string identity)
+        public void ComponentExit(string cid)
         {
-            dealer.Options.Identity = Encoding.UTF8.GetBytes(identity);
-
             //组件注册消息整理
             MSG msg = new MSG()
             {
@@ -194,10 +190,9 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="cid"></param>
         /// <param name="identity"></param>
-        public ComponentResponse ComponentQuery(string identity)
+        public ComponentResponse ComponentQuery()
         {
             ComponentResponse result = new ComponentResponse();
-            dealer.Options.Identity = Encoding.UTF8.GetBytes(identity);
             //组件注册消息整理
             MSG msg = new MSG()
             {
@@ -232,11 +227,9 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="configure">算法配置实体</param>
         /// <returns>0:成功</returns>
-        public int AlgorithmSet(string identity, AlgorithmInfo protoModel)
+        public int AlgorithmSet(AlgorithmInfo protoModel)
         {
             int result = 1;
-            dealer.Options.Identity = Encoding.UTF8.GetBytes(identity);
-
             MSG msg = new MSG()
             {
                 type = MSG.Type.ALGORITHM,
@@ -295,10 +288,9 @@ namespace ShipWeb.ProtoBuffer
         /// 算法查询
         /// </summary>
         /// <returns>算法配置实体</returns>
-        public List<AlgorithmInfo> AlgorithmQuery(string identity)
+        public List<AlgorithmInfo> AlgorithmQuery()
         {
             List<AlgorithmInfo> list = null;
-            dealer.Options.Identity = Encoding.UTF8.GetBytes(identity);
             MSG msg = new MSG()
             {
                 type = MSG.Type.ALGORITHM,
@@ -363,11 +355,9 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="uid"></param>
         /// <returns></returns>
-        public List<CrewInfo> CrewQuery(string Identity, string uid = "")
+        public List<CrewInfo> CrewQuery(string uid = "")
         {
             List<CrewInfo> list = new List<CrewInfo>();
-            dealer.Options.Identity = Encoding.UTF8.GetBytes(Identity);
-
             MSG msg = new MSG()
             {
                 type = MSG.Type.CREW,
@@ -435,10 +425,9 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="crewinfo">般员信息</param>
         /// <returns></returns>
-        public int CrewAdd(CrewInfo crewinfo, string identity)
+        public int CrewAdd(CrewInfo crewinfo)
         {
             int result = 1;
-            dealer.Options.Identity = Encoding.UTF8.GetBytes(identity);
             MSG msg = new MSG()
             {
                 type = MSG.Type.CREW,
@@ -499,10 +488,9 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="crewInfo">般员信息</param>
         /// <returns>为空表示失败</returns>
-        public int CrewUpdate(CrewInfo crewInfo,string identity)
+        public int CrewUpdate(CrewInfo crewInfo)
         {
             int result = 1;
-            dealer.Options.Identity = Encoding.UTF8.GetBytes(identity);
 
             MSG msg = new MSG()
             {
@@ -563,10 +551,9 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="uid">船员ID</param>
         /// <returns></returns>
-        public int CrewDelete(string uid, string identity)
+        public int CrewDelete(string uid)
         {
             int result = 1;
-            dealer.Options.Identity = Encoding.UTF8.GetBytes(identity);
 
             MSG msg = new MSG()
             {
@@ -632,10 +619,9 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="did">设备ID</param>
         /// <returns></returns>
-        public List<DeviceInfo> DeviceQuery(string identity, string did = "")
+        public List<DeviceInfo> DeviceQuery(string did = "")
         {
             List<DeviceInfo> list = new List<DeviceInfo>();
-            dealer.Options.Identity = Encoding.UTF8.GetBytes(identity);
 
             MSG msg = new MSG()
             {
@@ -705,10 +691,9 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="deviceInfo">设备实体</param>
         /// <returns></returns>
-        public DeviceResponse DeveiceAdd(DeviceInfo deviceInfo, string identity)
+        public DeviceResponse DeveiceAdd(DeviceInfo deviceInfo)
         {
             DeviceResponse result = new DeviceResponse();
-            dealer.Options.Identity = Encoding.UTF8.GetBytes(identity);
             MSG msg = new MSG()
             {
                 type = MSG.Type.DEVICE,
@@ -773,11 +758,9 @@ namespace ShipWeb.ProtoBuffer
         /// <param name="embedded">设备实体</param>
         /// <param name="optype"></param>
         /// <returns></returns>
-        public int DeveiceUpdate(DeviceInfo embedded, string did, string identity)
+        public int DeveiceUpdate(DeviceInfo embedded, string did)
         {
             int result = 1;
-            dealer.Options.Identity = Encoding.UTF8.GetBytes(identity);
-
             MSG msg = new MSG()
             {
                 type = MSG.Type.DEVICE,
@@ -838,10 +821,9 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="did"></param>
         /// <returns></returns>
-        public int DeveiceDelete(string did, string identity)
+        public int DeveiceDelete(string did)
         {
             int result = 1;
-            dealer.Options.Identity = Encoding.UTF8.GetBytes(identity);
 
             MSG msg = new MSG()
             {
@@ -907,10 +889,9 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="flag">是否在港口</param>
         /// <returns></returns>
-        public StatusResponse StatussSet(StatusRequest request, string identity)
+        public StatusResponse StatussSet(StatusRequest request)
         {
             StatusResponse result = new StatusResponse();
-            dealer.Options.Identity = Encoding.UTF8.GetBytes(identity);
             MSG msg = new MSG()
             {
                 type = MSG.Type.STATUS,
@@ -969,10 +950,9 @@ namespace ShipWeb.ProtoBuffer
         /// <param name="type"></param>
         /// <param name="identity"></param>
         /// <returns></returns>
-        public StatusResponse StatusQuery(string identity)
+        public StatusResponse StatusQuery()
         {
             StatusResponse result = new StatusResponse();
-            dealer.Options.Identity = Encoding.UTF8.GetBytes(identity);
             MSG msg = new MSG()
             {
                 type = MSG.Type.STATUS,
@@ -1032,10 +1012,10 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="person">用户信息</param>
         /// <returns></returns>
-        public UserResponse UserAdd(Person person, string identity)
+        public UserResponse UserAdd(Person person)
         {
             UserResponse result = new UserResponse();
-            MSG msg = UserAddOrUpdate(identity, person);
+            MSG msg = UserAddOrUpdate(person);
             result = UserAddMessage(msg, dealer);
             //SendMessage(msg);
             //MSG revMsg = ReceiveMessage(dealer);
@@ -1095,10 +1075,10 @@ namespace ShipWeb.ProtoBuffer
         /// <param name="person"></param>
         /// <param name="uid"></param>
         /// <returns></returns>
-        public int UserUpdate(Person person, string uid, string identity)
+        public int UserUpdate(Person person, string uid)
         {
             int result = 1;
-            MSG msg = UserAddOrUpdate(identity, person, uid);
+            MSG msg = UserAddOrUpdate(person, uid);
             SendMessage(msg);
             result = UserUpdateMessage(msg, dealer);
             //MSG revMsg = ReceiveMessage(dealer);
@@ -1151,10 +1131,10 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="uid"></param>
         /// <returns></returns>
-        public int UserDelete(string uid, string identity)
+        public int UserDelete(string uid)
         {
             int result = 1;
-            dealer.Options.Identity = Encoding.UTF8.GetBytes(identity);
+            //dealer.Options.Identity = Encoding.UTF8.GetBytes(identity);
             MSG msg = new MSG()
             {
                 type = MSG.Type.USER,
@@ -1263,11 +1243,9 @@ namespace ShipWeb.ProtoBuffer
         /// <param name="uid">用户ID</param>
         /// <param name="person">用户详情</param>
         /// <returns></returns>
-        public int UserLoggin(string uid, Person person, string identity)
+        public int UserLoggin(string uid, Person person)
         {
             int result = 1;
-            dealer.Options.Identity = Encoding.UTF8.GetBytes(identity);
-
             MSG msg = new MSG()
             {
                 type = MSG.Type.USER,
@@ -1290,7 +1268,7 @@ namespace ShipWeb.ProtoBuffer
             }
             return result;
         }
-        private MSG UserAddOrUpdate(string identity, Person person, string uid = "")
+        private MSG UserAddOrUpdate( Person person, string uid = "")
         {
             dealer.Options.Identity = Encoding.UTF8.GetBytes(identity);
             MSG msg = new MSG()
@@ -1317,11 +1295,9 @@ namespace ShipWeb.ProtoBuffer
         #endregion
 
         #region 报警消息
-        public Alarm AlarmStart(string identity)
+        public Alarm AlarmStart()
         {
             Alarm result = new Alarm();
-            dealer.Options.Identity = Encoding.UTF8.GetBytes(identity);
-
             MSG msg = new MSG()
             {
                 type = MSG.Type.ALARM,
