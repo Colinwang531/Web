@@ -26,7 +26,6 @@ namespace ShipWeb.Controllers
 
         public IActionResult LandHome()
         {
-
             ViewBag.IsSetShip = base.user.EnableConfigure;
             ViewBag.IsShow = base.user.Enablequery;
             ViewBag.isAdmin = base.user.Id == "admin" ? true : false;
@@ -48,5 +47,13 @@ namespace ShipWeb.Controllers
 
             return View();
         }
+
+        public IActionResult LandDataCenter()
+        {
+            return View();
+        }
+
+
+
     }
 }
