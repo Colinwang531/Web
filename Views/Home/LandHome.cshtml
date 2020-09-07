@@ -47,6 +47,11 @@
             $("#divShip").hide();
             $("#ifBody").attr("src", "/User/Index")
         });
+        $(".fleet").click(function () {
+            $("#divBody").show();
+            $("#divShip").hide();
+            $("#ifBody").attr("src", "/Fleet/Index")
+        });
     });
     function ShowShip() {
         $("#divBody").hide();
@@ -169,7 +174,7 @@
                     @if (ViewBag.IsSetShip)
                     {
                         <li class="layui-nav-item ship">
-                            <img  src="~/images/shipmenu.png" />
+                            <img src="~/images/shipmenu.png" />
                             <a href="#">船舶信息</a>
                         </li>
                     }
@@ -177,6 +182,9 @@
                     {
                         <li class="layui-nav-item user">
                             <img src="~/images/user.png" /><a href="#">用户信息</a>
+                        </li>
+                        <li class="layui-nav-item fleet">
+                            <img src="~/images/user.png" /><a href="#">船队管理</a>
                         </li>
                     }
                 </ul>

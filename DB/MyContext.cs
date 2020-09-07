@@ -32,7 +32,8 @@ namespace ShipWeb.DB
             modelBuilder.Entity<Alarm>();
             modelBuilder.Entity<AlarmPosition>();
             modelBuilder.Entity<Attendance>();
-            modelBuilder.Entity<AttendancePicture>();
+            modelBuilder.Entity<AttendancePicture>(); 
+            modelBuilder.Entity<Fleet>();
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -89,5 +90,9 @@ namespace ShipWeb.DB
         /// 考勤图片
         /// </summary>
         public DbSet<AttendancePicture> AttendancePicture { get; set; }
+        /// <summary>
+        /// 船队管理
+        /// </summary>
+        public DbSet<Fleet> Fleet { get; set; }
     }
 }

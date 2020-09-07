@@ -11,10 +11,25 @@ namespace ShipWeb.ProtoBuffer.Models
     {
 		public enum Type
 		{
+			/// <summary>
+			/// 消息分发组件
+			/// </summary>
 			XMQ = 1,
+			/// <summary>
+			/// WEB组件
+			/// </summary>
 			WEB = 2,
+			/// <summary>
+			/// 海康组件
+			/// </summary>
 			HKD = 3,
+			/// <summary>
+			/// 大华组件
+			/// </summary>
 			DHD = 4,
+			/// <summary>
+			/// 报警组件
+			/// </summary>
 			ALM = 5
 		}
 		/// <summary>
