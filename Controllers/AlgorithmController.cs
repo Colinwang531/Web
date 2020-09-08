@@ -32,10 +32,13 @@ namespace ShipWeb.Controllers
         }
         public IActionResult Load() 
         {
-            if (base.user.IsLandHome)
+            if (!ManagerHelp.IsTest)
             {
-               return LandLoad();
-            }
+                if (base.user.IsLandHome)
+                {
+                    return LandLoad();
+                }
+            }           
             string shipId = base.user.ShipId;
             var algor = _context.Algorithm.Where(c=>c.ShipId==shipId).ToList();
             var camera = _context.Camera.Where(c => c.ShipId == shipId).ToList();
@@ -119,7 +122,7 @@ namespace ShipWeb.Controllers
                 {
                     int code = 1;
                     string msg = "";
-                    if (base.user.IsLandHome)
+                    if (base.user.IsLandHome&&!ManagerHelp.IsTest)
                     {
                         ProtoBuffer.Models.AlgorithmInfo algorithm = GetProtoAlgorithm(viewModel);
                         var compant = _context.Component.Where(c => c.ShipId == shipId && (c.Type == Component.ComponentType.WEB || c.Type == Component.ComponentType.XMQ));

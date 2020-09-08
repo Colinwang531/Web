@@ -50,7 +50,7 @@ namespace ShipWeb.Controllers
         public IActionResult Load(int pageIndex, int pageSize)
         {
             ViewBag.IsLandHome = false;
-            if (base.user.IsLandHome)
+            if (base.user.IsLandHome&&!ManagerHelp.IsTest)
             {
                 ViewBag.IsLandHome = true;
                 return LandLoad();
@@ -198,7 +198,7 @@ namespace ShipWeb.Controllers
                         ids = picIds.Split(',').ToList();
                     }
                     #region 陆地端添加/修改船员
-                    if (base.user.IsLandHome)
+                    if (base.user.IsLandHome&&!ManagerHelp.IsTest)
                     {
                         string shipId = base.user.ShipId;
                         var component = _context.Component.FirstOrDefault(c => c.ShipId == shipId && c.Type == Component.ComponentType.WEB);
@@ -377,13 +377,16 @@ namespace ShipWeb.Controllers
             try
             {
                 //陆地端远程删除船员
-                if (base.user.IsLandHome)
+                if (base.user.IsLandHome&&!ManagerHelp.IsTest)
                 {
+                   
                     if (id == null)
                     {
                         return NotFound();
                     }
-                    manager.CrewDelete(id);
+                    string shipId = base.user.Id;
+                    var component = _context.Component.FirstOrDefault(c => c.ShipId == shipId && c.Type == Component.ComponentType.WEB);
+                    manager.CrewDelete(id,component.Id);
                     return new JsonResult(new { code = 0, msg = "删除成功!" });
                 }
                 if (id == null)

@@ -64,6 +64,13 @@ namespace ShipWeb.Controllers
         }
         public IActionResult Load() 
         {
+            if (!ManagerHelp.IsTest)
+            {
+                if (base.user.IsLandHome)
+                {
+                    return LandLoad();
+                }
+            }           
             string shipId = base.user.ShipId;
             var data = _context.Device.Where(c => c.ShipId == shipId).ToList(); 
             var ids = string.Join(',', data.Select(c => c.Id));
@@ -151,11 +158,12 @@ namespace ShipWeb.Controllers
         {
             try
             {
+                string shipId = base.user.ShipId;
                 int code = 1;
                 string msg = "";
                 if (ModelState.IsValid)
                 {
-                    if (base.user.ShipId == "")
+                    if (shipId == "")
                     {
                         return new JsonResult(new { code = 1, msg = "船不存在，无法添加数据" });
                     }
@@ -163,34 +171,76 @@ namespace ShipWeb.Controllers
                     //陆地端远程添加设备
                     if (base.user.IsLandHome)
                     {
-                        string shipId = base.user.ShipId;
-                        var component=_context.Component.FirstOrDefault(c => c.ShipId == shipId&& c.Type == (model.Factory == (int)Device.Factory.DAHUA ? Component.ComponentType.DHD : Component.ComponentType.HKD));
-                        ProtoBuffer.Models.DeviceInfo emb = GetProtoDevice(model);
-                        new TaskFactory().StartNew(() =>
+                        if (ManagerHelp.IsTest)
                         {
                             if (!string.IsNullOrEmpty(model.Id))
                             {
-                                code = manager.DeveiceUpdate(emb, model.Id, component.Id);
+                                var device = _context.Device.FirstOrDefault(c => c.Id == model.Id);
+                                if (device == null)
+                                {
+                                    return new JsonResult(new { code = 1, msg = "数据不存在" });
+                                }
+                                device.IP = model.IP;
+                                device.Name = model.Name;
+                                device.Nickname = model.Nickname;
+                                device.Password = model.Password;
+                                device.Port = model.Port;
+                                device.type = (Device.Type)model.Type;
+                                device.factory = (Device.Factory)model.Factory;
+                                device.Enable = model.Enable;
+                                _context.Device.Update(device);
+                              
                             }
                             else
                             {
-                            emb.camerainfos = new List<ProtoBuffer.Models.CameraInfo>()
+                                Device device = new Device()
                                 {
-                                   new ProtoBuffer.Models.CameraInfo()
-                                   {
-                                      cid=Guid.NewGuid().ToString(),
-                                      enable=false,
-                                      index=11,
-                                      ip="168.154.0.13",
-                                      nickname="摄像机UU"
-                                   }
-                                 };
-                            var result = manager.DeveiceAdd(emb, component.Id);
-                                code = result.result;
+                                    IP = model.IP,
+                                    Name = model.Name,
+                                    Nickname = model.Nickname,
+                                    Password = model.Password,
+                                    Port = model.Port,
+                                    type = (Device.Type)model.Type,
+                                    factory = (Device.Factory)model.Factory,
+                                    Id = Guid.NewGuid().ToString(),
+                                    ShipId = base.user.ShipId,
+                                    Enable = model.Enable
+                                };
+                                device.CameraModelList =new List<Camera>() {
+                                    new Camera(){
+                                         DeviceId=device.Id,
+                                         Id=Guid.NewGuid().ToString(),
+                                         Index=111,
+                                         IP="192.168.0.21",
+                                         Enable=true,
+                                         ShipId=shipId,
+                                         NickName="甲板"
+                                    }
+                                };
+                                _context.Device.Add(device);
                             }
-                            msg = code == 0 ? "" : "数据保存失败";
+                            _context.SaveChanges();
+                            code = 0;
+                        }
+                        else
+                        {
+                            var component = _context.Component.FirstOrDefault(c => c.ShipId == shipId && c.Type == (model.Factory == (int)Device.Factory.DAHUA ? Component.ComponentType.DHD : Component.ComponentType.HKD));
+                            ProtoBuffer.Models.DeviceInfo emb = GetProtoDevice(model);
+                            new TaskFactory().StartNew(() =>
+                            {
+                                if (!string.IsNullOrEmpty(model.Id))
+                                {
+                                    code = manager.DeveiceUpdate(emb, model.Id, component.Id);
+                                }
+                                else
+                                {
+                                    var result = manager.DeveiceAdd(emb, component.Id);
+                                    code = result.result;
+                                }
+                                msg = code == 0 ? "" : "数据保存失败";
 
-                        }).Wait(timeout);
+                            }).Wait(timeout);
+                        }
                     }
                     else
                     {
@@ -346,7 +396,7 @@ namespace ShipWeb.Controllers
                     int code = 1;
                     string msg = "";
                     //陆地端远程修改摄像机信息
-                    if (base.user.IsLandHome)
+                    if (base.user.IsLandHome&&!ManagerHelp.IsTest)
                     {
                         string shipId = base.user.ShipId;
                         var component = _context.Component.FirstOrDefault(c => c.ShipId == shipId && c.Type == (factory == (int)Device.Factory.DAHUA ? Component.ComponentType.DHD : Component.ComponentType.HKD));
@@ -472,7 +522,7 @@ namespace ShipWeb.Controllers
                 int code = 1;
                 string msg = "";
                 //陆地端删除设备
-                if (base.user.IsLandHome)
+                if (base.user.IsLandHome&&!ManagerHelp.IsTest)
                 { //获取设备的组件ID
                     var compants = _context.Component.FirstOrDefault(c => c.Type == (factory ==(int)Device.Factory.DAHUA ? Component.ComponentType.DHD : Component.ComponentType.HKD));
                     new TaskFactory().StartNew(() => {

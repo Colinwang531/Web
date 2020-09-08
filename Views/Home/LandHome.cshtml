@@ -30,9 +30,10 @@
     }
 </style>
 <script type="text/javascript">
-    layui.use(['element', 'table', 'form'], function () {
+    layui.use(['element', 'table', 'form','layer'], function () {
         var $ = layui.jquery
         var element = layui.element;
+        var layer = layui.layer; 
         var form = layer.form;
         $(".alarm").click(function () {
             $("#divBody").show();
