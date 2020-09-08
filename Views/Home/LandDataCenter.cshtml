@@ -11,8 +11,35 @@
     <link href="~/datacenter/css/scanboard.css?version=202009071632" rel="stylesheet" />
     <link href="~/datacenter/css/animsition.css" rel="stylesheet" />
     <link href="~/datacenter/css/jquery.shCircleLoader.css" rel="stylesheet" />
-    <script src="~/datacenter/js/jquery.min.js"></script>
+    @*<script src="~/datacenter/js/jquery.min.js"></script>*@
+    <script src="~/lib/jquery/dist/jquery.js"></script>
     <script src="~/datacenter/js/jquery.shCircleLoader-min.js"></script>
+    <style type="text/css">
+        #main .item .month {
+            color: #fff;
+            float: right;
+            border-radius: inherit;
+            font-weight: 100;
+            margin: 10px 0px -1px 0px;
+            z-index: 2147483647;
+        }
+
+            #main .item .month #upMonth {
+                background-color: #40ce48;
+                padding: 2px 5px 2px 5px;
+                border-radius: inherit;
+                border: 1px solid #1e5b6b;
+                cursor: pointer;
+            }
+
+            #main .item .month #currentMonth {
+                background-color: blueviolet;
+                padding: 2px 5px 2px 5px;
+                border-radius: inherit;
+                border: 1px solid #1e5b6b;
+                cursor: pointer;
+            }
+    </style>
 </head>
 <body>
     <div id="loader"></div>
@@ -46,34 +73,16 @@
         <!--Main Start!-->
         <div id="main" class="wp clearfix">
             <div class="left">
-                <!--今日运单数量-->
+                <!--报警类型分析-->
                 <div class="item waybill">
                     <div class="itemTit">
-                        <span class="border-yellow">今日运单数量</span>
+                        <span class="border-yellow">报警类型分析</span>
                     </div>
-                    <div class="itemCon itembg">
-                        <div class="progress" progress="80%">
-                            <h3 class="clearfix"><span>正常单</span><i>80单</i></h3>
-                            <div class="progressBar">
-                                <span></span>
-                            </div>
-                            <h4>0%</h4>
-                        </div>
-                        <div class="progress" progress="15%">
-                            <h3 class="clearfix"><span>临时单</span><i>15单</i></h3>
-                            <div class="progressBar">
-                                <span></span>
-                            </div>
-                            <h4>0%</h4>
-                        </div>
-                        <div class="progress" progress="5%">
-                            <h3 class="clearfix"><span>异常单</span><i>5单</i></h3>
-                            <div class="progressBar">
-                                <span></span>
-                            </div>
-                            <h4>0%</h4>
-                        </div>
+                    <div class="month">
+                        <span id="upMonth" onclick="SetAlarmType('upMonth');"> 上 月 </span>
+                        <span id="currentMonth" onclick="SetAlarmType('currentMonth')"> 本 月 </span>
                     </div>
+                    <div id="myChartAlarm" style="height: 235px;margin-top: 30px;"></div>
                 </div>
 
                 <!--各阶段平均用时统计-->
@@ -516,7 +525,7 @@
                         <div class="carIntro">
                             <div class="introBox fl">
                                 <div class="carImg fl">
-                                    <img src="~/datacenter/images/car.jpg">
+                                    <img src="~/datacenter/images/ship.png">
                                 </div>
                                 <div class="carText fl clearfix">
                                     <p>车辆类型：大车</p>
@@ -721,7 +730,7 @@
 </body>
 </html>
 <script src="~/datacenter/js/bg.js"></script>
-<script src="~/datacenter/js/scanboard.js?version=202009071630"></script>
+<script src="~/datacenter/js/scanboard.js?version=202009071647"></script>
 <script src="~/datacenter/js/fontscroll.js"></script>
 <script src="~/datacenter/js/jquery.animsition.js"></script>
 <script src="~/datacenter/js/jquery.nicescroll.js"></script>
@@ -729,6 +738,80 @@
 <script type="text/javascript" src="http://webapi.amap.com/maps?v=1.4.3&key=f8ffe058b8e6f5b05e8ff43ca4207393"></script>
 <script type="text/javascript">
     $(function () {
+        SetAlarmType();
+  
+
+
 
     })
+    //报警类型分析
+    function SetAlarmType(month) {
+        var myChartAlarm = echarts.init(document.getElementById('myChartAlarm'));
+        $.ajax({
+            type: "get",
+            url: "/Home/GetAlarmType",
+            data: { month: month },
+            success: function (res) {
+                //长度为6 的数组填充默认值0
+                let dataArray = Array.apply(null, Array(6)).map(() => 0);
+                res.forEach(function (k, v) {
+                    dataArray[v] = k.num;
+                });
+                var optionAlarm = {
+                    color: ['#339899'],
+                    tooltip: {
+                        trigger: 'axis',
+                        axisPointer: {            // 坐标轴指示器，坐标轴触发有效
+                            type: 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+                        }
+                    },
+                    grid: {
+                        left: '3%',
+                        right: '4%',
+                        bottom: '3%',
+                        containLabel: true
+                    },
+                    xAxis: [
+                        {
+                            name: '类型',
+                            nameTextStyle: {
+                                color: '#fff'
+                            },
+                            type: 'category',
+                            data: ['安全帽', '打电话', '睡觉', '打架', '考勤入', '考勤出'],//type 1 2 3 4 5 6
+                            axisTick: {
+                                alignWithLabel: true
+                            },
+                            axisLabel: {
+                                color: '#fff',
+                                fontWeight: 'bold'
+                            }
+                        }
+                    ],
+                    yAxis: [
+                        {
+                            name: '次数',
+                            nameTextStyle: {
+                                color: '#fff'
+                            },
+                            type: 'value',
+                            axisLabel: {
+                                color: '#fff'
+                            }
+                        }
+                    ],
+                    series: [
+                        {
+                            name: '报警次数',
+                            type: 'bar',
+                            barWidth: '50%',
+                            data: dataArray
+                        }
+                    ]
+                };
+                myChartAlarm.setOption(optionAlarm);
+            }
+        })
+
+    }
 </script>

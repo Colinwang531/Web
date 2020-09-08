@@ -54,6 +54,38 @@ namespace ShipWeb.Controllers
         }
 
 
+        #region 数字大屏业务
+        /// <summary>
+        /// 报警类型分析
+        /// </summary>
+        /// <returns></returns>
+        public JsonResult GetAlarmType(string month)
+        {
+            DateTime startTime = DateTime.Now;
+            DateTime endTime = DateTime.Now;
+            DateTime now = Convert.ToDateTime(DateTime.Now.ToShortDateString());
+            switch (month)
+            {
+                case "upMonth":
+                    startTime = now.AddMonths(-1).AddDays(1 - now.Day);//上月月初
+                    endTime = startTime.AddMonths(1).AddDays(-1);//上月月末
+                    break;
+                case "currentMonth":
+                    startTime = now.AddDays(1 - now.Day);//本月月初
+                    endTime = startTime.AddMonths(1).AddDays(-1);//本月月末
+                    break;
+                default:
+                    startTime = now.AddYears(-99);
+                    endTime = now.AddYears(99);
+                    break;
+            }
+
+            var result = _context.Alarm.Where(x => startTime < x.Time && x.Time < endTime).GroupBy(x => x.Type).Select(s => (new { Type = s.Key, Num = s.Count() })).OrderBy(x => x.Type);
+            return Json(result);
+        }
+
+        #endregion
+
 
     }
 }

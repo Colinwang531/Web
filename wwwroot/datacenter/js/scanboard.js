@@ -90,7 +90,7 @@ $(function () {
         var marker = new AMap.Marker({
             position: point[i],
             map: myMap,
-            icon: '/datacenter/images/s_ico4.png',
+            icon: '/datacenter/images/s_ico4.jpg',
         });
         marker.content = '<p>ZC1712120023</p>' +
             '<p>起点：配件A厂</p>' +
