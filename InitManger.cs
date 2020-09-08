@@ -103,33 +103,80 @@ namespace ShipWeb
                         Component();
                     }
                     IsOver = true;
-                    using (var cont = new MyContext())
+                    //查询组件信息
+                    var response = manager.ComponentQuery();
+                    if (response.result == 0 && response.componentinfos.Count > 0)
                     {
-                        //注册成功推送状态
-                        var shipdb = cont.Ship.FirstOrDefault();
-                        StatusRequest request = new StatusRequest()
-                        {
-                            type = StatusRequest.Type.SAIL,
-                            flag = (int)shipdb.type
-                        };
-                        manager.StatussSet(request);
-                        //发送设备信息
-                        int result=GetDevice();
-                        if (result==0)
-                        {
-                            //发送算法信息
-                            GetAlgorithm();
+                        var protoComp = response.componentinfos;
+                        //添加组件ID
+                        AddComponent(protoComp, shipId);
+                        using (var cont = new MyContext())
+                        {                          
+                            //注册成功推送状态
+                            var shipdb = cont.Ship.FirstOrDefault();
+                            StatusRequest request = new StatusRequest()
+                            {
+                                type = StatusRequest.Type.SAIL,
+                                flag = (int)shipdb.type
+                            };
+                            manager.StatussSet(request);
+                            //发送设备信息
+                            int result = GetDevice(protoComp);
+                          
+                            if (result == 0)
+                            {
+                                if (protoComp.Where(c => c.type == ComponentInfo.Type.XMQ).Any()) {
+
+                                    //发送算法信息
+                                    GetAlgorithm(protoComp.FirstOrDefault(c => c.type == ComponentInfo.Type.XMQ).cid);
+                                }
+
+                            }
                         }
                     }
                 }
             }, TaskCreationOptions.LongRunning);
         }
+        private static void AddComponent(List<ComponentInfo> list,string shipId)
+        {
+            using (var cont=new MyContext())
+            {
+                var components = cont.Component.ToList();
+                foreach (var item in list)
+                {
+                    if (!components.Where(c=>c.Id==item.cid).Any())
+                    {
+                        Models.Component model = new Models.Component()
+                        {
+                             Id=item.cid,
+                             Name=item.cname,
+                             Type=(Models.Component.ComponentType)item.type,
+                             ShipId=shipId
+                        };
+                        cont.Component.Add(model);
+                    }
+                }
+                cont.SaveChanges();
+            }
+        }
         /// <summary>
         /// 设备请求
         /// </summary>
-        private static int GetDevice() 
+        private static int GetDevice(List<ComponentInfo> list) 
         {
             int result = 0;
+            //大华通讯ID
+            string DHDIdenity = "";
+            //海康通讯Id
+            string HKDIdentity = "";
+            if (list.Where(c => c.type == ComponentInfo.Type.DHD).Any())
+            {
+                DHDIdenity = list.FirstOrDefault(c => c.type == ComponentInfo.Type.DHD).cid;
+            }
+            if (list.Where(c => c.type == ComponentInfo.Type.HKD).Any())
+            {
+                HKDIdentity = list.FirstOrDefault(c => c.type == ComponentInfo.Type.HKD).cid;
+            }
             ProtoManager manager = new ProtoManager();
             using (var context=new MyContext())
             {
@@ -138,6 +185,11 @@ namespace ShipWeb
                 var cam = context.Camera.Where(c => ids.Contains(c.DeviceId)).ToList();
                 foreach (var item in dev)
                 {
+                    string devIdentity = "";
+                    if (item.factory == Models.Device.Factory.DAHUA) devIdentity = DHDIdenity;
+                    else if (item.factory == Models.Device.Factory.HIKVISION) devIdentity = HKDIdentity;
+                    //海康和大华组件尚未启动则不需要发送组件注册消息
+                    if (devIdentity == "") continue;
                     ProtoBuffer.Models.DeviceInfo emb = new ProtoBuffer.Models.DeviceInfo()
                     {
                         ip = item.IP,
@@ -163,7 +215,7 @@ namespace ShipWeb
                             nickname = camera.NickName
                         });
                     }
-                    var res=manager.DeveiceAdd(emb);
+                    var res=manager.DeveiceAdd(emb,devIdentity);
                     if (res.result!=0)
                     {
                         result = res.result;
@@ -176,7 +228,7 @@ namespace ShipWeb
         /// <summary>
         /// 算法请求
         /// </summary>
-        private static void GetAlgorithm() 
+        private static void GetAlgorithm(string algoIdentity) 
         {
             ProtoManager manager = new ProtoManager();
             using (var context=new MyContext())
@@ -194,7 +246,7 @@ namespace ShipWeb
                         track = (float)model.Track,
                         type = (ProtoBuffer.Models.AlgorithmInfo.Type)model.Type
                     };
-                    manager.AlgorithmSet(info);
+                    manager.AlgorithmSet(info, algoIdentity);
                 }
             }
         }

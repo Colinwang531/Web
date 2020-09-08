@@ -16,6 +16,7 @@ using ShipWeb.Tool;
 using Microsoft.Extensions.Logging;
 using ShipWeb.Interface;
 using ShipWeb.Helpers;
+using Org.BouncyCastle.Crypto.Tls;
 
 namespace ShipWeb.ProtoBuffer
 {
@@ -71,7 +72,7 @@ namespace ShipWeb.ProtoBuffer
             if (!string.IsNullOrEmpty(cid)) msg.component.componentrequest.componentinfo.cid = cid;
 
             //retult = DataMessage(msg,dealer);
-            SendMessage(msg);
+            SendMessage(msg,identity,"");
             return retult;
         }
         /// <summary>
@@ -104,7 +105,7 @@ namespace ShipWeb.ProtoBuffer
                 }
             };
             if (!string.IsNullOrEmpty(cid)) msg.component.componentrequest.componentinfo.cid = cid;
-            SendMessage(msg);
+            SendMessage(msg,identity,"");
             //service.SendMessage(msg, identity);
         }
         /// <summary>
@@ -116,44 +117,41 @@ namespace ShipWeb.ProtoBuffer
         private ComponentResponse DataMessage(MSG msg, DealerSocket dealer)
         {
             ComponentResponse retult = new ComponentResponse();
-            SendMessage(msg);
-            MSG revMsg = ReceiveMessage(dealer);
-            //service.SendMessage(msg, identity);
-            //MSG revMsg = service.ReviceMessage();
-            //MSG revMsg = msg;
-            if (revMsg.type == MSG.Type.COMPONENT)
-            {
-                Component compMsg = revMsg.component;
-                if (compMsg.command == Component.Command.SIGNIN_REP)
-                {
-                    if (compMsg.componentresponse != null)
-                    {
-                        retult = compMsg.componentresponse;
-                    }
-                }
-                //陆地端接收到船舶端的组件注册请求
-                else if (compMsg.command == Component.Command.SIGNIN_REQ)
-                {
-                    byte[] by = dealer.Options.Identity;
-                    string dbcid = ProtoBDManager.ComponentSet(Encoding.UTF8.GetString(by),compMsg.componentrequest.componentinfo);
-                    MSG msgSend = new MSG()
-                    {
-                        type = MSG.Type.COMPONENT,
-                        timestamp = ProtoBufHelp.TimeSpan(),
-                        sequence = 2,
-                        component = new Component()
-                        {
-                            command = Component.Command.SIGNIN_REP,
-                            componentresponse = new ComponentResponse()
-                            {
-                                cid = dbcid,
-                                result = 0
-                            }
-                        }
-                    };
-                  return DataMessage(msgSend, dealer);
-                }
-            }
+            //SendMessage(msg);
+            //MSG revMsg = ReceiveMessage(dealer);
+            //if (revMsg.type == MSG.Type.COMPONENT)
+            //{
+            //    Component compMsg = revMsg.component;
+            //    if (compMsg.command == Component.Command.SIGNIN_REP)
+            //    {
+            //        if (compMsg.componentresponse != null)
+            //        {
+            //            retult = compMsg.componentresponse;
+            //        }
+            //    }
+            //    //陆地端接收到船舶端的组件注册请求
+            //    else if (compMsg.command == Component.Command.SIGNIN_REQ)
+            //    {
+            //        byte[] by = dealer.Options.Identity;
+            //        string dbcid = ProtoBDManager.ComponentSet(Encoding.UTF8.GetString(by),compMsg.componentrequest.componentinfo);
+            //        MSG msgSend = new MSG()
+            //        {
+            //            type = MSG.Type.COMPONENT,
+            //            timestamp = ProtoBufHelp.TimeSpan(),
+            //            sequence = 2,
+            //            component = new Component()
+            //            {
+            //                command = Component.Command.SIGNIN_REP,
+            //                componentresponse = new ComponentResponse()
+            //                {
+            //                    cid = dbcid,
+            //                    result = 0
+            //                }
+            //            }
+            //        };
+            //      return DataMessage(msgSend, dealer);
+            //    }
+            //}
             return retult;
         }
 
@@ -183,14 +181,14 @@ namespace ShipWeb.ProtoBuffer
             };
             //把成实转成字节流
             byte[] byt = ProtoBufHelp.Serialize<MSG>(msg);
-            SendMessage(msg);
+            SendMessage(msg,identity,"");
         }
         /// <summary>
         /// 组件查询
         /// </summary>
         /// <param name="cid"></param>
         /// <param name="identity"></param>
-        public ComponentResponse ComponentQuery()
+        public ComponentResponse ComponentQuery(string nextIdentity="")
         {
             ComponentResponse result = new ComponentResponse();
             //组件注册消息整理
@@ -204,7 +202,7 @@ namespace ShipWeb.ProtoBuffer
                     command = Component.Command.QUERY_REP
                 }
             };
-            SendMessage(msg);
+            SendMessage(msg,identity,nextIdentity);
             MSG revMsg = ReceiveMessage(dealer);
             if (revMsg != null && revMsg.type == MSG.Type.COMPONENT)
             {
@@ -227,7 +225,7 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="configure">算法配置实体</param>
         /// <returns>0:成功</returns>
-        public int AlgorithmSet(AlgorithmInfo protoModel)
+        public int AlgorithmSet(AlgorithmInfo protoModel,string algoIdentity)
         {
             int result = 1;
             MSG msg = new MSG()
@@ -244,13 +242,13 @@ namespace ShipWeb.ProtoBuffer
                     }
                 }
             };
-            result=ConfigureSetMessage(msg, dealer);
+            result=ConfigureSetMessage(msg, dealer,algoIdentity);
             return result;
         }
-        private int ConfigureSetMessage(MSG msg, DealerSocket dealer)
+        private int ConfigureSetMessage(MSG msg, DealerSocket dealer,string algoIdentity)
         {
             int result = 1;
-            SendMessage(msg);
+            SendMessage(msg,identity,algoIdentity);
             MSG revMsg = ReceiveMessage(dealer);
             //MSG revMsg = msg;
             if (revMsg.type == MSG.Type.ALGORITHM)
@@ -264,7 +262,7 @@ namespace ShipWeb.ProtoBuffer
                 {
                     byte[] by = dealer.Options.Identity;
                     string shipId = Encoding.UTF8.GetString(by);
-                    result = ProtoBDManager.CameraConfigSet(shipId,algMsg.algorithmrequest.algorithminfo);
+                    result = ProtoBDManager.CameraConfigSet(algMsg.algorithmrequest.algorithminfo);
                     MSG sendMsg = new MSG()
                     {
                         type = MSG.Type.ALGORITHM,
@@ -279,7 +277,7 @@ namespace ShipWeb.ProtoBuffer
                             }
                         }
                     };
-                    return ConfigureSetMessage(sendMsg, dealer);
+                    return ConfigureSetMessage(sendMsg, dealer,algoIdentity);
                 }
             }
             return result;
@@ -288,7 +286,7 @@ namespace ShipWeb.ProtoBuffer
         /// 算法查询
         /// </summary>
         /// <returns>算法配置实体</returns>
-        public List<AlgorithmInfo> AlgorithmQuery()
+        public List<AlgorithmInfo> AlgorithmQuery(string algoIdentity)
         {
             List<AlgorithmInfo> list = null;
             MSG msg = new MSG()
@@ -301,15 +299,15 @@ namespace ShipWeb.ProtoBuffer
                     command = Algorithm.Command.QUERY_REQ
                 }
             };
-            list = ConfigureMessage(msg, dealer);
+            list = ConfigureMessage(msg, dealer,algoIdentity);
 
             return list;
         }
 
-        private List<AlgorithmInfo> ConfigureMessage(MSG msg, DealerSocket dealer)
+        private List<AlgorithmInfo> ConfigureMessage(MSG msg, DealerSocket dealer,string algoIdentity)
         {
             List<AlgorithmInfo> list = new List<AlgorithmInfo>();
-            SendMessage(msg);
+            SendMessage(msg,identity,algoIdentity);
             MSG revMsg = ReceiveMessage(dealer);
             //MSG revMsg = msg;
             if (revMsg.type == MSG.Type.ALGORITHM)
@@ -324,9 +322,7 @@ namespace ShipWeb.ProtoBuffer
                 }
                 else if (algMsg.command == Algorithm.Command.QUERY_REQ)
                 {
-                    byte[] by = dealer.Options.Identity;
-                    string shipId = Encoding.UTF8.GetString(by);
-                    var conList = ProtoBDManager.CameraConfigQuery(shipId);
+                    var conList = ProtoBDManager.CameraConfigQuery();
                     MSG sendMsg = new MSG()
                     {
                         type = MSG.Type.ALGORITHM,
@@ -342,7 +338,7 @@ namespace ShipWeb.ProtoBuffer
                             }
                         }
                     };
-                    return ConfigureMessage(sendMsg, dealer);
+                    return ConfigureMessage(sendMsg, dealer,algoIdentity);
                 }
             }
             return list;
@@ -355,7 +351,7 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="uid"></param>
         /// <returns></returns>
-        public List<CrewInfo> CrewQuery(string uid = "")
+        public List<CrewInfo> CrewQuery(string uid = "", string nextIdentity="")
         {
             List<CrewInfo> list = new List<CrewInfo>();
             MSG msg = new MSG()
@@ -375,15 +371,15 @@ namespace ShipWeb.ProtoBuffer
                     }
                 }
             };
-            list=EmployeeMessage(msg, dealer);
+            list=EmployeeMessage(msg, dealer, nextIdentity);
             return list;
         }
-        private List<CrewInfo> EmployeeMessage(MSG msg, DealerSocket dealer)
+        private List<CrewInfo> EmployeeMessage(MSG msg, DealerSocket dealer, string nextIdentyty)
         {
             List<CrewInfo> list = new List<CrewInfo>();
-            //SendMessage(msg);
-            //MSG revMsg = ReceiveMessage(dealer);
-            MSG revMsg = msg;
+            SendMessage(msg,identity,nextIdentyty);
+            MSG revMsg = ReceiveMessage(dealer);
+            //MSG revMsg = msg;
             if (revMsg.type == MSG.Type.CREW)
             {
                 Crew crewMsg = revMsg.crew;
@@ -397,9 +393,7 @@ namespace ShipWeb.ProtoBuffer
                 else if (crewMsg.command == Crew.Command.QUERY_REQ)
                 {
                     string uid = crewMsg.crewrequest.crewinfo==null ? "" : crewMsg.crewrequest.crewinfo.uid;
-                    byte[] by = dealer.Options.Identity;
-                    string shipId = Encoding.UTF8.GetString(by);
-                    var empList = ProtoBDManager.CrewQuery(shipId,uid);
+                    var empList = ProtoBDManager.CrewQuery(uid);
                     MSG sendMsg = new MSG()
                     {
                         type = MSG.Type.CREW,
@@ -415,7 +409,7 @@ namespace ShipWeb.ProtoBuffer
                             }
                         }
                     };
-                    return EmployeeMessage(sendMsg, dealer);
+                    return EmployeeMessage(sendMsg, dealer,nextIdentyty);
                 }
             }
             return list;
@@ -425,7 +419,7 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="crewinfo">般员信息</param>
         /// <returns></returns>
-        public int CrewAdd(CrewInfo crewinfo)
+        public int CrewAdd(CrewInfo crewinfo,string nextIdentity="")
         {
             int result = 1;
             MSG msg = new MSG()
@@ -442,15 +436,15 @@ namespace ShipWeb.ProtoBuffer
                     }
                 }
             };
-            result=CrewAddMessage(msg, dealer);
+            result=CrewAddMessage(msg, dealer,nextIdentity);
             return result;
         }
-        private int CrewAddMessage(MSG msg, DealerSocket dealer)
+        private int CrewAddMessage(MSG msg, DealerSocket dealer,string nextIdentity)
         {
             int result = 1;
-            //SendMessage(msg);
-            //MSG revMsg = ReceiveMessage(dealer);
-            MSG revMsg = msg;
+            SendMessage(msg,identity,nextIdentity);
+            MSG revMsg = ReceiveMessage(dealer);
+            //MSG revMsg = msg;
             if (revMsg.type == MSG.Type.CREW)
             {
                 Crew crewMsg = revMsg.crew;
@@ -460,9 +454,7 @@ namespace ShipWeb.ProtoBuffer
                 }
                 else if (crewMsg.command == Crew.Command.NEW_REQ && crewMsg.crewrequest != null)
                 {
-                    byte[] by = dealer.Options.Identity;
-                    string shipId = Encoding.UTF8.GetString(by);
-                    var res = ProtoBDManager.CrewAdd(shipId,crewMsg.crewrequest.crewinfo);
+                    var res = ProtoBDManager.CrewAdd(crewMsg.crewrequest.crewinfo);
                     MSG sendMsg = new MSG()
                     {
                         type = MSG.Type.CREW,
@@ -477,7 +469,7 @@ namespace ShipWeb.ProtoBuffer
                             }
                         }
                     };
-                    return CrewAddMessage(sendMsg, dealer);
+                    return CrewAddMessage(sendMsg, dealer,nextIdentity);
                 }
             }
             return result;
@@ -488,10 +480,9 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="crewInfo">般员信息</param>
         /// <returns>为空表示失败</returns>
-        public int CrewUpdate(CrewInfo crewInfo)
+        public int CrewUpdate(CrewInfo crewInfo,string nextIdentity="")
         {
             int result = 1;
-
             MSG msg = new MSG()
             {
                 type = MSG.Type.CREW,
@@ -506,15 +497,15 @@ namespace ShipWeb.ProtoBuffer
                     }
                 }
             };
-            result = CrewUpdateMessage(msg, dealer);
+            result = CrewUpdateMessage(msg, dealer,nextIdentity);
             return result;
         }
-        private int CrewUpdateMessage(MSG msg, DealerSocket dealer)
+        private int CrewUpdateMessage(MSG msg, DealerSocket dealer, string nextIdentity)
         {
             int result = 1;
-            //SendMessage(msg);
-            //MSG revMsg = ReceiveMessage(dealer);
-            MSG revMsg = msg;
+            SendMessage(msg,identity,nextIdentity);
+            MSG revMsg = ReceiveMessage(dealer);
+            //MSG revMsg = msg;
             if (revMsg.type == MSG.Type.CREW)
             {
                 Crew crewMsg = revMsg.crew;
@@ -522,11 +513,9 @@ namespace ShipWeb.ProtoBuffer
                 {
                     result = crewMsg.crewresponse.result;
                 }
-                else if (crewMsg.command == Crew.Command.MODIFY_REQ && crewMsg.crewrequest != null)                {
-
-                    byte[] by = dealer.Options.Identity;
-                    string shipId = Encoding.UTF8.GetString(by);
-                    var res = ProtoBDManager.CrewUpdate(shipId,crewMsg.crewrequest.crewinfo);
+                else if (crewMsg.command == Crew.Command.MODIFY_REQ && crewMsg.crewrequest != null)    
+                {
+                    var res = ProtoBDManager.CrewUpdate(crewMsg.crewrequest.crewinfo);
                     MSG sendMsg = new MSG()
                     {
                         type = MSG.Type.CREW,
@@ -541,7 +530,7 @@ namespace ShipWeb.ProtoBuffer
                             }
                         }
                     };
-                    return CrewUpdateMessage(sendMsg, dealer);
+                    return CrewUpdateMessage(sendMsg, dealer,nextIdentity);
                 }
             }
             return result;
@@ -551,10 +540,9 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="uid">船员ID</param>
         /// <returns></returns>
-        public int CrewDelete(string uid)
+        public int CrewDelete(string uid,string nextIdentity="")
         {
             int result = 1;
-
             MSG msg = new MSG()
             {
                 type = MSG.Type.CREW,
@@ -571,13 +559,13 @@ namespace ShipWeb.ProtoBuffer
                     }
                 }
             };
-            result = CrewDeleteMessage(msg, dealer);
+            result = CrewDeleteMessage(msg, dealer,nextIdentity);
             return result;
         }
-        private int CrewDeleteMessage(MSG msg, DealerSocket dealer)
+        private int CrewDeleteMessage(MSG msg, DealerSocket dealer,string nextIdentity)
         {
             int result = 1;
-            SendMessage(msg);
+            SendMessage(msg,identity,nextIdentity);
             MSG revMsg = ReceiveMessage(dealer);
             //MSG revMsg = msg;
             if (revMsg.type == MSG.Type.CREW)
@@ -589,9 +577,7 @@ namespace ShipWeb.ProtoBuffer
                 }
                 else if (crewMsg.command == Crew.Command.DELETE_REQ && crewMsg.crewrequest != null)
                 {
-                    byte[] by = dealer.Options.Identity;
-                    string shipId = Encoding.UTF8.GetString(by);
-                    var res = ProtoBDManager.CrewDelete(shipId,crewMsg.crewrequest.crewinfo.uid);
+                    var res = ProtoBDManager.CrewDelete(crewMsg.crewrequest.crewinfo.uid);
                     MSG sendMsg = new MSG()
                     {
                         type = MSG.Type.CREW,
@@ -606,7 +592,7 @@ namespace ShipWeb.ProtoBuffer
                             }
                         }
                     };
-                    return CrewDeleteMessage(sendMsg, dealer);
+                    return CrewDeleteMessage(sendMsg, dealer,nextIdentity);
                 }
             }
             return result;
@@ -619,7 +605,7 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="did">设备ID</param>
         /// <returns></returns>
-        public List<DeviceInfo> DeviceQuery(string did = "")
+        public List<DeviceInfo> DeviceQuery(string devIdentity, string did = "")
         {
             List<DeviceInfo> list = new List<DeviceInfo>();
 
@@ -640,15 +626,15 @@ namespace ShipWeb.ProtoBuffer
                     did = did
                 };
             }
-            list = DeviceMessage(msg, dealer);
+            list = DeviceMessage(msg, dealer,devIdentity);
             return list;
         }
-        private List<DeviceInfo> DeviceMessage(MSG msg, DealerSocket dealer)
+        private List<DeviceInfo> DeviceMessage(MSG msg, DealerSocket dealer,string devIdentity)
         {
             List<DeviceInfo> list = new List<DeviceInfo>();
-            //SendMessage(msg);
-            //MSG revMsg = ReceiveMessage(dealer);
-            MSG revMsg = msg;
+            SendMessage(msg,identity,devIdentity);
+            MSG revMsg = ReceiveMessage(dealer);
+            //MSG revMsg = msg;
             if (revMsg.type == MSG.Type.DEVICE)
             {
                 Device devMsg = revMsg.device;
@@ -664,7 +650,7 @@ namespace ShipWeb.ProtoBuffer
                     string did = devMsg.devicerequest==null ? "" : devMsg.devicerequest.did;
                     var info = devMsg.devicerequest == null ? null : devMsg.devicerequest.deviceinfo;
                     byte[] by = dealer.Options.Identity;
-                    list = ProtoBDManager.DeviceQuery(Encoding.UTF8.GetString(by),info,did);
+                    list = ProtoBDManager.DeviceQuery(info,did);
                     MSG sendMsg = new MSG()
                     {
                         type = MSG.Type.DEVICE,
@@ -681,7 +667,7 @@ namespace ShipWeb.ProtoBuffer
                             }
                         }
                     };
-                    return DeviceMessage(sendMsg, dealer);
+                    return DeviceMessage(sendMsg, dealer,devIdentity);
                 }
             }
             return list;
@@ -691,7 +677,7 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="deviceInfo">设备实体</param>
         /// <returns></returns>
-        public DeviceResponse DeveiceAdd(DeviceInfo deviceInfo)
+        public DeviceResponse DeveiceAdd(DeviceInfo deviceInfo,string devIdentity)
         {
             DeviceResponse result = new DeviceResponse();
             MSG msg = new MSG()
@@ -709,15 +695,15 @@ namespace ShipWeb.ProtoBuffer
                 }
             };
             //SendMessage(msg);
-            result = DeveiceAddMessage(msg, dealer);
+            result = DeveiceAddMessage(msg, dealer,devIdentity);
             return result;
         }
-        private DeviceResponse DeveiceAddMessage(MSG msg, DealerSocket dealer)
+        private DeviceResponse DeveiceAddMessage(MSG msg, DealerSocket dealer,string devIdentity)
         {
             DeviceResponse result = new DeviceResponse();
-            //SendMessage(msg);
-            //MSG revMsg = ReceiveMessage(dealer);
-            MSG revMsg = msg;
+            SendMessage(msg,identity,devIdentity);
+            MSG revMsg = ReceiveMessage(dealer);
+            //MSG revMsg = msg;
             if (revMsg.type == MSG.Type.DEVICE)
             {
                 Device devMsg = revMsg.device;
@@ -730,9 +716,7 @@ namespace ShipWeb.ProtoBuffer
                 }
                 else if (devMsg.command == Device.Command.NEW_REQ && devMsg.devicerequest != null)
                 {
-                    byte[] by = dealer.Options.Identity;
-                    string shipId = Encoding.UTF8.GetString(by);
-                    var res = ProtoBDManager.DeviceAdd(shipId,devMsg.devicerequest.deviceinfo);
+                    var res = ProtoBDManager.DeviceAdd(devMsg.devicerequest.deviceinfo);
                     MSG sendMsg = new MSG()
                     {
                         type = MSG.Type.DEVICE,
@@ -747,7 +731,7 @@ namespace ShipWeb.ProtoBuffer
                             }
                         }
                     };
-                    return DeveiceAddMessage(sendMsg, dealer);
+                    return DeveiceAddMessage(sendMsg, dealer,devIdentity);
                 }
             }
             return result;
@@ -758,7 +742,7 @@ namespace ShipWeb.ProtoBuffer
         /// <param name="embedded">设备实体</param>
         /// <param name="optype"></param>
         /// <returns></returns>
-        public int DeveiceUpdate(DeviceInfo embedded, string did)
+        public int DeveiceUpdate(DeviceInfo embedded, string did,string devIdentity)
         {
             int result = 1;
             MSG msg = new MSG()
@@ -776,15 +760,15 @@ namespace ShipWeb.ProtoBuffer
                     }
                 }
             };
-            result = DeveiceUpdateMessage(msg, dealer);
+            result = DeveiceUpdateMessage(msg, dealer,devIdentity);
             return result;
         }
-        private int DeveiceUpdateMessage(MSG msg, DealerSocket dealer)
+        private int DeveiceUpdateMessage(MSG msg, DealerSocket dealer,string devIdentity)
         {
             int result = 1;
-            //SendMessage(msg);
-            //MSG revMsg = ReceiveMessage(dealer);
-            MSG revMsg = msg;
+            SendMessage(msg,identity,devIdentity);
+            MSG revMsg = ReceiveMessage(dealer);
+            //MSG revMsg = msg;
             if (revMsg.type == MSG.Type.DEVICE)
             {
                 Device devMsg = revMsg.device;
@@ -794,9 +778,7 @@ namespace ShipWeb.ProtoBuffer
                 }
                 else if (devMsg.command == Device.Command.MODIFY_REQ && devMsg.devicerequest != null)
                 {
-                    byte[] by = dealer.Options.Identity;
-                    string shipId = Encoding.UTF8.GetString(by);
-                    var res = ProtoBDManager.DeviceUpdate(shipId,devMsg.devicerequest.did, devMsg.devicerequest.deviceinfo);
+                    var res = ProtoBDManager.DeviceUpdate(devMsg.devicerequest.did, devMsg.devicerequest.deviceinfo);
                     MSG sendMsg = new MSG()
                     {
                         type = MSG.Type.DEVICE,
@@ -811,7 +793,7 @@ namespace ShipWeb.ProtoBuffer
                             }
                         }
                     };
-                    return DeveiceUpdateMessage(sendMsg, dealer);
+                    return DeveiceUpdateMessage(sendMsg, dealer,devIdentity);
                 }
             }
             return result;
@@ -821,7 +803,7 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="did"></param>
         /// <returns></returns>
-        public int DeveiceDelete(string did)
+        public int DeveiceDelete(string did,string devIdentity)
         {
             int result = 1;
 
@@ -839,15 +821,15 @@ namespace ShipWeb.ProtoBuffer
                     }
                 }
             };
-            result = DeveiceDeleteMessage(msg, dealer);
+            result = DeveiceDeleteMessage(msg, dealer,devIdentity);
             return result;
         }
-        private int DeveiceDeleteMessage(MSG msg, DealerSocket dealer)
+        private int DeveiceDeleteMessage(MSG msg, DealerSocket dealer,string devIdentity)
         {
             int result = 1;
-            //SendMessage(msg);
-            //MSG revMsg = ReceiveMessage(dealer);
-            MSG revMsg = msg;
+            SendMessage(msg,identity,devIdentity);
+            MSG revMsg = ReceiveMessage(dealer);
+            //MSG revMsg = msg;
             if (revMsg.type == MSG.Type.DEVICE)
             {
                 Device devMsg = revMsg.device;
@@ -858,10 +840,7 @@ namespace ShipWeb.ProtoBuffer
                 else if (devMsg.command == Device.Command.DELETE_REQ && devMsg.devicerequest != null)
                 {
                     string did = devMsg.devicerequest.did;
-
-                    byte[] by = dealer.Options.Identity;
-                    string shipId = Encoding.UTF8.GetString(by);
-                    var res = ProtoBDManager.DeviceDelete(shipId,did);
+                    var res = ProtoBDManager.DeviceDelete(did);
                     MSG sendMsg = new MSG()
                     {
                         type = MSG.Type.DEVICE,
@@ -876,7 +855,7 @@ namespace ShipWeb.ProtoBuffer
                             }
                         }
                     };
-                    return DeveiceDeleteMessage(sendMsg, dealer);
+                    return DeveiceDeleteMessage(sendMsg, dealer,devIdentity);
                 }
             }
             return result;
@@ -889,7 +868,7 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="flag">是否在港口</param>
         /// <returns></returns>
-        public StatusResponse StatussSet(StatusRequest request)
+        public StatusResponse StatussSet(StatusRequest request,string nextIdentity="")
         {
             StatusResponse result = new StatusResponse();
             MSG msg = new MSG()
@@ -904,13 +883,13 @@ namespace ShipWeb.ProtoBuffer
                 }
             };
             //SendMessage(msg);
-            result = StatusSetMessage(msg, dealer);
+            result = StatusSetMessage(msg, dealer, nextIdentity);
             return result;
         }
-        private StatusResponse StatusSetMessage(MSG msg, DealerSocket dealer) 
+        private StatusResponse StatusSetMessage(MSG msg, DealerSocket dealer ,string nextIdentity) 
         {
             StatusResponse result = new StatusResponse();
-            SendMessage(msg);
+            SendMessage(msg,identity,nextIdentity);
             MSG revMsg = ReceiveMessage(dealer);
             //MSG revMsg = msg;
             if (revMsg.type == MSG.Type.STATUS)
@@ -939,7 +918,7 @@ namespace ShipWeb.ProtoBuffer
                             }
                         }
                     };
-                    return StatusSetMessage(sendMsg, dealer);
+                    return StatusSetMessage(sendMsg, dealer,nextIdentity);
                 }
             }
             return result;
@@ -969,7 +948,7 @@ namespace ShipWeb.ProtoBuffer
         private StatusResponse StatusQueryMessage(MSG msg, DealerSocket dealer) 
         {
             StatusResponse result = new StatusResponse();
-            SendMessage(msg);
+            SendMessage(msg,identity,"");
             MSG revMsg = ReceiveMessage(dealer);
             //MSG revMsg = msg;
             if (revMsg.type == MSG.Type.STATUS)
@@ -981,9 +960,7 @@ namespace ShipWeb.ProtoBuffer
                 }
                 else if(staMsg.command == Status.Command.QUERY_REQ)
                 {
-                    byte[] by = dealer.Options.Identity;
-                    string shipId = Encoding.UTF8.GetString(by);
-                    var ship = ProtoBDManager.StatusQuery(shipId);
+                    var ship = ProtoBDManager.StatusQuery();
                     MSG sendMsg = new MSG()
                     {
                         type = MSG.Type.STATUS,
@@ -1006,294 +983,6 @@ namespace ShipWeb.ProtoBuffer
         }
         #endregion
 
-        #region 用户
-        /// <summary>
-        /// 增加用户
-        /// </summary>
-        /// <param name="person">用户信息</param>
-        /// <returns></returns>
-        public UserResponse UserAdd(Person person)
-        {
-            UserResponse result = new UserResponse();
-            MSG msg = UserAddOrUpdate(person);
-            result = UserAddMessage(msg, dealer);
-            //SendMessage(msg);
-            //MSG revMsg = ReceiveMessage(dealer);
-            //if (revMsg.type == MSG.Type.USER)
-            //{
-            //    User useMsg = revMsg.user;
-            //    if (useMsg.command == User.Command.NEW_REP && useMsg.userresponse != null)
-            //    {
-            //        if (useMsg.userresponse.result == 0)
-            //        {
-            //            result = useMsg.userresponse;
-            //        }
-            //    }
-            //}
-            return result;
-        }
-        private UserResponse UserAddMessage(MSG msg, DealerSocket dealer)
-        {
-            UserResponse result = new UserResponse();
-            SendMessage(msg);
-            MSG revMsg = ReceiveMessage(dealer);
-            if (revMsg.type == MSG.Type.USER)
-            {
-                User useMsg = revMsg.user;
-                if (useMsg.command == User.Command.NEW_REP && useMsg.userresponse != null)
-                {
-                    if (useMsg.userresponse.result == 0)
-                    {
-                        result = useMsg.userresponse;
-                    }
-                }
-                else if (useMsg.command == User.Command.NEW_REQ && useMsg.userrequest != null)
-                {
-                    var res = ProtoBDManager.UserAdd(useMsg.userrequest.person);
-                    MSG sendMsg = new MSG()
-                    {
-                        type = MSG.Type.USER,
-                        timestamp = ProtoBufHelp.TimeSpan(),
-                        sequence = 8,
-                        user = new User()
-                        {
-                            command = User.Command.NEW_REP,
-                            userresponse = new UserResponse()
-                            {
-                                result = res
-                            }
-                        }
-                    };
-                    return UserAddMessage(sendMsg, dealer);
-                }
-            }
-            return result;
-        }
-        /// <summary>
-        /// 修改用户信息
-        /// </summary>
-        /// <param name="person"></param>
-        /// <param name="uid"></param>
-        /// <returns></returns>
-        public int UserUpdate(Person person, string uid)
-        {
-            int result = 1;
-            MSG msg = UserAddOrUpdate(person, uid);
-            SendMessage(msg);
-            result = UserUpdateMessage(msg, dealer);
-            //MSG revMsg = ReceiveMessage(dealer);
-            //if (revMsg.type == MSG.Type.USER)
-            //{
-            //    User useMsg = revMsg.user;
-            //    if (useMsg.command == User.Command.MODIFY_REP && useMsg.userresponse != null)
-            //    {
-            //        result = useMsg.userresponse.result;
-            //    }
-            //}
-            return result;
-        }
-        private int UserUpdateMessage(MSG msg, DealerSocket dealer)
-        {
-            int result = 1;
-            SendMessage(msg);
-            MSG revMsg = ReceiveMessage(dealer);
-            if (revMsg.type == MSG.Type.USER)
-            {
-                User useMsg = revMsg.user;
-                if (useMsg.command == User.Command.MODIFY_REP && useMsg.userresponse != null)
-                {
-                    result = useMsg.userresponse.result;
-                }
-                else if (useMsg.command == User.Command.MODIFY_REQ && useMsg.userrequest != null)
-                {
-                    var res = ProtoBDManager.UserUpdate(useMsg.userrequest.uid, useMsg.userrequest.person);
-                    MSG sendMsg = new MSG()
-                    {
-                        type = MSG.Type.USER,
-                        timestamp = ProtoBufHelp.TimeSpan(),
-                        sequence = 8,
-                        user = new User()
-                        {
-                            command = User.Command.MODIFY_REP,
-                            userresponse = new UserResponse()
-                            {
-                                result = res
-                            }
-                        }
-                    };
-                    return UserUpdateMessage(sendMsg, dealer);
-                }
-            }
-            return result;
-        }
-        /// <summary>
-        /// 删除用户信息
-        /// </summary>
-        /// <param name="uid"></param>
-        /// <returns></returns>
-        public int UserDelete(string uid)
-        {
-            int result = 1;
-            //dealer.Options.Identity = Encoding.UTF8.GetBytes(identity);
-            MSG msg = new MSG()
-            {
-                type = MSG.Type.USER,
-                sequence = 7,
-                timestamp = ProtoBufHelp.TimeSpan(),
-                user = new User()
-                {
-                    command = User.Command.DELETE_REQ,
-                    userrequest = new UserRequest()
-                    {
-                        uid = uid
-                    }
-                }
-            };
-            result = UserDeleteMessage(msg, dealer);
-            //SendMessage(msg);
-            //MSG revMsg = ReceiveMessage(dealer);
-            //if (revMsg.type == MSG.Type.USER)
-            //{
-            //    User useMsg = revMsg.user;
-            //    if (useMsg.command == User.Command.DELETE_REP && useMsg.userresponse != null)
-            //    {
-            //        result = useMsg.userresponse.result;
-            //    }
-            //}
-            return result;
-        }
-        private int UserDeleteMessage(MSG msg, DealerSocket dealer)
-        {
-            int result = 1;
-            SendMessage(msg);
-            MSG revMsg = ReceiveMessage(dealer);
-            if (revMsg.type == MSG.Type.USER)
-            {
-                User useMsg = revMsg.user;
-                if (useMsg.command == User.Command.DELETE_REP && useMsg.userresponse != null)
-                {
-                    result = useMsg.userresponse.result;
-                }
-                else if (useMsg.command == User.Command.DELETE_REQ && useMsg.userrequest != null)
-                {
-                    var res = ProtoBDManager.UserDelete(useMsg.userrequest.uid);
-                    MSG sendMsg = new MSG()
-                    {
-                        type = MSG.Type.USER,
-                        timestamp = ProtoBufHelp.TimeSpan(),
-                        sequence = 8,
-                        user = new User()
-                        {
-                            command = User.Command.DELETE_REP,
-                            userresponse = new UserResponse()
-                            {
-                                result = res
-                            }
-                        }
-                    };
-                    return UserUpdateMessage(sendMsg, dealer);
-                }
-            }
-            return result;
-        }
-        /// <summary>
-        /// 查询用户信息
-        /// </summary>
-        /// <param name="uid">用户ID</param>
-        /// <returns></returns>
-        public List<Person> UserQuery(string uid = "")
-        {
-            List<Person> list = new List<Person>();
-            Random rm = new Random();
-            int index = rm.Next();
-            dealer.Options.Identity = Encoding.UTF8.GetBytes(index.ToString());
-
-            MSG msg = new MSG()
-            {
-                type = MSG.Type.USER,
-                sequence = 7,
-                timestamp = ProtoBufHelp.TimeSpan(),
-                user = new User()
-                {
-                    command = User.Command.QUERY_REQ,
-                }
-            };
-            if (!string.IsNullOrEmpty(uid))
-            {
-                msg.user.userrequest.uid = uid;
-            }
-            SendMessage(msg);
-            MSG revMsg = ReceiveMessage(dealer);
-            if (revMsg.type == MSG.Type.USER)
-            {
-                User useMsg = revMsg.user;
-                if (useMsg.command == User.Command.QUERY_REP && useMsg.userresponse != null)
-                {
-                    if (useMsg.userresponse.result == 0)
-                    {
-                        list = useMsg.userresponse.persons;
-                    }
-                }
-            }
-            return list;
-        }
-        /// <summary>
-        /// 用户登陆
-        /// </summary>
-        /// <param name="uid">用户ID</param>
-        /// <param name="person">用户详情</param>
-        /// <returns></returns>
-        public int UserLoggin(string uid, Person person)
-        {
-            int result = 1;
-            MSG msg = new MSG()
-            {
-                type = MSG.Type.USER,
-                sequence = 7,
-                timestamp = ProtoBufHelp.TimeSpan(),
-                user = new User()
-                {
-                    command = User.Command.LOGIN_REQ,
-                }
-            };
-            SendMessage(msg);
-            MSG revMsg = ReceiveMessage(dealer);
-            if (revMsg.type == MSG.Type.USER)
-            {
-                User useMsg = revMsg.user;
-                if (useMsg.command == User.Command.LOGIN_REP && useMsg.userresponse != null)
-                {
-                    result = useMsg.userresponse.result;
-                }
-            }
-            return result;
-        }
-        private MSG UserAddOrUpdate( Person person, string uid = "")
-        {
-            dealer.Options.Identity = Encoding.UTF8.GetBytes(identity);
-            MSG msg = new MSG()
-            {
-                type = MSG.Type.USER,
-                sequence = 7,
-                timestamp = ProtoBufHelp.TimeSpan(),
-                user = new User()
-                {
-                    command = string.IsNullOrEmpty(uid) ? User.Command.NEW_REQ : User.Command.MODIFY_REQ,
-                    userrequest = new UserRequest()
-                    {
-                        person = person
-                    }
-                }
-            };
-            //执行修改时需要填入用户ID
-            if (!string.IsNullOrEmpty(uid))
-            {
-                msg.user.userrequest.uid = uid;
-            }
-            return msg;
-        }
-        #endregion
-
         #region 报警消息
         public Alarm AlarmStart()
         {
@@ -1304,7 +993,7 @@ namespace ShipWeb.ProtoBuffer
                 sequence = 1,
                 timestamp = ProtoBufHelp.TimeSpan()
             };
-            SendMessage(msg);
+            SendMessage(msg,identity,"");
             MSG revMsg = ReceiveMessage(dealer);
             if (revMsg.type == MSG.Type.ALARM)
             {
@@ -1317,15 +1006,19 @@ namespace ShipWeb.ProtoBuffer
         /// <summary>
         /// 发送消息
         /// </summary>
-        /// <param name="index">序号</param>
-        /// <param name="msg"></param>
-        private void SendMessage(MSG msg)
+        /// <param name="identity">自己的通讯ID</param>
+        /// <param name="nextIdentity">需要操作的通讯ID</param>
+        /// <param name="msg">通讯内容</param>
+        private void SendMessage(MSG msg,string identity,string nextIdentity)
         {
             try
             {
                 byte[] byt = ProtoBufHelp.Serialize<MSG>(msg);
                 NetMQMessage mqmsg = new NetMQMessage();
                 mqmsg.AppendEmptyFrame();
+                mqmsg.Append("Request");
+                mqmsg.Append(identity);               
+                mqmsg.Append(nextIdentity); 
                 mqmsg.Append(byt);
                 //发送注册请求
                 bool flag = dealer.TrySendMultipartMessage(mqmsg);

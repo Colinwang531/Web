@@ -1,0 +1,39 @@
+﻿
+@{
+    Layout = null;
+}
+<script src="~/layui/layui.js"></script>
+<link href="~/layui/css/layui.css" rel="stylesheet" />
+<script type="text/javascript">
+    layui.use('table', function () {
+        var table = layui.table;
+        var tableIns = table.render({
+            elem: '#comTable',   //渲染的目标对象
+            url: '/Component/Load', //数据接口
+            //toolbar: "#userToolBar",   //表格的工具条
+            defaultToolbar: [],
+            page: false,  //是否启用分页
+            cols: [[   //列表数据
+                { type: 'numbers', title: "序号", width: 100 },
+                {
+                    field: 'type', title: '组件类型', align: 'center', templet: function (d) {
+                        if (d.type == 1) return "XMQ";
+                        else if (d.type == 2) return "WEB";
+                        else if (d.type == 3) return "HKD";
+                        else if (d.type == 4) return "DHD";
+                        else if (d.type == 5) return "ALM";
+                    }
+                },
+                { field: 'name', title: '组件名称', align: 'center' },
+            ]],
+            done: function (res) {              
+            }
+        });
+    })
+</script>
+<div style="width:96%;">
+    <div style="margin-left:30px;margin-top:30px">
+        <label style="font-family:STZhongsong;font-weight:bold;width:300px;font:normal;font-size:28px;">组件查询</label>
+        <table id="comTable" class="layui-table" lay-filter="comTable" style="margin-top:34px"></table>
+    </div>
+</div>

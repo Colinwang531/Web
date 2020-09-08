@@ -1,7 +1,269 @@
 ﻿
 @{
-    ViewData["Title"] = "Index";
+    Layout = null; ;
 }
+@{
+    Layout = null;
+}
+<link href="~/layui/css/layui.css" rel="stylesheet" />
+<script src="~/layui/layui.js"></script>
+<script src="~/layui/formSelects-v4.js"></script>
+<link href="~/layui/formSelects-v4.css" rel="stylesheet" />
+<script type="text/javascript">
+    var url;
+    var mainIndex;
+    layui.use(['table', 'form', 'formSelects'], function () {
+        var $ = layui.$;
+        var table = layui.table;
+        var form = layui.form;
+        var formSelects = layui.formSelects; 
+        var DISABLED = 'layui-btn-disabled';
+        var keys = [];
+        var fleet;
+        var tableIns = table.render({
+            elem: '#fleetTable',   //渲染的目标对象
+            url: '/Fleet/Load', //数据接口
+            //toolbar: "#userToolBar",   //表格的工具条
+            defaultToolbar: [],
+            page: false,  //是否启用分页
+            cols: [[   //列表数据
+                { type: 'numbers', title: "序号", width: 100 },
+                { field: 'name', title: '船队名称', align: 'center' },
+                { field: 'userName', title: '船队负责人', align: 'center' },
+                { field: 'phone', title: '负责人电话', align: 'center' },
+                { field: 'shipName', title: '船舶', align: 'center' },
+                { fixed: 'right', title: '操作', toolbar: '#userBar', align: 'center' }
+            ]],
+            done: function (res) {
+                if (res.code == 0) {
+                    fleet = res.data;
+                    //舶舶下拉
+                    var ship = res.ship;
+                    for (var i = 0; i < ship.length; i++) {
+                        var temp = {
+                            "name": ship[i].name,
+                            "value": ship[i].id  //value为唯一标识，此处为id
+                        }
+                        keys.push(temp);
+                    }
+                    formSelects.data('slShip', 'local', { //请求数据后，将数据动态渲染到下拉框中
+                        arr: keys
+                    });
 
-<h1>Index</h1>
+                    var user = res.user;
+                    var uhtml = '<option value = ""> 请选择</option>';
+                    for (var i = 0; i < user.length; i++) {
+                        uhtml += '<option value="' + user[i].id + '">' + user[i].name + '</option>'
+                    }
+                    $("#slUser").html(uhtml);
+                }
+                form.render();
+            }
+        });
+      
+        //监听工具条
+        table.on('tool(fleetTable)', function (obj) {
+            var data = obj.data;
+            if (obj.event === 'del') {
+                layer.confirm("是否确认删除？", {
+                    icon: 3,
+                    btn: ["确定", "取消"],
+                    btnAlign: 'c', //按钮居中
+                    yes: function (index) {
+                        obj.del();
+                        layer.close(index);
+                        $.ajax({
+                            url: "/Fleet/Delete",
+                            type: "get",
+                            dataType: "json",
+                            data: { id: data.id },
+                            contentType: "application/json;chartset=utf-8",
+                            success: function (res) {
+                                if (res.code == 1) {
+                                    layer.msg(res.msg, { icon: 2 });
+                                } else {
+                                    layer.msg("删除成功", { icon: 1 });
+                                    tableIns.reload();
+                                }
+                            }
+                        });
+                    }
+                });
+            } else if (obj.event === 'edit') {
+                //layer.alert('编辑行：<br>' + JSON.stringify(data))
+                mainIndex = layer.open({
+                    type: 1,
+                    title: '修改船队',
+                    content: $("#saveOrUpdateDiv"),
+                    area: ['520px', '450px'],
+                    success: function (index) {
+                        formSelects.data('slShip', 'local', { arr: [] }); //清空下拉框数据
+                        $("#dataFrm")[0].reset();
+                        $("#slUser").val(data.userId);                      
+                        form.val("dataFrm", data);
 
+                        var ids = "";
+                        //查出已经绑定的船
+                        for (var i = 0; i < fleet.length; i++) {
+                            if (fleet[i].id == data.id) continue;
+                            if (i == fleet.length - 1) {
+                                ids += fleet[i].shipIds;
+                            } else {
+                                ids += fleet[i].shipIds + ",";
+                            }
+                        }
+                        var arr = [];
+                        var shipIds = ids.split(',');
+                        for (var i = 0; i < keys.length; i++) {
+                            if ($.inArray(keys[i].value, shipIds) == -1) {
+                                arr.push(keys[i]);
+                            }
+                        }
+                        formSelects.data('slShip', 'local', { //请求数据后，将数据动态渲染到下拉框中
+                            arr: arr
+                        });
+                        var values = data.shipIds.split(',');                      
+                        formSelects.value('slShip', values);
+                      
+                        url = "user/updateUser.action";
+                        form.render();
+                    },
+                    yes: function () {
+                        layer.closeAll();
+                    }
+                });
+            }
+        });
+        $("#btnAdd").click(function () {
+            layer.open({
+                type: 1,
+                title: '新增船队',
+                content: $("#saveOrUpdateDiv"),
+                area: ['520px', '450px'],
+                success: function (index) {                 
+                    $("#hidId").val("");
+                    //清空表单数据
+                    $("#dataFrm")[0].reset();
+                    var ids="";
+                    //查出已经绑定的船
+                    for (var i = 0; i < fleet.length; i++) {
+                        if (i == fleet.length - 1) {
+                            ids += fleet[i].shipIds;
+                        } else {
+                            ids +=fleet[i].shipIds+",";
+                        }
+                    }
+                    var arr = [];
+                    var shipIds = ids.split(',');
+                    for (var i = 0; i < keys.length; i++) {
+                        if ($.inArray(keys[i].value, shipIds) == -1) {
+                            arr.push(keys[i]);
+                        }
+                    }
+                    //server模式
+                    //formSelects.data('slShip', 'server', {
+                    //    url: "/Fleet/GetShip?add=true"
+                    //});
+                    formSelects.data('slShip', 'local', { arr: arr }); //清空下拉框数据
+                    form.render();
+                    url = "user/addUser.action";
+                }
+            });
+        });
+        //保存
+        form.on("submit(doSubmit)", function (data) {
+            $('#btnSubmit').attr('disabled', 'disabled').addClass(DISABLED);
+            var data = {
+                Id: data.field.id,
+                Name: data.field.name,
+                UserId: data.field.slUser,
+                Phone: data.field.phone,
+                ShipIds: data.field.slShip
+            }
+            $.ajax({
+                url: "/fleet/Save",
+                data: { model: JSON.stringify(data) },
+                type: "get",
+                dataType: "json",
+                contentType: "application/json;charset=utf-8",
+                success: function (res) {
+                    if (res.code == 1) {
+                        layer.msg(res.msg, { icon: 2 });
+                    } else {
+                        layer.msg("保存成功", { icon: 1 });
+                        tableIns.reload();
+                        layer.closeAll();
+                    }
+                    $("#btnSubmit").removeAttr('disabled').removeClass(DISABLED);
+                }
+            });
+            return false;
+        });
+    });
+
+</script>
+<style>
+    button {
+        width: 150px;
+        height: 40px;
+    }
+</style>
+<div style="width:96%;">
+    <div style="margin-left:30px;margin-top:30px">
+        <label style="font-family:STZhongsong;font-weight:bold;width:300px;font:normal;font-size:28px;">船队管理</label>
+        <form class="layui-form" action="" id="serachFrm" lay-filter="serachFrm" style="margin-top:45px">
+            <button type="button" class="layui-btn" style="width:126px;height:40px" id="btnAdd">新增船队</button>
+        </form>
+        <table id="fleetTable" class="layui-table" lay-filter="fleetTable" style="margin-top:34px"></table>
+        <div id="userBar" style="display: none;">
+            <a style="color:#2F6BFF" lay-event="edit">编辑</a>
+            <a style="color:#8C8C8C;margin-left:50px" lay-event="del">删除</a>
+        </div>
+    </div>
+</div>
+<div style="display: none;" id="saveOrUpdateDiv">
+    <form class="layui-form" action="" id="dataFrm" lay-filter="dataFrm">
+        <input name="id" id="hidId" type="hidden" />
+        <div class="layui-form-item" style="margin-top: 20px;">
+            <div class="layui-inline">
+                <label class="layui-form-label" style="width:100px">船队名称：</label>
+                <div class="layui-input-inline">
+                    <input type="text" id="txtUserame" name="name" lay-reqtext="船队名称是必填项" style="width:360px" maxlength="20" lay-verify="required" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item" style="margin-top: 20px;">
+            <div class="layui-inline">
+                <label class="layui-form-label" style="width:100px">船队负责人：</label>
+                <div class="layui-input-inline" style="width:360px">
+                    <select name="slUser" id="slUser" class="layui-input">                     
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item" style="margin-top: 20px;">
+            <div class="layui-inline">
+                <label class="layui-form-label" style="width:100px">负责人电话：</label>
+                <div class="layui-input-inline">
+                    <input type="text" name="phone" lay-reqtext="船队名称是必填项" style="width:360px" maxlength="20" lay-verify="required|phone" autocomplete="off" class="layui-input" >
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item" style="margin-top: 20px;">
+            <div class="layui-inline">
+                <label class="layui-form-label" style="width:100px">管理船舶：</label>
+                <div class="layui-input-inline"style="width:360px">
+                    <select name="slShip" id="slShip" lay-filter="slShip" xm-select="slShip" xm-select-type="1" lay-verify="required">
+                        </select>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item" style="text-align: center;margin-top:42px">
+            <div class="layui-input-block" style="margin:0 auto">
+                <button type="submit" id="btnSubmit" class="layui-btn" lay-filter="doSubmit" lay-submit="">提交</button>
+                <button type="reset" class="layui-btn layui-btn-warm">重置</button>
+            </div>
+
+        </div>
+    </form>
+</div>

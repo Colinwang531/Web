@@ -30,9 +30,10 @@
     }
 </style>
 <script type="text/javascript">
-    layui.use(['element', 'table', 'form'], function () {
+    layui.use(['element', 'table', 'form','layer'], function () {
         var $ = layui.jquery
         var element = layui.element;
+        var layer = layui.layer; 
         var form = layer.form;
         $(".alarm").click(function () {
             $("#divBody").show();
@@ -184,7 +185,7 @@
                             <img src="~/images/user.png" /><a href="#">用户信息</a>
                         </li>
                         <li class="layui-nav-item fleet">
-                            <img src="~/images/user.png" /><a href="#">船队管理</a>
+                            <img src="~/images/fleet.png" /><a href="#">船队管理</a>
                         </li>
                     }
                 </ul>

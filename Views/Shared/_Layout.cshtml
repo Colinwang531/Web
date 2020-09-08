@@ -58,15 +58,18 @@
             <div class="layui-side-scroll" style="height:90%">
                 <ul id="ulLeft">
                     <li id="device">
-                        @if(ViewBag.layuithis=="device"){
-                        <a href="#" style="font-weight:bold;color:#">
-                            <img src="~/images/ship/device1.png" />设备
-                        </a>
-                    }else{
-                        <a href="#">
-                            <img src="~/images/ship/device.png" />设备
-                        </a>
-                    }
+                        @if (ViewBag.layuithis == "device")
+                        {
+                            <a href="#" style="font-weight:bold;color:#">
+                                <img src="~/images/ship/device1.png" />设备
+                            </a>
+                        }
+                        else
+                        {
+                            <a href="#">
+                                <img src="~/images/ship/device.png" />设备
+                            </a>
+                        }
                     </li>
 
                     <li id="algorithm">
@@ -84,24 +87,32 @@
                             <img src="~/images/ship/shipstatus.png" />航行设置
                         </a>
                     </li>
+                    <li id="compon">
+                        <a href="#">
+                            <img src="~/images/ship/component.png" />组件查询
+                        </a>
+                    </li>
                     @if (ShipWeb.Tool.ManagerHelp.IsShowAlarm)
                     {
-                    <li id="alarm">
-                        @if(ViewBag.layuithis=="alarm"){
-                        <a href="#" style="color:#005DFF;font-weight:bold">
-                            <img src="~/images/ship/alarm1.png" />报警
-                        </a>
-                            }else{
-                        <a href="#">
-                            <img src="~/images/ship/alarm.png" />报警
-                        </a>
-                                }
-                    </li>
-                    <li id="attendance">
-                        <a href="#" >
-                            <img src="~/images/ship/attendance.png" />考勤
-                        </a>
-                    </li>
+                        <li id="alarm">
+                            @if (ViewBag.layuithis == "alarm")
+                            {
+                                <a href="#" style="color:#005DFF;font-weight:bold">
+                                    <img src="~/images/ship/alarm1.png" />报警
+                                </a>
+                            }
+                            else
+                            {
+                                <a href="#">
+                                    <img src="~/images/ship/alarm.png" />报警
+                                </a>
+                            }
+                        </li>
+                        <li id="attendance">
+                            <a href="#">
+                                <img src="~/images/ship/attendance.png" />考勤
+                            </a>
+                        </li>
                     }
                     <li id="video">
                         <a href="#">
@@ -168,6 +179,12 @@
                 $("#video a").attr("style", "font-weight:bold;color:#005DFF;");
                 $("#video a img").attr("src", "/images/ship/video1.png");
             });
+            $("#compon").click(function () {
+                $("#frm").attr("src", "/Component/Index")
+                ClearStyle();
+                $("#compon a").attr("style", "font-weight:bold;color:#005DFF;");
+                $("#compon a img").attr("src", "/images/ship/component1.png");
+            });
         });
         //清除左侧菜单样式
         function ClearStyle() {
@@ -191,6 +208,9 @@
                
             $("#video a").removeAttr("style");
             $("#video a img").attr("src", "/images/ship/video.png");
+
+            $("#compon a").removeAttr("style");
+            $("#compon a img").attr("src", "/images/ship/component.png");
         }      
     </script>
 </body>

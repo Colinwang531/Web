@@ -20,7 +20,8 @@ namespace ShipWeb.Tool
         /// 组件ID（组件注册成功后返回的ID）
         /// </summary>
         public static string Cid = "";
-
+        //是否启动模似数据
+        public static bool IsTest = AppSettingHelper.GetSectionValue("IsSimulate")=="true"?true:false;
         /// <summary>
         /// 是否显示返回陆地端菜单
         /// </summary>

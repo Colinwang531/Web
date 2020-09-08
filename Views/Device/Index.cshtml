@@ -144,7 +144,7 @@
                             url: "/Device/Delete",
                             type: "get",
                             dataType: "json",
-                            data: { id: data.id },
+                            data: { id: data.id, factory:data.factory },
                             contentType: "application/json;chartset=utf-8",
                             success: function (res) {
                                 if (res.code == 1) {
@@ -190,6 +190,7 @@
                         form.val("dataCamFrm", {
                             "id": camdata.cells[1].firstChild.innerHTML,
                             "did": camdata.cells[2].firstChild.innerHTML,
+                            "factory": camdata.cells[3].firstChild.innerHTML,
                             "enable": camdata.cells[4].firstChild.innerHTML == "开启" ? true : false,
                             "nickName": camdata.cells[5].firstChild.innerHTML
                         });
@@ -298,6 +299,7 @@
                 var data = {
                     id: camFrm.field.id,
                     did: camFrm.field.did,
+                    factory: parseInt(camFrm.field.factory),
                     nickName: camFrm.field.nickName,
                     enable: camFrm.field.enable
                 }
@@ -459,6 +461,7 @@
     <form class="layui-form" action="" id="dataCamFrm" lay-filter="dataCamFrm">
         <input name="id" id="hidId" type="hidden" class="layui-input" />
         <input type="hidden" name="did" value="" class="layui-input" />
+        <input type="hidden" name="factory" value="" class="layui-input" />
         <div class="layui-form-item">
             <label class="layui-form-label" style="width:100px">摄像机状态：</label>
             <div class="layui-input-inline">
