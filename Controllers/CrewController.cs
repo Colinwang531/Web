@@ -113,14 +113,16 @@ namespace ShipWeb.Controllers
         /// <returns></returns>
         private IActionResult LandLoad()
         {
-            var data = manager.CrewQuery();
+            string shipId = base.user.ShipId;
+            var compent = _context.Component.FirstOrDefault(c => c.ShipId == shipId && c.Type ==Component.ComponentType.WEB);
+            var data = manager.CrewQuery(compent.Id);
             var dataShow = from a in data
                            select new
                            {
                                a.job,
                                a.name,
                                id = a.uid,
-                               ShipId = base.user.ShipId,
+                               ShipId = shipId,
                                employeePictures = from b in a.pictures
                                                   select new
                                                   {
@@ -133,7 +135,7 @@ namespace ShipWeb.Controllers
                 code = 0,
                 data = dataShow,
                 count= data.Count(),
-                isSet = !string.IsNullOrEmpty(base.user.ShipId) ? base.user.EnableConfigure : false
+                isSet = !string.IsNullOrEmpty(shipId) ? base.user.EnableConfigure : false
             };
             return new JsonResult(result);
         }
@@ -198,13 +200,14 @@ namespace ShipWeb.Controllers
                     #region 陆地端添加/修改船员
                     if (base.user.IsLandHome)
                     {
+                        string shipId = base.user.ShipId;
+                        var component = _context.Component.FirstOrDefault(c => c.ShipId == shipId && c.Type == Component.ComponentType.WEB);
                         ShipWeb.ProtoBuffer.Models.CrewInfo emp = new ShipWeb.ProtoBuffer.Models.CrewInfo()
                         {
                             job = job,
                             name = name,
                             uid = id
                         };
-
                         int code = 0;
                         //陆地端添加船员
                         if (string.IsNullOrEmpty(id))
@@ -221,7 +224,7 @@ namespace ShipWeb.Controllers
                                     }
                                 }
                             }
-                            code = manager.CrewAdd(emp);
+                            code = manager.CrewAdd(emp, component.Id);
                         }
                         else
                         {
@@ -240,7 +243,7 @@ namespace ShipWeb.Controllers
                                     emp.pictures.Add(Encoding.UTF8.GetBytes(item));
                                 }
                             }
-                            int result = manager.CrewUpdate(emp);
+                            int result = manager.CrewUpdate(emp, component.Id);
                             code = result;
                         }
                         //清除已经上传了的图片

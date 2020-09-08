@@ -64,9 +64,11 @@ namespace ShipWeb.Controllers
         public IActionResult LandLoad()
         {
             List<Camera> cameras = new List<Camera>();
+            string shipId = base.user.ShipId;
+            var comtent = _context.Component.FirstOrDefault(c => c.ShipId == shipId&&c.Type==Component.ComponentType.WEB);
             List<ProtoBuffer.Models.AlgorithmInfo> protoDate = new List<ProtoBuffer.Models.AlgorithmInfo>();
             new TaskFactory().StartNew(() => {
-                 protoDate = manager.AlgorithmQuery();              
+                 protoDate = manager.AlgorithmQuery(comtent.ShipId);              
             }).Wait(timeout);
             var data = from a in protoDate
                        select new
@@ -81,7 +83,7 @@ namespace ShipWeb.Controllers
                            DectectSecond = a.dectectsecond,
                            Track = a.track
                        };
-            var device = manager.DeviceQuery();
+            var device = manager.DeviceQuery(comtent.ShipId);
             foreach (var item in device)
             {
                 var camList = item.camerainfos;
@@ -120,9 +122,14 @@ namespace ShipWeb.Controllers
                     if (base.user.IsLandHome)
                     {
                         ProtoBuffer.Models.AlgorithmInfo algorithm = GetProtoAlgorithm(viewModel);
+                        var compant = _context.Component.Where(c => c.ShipId == shipId && (c.Type == Component.ComponentType.WEB || c.Type == Component.ComponentType.XMQ));
+                        //当前船的通讯ID
+                        string shipIdentity = compant.FirstOrDefault(c => c.Type == Component.ComponentType.WEB).Id;
+                        //当前船上对应的算法通讯ID
+                        string algoIdentity= compant.FirstOrDefault(c => c.Type == Component.ComponentType.XMQ).Id;
                         new TaskFactory().StartNew(() =>
                         {
-                            int res = manager.AlgorithmSet(algorithm);
+                            int res = manager.AlgorithmSet(algorithm,(shipIdentity+":"+algoIdentity));
                             code = res;
                             msg = res != 0 ? res == 2 ? "一个摄像机只能设置考勤入或考勤出" : "数据修改失败" : "";
                         }).Wait(timeout);
@@ -179,20 +186,30 @@ namespace ShipWeb.Controllers
                             };
                             _context.Algorithm.Add(algo);
                         }
-                        new TaskFactory().StartNew(() =>
+                        if (!ManagerHelp.IsTest)
                         {
-                            ProtoBuffer.Models.AlgorithmInfo algorithm = GetProtoAlgorithm(viewModel);
-                            int res = manager.AlgorithmSet(algorithm);
-                            if (res == 0)
+                            var compent = _context.Component.FirstOrDefault(c => c.Type == Component.ComponentType.XMQ); 
+                            new TaskFactory().StartNew(() =>
                             {
-                                _context.SaveChanges();
-                                code = 0;
-                            }
-                            else
-                            {
-                                msg = "数据保存失败";
-                            }
-                        }).Wait(timeout);
+                                ProtoBuffer.Models.AlgorithmInfo algorithm = GetProtoAlgorithm(viewModel);
+                                int res = manager.AlgorithmSet(algorithm, compent.Id);
+                                if (res == 0)
+                                {
+                                    _context.SaveChanges();
+                                    code = 0;
+                                }
+                                else
+                                {
+                                    msg = "数据保存失败";
+                                }
+                            }).Wait(timeout);
+                        }
+                        else
+                        {
+                            _context.SaveChanges();
+                            code = 0;
+                        }
+                       
                     }
                     msg = (code == 1 && msg == "") ? "请求超时。。。" : msg;
                     return new JsonResult(new { code = code, msg =msg });

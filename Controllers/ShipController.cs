@@ -82,6 +82,7 @@ namespace ShipWeb.Controllers
             {
                 var ship = await _context.Ship.ToListAsync();
                 List<ShipViewModel> list = new List<ShipViewModel>();
+                var compents = _context.Component.Where(c => c.Type == Component.ComponentType.WEB && c.ShipId != null).ToList();
                 foreach (var item in ship)
                 {
                     ShipViewModel model = new ShipViewModel()
@@ -90,45 +91,40 @@ namespace ShipWeb.Controllers
                         Name = item.Name,
                         Line=false//默认离线
                     };
-                    model.Line = true;
-                    model.flag = item.Flag;
-                    //new TaskFactory().StartNew(() => {
-                    //    #region 测试数据
-                    //    //ProtoBuffer.Models.ComponentResponse rep = new ProtoBuffer.Models.ComponentResponse()
-                    //    //{
-                    //    //    result = 0,
-                    //    //    componentinfos = new List<ProtoBuffer.Models.ComponentInfo>()
-                    //    // {
-                    //    //     new ProtoBuffer.Models.ComponentInfo ()
-                    //    //     {
-                    //    //        type= ProtoBuffer.Models.ComponentInfo.Type.WEB
-                    //    //     }
-                    //    // }
-                    //    //};
-                    //    #endregion
-                    //    ProtoBuffer.Models.ComponentResponse rep = manager.ComponentQuery(item.Id);
-                    //    if (rep.result == 0)
-                    //    {
-                    //        var info = rep.componentinfos.Where(c => c.type == ProtoBuffer.Models.ComponentInfo.Type.WEB);
-                    //        if (info.Count() > 0)
-                    //        {
-                    //            model.Line = true;//在线
-                    //            ProtoBuffer.Models.StatusResponse strep = manager.StatusQuery();
-                    //            if (strep.result == 0)
-                    //            {
-                    //                model.Name = strep.name;
-                    //                model.flag = strep.flag;
-                    //                //从船舶端过来的船名与陆地端不同时，更改陆地端的船名
-                    //                if (item.Name != strep.name)
-                    //                {
-                    //                    item.Name = strep.name;
-                    //                    _context.Ship.Update(item);
-                    //                    _context.SaveChanges();
-                    //                }
-                    //            }
-                    //        }
-                    //    }
-                    //}).Wait(timeout);                  
+                    if (ManagerHelp.IsTest)
+                    {
+                        model.Line = true;
+                        model.flag = item.Flag;
+                    }
+                    else
+                    {
+                        var nextIdentity = compents.FirstOrDefault(c => c.ShipId == item.Id).Id;
+                        new TaskFactory().StartNew(() =>
+                        {                           
+                            ProtoBuffer.Models.ComponentResponse rep = manager.ComponentQuery(nextIdentity);
+                            if (rep.result == 0)
+                            {
+                                var info = rep.componentinfos.Where(c => c.type == ProtoBuffer.Models.ComponentInfo.Type.WEB);
+                                if (info.Count() > 0)
+                                {
+                                    model.Line = true;//在线
+                                    ProtoBuffer.Models.StatusResponse strep = manager.StatusQuery();
+                                    if (strep.result == 0)
+                                    {
+                                        model.Name = strep.name;
+                                        model.flag = strep.flag;
+                                        //从船舶端过来的船名与陆地端不同时，更改陆地端的船名
+                                        if (item.Name != strep.name)
+                                        {
+                                            item.Name = strep.name;
+                                            _context.Ship.Update(item);
+                                            _context.SaveChanges();
+                                        }
+                                    }
+                                }
+                            }
+                        }).Wait(timeout);
+                    }
                     list.Add(model);
                 }
                 var result = new
@@ -161,6 +157,7 @@ namespace ShipWeb.Controllers
                 }
                 if (base.user.IsLandHome)
                 {
+                    var component = _context.Component.FirstOrDefault(c => c.Type == Component.ComponentType.WEB && c.ShipId == id);
                     #region 陆地端登陆船舶端修改船状态
                     new TaskFactory().StartNew(() => {
                         ShipWeb.ProtoBuffer.Models.StatusRequest sr = new ShipWeb.ProtoBuffer.Models.StatusRequest()
@@ -168,13 +165,13 @@ namespace ShipWeb.Controllers
                             type = ShipWeb.ProtoBuffer.Models.StatusRequest.Type.SAIL,
                             flag = type
                         };
-                        var res = manager.StatussSet(sr);
+                        var res = manager.StatussSet(sr, component.Id);
                         sr = new ProtoBuffer.Models.StatusRequest()
                         {
                             type = ProtoBuffer.Models.StatusRequest.Type.NAME,
                             text = name
                         };
-                        var res1 = manager.StatussSet(sr);
+                        var res1 = manager.StatussSet(sr,component.Id);
                         if (res.result==0&&res1.result==0)
                         {
                             return new JsonResult(new { code = 0 });
