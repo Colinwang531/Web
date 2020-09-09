@@ -929,131 +929,131 @@ $(function () {
     });
 
 
-    /**************************************调用业务数据 Start************************************/
+
     SetAlarmType();
     SetAttendance();
-
-
-    //报警类型分析
-    function SetAlarmType(month) {
-        var myChartAlarm = echarts.init(document.getElementById('myChartAlarm'));
-        $.ajax({
-            type: "get",
-            url: "/Home/GetAlarmType",
-            data: { month: month },
-            success: function (res) {
-                //长度为6 的数组填充默认值0
-                let dataArray = Array.apply(null, Array(6)).map(() => 0);
-                res.forEach(function (k, v) {
-                    dataArray[k.type - 1] = k.num;
-                });
-                var optionAlarm = {
-                    color: ['#339899'],
-                    tooltip: {
-                        trigger: 'axis',
-                        axisPointer: {            // 坐标轴指示器，坐标轴触发有效
-                            type: 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
-                        }
-                    },
-                    grid: {
-                        left: '3%',
-                        right: '4%',
-                        bottom: '3%',
-                        containLabel: true
-                    },
-                    xAxis: [
-                        {
-                            name: '类型',
-                            nameTextStyle: {
-                                color: '#fff'
-                            },
-                            type: 'category',
-                            data: ['安全帽', '打电话', '睡觉', '打架', '考勤入', '考勤出'],//type 1 2 3 4 5 6
-                            axisTick: {
-                                alignWithLabel: true
-                            },
-                            axisLabel: {
-                                color: '#fff',
-                                fontWeight: 'bold'
-                            }
-                        }
-                    ],
-                    yAxis: [
-                        {
-                            name: '次数',
-                            nameTextStyle: {
-                                color: '#fff'
-                            },
-                            type: 'value',
-                            axisLabel: {
-                                color: '#fff'
-                            }
-                        }
-                    ],
-                    series: [
-                        {
-                            name: '报警次数',
-                            type: 'bar',
-                            barWidth: '50%',
-                            data: dataArray
-                        }
-                    ]
-                };
-                myChartAlarm.setOption(optionAlarm);
-            }
-        })
-    }
-    //考勤状态
-    function SetAttendance() {
-        $.get("/Home/GetAttendance", function (res) {
-            if (res != null) {
-                let temp = "";
-                res.forEach(function (item) {
-                    let behavior = "";
-                    if (item.behavior == 0)
-                        behavior = '<span style="background-color: #40CE48;">签入</span>';
-                    else
-                        behavior = '<span style="background-color: #8A2bE2;">签出</span>';
-
-
-                    temp += '<li><div class="fontInner clearfix">' +
-                        '<span>' + item.shipName + '</span>' +
-                        '<span>' + item.crewName + '</span>' +
-                        '<span>' + dateFtt("yyyy-MM-dd hh:mm:ss", item.time) + '</span>' + behavior +
-                        '<span><div class="progress" progress="' + item.rate + '%">' +
-                        '<div class="progressBar"><span></span></div>' +
-                        '<h3><i><h4></h4></i></h3>' +
-                        '</div></span>' +
-                        '</div></li>';
-                });
-                $("#FontScroll ul").empty();
-                $("#FontScroll ul").append(temp);
-                //考勤状态文字滚动
-                $('#FontScroll').FontScroll({ time: 2000, num: 1 });
-            }
-        })
-    }
-
-
-    //时间格式化处理
-    function dateFtt(fmt, date) {
-        date = new Date(date);
-        var o = {
-            "M+": date.getMonth() + 1,                 //月份   
-            "d+": date.getDate(),                    //日   
-            "h+": date.getHours(),                   //小时   
-            "m+": date.getMinutes(),                 //分   
-            "s+": date.getSeconds(),                 //秒   
-            "q+": Math.floor((date.getMonth() + 3) / 3), //季度   
-            "S": date.getMilliseconds()             //毫秒   
-        };
-        if (/(y+)/.test(fmt))
-            fmt = fmt.replace(RegExp.$1, (date.getFullYear() + "").substr(4 - RegExp.$1.length));
-        for (var k in o)
-            if (new RegExp("(" + k + ")").test(fmt))
-                fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
-        return fmt;
-    }
-    /**************************************调用业务数据 End************************************/
-
 });
+
+
+/**************************************调用业务数据 Start************************************/
+//报警类型分析
+function SetAlarmType(month) {
+    var myChartAlarm = echarts.init(document.getElementById('myChartAlarm'));
+    $.ajax({
+        type: "get",
+        url: "/Home/GetAlarmType",
+        data: { month: month },
+        success: function (res) {
+            //长度为6 的数组填充默认值0
+            let dataArray = Array.apply(null, Array(6)).map(() => 0);
+            res.forEach(function (k, v) {
+                dataArray[k.type - 1] = k.num;
+            });
+            var optionAlarm = {
+                color: ['#339899'],
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {            // 坐标轴指示器，坐标轴触发有效
+                        type: 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: [
+                    {
+                        name: '类型',
+                        nameTextStyle: {
+                            color: '#fff'
+                        },
+                        type: 'category',
+                        data: ['安全帽', '打电话', '睡觉', '打架', '考勤入', '考勤出'],//type 1 2 3 4 5 6
+                        axisTick: {
+                            alignWithLabel: true
+                        },
+                        axisLabel: {
+                            color: '#fff',
+                            fontWeight: 'bold'
+                        }
+                    }
+                ],
+                yAxis: [
+                    {
+                        name: '次数',
+                        nameTextStyle: {
+                            color: '#fff'
+                        },
+                        type: 'value',
+                        axisLabel: {
+                            color: '#fff'
+                        }
+                    }
+                ],
+                series: [
+                    {
+                        name: '报警次数',
+                        type: 'bar',
+                        barWidth: '50%',
+                        data: dataArray
+                    }
+                ]
+            };
+            myChartAlarm.setOption(optionAlarm);
+        }
+    })
+}
+//考勤状态
+function SetAttendance() {
+    $.get("/Home/GetAttendance", function (res) {
+        if (res != null) {
+            let temp = "";
+            res.forEach(function (item) {
+                let behavior = "";
+                if (item.behavior == 0)
+                    behavior = '<span style="background-color: #40CE48;">签入</span>';
+                else
+                    behavior = '<span style="background-color: #8A2bE2;">签出</span>';
+
+
+                temp += '<li><div class="fontInner clearfix">' +
+                    '<span>' + item.shipName + '</span>' +
+                    '<span>' + item.crewName + '</span>' +
+                    '<span>' + dateFtt("yyyy-MM-dd hh:mm:ss", item.time) + '</span>' + behavior +
+                    '<span><div class="progress" progress="' + item.rate + '%">' +
+                    '<div class="progressBar"><span></span></div>' +
+                    '<h3><i><h4></h4></i></h3>' +
+                    '</div></span>' +
+                    '</div></li>';
+            });
+            $("#FontScroll ul").empty();
+            $("#FontScroll ul").append(temp);
+            //考勤状态文字滚动
+            $('#FontScroll').FontScroll({ time: 2000, num: 1 });
+        }
+    })
+}
+
+
+//时间格式化处理
+function dateFtt(fmt, date) {
+    date = new Date(date);
+    var o = {
+        "M+": date.getMonth() + 1,                 //月份   
+        "d+": date.getDate(),                    //日   
+        "h+": date.getHours(),                   //小时   
+        "m+": date.getMinutes(),                 //分   
+        "s+": date.getSeconds(),                 //秒   
+        "q+": Math.floor((date.getMonth() + 3) / 3), //季度   
+        "S": date.getMilliseconds()             //毫秒   
+    };
+    if (/(y+)/.test(fmt))
+        fmt = fmt.replace(RegExp.$1, (date.getFullYear() + "").substr(4 - RegExp.$1.length));
+    for (var k in o)
+        if (new RegExp("(" + k + ")").test(fmt))
+            fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+    return fmt;
+}
+/**************************************调用业务数据 End************************************/
