@@ -11,23 +11,23 @@ namespace ShipWeb
     {
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            //InitManger.Init();
-            //while (!stoppingToken.IsCancellationRequested)
-            //{
-            //    try
-            //    {
-            //        if (InitManger.IsOver)
-            //        {
-            //            //心跳
-            //            InitManger.HeartBeat();
-            //        }
-            //    }
-            //    catch (Exception ex)
-            //    {
-            //        //LogHelper.Error(ex.Message);
-            //    }
-            //    await Task.Delay(1000 * 30, stoppingToken);//单位秒
-            //}
+            InitManger.Init();
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                try
+                {
+                    if (InitManger.IsOver)
+                    {
+                        //心跳
+                        InitManger.HeartBeat();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    //LogHelper.Error(ex.Message);
+                }
+                await Task.Delay(1000 * 30, stoppingToken);//单位秒
+            }
         }
     }
 }

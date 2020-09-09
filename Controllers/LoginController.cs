@@ -42,10 +42,10 @@ namespace ShipWeb.Controllers
         /// <returns></returns>
         public IActionResult UserLogin(string name,string password)
         {
-            //if (string.IsNullOrEmpty(ManagerHelp.Cid))
-            //{
-            //    return new JsonResult(new { code = 1, msg = "组件还在自动注册中，请稍等" });
-            //}
+            if (string.IsNullOrEmpty(ManagerHelp.Cid))
+            {
+                return new JsonResult(new { code = 1, msg = "组件还在自动注册中，请稍等" });
+            }
             var usersModel = _context.User.FirstOrDefault(u => u.Name == name && u.Password == MD5Help.MD5Encrypt(password));
             if (usersModel == null)
             {
