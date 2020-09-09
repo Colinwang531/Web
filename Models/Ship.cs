@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -41,6 +42,13 @@ namespace ShipWeb.Models
         /// 航状态  true:航行 false:停港
         /// </summary>
         public bool Flag { get; set; }
+
+        /// <summary>
+        /// 坐标(经纬度) {"longitude":"","latitude":""}
+        /// </summary>
+        [NotMapped]
+        public dynamic Coordinate { get; set; }
+
     }
-    
+
 }

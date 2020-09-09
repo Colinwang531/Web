@@ -8,7 +8,7 @@
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
     <title>数据中心大屏-禹创</title>
     <link href="~/datacenter/css/reset.css" rel="stylesheet" />
-    <link href="~/datacenter/css/scanboard.css?version=202009071632" rel="stylesheet" />
+    <link href="~/datacenter/css/scanboard.css?version=202009071640" rel="stylesheet" />
     <link href="~/datacenter/css/animsition.css" rel="stylesheet" />
     <link href="~/datacenter/css/jquery.shCircleLoader.css" rel="stylesheet" />
     @*<script src="~/datacenter/js/jquery.min.js"></script>*@
@@ -79,8 +79,7 @@
                         <span class="border-yellow">报警类型分析</span>
                     </div>
                     <div class="month">
-                        <span id="upMonth" onclick="SetAlarmType('upMonth');"> 上 月 </span>
-                        <span id="currentMonth" onclick="SetAlarmType('currentMonth')"> 本 月 </span>
+                        <span id="upMonth" onclick="SetAlarmType('upMonth');">上 月</span><span id="currentMonth" onclick="SetAlarmType('currentMonth')">本 月</span>
                     </div>
                     <div id="myChartAlarm" style="height: 235px;margin-top: 30px;"></div>
                 </div>
@@ -207,185 +206,39 @@
                 <!--运单状态-->
                 <div class="item billState">
                     <div class="itemTit">
-                        <span class="border-gray">运单状态</span>
+                        <span class="border-gray">考勤状态</span>
                     </div>
                     <div class="itemCon">
                         <div class="StateBox">
                             <div class="StateTit">
-                                <span>订单编号</span>
-                                <span>使用时间</span>
-                                <span>满载率</span>
+                                <span>船舶名称</span>
+                                <span>船员姓名</span>
+                                <span>考勤时间</span>
+                                <span>行为</span>
+                                <span>月出勤率</span>
+
+
+                                @*<span>订单编号</span>
+                                    <span>使用时间</span>
+                                    <span>满载率</span>*@
                             </div>
                             <div id="FontScroll">
                                 <ul>
-                                    <li>
-                                        <div class="fontInner clearfix">
-                                            <span>ZC1712120023</span>
-                                            <span>2小时15分</span>
-                                            <span>
-                                                <div class="progress" progress="78%">
-                                                    <div class="progressBar">
-                                                        <span></span>
+
+                                    @*<li>
+                                            <div class="fontInner clearfix">
+                                                <span>ZC1712120023</span>
+                                                <span>2小时15分</span>
+                                                <span>
+                                                    <div class="progress" progress="49%">
+                                                        <div class="progressBar">
+                                                            <span></span>
+                                                        </div>
+                                                        <h3><i><h4></h4></i></h3>
                                                     </div>
-                                                    <h3><i><h4></h4></i></h3>
-                                                </div>
-                                            </span>
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div class="fontInner clearfix">
-                                            <span>ZC1712120023</span>
-                                            <span>2小时15分</span>
-                                            <span>
-                                                <div class="progress" progress="80%">
-                                                    <div class="progressBar">
-                                                        <span></span>
-                                                    </div>
-                                                    <h3><i><h4></h4></i></h3>
-                                                </div>
-                                            </span>
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div class="fontInner clearfix">
-                                            <span>ZC1712120023</span>
-                                            <span>2小时15分</span>
-                                            <span>
-                                                <div class="progress" progress="49%">
-                                                    <div class="progressBar">
-                                                        <span></span>
-                                                    </div>
-                                                    <h3><i><h4></h4></i></h3>
-                                                </div>
-                                            </span>
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div class="fontInner clearfix">
-                                            <span>ZC1712120023</span>
-                                            <span>2小时15分</span>
-                                            <span>
-                                                <div class="progress" progress="7%">
-                                                    <div class="progressBar">
-                                                        <span></span>
-                                                    </div>
-                                                    <h3><i><h4></h4></i></h3>
-                                                </div>
-                                            </span>
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div class="fontInner clearfix">
-                                            <span>ZC1712120023</span>
-                                            <span>2小时15分</span>
-                                            <span>
-                                                <div class="progress" progress="55%">
-                                                    <div class="progressBar">
-                                                        <span></span>
-                                                    </div>
-                                                    <h3><i><h4></h4></i></h3>
-                                                </div>
-                                            </span>
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div class="fontInner clearfix">
-                                            <span>ZC1712120023</span>
-                                            <span>2小时15分</span>
-                                            <span>
-                                                <div class="progress" progress="100%">
-                                                    <div class="progressBar">
-                                                        <span></span>
-                                                    </div>
-                                                    <h3><i><h4></h4></i></h3>
-                                                </div>
-                                            </span>
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div class="fontInner clearfix">
-                                            <span>ZC1712120023</span>
-                                            <span>2小时15分</span>
-                                            <span>
-                                                <div class="progress" progress="94%">
-                                                    <div class="progressBar">
-                                                        <span></span>
-                                                    </div>
-                                                    <h3><i><h4></h4></i></h3>
-                                                </div>
-                                            </span>
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div class="fontInner clearfix">
-                                            <span>ZC1712120023</span>
-                                            <span>2小时15分</span>
-                                            <span>
-                                                <div class="progress" progress="23%">
-                                                    <div class="progressBar">
-                                                        <span></span>
-                                                    </div>
-                                                    <h3><i><h4></h4></i></h3>
-                                                </div>
-                                            </span>
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div class="fontInner clearfix">
-                                            <span>ZC1712120023</span>
-                                            <span>2小时15分</span>
-                                            <span>
-                                                <div class="progress" progress="67%">
-                                                    <div class="progressBar">
-                                                        <span></span>
-                                                    </div>
-                                                    <h3><i><h4></h4></i></h3>
-                                                </div>
-                                            </span>
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div class="fontInner clearfix">
-                                            <span>ZC1712120023</span>
-                                            <span>2小时15分</span>
-                                            <span>
-                                                <div class="progress" progress="42%">
-                                                    <div class="progressBar">
-                                                        <span></span>
-                                                    </div>
-                                                    <h3><i><h4></h4></i></h3>
-                                                </div>
-                                            </span>
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div class="fontInner clearfix">
-                                            <span>ZC1712120023</span>
-                                            <span>2小时15分</span>
-                                            <span>
-                                                <div class="progress" progress="38%">
-                                                    <div class="progressBar">
-                                                        <span></span>
-                                                    </div>
-                                                    <h3><i><h4></h4></i></h3>
-                                                </div>
-                                            </span>
-                                        </div>
-                                    </li>
-                                    <li>
-                                        <div class="fontInner clearfix">
-                                            <span>ZC1712120023</span>
-                                            <span>2小时15分</span>
-                                            <span>
-                                                <div class="progress" progress="76%">
-                                                    <div class="progressBar">
-                                                        <span></span>
-                                                    </div>
-                                                    <h3><i><h4></h4></i></h3>
-                                                </div>
-                                            </span>
-                                        </div>
-                                    </li>
+                                                </span>
+                                            </div>
+                                        </li>*@
                                 </ul>
                             </div>
                         </div>
@@ -730,88 +583,9 @@
 </body>
 </html>
 <script src="~/datacenter/js/bg.js"></script>
-<script src="~/datacenter/js/scanboard.js?version=202009071647"></script>
+<script src="~/datacenter/js/scanboard.js?version=202009071669"></script>
 <script src="~/datacenter/js/fontscroll.js"></script>
 <script src="~/datacenter/js/jquery.animsition.js"></script>
 <script src="~/datacenter/js/jquery.nicescroll.js"></script>
 <script src="~/datacenter/js/echarts.min.js"></script>
 <script type="text/javascript" src="http://webapi.amap.com/maps?v=1.4.3&key=f8ffe058b8e6f5b05e8ff43ca4207393"></script>
-<script type="text/javascript">
-    $(function () {
-        SetAlarmType();
-  
-
-
-
-    })
-    //报警类型分析
-    function SetAlarmType(month) {
-        var myChartAlarm = echarts.init(document.getElementById('myChartAlarm'));
-        $.ajax({
-            type: "get",
-            url: "/Home/GetAlarmType",
-            data: { month: month },
-            success: function (res) {
-                //长度为6 的数组填充默认值0
-                let dataArray = Array.apply(null, Array(6)).map(() => 0);
-                res.forEach(function (k, v) {
-                    dataArray[v] = k.num;
-                });
-                var optionAlarm = {
-                    color: ['#339899'],
-                    tooltip: {
-                        trigger: 'axis',
-                        axisPointer: {            // 坐标轴指示器，坐标轴触发有效
-                            type: 'shadow'        // 默认为直线，可选为：'line' | 'shadow'
-                        }
-                    },
-                    grid: {
-                        left: '3%',
-                        right: '4%',
-                        bottom: '3%',
-                        containLabel: true
-                    },
-                    xAxis: [
-                        {
-                            name: '类型',
-                            nameTextStyle: {
-                                color: '#fff'
-                            },
-                            type: 'category',
-                            data: ['安全帽', '打电话', '睡觉', '打架', '考勤入', '考勤出'],//type 1 2 3 4 5 6
-                            axisTick: {
-                                alignWithLabel: true
-                            },
-                            axisLabel: {
-                                color: '#fff',
-                                fontWeight: 'bold'
-                            }
-                        }
-                    ],
-                    yAxis: [
-                        {
-                            name: '次数',
-                            nameTextStyle: {
-                                color: '#fff'
-                            },
-                            type: 'value',
-                            axisLabel: {
-                                color: '#fff'
-                            }
-                        }
-                    ],
-                    series: [
-                        {
-                            name: '报警次数',
-                            type: 'bar',
-                            barWidth: '50%',
-                            data: dataArray
-                        }
-                    ]
-                };
-                myChartAlarm.setOption(optionAlarm);
-            }
-        })
-
-    }
-</script>

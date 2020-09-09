@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ShipWeb.DB;
@@ -84,6 +85,27 @@ namespace ShipWeb.Controllers
             return Json(result);
         }
 
+
+
+        /// <summary>
+        /// 考勤状态(以船员为主表)
+        /// </summary>
+        /// <returns></returns>
+        public JsonResult GetAttendance()
+        {
+            //无月考勤率
+            //var result = _context.Crew.FromSqlRaw("SELECT a.*,a.Name as CrewName,b.Name as ShipName,c.Time,c.Behavior from Crew a LEFT JOIN Ship b on a.ShipId=b.Id LEFT JOIN Attendance c on a.Id=c.CrewId ORDER BY c.Time DESC LIMIT 100");
+
+            //增加月考勤率
+            DateTime now = DateTime.Now;
+            DateTime startTime = now.AddDays(1 - now.Day);//本月月初
+            DateTime endTime = startTime.AddMonths(1).AddDays(-1);//本月月末
+            string sql = $"SELECT DISTINCT(a.id),a.Job,a.Name,a.ShipId,a.Name as CrewName,b.Name as ShipName,c.Time,c.Behavior,  TRUNCATE((select ((select count(*) from(select aa.Time, aa.CrewId from Attendance as aa where aa.CrewId = a.Id and aa.Time >= DATE('{startTime:yyyy-MM-dd 00:00:00}') and aa.Time <= DATE('{endTime:yyyy-MM-dd 23:59:59}'))tt) / 22 * 100.00) as chuqin),2) as Rate from Crew a LEFT JOIN Ship b on a.ShipId = b.Id LEFT JOIN Attendance c on a.Id = c.CrewId ORDER BY c.Time DESC LIMIT 100";
+            var result = _context.Crew.FromSqlRaw(sql);
+            return Json(result);
+        }
+
+        
         #endregion
 
 
