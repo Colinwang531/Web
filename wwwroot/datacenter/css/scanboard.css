@@ -230,6 +230,31 @@ body {
     background-color: rgba(0,0,0,0.3);
     border-radius: 8px;
 }
+/**报警类型分析*/
+#main .item .month {
+    color: #fff;
+    float: right;
+    border-radius: inherit;
+    font-weight: 100;
+    margin: 10px 0px -1px 0px;
+    z-index: 2147483647;
+}
+
+    #main .item .month #upMonth {
+        background-color: #40ce48;
+        padding: 2px 5px 2px 5px;
+        border-radius: inherit;
+        border: 1px solid #1e5b6b;
+        cursor: pointer;
+    }
+
+    #main .item .month #currentMonth {
+        background-color: blueviolet;
+        padding: 2px 5px 2px 5px;
+        border-radius: inherit;
+        border: 1px solid #1e5b6b;
+        cursor: pointer;
+    }
 
 .itemTit {
     padding: 12px 30px;
