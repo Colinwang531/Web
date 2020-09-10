@@ -6,13 +6,13 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="initial-scale=1.0, user-scalable=no, width=device-width">
-    <meta http-equiv="refresh" content="60" /> @*其中60指每隔60秒刷新一次页面*@
+    <meta http-equiv="refresh" content="600" />
     <title>数据中心大屏-禹创</title>
     <link href="~/datacenter/css/reset.css" rel="stylesheet" />
     <link href="~/datacenter/css/scanboard.css?version=202009071641" rel="stylesheet" />
     <link href="~/datacenter/css/animsition.css" rel="stylesheet" />
     <link href="~/datacenter/css/jquery.shCircleLoader.css" rel="stylesheet" />
-    @*<script src="~/datacenter/js/jquery.min.js"></script>*@
+    @*<script src="~/datacenter/js/jquery.min.js"></script>低版本jq*@
     <script src="~/lib/jquery/dist/jquery.js"></script>
     <script src="~/datacenter/js/jquery.shCircleLoader-min.js"></script>
 </head>
@@ -49,7 +49,7 @@
         <div id="main" class="wp clearfix">
             <div class="left">
                 <!--报警类型分析-->
-                <div class="item waybill">
+                <div class="item waybill" style="height:45%">
                     <div class="itemTit">
                         <span class="border-yellow">报警类型分析</span>
                     </div>
@@ -60,7 +60,7 @@
                 </div>
 
                 <!--各阶段平均用时统计-->
-                <div class="item">
+                <div class="item" style="height:32%">
                     <div class="itemTit">
                         <span class="border-green">各阶段平均用时统计</span>
                     </div>
@@ -91,7 +91,7 @@
                 </div>
 
                 <!--人员信息-->
-                <div class="item">
+                <div class="item" style="height:28%">
                     <div class="itemTit">
                         <span class="border-blue">人员信息</span>
                     </div>
@@ -143,17 +143,17 @@
 
             <div class="right">
                 <!--总计运单数-->
-                <div class="item total itembg">
+                <div class="item total" style="height:25%">
                     <div class="itemTit">
                         <span class="border-purple">总计运单数</span>
                     </div>
-                    <div class="itemCon">
+                    <div class="itemCon itembg">
                         <div class="totalNum"><strong id="totalNum" total="368082">0</strong><span>单</span></div>
                     </div>
                 </div>
 
                 <!--基本信息-->
-                <div class="item basicInfo">
+                <div class="item basicInfo" style="height:33%">
                     <div class="itemTit">
                         <span class="border-green1">基本信息</span>
                     </div>
@@ -179,7 +179,7 @@
                 </div>
 
                 <!--考勤状态-->
-                <div class="item billState">
+                <div class="item billState" style="height:45%">
                     <div class="itemTit">
                         <span class="border-gray">考勤状态</span>
                     </div>
@@ -202,6 +202,13 @@
             </div>
         </div>
         <!--Main End!-->
+        <!--Footer Start!-->
+        <div id="footer">
+            <div class="wp clearfix">
+                <a href="#">上海禹创智能科技有限公司@2020</a>
+            </div>
+        </div>
+        <!--Footer End!-->
     </div>
 
     <div class="filterbg"></div>

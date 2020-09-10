@@ -102,16 +102,19 @@ body {
 .left {
     float: left;
     width: 20%;
+    height: 88%;
 }
 
 .center {
     float: left;
     width: 56%;
+    height: 88%;
 }
 
 .right {
     float: right;
     width: 24%;
+    height: 88%;
 }
 
 #top {
@@ -222,6 +225,7 @@ body {
 
 #main {
     padding-top: 30px;
+    height: 85%;
 }
 
 .item {
@@ -282,7 +286,8 @@ body {
 
 .itembg {
     background-image: url(../images/gz.png);
-    background-repeat: repeat
+    background-repeat: repeat;
+    width: 86%;
 }
 
 
@@ -340,6 +345,7 @@ body {
 .centerWp {
     width: 94%;
     margin: 0 auto;
+    height: 88%;
 }
 
 #myMap {
@@ -377,7 +383,7 @@ body {
 }
 
     .total .itemTit {
-        border: none;
+        /* border: none;*/
     }
 
     .total .totalNum {
@@ -601,6 +607,14 @@ body {
     height: 80%;
 }
 
+#footer {
+    border-top: 1px solid #162c52;
+    text-align: center;
+}
+
+    #footer a {
+        color: cadetblue
+    }
 
 
 @media screen and (max-width: 1919px) and (min-width: 1680px) {
@@ -1354,6 +1368,7 @@ body {
 
 .mapContainer {
     position: relative;
+    height: 82%;
 }
 
 #myMap {
