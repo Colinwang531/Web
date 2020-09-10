@@ -94,5 +94,12 @@ namespace ShipWeb.DB
         /// 船队管理
         /// </summary>
         public DbSet<Fleet> Fleet { get; set; }
+
+        #region 扩展查询对象
+        /// <summary>
+        /// 船舶数量统计
+        /// </summary>
+        public DbSet<ShipCount> ShipCount { get; set; }
+        #endregion
     }
 }

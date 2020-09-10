@@ -88,6 +88,18 @@ namespace ShipWeb.Controllers
 
 
         /// <summary>
+        /// 基本信息
+        /// </summary>
+        /// <returns></returns>
+        public JsonResult GetCountInfo()
+        {
+            var sql = $"select count(1) Id,count(case when(s.Flag = TRUE) then 1 else null end) sailCount,count(case when(s.Flag = FALSE) then 1 else null end) portCount," +
+                $"(SELECT COUNT(*)  FROM Crew c LEFT JOIN Ship ss on c.ShipId = ss.Id) crewCount from Ship s";
+            var result = _context.ShipCount.FromSqlRaw(sql);
+            return Json(result);
+        }
+
+        /// <summary>
         /// 考勤状态(以船员为主表)
         /// </summary>
         /// <returns></returns>
@@ -104,8 +116,6 @@ namespace ShipWeb.Controllers
             var result = _context.Crew.FromSqlRaw(sql);
             return Json(result);
         }
-
-        
         #endregion
 
 

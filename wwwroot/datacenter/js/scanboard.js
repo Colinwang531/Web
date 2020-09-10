@@ -931,6 +931,7 @@ $(function () {
 
 
     SetAlarmType();
+    SetCountInfo();
     SetAttendance();
 });
 
@@ -1005,6 +1006,15 @@ function SetAlarmType(month) {
         }
     })
 }
+
+//基本信息
+function SetCountInfo() {
+    $.get("/Home/GetCountInfo", function (res) {        
+        $("#indicator1").attr("total", res[0].sailCount);
+        $("#indicator2").attr("total", res[0].portCount);
+        $("#indicator3").attr("total", res[0].crewCount);
+    });
+}
 //考勤状态
 function SetAttendance() {
     $.get("/Home/GetAttendance", function (res) {
@@ -1035,7 +1045,6 @@ function SetAttendance() {
         }
     })
 }
-
 
 //时间格式化处理
 function dateFtt(fmt, date) {
