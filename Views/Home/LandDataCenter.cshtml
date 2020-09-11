@@ -9,11 +9,10 @@
     <meta http-equiv="refresh" content="600" />
     <title>数据中心大屏-禹创</title>
     <link href="~/datacenter/css/reset.css" rel="stylesheet" />
-    <link href="~/datacenter/css/scanboard.css?version=202009071641" rel="stylesheet" />
+    <link href="~/datacenter/css/scanboard.css?version=202009071611" rel="stylesheet" />
     <link href="~/datacenter/css/animsition.css" rel="stylesheet" />
     <link href="~/datacenter/css/jquery.shCircleLoader.css" rel="stylesheet" />
-    @*<script src="~/datacenter/js/jquery.min.js"></script>低版本jq*@
-    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <script src="~/datacenter/js/jquery.js"></script>
     <script src="~/datacenter/js/jquery.shCircleLoader-min.js"></script>
 </head>
 <body>
@@ -49,7 +48,7 @@
         <div id="main" class="wp clearfix">
             <div class="left">
                 <!--报警类型分析-->
-                <div class="item waybill" style="height:45%">
+                <div class="item waybill" style="height:43%">
                     <div class="itemTit">
                         <span class="border-yellow">报警类型分析</span>
                     </div>
@@ -60,9 +59,9 @@
                 </div>
 
                 <!--各阶段平均用时统计-->
-                <div class="item" style="height:32%">
+                <div class="item" style="height:30%">
                     <div class="itemTit">
-                        <span class="border-green">各阶段平均用时统计</span>
+                        <span class="border-green"><s>各阶段平均用时统计</s></span>
                     </div>
                     <div class="itemCon">
                         <ul class="listStyle">
@@ -90,25 +89,12 @@
                     </div>
                 </div>
 
-                <!--人员信息-->
-                <div class="item" style="height:28%">
+                <!--设备数据统计-->
+                <div class="item" style="height: 32%">
                     <div class="itemTit">
-                        <span class="border-blue">人员信息</span>
+                        <span class="border-blue">设备数据统计</span>
                     </div>
-                    <div class="itemCon itembg">
-                        <ul class="listStyle">
-                            <li class="clearfix">
-                                <span>领导：<strong>5</strong>人</span>
-                                <span>司机：<strong>36</strong>人</span>
-                                <span>门卫：<strong>6</strong>人</span>
-                                <span>器具中心：<strong>15</strong>人</span>
-                                <span>派单员：<strong>20</strong>人</span>
-                                <span>售后卸载：<strong>29</strong>人</span>
-                                <span>财务：<strong>3</strong>人</span>
-                                <span>售后回收：<strong>10</strong>人</span>
-                            </li>
-                        </ul>
-                    </div>
+                    <div id="myCountStatis" class="itemCon itembg" style="width: 83%;height: 70%;"></div>
                 </div>
             </div>
 
@@ -134,7 +120,7 @@
                     <!--月运单量统计图-->
                     <div class="billChart">
                         <div class="itemTit">
-                            <span class="border-blue">月运单量统计图<small>(2017年12月)</small></span>
+                            <span class="border-blue"><s>月运单量统计图</s><small>(2020年09月)</small></span>
                         </div>
                         <div id="myChart1"></div>
                     </div>
@@ -145,7 +131,7 @@
                 <!--总计运单数-->
                 <div class="item total" style="height:25%">
                     <div class="itemTit">
-                        <span class="border-purple">总计运单数</span>
+                        <span class="border-purple"><s>总计运单数</s></span>
                     </div>
                     <div class="itemCon itembg">
                         <div class="totalNum"><strong id="totalNum" total="368082">0</strong><span>单</span></div>
@@ -545,9 +531,9 @@
 </body>
 </html>
 <script src="~/datacenter/js/bg.js"></script>
-<script src="~/datacenter/js/scanboard.js?version=202009071699"></script>
+<script src="~/datacenter/js/scanboard.js?version=202009118879"></script>
 <script src="~/datacenter/js/fontscroll.js"></script>
 <script src="~/datacenter/js/jquery.animsition.js"></script>
 <script src="~/datacenter/js/jquery.nicescroll.js"></script>
-<script src="~/datacenter/js/echarts.min.js"></script>
+<script src="~/datacenter/js/echarts.js"></script>
 <script type="text/javascript" src="http://webapi.amap.com/maps?v=1.4.3&key=f8ffe058b8e6f5b05e8ff43ca4207393"></script>

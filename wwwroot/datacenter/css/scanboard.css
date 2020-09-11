@@ -1,4 +1,4 @@
-/*最新最全最好的Bootstrap模板：http://www.bootstrapmb.com*/
+/*by suzong*/
 @font-face {
     font-family: 'tapeworm';
     src: url('../fonts/tapeworm.eot');
@@ -341,6 +341,20 @@ body {
         color: #45c6c8;
         margin-right: 4px;
     }
+.listStyles li span {
+    float: left;
+    width: 33.3%;
+    color: #fff;
+    font-size: 15px;
+    height: 32px;
+    line-height: 32px;
+}
+
+    .listStyles li span strong {
+        font-weight: normal;
+        color: #45c6c8;
+        margin-right: 4px;
+    }
 
 .centerWp {
     width: 94%;
@@ -613,7 +627,7 @@ body {
 }
 
     #footer a {
-        color: cadetblue
+        color: #38476f;
     }
 
 

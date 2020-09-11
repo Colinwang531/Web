@@ -85,6 +85,20 @@ namespace ShipWeb.Controllers
             return Json(result);
         }
 
+        /// <summary>
+        /// 数据统计
+        /// </summary>
+        /// <returns></returns>
+        public JsonResult GetDataStatis()
+        {
+            int enableDeviceCount = _context.Device.Where(s => s.Enable.Equals(true)).Count();
+            int stopDeviceCount = _context.Device.Where(s => s.Enable.Equals(false)).Count();
+
+            int enableCameraCount = _context.Camera.Where(s => s.Enable.Equals(true)).Count();
+            int stopCameraCount = _context.Camera.Where(s => s.Enable.Equals(false)).Count();
+
+            return Json(new { enableDeviceCount, stopDeviceCount, enableCameraCount, stopCameraCount });
+        }
 
 
         /// <summary>

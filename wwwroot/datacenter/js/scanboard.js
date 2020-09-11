@@ -931,6 +931,7 @@ $(function () {
 
 
     SetAlarmType();
+    SetDataStatis();
     SetCountInfo();
     SetAttendance();
 });
@@ -1007,9 +1008,52 @@ function SetAlarmType(month) {
     })
 }
 
+//数据统计
+function SetDataStatis() {
+    var myCountStatis = echarts.init(document.getElementById('myCountStatis'));
+    $.ajax({
+        type: "get",
+        url: "/Home/GetDataStatis",
+        success: function (res) {
+            var optionCountStatis = {
+                legend: {},
+                tooltip: {},
+                dataset: {
+                    source: [
+                        ['product', 'Device', 'Camera'],
+                        ['启用', res.enableDeviceCount, res.enableCameraCount],
+                        ['未启用', res.stopDeviceCount, res.stopCameraCount]
+                    ] 
+                },
+                series: [{
+                    name: 'NVR设备',
+                    type: 'pie',
+                    radius: 40,
+                    center: ['37%', '60%'],
+                    encode: {
+                        itemName: 'product',
+                        value: 'Device'
+                    }
+                }, {
+                    name: '摄像机',
+                    type: 'pie',
+                    radius: 40,
+                    center: ['70%', '60%'],
+                    encode: {
+                        itemName: 'product',
+                        value: 'Camera'
+                    }
+                }],
+                color: [/*'#c23531', '#2f4554',*/ '#61a0a8', '#d48265', '#91c7ae', '#749f83', '#ca8622', '#bda29a', '#6e7074', '#546570', '#c4ccd3']
+            };
+            myCountStatis.setOption(optionCountStatis);
+        }
+    });
+}
+
 //基本信息
 function SetCountInfo() {
-    $.get("/Home/GetCountInfo", function (res) {        
+    $.get("/Home/GetCountInfo", function (res) {
         $("#indicator1").attr("total", res[0].sailCount);
         $("#indicator2").attr("total", res[0].portCount);
         $("#indicator3").attr("total", res[0].crewCount);
@@ -1032,7 +1076,7 @@ function SetAttendance() {
                     '<span>' + item.shipName + '</span>' +
                     '<span>' + item.crewName + '</span>' +
                     '<span>' + dateFtt("yyyy-MM-dd hh:mm:ss", item.time) + '</span>' + behavior +
-                    '<span><div class="progress" progress="' + item.rate + '%">' +
+                    '<span><div class="progress" progress="' + (item.rate == 0 ? 1 : Math.round(item.rate)) + '%">' +
                     '<div class="progressBar"><span></span></div>' +
                     '<h3><i><h4></h4></i></h3>' +
                     '</div></span>' +
