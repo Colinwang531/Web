@@ -44,10 +44,9 @@ namespace ShipWeb.Models
         public bool Flag { get; set; }
 
         /// <summary>
-        /// 坐标(经纬度) {"longitude":"","latitude":""}
+        /// 坐标(经纬度数组)
         /// </summary>
-        [NotMapped]
-        public dynamic Coordinate { get; set; }
+        public string Coordinate { get; set; }
 
     }
 

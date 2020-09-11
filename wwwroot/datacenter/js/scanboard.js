@@ -1,3 +1,4 @@
+/*by suzong 202009*/
 $(function () {
     //页面淡入效果
     $(".animsition").animsition({
@@ -19,13 +20,13 @@ $(function () {
         overlayClass: 'animsition-overlay-slide',
         overlayParentElement: 'body'
     });
-
     document.onreadystatechange = subSomething;
     function subSomething() {
         if (document.readyState == "complete") {
             $('#loader').hide();
         }
     }
+
 
     //顶部时间
     function getTime() {
@@ -53,39 +54,21 @@ $(function () {
         return realNum;
     }
     setInterval(getTime, 1000);
-
-    function totalNum(obj, speed) {
-        var singalNum = 0;
-        var timer;
-        var totalNum = obj.attr('total');
-
-        if (totalNum) {
-            timer = setInterval(function () {
-                singalNum += speed;
-                if (singalNum >= totalNum) {
-                    singalNum = totalNum;
-                    clearInterval(timer);
-                }
-                obj.html(singalNum);
-            }, 1);
-        }
-    }
+    
 
     //高德地图
     var myMap = new AMap.Map('myMap', {
         resizeEnable: true,
-        zoom: 14,
+        zoom: 6,
         mapStyle: 'amap://styles/darkblue',
-        center: [103.752171, 36.068716],
+        center: [120.312724, 36.064831],
     });
-
     var point = [
-        [103.752171, 36.068716],
-        [103.759037, 36.072046],
-        [108.759037, 38.072046],
-        [103.73788, 36.061257]
+        [121.804461, 38.843299],
+        [122.254901, 37.57436],
+        [120.563006, 35.948392],
+        [119.574237, 34.799548],
     ]
-    var maker;
     for (var i = 0; i < point.length; i += 1) {
         var marker = new AMap.Marker({
             position: point[i],
@@ -186,11 +169,23 @@ $(function () {
         },
     }
 
-    //运单状态文字滚动
-    //$('#FontScroll').FontScroll({ time: 3000, num: 1 });
+    function totalNum(obj, speed) {
+        var singalNum = 0;
+        var timer;
+        var totalNum = obj.attr('total');
 
+        if (totalNum) {
+            timer = setInterval(function () {
+                singalNum += speed;
+                if (singalNum >= totalNum) {
+                    singalNum = totalNum;
+                    clearInterval(timer);
+                }
+                obj.html(singalNum);
+            }, 1);
+        }
+    }
     setTimeout(function () {
-
         $('.progress').each(function (i, ele) {
             var PG = $(ele).attr('progress');
             var PGNum = parseInt(PG);
@@ -222,20 +217,15 @@ $(function () {
             }, speed);
         });
 
-
-
+        //总计运单数
+        totalNum($('#totalNum'), 1000);
         //基本信息
         totalNum($('#indicator1'), 1);
         totalNum($('#indicator2'), 1);
-        totalNum($('#indicator3'), 1);
-
-        //总计运单数
-        totalNum($('#totalNum'), 1000);
+        totalNum($('#indicator3'), 1);              
 
         myChart1.setOption(option1);
-
     }, 500);
-
 
     var summaryPie1, summaryPie2, summaryPie3, summaryBar, summaryLine;
     var pieData;
@@ -699,9 +689,6 @@ $(function () {
     });
 
 
-
-    /***************2018-01-03增加js****************/
-
     //地图上的搜索
     $('.searchBtn').on('click', function () {
         $(this).hide();
@@ -1008,7 +995,7 @@ function SetAlarmType(month) {
     })
 }
 
-//数据统计
+//设备数据统计
 function SetDataStatis() {
     var myCountStatis = echarts.init(document.getElementById('myCountStatis'));
     $.ajax({
@@ -1023,13 +1010,13 @@ function SetDataStatis() {
                         ['product', 'Device', 'Camera'],
                         ['启用', res.enableDeviceCount, res.enableCameraCount],
                         ['未启用', res.stopDeviceCount, res.stopCameraCount]
-                    ] 
+                    ]
                 },
                 series: [{
                     name: 'NVR设备',
                     type: 'pie',
-                    radius: 40,
-                    center: ['37%', '60%'],
+                    radius: 45,
+                    center: ['32%', '60%'],
                     encode: {
                         itemName: 'product',
                         value: 'Device'
@@ -1037,7 +1024,7 @@ function SetDataStatis() {
                 }, {
                     name: '摄像机',
                     type: 'pie',
-                    radius: 40,
+                    radius: 45,
                     center: ['70%', '60%'],
                     encode: {
                         itemName: 'product',
