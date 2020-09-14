@@ -28,7 +28,7 @@ namespace ShipWeb.Models
         }
         /// <summary>
         /// 主键id
-        /// </summary>
+        /// </summary>     
         public string Id { get; set; }
         /// <summary>
         /// 船名称

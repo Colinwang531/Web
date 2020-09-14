@@ -54,45 +54,44 @@ $(function () {
         return realNum;
     }
     setInterval(getTime, 1000);
-    
 
     //高德地图
-    var myMap = new AMap.Map('myMap', {
-        resizeEnable: true,
-        zoom: 6,
-        mapStyle: 'amap://styles/darkblue',
-        center: [120.312724, 36.064831],
-    });
-    var point = [
-        [121.804461, 38.843299],
-        [122.254901, 37.57436],
-        [120.563006, 35.948392],
-        [119.574237, 34.799548],
-    ]
-    for (var i = 0; i < point.length; i += 1) {
-        var marker = new AMap.Marker({
-            position: point[i],
-            map: myMap,
-            icon: '/datacenter/images/s_ico4.png',
-        });
-        marker.content = '<p>ZC1712120023</p>' +
-            '<p>起点：配件A厂</p>' +
-            '<p>终点：美的冰箱公司</p>' +
-            '<p>满载率：95%</p>' +
-            '<p>已使用时间：2小时15分</p>';
-        marker.on('click', markerClick);
-        //map.setFitView(); 
-    }
-    var infoWindow = new AMap.InfoWindow({
-        offset: new AMap.Pixel(16, -36)
-    });
-    function markerClick(e) {
-        infoWindow.setContent(e.target.content);
-        infoWindow.open(myMap, e.target.getPosition());
-    }
-    myMap.on('click', function () {
-        infoWindow.close();
-    });
+    //var myMap = new AMap.Map('myMap', {
+    //    resizeEnable: true,
+    //    zoom: 6,
+    //    mapStyle: 'amap://styles/darkblue',
+    //    center: [120.312724, 36.064831],
+    //});
+    //var point = [
+    //    [121.804461, 38.843299],
+    //    [122.254901, 37.57436],
+    //    [120.563006, 35.948392],
+    //    [119.574237, 34.799548],
+    //]
+    //for (var i = 0; i < point.length; i += 1) {
+    //    var marker = new AMap.Marker({
+    //        position: point[i],
+    //        map: myMap,
+    //        icon: '/datacenter/images/s_ico4.png',
+    //    });
+    //    marker.content = '<p>ZC1712120023</p>' +
+    //        '<p>起点：配件A厂</p>' +
+    //        '<p>终点：美的冰箱公司</p>' +
+    //        '<p>满载率：95%</p>' +
+    //        '<p>已使用时间：2小时15分</p>';
+    //    marker.on('click', markerClick);
+    //    //map.setFitView(); 
+    //}
+    //var infoWindow = new AMap.InfoWindow({
+    //    offset: new AMap.Pixel(16, -36)
+    //});
+    //function markerClick(e) {
+    //    infoWindow.setContent(e.target.content);
+    //    infoWindow.open(myMap, e.target.getPosition());
+    //}
+    //myMap.on('click', function () {
+    //    infoWindow.close();
+    //});
 
 
     //月运单量统计图
@@ -222,7 +221,7 @@ $(function () {
         //基本信息
         totalNum($('#indicator1'), 1);
         totalNum($('#indicator2'), 1);
-        totalNum($('#indicator3'), 1);              
+        totalNum($('#indicator3'), 1);
 
         myChart1.setOption(option1);
     }, 500);
@@ -919,6 +918,7 @@ $(function () {
 
     SetAlarmType();
     SetDataStatis();
+    SetShipList();
     SetCountInfo();
     SetAttendance();
 });
@@ -1034,6 +1034,74 @@ function SetDataStatis() {
                 color: [/*'#c23531', '#2f4554',*/ '#61a0a8', '#d48265', '#91c7ae', '#749f83', '#ca8622', '#bda29a', '#6e7074', '#546570', '#c4ccd3']
             };
             myCountStatis.setOption(optionCountStatis);
+        }
+    });
+}
+
+//船舶信息集合 高德地图展示
+function SetShipList() {
+    var map = new AMap.Map("myMap", {
+        resizeEnable: true,
+        zoom: 7,
+        mapStyle: 'amap://styles/darkblue',
+        //center: [120.394045, 35.988562]
+    });
+    $.ajax({
+        type: "get",
+        url: "/Home/GetShipList",
+        success: function (res) {
+            res.forEach(function (item, index) {
+                if (item.coordinate == null || item.coordinate == "") return;
+
+                var marker, lineArr = item.coordinate.split(",");
+                //处理数据库里返回的经纬度字符串数组，转为二维Float类型数组
+                var arr = new Array();
+                var num = 0;
+                let len = lineArr.length / 2;
+                for (var x = 0; x < len; x++) {
+                    arr[x] = new Array();
+                    for (var y = 0; y < 2; y++) {
+                        arr[x][y] = parseFloat(lineArr[num].replace("[", "").replace("]", ""));
+                        num++;
+                    }
+                }
+                lineArr = arr;
+
+                marker = new AMap.Marker({
+                    map: map,
+                    position: lineArr[lineArr.length - 1],
+                    icon: "/datacenter/images/s_ico4.png",
+                    offset: new AMap.Pixel(-26, -13),
+                    autoRotation: true,
+                    angle: -90,
+                });
+
+                // 绘制轨迹
+                var polyline = new AMap.Polyline({
+                    map: map,
+                    path: lineArr,
+                    showDir: true,
+                    strokeColor: "#28F",  //线颜色
+                    //strokeOpacity: 1,     //线透明度
+                    strokeWeight: 2,      //线宽
+                    strokeStyle: "dashed"  //线样式solid
+                });
+                var passedPolyline = new AMap.Polyline({
+                    map: map,
+                    //path: lineArr,
+                    strokeColor: "#AF5",  
+                    strokeOpacity: 0.5,   
+                    strokeWeight: 2,
+                    strokeStyle: "dashed"
+                });
+                marker.on('moving', function (e) {
+                    passedPolyline.setPath(e.passedPath);
+                });
+                //地图渲染 开始动画
+                map.setFitView();
+                marker.moveAlong(lineArr, 3000);
+
+            });
         }
     });
 }

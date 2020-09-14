@@ -100,6 +100,16 @@ namespace ShipWeb.Controllers
             return Json(new { enableDeviceCount, stopDeviceCount, enableCameraCount, stopCameraCount });
         }
 
+        /// <summary>
+        /// 获取船舶集合
+        /// </summary>
+        /// <param name="month"></param>
+        /// <returns></returns>
+        public JsonResult GetShipList()
+        {
+            var result = _context.Ship;
+            return Json(result);
+        }
 
         /// <summary>
         /// 基本信息
