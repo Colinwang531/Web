@@ -107,7 +107,12 @@ namespace ShipWeb.Controllers
         /// <returns></returns>
         public JsonResult GetShipList()
         {
-            var result = _context.Ship;
+            var result = _context.Ship.ToList(); 
+            var crews = _context.Crew;           
+            foreach (var item in result)
+            {
+                item.CrewNum = crews.Where(s => s.ShipId.Equals(item.Id)).Count();
+            }
             return Json(result);
         }
 

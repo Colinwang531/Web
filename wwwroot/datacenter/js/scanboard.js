@@ -55,45 +55,6 @@ $(function () {
     }
     setInterval(getTime, 1000);
 
-    //高德地图
-    //var myMap = new AMap.Map('myMap', {
-    //    resizeEnable: true,
-    //    zoom: 6,
-    //    mapStyle: 'amap://styles/darkblue',
-    //    center: [120.312724, 36.064831],
-    //});
-    //var point = [
-    //    [121.804461, 38.843299],
-    //    [122.254901, 37.57436],
-    //    [120.563006, 35.948392],
-    //    [119.574237, 34.799548],
-    //]
-    //for (var i = 0; i < point.length; i += 1) {
-    //    var marker = new AMap.Marker({
-    //        position: point[i],
-    //        map: myMap,
-    //        icon: '/datacenter/images/s_ico4.png',
-    //    });
-    //    marker.content = '<p>ZC1712120023</p>' +
-    //        '<p>起点：配件A厂</p>' +
-    //        '<p>终点：美的冰箱公司</p>' +
-    //        '<p>满载率：95%</p>' +
-    //        '<p>已使用时间：2小时15分</p>';
-    //    marker.on('click', markerClick);
-    //    //map.setFitView(); 
-    //}
-    //var infoWindow = new AMap.InfoWindow({
-    //    offset: new AMap.Pixel(16, -36)
-    //});
-    //function markerClick(e) {
-    //    infoWindow.setContent(e.target.content);
-    //    infoWindow.open(myMap, e.target.getPosition());
-    //}
-    //myMap.on('click', function () {
-    //    infoWindow.close();
-    //});
-
-
     //月运单量统计图
     var myChart1 = echarts.init(document.getElementById('myChart1'));
     var option1 = {
@@ -915,7 +876,6 @@ $(function () {
     });
 
 
-
     SetAlarmType();
     SetDataStatis();
     SetShipList();
@@ -1052,20 +1012,7 @@ function SetShipList() {
         success: function (res) {
             res.forEach(function (item, index) {
                 if (item.coordinate == null || item.coordinate == "") return;
-
-                var marker, lineArr = item.coordinate.split(",");
-                //处理数据库里返回的经纬度字符串数组，转为二维Float类型数组
-                var arr = new Array();
-                var num = 0;
-                let len = lineArr.length / 2;
-                for (var x = 0; x < len; x++) {
-                    arr[x] = new Array();
-                    for (var y = 0; y < 2; y++) {
-                        arr[x][y] = parseFloat(lineArr[num].replace("[", "").replace("]", ""));
-                        num++;
-                    }
-                }
-                lineArr = arr;
+                var marker, lineArr = handleArrayStr(item.coordinate.split(","));
 
                 marker = new AMap.Marker({
                     map: map,
@@ -1075,6 +1022,10 @@ function SetShipList() {
                     autoRotation: true,
                     angle: -90,
                 });
+                marker.content = '<p>' + item.name + '</p>' +
+                    '<p>是否在港：' + (item.flag == true ? "航行" : "停港") + '</p>' +
+                    '<p>船员数量：' + (item.crewNum == 0 ? "未知" : (item.crewNum + "人")) + '</p>';
+                marker.on('click', markerClick);
 
                 // 绘制轨迹
                 var polyline = new AMap.Polyline({
@@ -1082,15 +1033,15 @@ function SetShipList() {
                     path: lineArr,
                     showDir: true,
                     strokeColor: "#28F",  //线颜色
-                    //strokeOpacity: 1,     //线透明度
+                    strokeOpacity: 0.5,     //线透明度
                     strokeWeight: 2,      //线宽
                     strokeStyle: "dashed"  //线样式solid
                 });
                 var passedPolyline = new AMap.Polyline({
                     map: map,
                     //path: lineArr,
-                    strokeColor: "#AF5",  
-                    strokeOpacity: 0.5,   
+                    strokeColor: getRandomColor(),
+                    strokeOpacity: 0.5,
                     strokeWeight: 2,
                     strokeStyle: "dashed"
                 });
@@ -1100,11 +1051,22 @@ function SetShipList() {
                 //地图渲染 开始动画
                 map.setFitView();
                 marker.moveAlong(lineArr, 3000);
-
+                //信息弹窗
+                var infoWindow = new AMap.InfoWindow({
+                    offset: new AMap.Pixel(-5, -8)
+                });
+                function markerClick(e) {
+                    infoWindow.setContent(e.target.content);
+                    infoWindow.open(map, e.target.getPosition());
+                }
+                map.on('click', function () {
+                    infoWindow.close();
+                });
             });
         }
     });
 }
+
 
 //基本信息
 function SetCountInfo() {
@@ -1145,6 +1107,27 @@ function SetAttendance() {
     })
 }
 
+//处理数据库里返回的经纬度字符串数组，转为二维Float类型数组
+function handleArrayStr(lineArr) {
+    var arr = new Array();
+    var num = 0;
+    let len = lineArr.length / 2;
+    for (var x = 0; x < len; x++) {
+        arr[x] = new Array();
+        for (var y = 0; y < 2; y++) {
+            arr[x][y] = parseFloat(lineArr[num].replace("[", "").replace("]", ""));
+            num++;
+        }
+    }
+    return arr;
+}
+//生成十六进制的颜色值
+function getRandomColor() {
+    return '#' + (function (color) {
+        return (color += '0123456789abcdef'[Math.floor(Math.random() * 16)])
+            && (color.length == 6) ? color : arguments.callee(color);
+    })('');
+}
 //时间格式化处理
 function dateFtt(fmt, date) {
     date = new Date(date);

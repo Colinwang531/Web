@@ -48,6 +48,12 @@ namespace ShipWeb.Models
         /// </summary>
         public string Coordinate { get; set; }
 
+        /// <summary>
+        /// 船员数量
+        /// </summary>
+        public int? CrewNum { get; set; }
+
+
     }
 
 }
