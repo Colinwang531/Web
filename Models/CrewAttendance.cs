@@ -6,32 +6,20 @@ using System.Threading.Tasks;
 namespace ShipWeb.Models
 {
     /// <summary>
-    /// 船员表
+    /// 船员考勤
     /// </summary>
     public class CrewAttendance
     {
         /// <summary>
-        /// 
+        /// CrewId
         /// </summary>
-      public string Id { get; set; }
+        public string CrewId { get; set; }
+
         /// <summary>
-        /// 船员名字
-        /// </summary>
-        public string Name { get; set; }
-        /// <summary>
-        /// 工作内容
-        /// </summary>
-        public string Job { get; set; }
-        /// <summary>
-        /// 船表主键id
+        /// ShipId
         /// </summary>
         public string ShipId { get; set; }
-        /// <summary>
-        /// 船员图片
-        /// </summary>
-        public List<CrewPicture> employeePictures { get; set; }
 
-        #region 扩展属性
         /// <summary>
         /// 船名
         /// </summary>
@@ -52,6 +40,6 @@ namespace ShipWeb.Models
         /// 月考勤率
         /// </summary>
         public double? Rate { get; set; }
-        #endregion
+        
     }
 }

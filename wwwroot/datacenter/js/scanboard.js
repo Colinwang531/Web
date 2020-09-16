@@ -794,84 +794,84 @@ function SetShipList(shipName) {
 //月报警量统计
 function SetMonthAlarmStatis() {
     //月运单量统计图
-    var myChartMonthAlarm = echarts.init(document.getElementById('myChartMonthAlarm'));
-    var optionMonthAlarm = {
-        tooltip: {
-            trigger: 'item',
-            formatter: function (params) {
-                var res = '本月' + params.name + '号运单数：' + params.data;
-                return res;
-            }
-        },
-        grid: {
-            top: '5%',
-            left: '0%',
-            width: '100%',
-            height: '95%',
-            containLabel: true
-        },
-        xAxis: {
-            data: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'],
-            axisLabel: {
-                show: true,
-                textStyle: {
-                    fontSize: '12px',
-                    color: '#fff',
-                }
-            },
-            axisLine: {
-                lineStyle: {
-                    color: '#fff',
-                    width: 1,
-                }
-            }
-        },
+    var myChartMonthAlarm = echarts.init(document.getElementById('myChartMonthAlarm'));    
+    $.get("/Home/GetMonthAlarmStatis", function (res) {
 
-        yAxis: {
-            axisLabel: {
-                show: true,
-                textStyle: {
-                    fontSize: '12px',
-                    color: '#fff',
+        var optionMonthAlarm = {
+            tooltip: {
+                trigger: 'item',
+                formatter: function (params) {
+                    var res = '本月' + params.name + '号运单数：' + params.data;
+                    return res;
                 }
             },
-            axisLine: {
-                lineStyle: {
-                    color: '#fff',
-                    width: 1,
+            grid: {
+                top: '5%',
+                left: '0%',
+                width: '100%',
+                height: '95%',
+                containLabel: true
+            },
+            xAxis: {
+                data: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'],
+                axisLabel: {
+                    show: true,
+                    textStyle: {
+                        fontSize: '12px',
+                        color: '#fff',
+                    }
+                },
+                axisLine: {
+                    lineStyle: {
+                        color: '#fff',
+                        width: 1,
+                    }
                 }
             },
-            splitLine: {
-                show: false,
-            }
-        },
 
-        series: {
-            name: '',
-            type: 'bar',
-            barWidth: 10,
-            data: ['5', '14', '3', '6', '8', '18', '11', '4', '8', '7', '16', '13', '6', '10', '11', '9', '19', '13', '4', '20', '12', '7', '13', '15', '8', '3', '9', '16', '11', '16', '8'],
-            itemStyle: {
-                normal: {
-                    barBorderRadius: [5, 5, 5, 5],
-                    color: new echarts.graphic.LinearGradient(
-                        0, 0, 0, 1,
-                        [
-                            { offset: 0, color: '#3876cd' },
-                            { offset: 0.5, color: '#45b4e7' },
-                            { offset: 1, color: '#54ffff' }
-                        ]
-                    ),
+            yAxis: {
+                axisLabel: {
+                    show: true,
+                    textStyle: {
+                        fontSize: '12px',
+                        color: '#fff',
+                    }
+                },
+                axisLine: {
+                    lineStyle: {
+                        color: '#fff',
+                        width: 1,
+                    }
+                },
+                splitLine: {
+                    show: false,
+                }
+            },
+
+            series: {
+                name: '',
+                type: 'bar',
+                barWidth: 10,
+                data: ['5', '14', '3', '6', '8', '18', '11', '4', '8', '7', '16', '13', '6', '10', '11', '9', '19', '13', '4', '20', '12', '7', '13', '15', '8', '3', '9', '16', '11', '16', '8'],
+                itemStyle: {
+                    normal: {
+                        barBorderRadius: [5, 5, 5, 5],
+                        color: new echarts.graphic.LinearGradient(
+                            0, 0, 0, 1,
+                            [
+                                { offset: 0, color: '#3876cd' },
+                                { offset: 0.5, color: '#45b4e7' },
+                                { offset: 1, color: '#54ffff' }
+                            ]
+                        ),
+                    },
                 },
             },
-        },
-    }
-    $.get("/Home/GetMonthAlarmStatis", function (res) {
-        debugger;
-    });
-    setTimeout(function () {
-        myChartMonthAlarm.setOption(optionMonthAlarm);
-    }, 500);
+        }
+        setTimeout(function () {
+            myChartMonthAlarm.setOption(optionMonthAlarm);
+        }, 500);
+    });   
 }
 
 //基本信息
