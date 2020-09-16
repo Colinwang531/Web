@@ -81,7 +81,7 @@ namespace ShipWeb
             //Task.WaitAll(DealerService.taskList.ToArray());
             //DealerService.taskList = new List<Task>();
             //string aa = ManagerHelp.Reponse;
-
+            string result = "";
             bool flag = true;
             new TaskFactory().StartNew(() =>
             {
@@ -89,7 +89,7 @@ namespace ShipWeb
                 {
                     if (ManagerHelp.Reponse != "")
                     {
-                        string aa = ManagerHelp.Reponse;
+                        result = ManagerHelp.Reponse;
                         ManagerHelp.Reponse = "";
                         flag = false;
                     }
@@ -99,22 +99,26 @@ namespace ShipWeb
             flag = false;
             //发送船员状态
             assembly.SendStatusSet(request);
-            using (var cont = new MyContext())
+            if (result!="")
             {
-                //查询组件信息
-                var components = cont.Component.Where(c => c.Type != Models.Component.ComponentType.WEB).ToList();
-                if (components.Count>0)
-                { 
-                    //发送设备信息
-                    GetDevice(components);
-                    if (components.Where(c => c.Type == Models.Component.ComponentType.AI).Any())
+                using (var cont = new MyContext())
+                {
+                    //查询组件信息
+                    var components = cont.Component.Where(c => c.Type != Models.Component.ComponentType.WEB).ToList();
+                    if (components.Count > 0)
                     {
-                        //发送算法信息
-                        GetAlgorithm(components.FirstOrDefault(c => c.Type == Models.Component.ComponentType.AI).Id);
+                        //发送设备信息
+                        GetDevice(components);
+                        if (components.Where(c => c.Type == Models.Component.ComponentType.AI).Any())
+                        {
+                            //发送算法信息
+                            GetAlgorithm(components.FirstOrDefault(c => c.Type == Models.Component.ComponentType.AI).Id);
+                        }
+                        //发送船员信息
+                        GetCrew(components);
                     }
-                    //发送船员信息
-                    GetCrew(components); 
                 }
+
             }
         }
         /// <summary>
