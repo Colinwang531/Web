@@ -597,7 +597,6 @@ $(function () {
         }
     });
 
-
     //加载后端数据
     SetAlarmType();
     SetDataStatis();
@@ -793,15 +792,21 @@ function SetShipList(shipName) {
 }
 //月报警量统计
 function SetMonthAlarmStatis() {
-    //月运单量统计图
-    var myChartMonthAlarm = echarts.init(document.getElementById('myChartMonthAlarm'));    
+    var myChartMonthAlarm = echarts.init(document.getElementById('myChartMonthAlarm'));
     $.get("/Home/GetMonthAlarmStatis", function (res) {
-
+        //长度为月天数总数的数组，填充默认值0
+        let dataArray = Array.apply(null, Array(getCountDays())).map(() => "0");
+        res.forEach(function (item, index) {
+            //具体天数          
+            var thisDay = new Date(item.time).getDate();         
+            dataArray[thisDay - 1] = item.count.toString();
+        });
+        
         var optionMonthAlarm = {
             tooltip: {
                 trigger: 'item',
                 formatter: function (params) {
-                    var res = '本月' + params.name + '号运单数：' + params.data;
+                    var res = '本月' + params.name + '号报警数：' + params.data;
                     return res;
                 }
             },
@@ -813,7 +818,7 @@ function SetMonthAlarmStatis() {
                 containLabel: true
             },
             xAxis: {
-                data: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'],
+                data: getEveryDay(),
                 axisLabel: {
                     show: true,
                     textStyle: {
@@ -828,7 +833,6 @@ function SetMonthAlarmStatis() {
                     }
                 }
             },
-
             yAxis: {
                 axisLabel: {
                     show: true,
@@ -847,12 +851,12 @@ function SetMonthAlarmStatis() {
                     show: false,
                 }
             },
-
             series: {
                 name: '',
                 type: 'bar',
                 barWidth: 10,
-                data: ['5', '14', '3', '6', '8', '18', '11', '4', '8', '7', '16', '13', '6', '10', '11', '9', '19', '13', '4', '20', '12', '7', '13', '15', '8', '3', '9', '16', '11', '16', '8'],
+                //data: ['5', '14', '3', '6', '8', '18', '11', '4', '8', '7', '16', '13', '6', '10', '11', '9', '19', '13', '4', '20', '12', '7', '13', '15', '8', '3', '9', '16', '11', '16', '8'],
+                data: dataArray,
                 itemStyle: {
                     normal: {
                         barBorderRadius: [5, 5, 5, 5],
@@ -871,7 +875,7 @@ function SetMonthAlarmStatis() {
         setTimeout(function () {
             myChartMonthAlarm.setOption(optionMonthAlarm);
         }, 500);
-    });   
+    });
 }
 
 //基本信息
@@ -913,7 +917,23 @@ function SetAttendance() {
     })
 }
 
-
+//获取本月的天数总数
+function getCountDays() {
+    var curDate = new Date();
+    var curMonth = curDate.getMonth();
+    curDate.setMonth(curMonth + 1);
+    curDate.setDate(0);
+    return curDate.getDate();
+}
+//获取本月的天数数组
+function getEveryDay() {
+    var dayArry = [];
+    var day = getCountDays();
+    for (var k = 1; k <= day; k++) {
+        dayArry.push(k.toString());
+    }
+    return dayArry;
+};
 //处理数据库里返回的经纬度字符串数组，转为二维Float类型数组
 function handleArrayStr(lineArr) {
     var arr = new Array();
