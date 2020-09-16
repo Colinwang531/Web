@@ -21,6 +21,7 @@ using ShipWeb.Helpers;
 using DinkToPdf.Contracts;
 using DinkToPdf;
 using ShipWeb.Interface;
+using NetMQ.Sockets;
 
 namespace ShipWeb
 {
@@ -77,7 +78,6 @@ namespace ShipWeb
 
             app.UseRouting();
             app.UseAuthorization();
-
             app.UseSession();
             app.UseEndpoints(endpoints =>
             {

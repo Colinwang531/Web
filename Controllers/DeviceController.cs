@@ -14,7 +14,9 @@ using Newtonsoft.Json;
 using Org.BouncyCastle.Asn1.Cms;
 using Org.BouncyCastle.Crypto.Tls;
 using ShipWeb.DB;
+using ShipWeb.Interface;
 using ShipWeb.Models;
+using ShipWeb.ProtoBuffer;
 using ShipWeb.Tool;
 
 namespace ShipWeb.Controllers
@@ -22,9 +24,9 @@ namespace ShipWeb.Controllers
     public class DeviceController : BaseController
     {
         private readonly MyContext _context;
-        private ProtoBuffer.ProtoManager manager=new ProtoBuffer.ProtoManager();
         private int timeout = 5000;//等待时间
         private ILogger<DeviceController> _logger;
+        private SendDataMsg assembly = new SendDataMsg();
         public DeviceController(MyContext context, ILogger<DeviceController> logger)
         {
             _context = context;
@@ -110,41 +112,60 @@ namespace ShipWeb.Controllers
         private IActionResult LandLoad()
         {
             List<DeviceViewModel> list = new List<DeviceViewModel>();
-            new TaskFactory().StartNew(() =>
+            string shipId = base.user.ShipId;
+            var devIdentity = _context.Component.FirstOrDefault(c => c.ShipId == shipId).Id;
+            assembly.SendDeveiceQuery(devIdentity);
+            List<ProtoBuffer.Models.DeviceInfo> devices = new List<ProtoBuffer.Models.DeviceInfo>();
+            try
             {
-                string shipId = base.user.ShipId;
-                var devIdentity = _context.Component.FirstOrDefault(c => c.ShipId == shipId).Id;
-                var protoModel = manager.DeviceQuery(devIdentity);
-                foreach (var item in protoModel)
+                bool flag = true;
+                new TaskFactory().StartNew(() =>
                 {
-                    DeviceViewModel model = new DeviceViewModel()
+                    while (flag)
                     {
-                        Enable = item.enable,
-                        Factory = (int)item.factory,
-                        Id = item.did,
-                        IP = item.ip,
-                        Name = item.name,
-                        Nickname = item.nickname,
-                        Password = item.password,
-                        Port = item.port,
-                        Type = (int)item.type
-                    };
-                    var cam = item.camerainfos;
-                    model.cameraViews = new List<CameraViewModel>();
-                    foreach (var it in cam)
-                    {
-                        model.cameraViews.Add(new CameraViewModel()
+                        if (ManagerHelp.Reponse != "")
                         {
-                            Index = it.index,
-                            Id = it.cid,
-                            Enable = it.enable,
-                            IP = it.ip,
-                            NickName = it.nickname,
-                            DeviceId = item.did
-                        });
+                            devices = JsonConvert.DeserializeObject<List<ProtoBuffer.Models.DeviceInfo>>(ManagerHelp.Reponse);
+                            flag = false;
+                        }
+                        Thread.Sleep(500);
                     }
+                }).Wait(timeout);
+                flag = false;
+            }
+            catch (Exception)
+            {
+            }
+            ManagerHelp.Reponse = "";
+            foreach (var item in devices)
+            {
+                DeviceViewModel model = new DeviceViewModel()
+                {
+                    Enable = item.enable,
+                    Factory = (int)item.factory,
+                    Id = item.did,
+                    IP = item.ip,
+                    Name = item.name,
+                    Nickname = item.nickname,
+                    Password = item.password,
+                    Port = item.port,
+                    Type = (int)item.type
+                };
+                var cam = item.camerainfos;
+                model.cameraViews = new List<CameraViewModel>();
+                foreach (var it in cam)
+                {
+                    model.cameraViews.Add(new CameraViewModel()
+                    {
+                        Index = it.index,
+                        Id = it.cid,
+                        Enable = it.enable,
+                        IP = it.ip,
+                        NickName = it.nickname,
+                        DeviceId = item.did
+                    });
                 }
-            }).Wait(timeout);
+            }
             var result = new
             {
                 code = 0,
@@ -153,7 +174,7 @@ namespace ShipWeb.Controllers
             };
             return new JsonResult(result);
         }
-        
+
         public IActionResult Save(string strEmbed)
         {
             try
@@ -189,7 +210,7 @@ namespace ShipWeb.Controllers
                                 device.factory = (Device.Factory)model.Factory;
                                 device.Enable = model.Enable;
                                 _context.Device.Update(device);
-                              
+
                             }
                             else
                             {
@@ -206,7 +227,7 @@ namespace ShipWeb.Controllers
                                     ShipId = base.user.ShipId,
                                     Enable = model.Enable
                                 };
-                                device.CameraModelList =new List<Camera>() {
+                                device.CameraModelList = new List<Camera>() {
                                     new Camera(){
                                          DeviceId=device.Id,
                                          Id=Guid.NewGuid().ToString(),
@@ -226,25 +247,20 @@ namespace ShipWeb.Controllers
                         {
                             var component = _context.Component.FirstOrDefault(c => c.ShipId == shipId && c.Type == (model.Factory == (int)Device.Factory.DAHUA ? Component.ComponentType.DHD : Component.ComponentType.HKD));
                             ProtoBuffer.Models.DeviceInfo emb = GetProtoDevice(model);
-                            new TaskFactory().StartNew(() =>
+                            if (!string.IsNullOrEmpty(model.Id))
                             {
-                                if (!string.IsNullOrEmpty(model.Id))
-                                {
-                                    code = manager.DeveiceUpdate(emb, model.Id, component.Id);
-                                }
-                                else
-                                {
-                                    var result = manager.DeveiceAdd(emb, component.Id);
-                                    code = result.result;
-                                }
-                                msg = code == 0 ? "" : "数据保存失败";
-
-                            }).Wait(timeout);
+                                assembly.SendDeveiceUpdate(emb, component.Id, model.Id);
+                            }
+                            else
+                            {
+                                assembly.SendDeveiceAdd(emb, component.Id);
+                            }
+                            code = 0;
                         }
                     }
                     else
                     {
-                        var compents =_context.Component.FirstOrDefault(c => c.Type == (model.Factory == (int)Device.Factory.DAHUA ? Component.ComponentType.DHD : Component.ComponentType.HKD));
+                        var compents = _context.Component.FirstOrDefault(c => c.Type == (model.Factory == (int)Device.Factory.DAHUA ? Component.ComponentType.DHD : Component.ComponentType.HKD));
                         if (!string.IsNullOrEmpty(model.Id))
                         {
                             #region 修改
@@ -253,42 +269,49 @@ namespace ShipWeb.Controllers
                             {
                                 return new JsonResult(new { code = 1, msg = "数据不存在" });
                             }
-                            device.IP = model.IP;
-                            device.Name = model.Name;
-                            device.Nickname = model.Nickname;
-                            device.Password = model.Password;
-                            device.Port = model.Port;
-                            device.type = (Device.Type)model.Type;
-                            device.factory = (Device.Factory)model.Factory;
-                            device.Enable = model.Enable;
                             //测试数据 
                             if (ManagerHelp.IsTest)
                             {
+                                device.IP = model.IP;
+                                device.Name = model.Name;
+                                device.Nickname = model.Nickname;
+                                device.Password = model.Password;
+                                device.Port = model.Port;
+                                device.type = (Device.Type)model.Type;
+                                device.factory = (Device.Factory)model.Factory;
+                                device.Enable = model.Enable;
                                 _context.Device.Update(device);
                                 _context.SaveChanges();
                                 code = 0;
                             }
                             else
                             {
-                                new System.Threading.Tasks.TaskFactory().StartNew(() =>
+                                if (compents == null)
                                 {
-                                    ProtoBuffer.Models.DeviceInfo emb = GetProtoDevice(model);
-                                    int result = manager.DeveiceUpdate(emb, device.Id, compents.Id);
-                                    if (result == 0)
-                                    {
-                                        _context.Device.Update(device);
-                                        _context.SaveChanges();
-                                    }
-                                    code = result;
-                                    msg = result != 0 ? "数据修改失败!" : "";
-                                }).Wait(timeout);
+                                    return new JsonResult(new { code = 1, msg = "设备组件未启动" });
+                                }
+                                ProtoBuffer.Models.DeviceResponse response = new ProtoBuffer.Models.DeviceResponse();
+                                device.IP = model.IP;
+                                device.Name = model.Name;
+                                device.Nickname = model.Nickname;
+                                device.Password = model.Password;
+                                device.Port = model.Port;
+                                device.type = (Device.Type)model.Type;
+                                device.factory = (Device.Factory)model.Factory;
+                                device.Enable = model.Enable;
+                                _context.Device.Update(device);
+                                _context.SaveChanges();
+                                code = 0;
+                                ProtoBuffer.Models.DeviceInfo emb = GetProtoDevice(model);
+                                SendDataMsg assembly = new SendDataMsg();
+                                assembly.SendDeveiceUpdate(emb, compents.Id, device.Id);
+                                
                             }
                             #endregion
                         }
                         else
                         {
                             #region 添加
-                            string iditity = Guid.NewGuid().ToString();
                             Device device = new Device()
                             {
                                 IP = model.IP,
@@ -298,16 +321,18 @@ namespace ShipWeb.Controllers
                                 Port = model.Port,
                                 type = (Device.Type)model.Type,
                                 factory = (Device.Factory)model.Factory,
-                                Id = iditity,
+                                Id = Guid.NewGuid().ToString(),
                                 ShipId = base.user.ShipId,
                                 Enable = model.Enable
                             };
+                            _context.Device.Add(device);
+                            _context.SaveChanges();
                             if (ManagerHelp.IsTest)
                             {
                                 //测试数据
-                                device.CameraModelList = new List<Camera>() {
+                                List <Camera> cameras = new List<Camera>() {
                                     new Camera(){
-                                     DeviceId = iditity,
+                                     DeviceId = device.Id,
                                      Enable = false,
                                      Id = Guid.NewGuid().ToString(),
                                      NickName ="摄像机1",
@@ -316,7 +341,7 @@ namespace ShipWeb.Controllers
                                      Index = 1
                                     },
                                     new Camera(){
-                                     DeviceId = iditity,
+                                     DeviceId = device.Id,
                                      Enable = false,
                                      Id = Guid.NewGuid().ToString(),
                                      NickName ="摄像机2",
@@ -325,59 +350,28 @@ namespace ShipWeb.Controllers
                                      Index = 2
                                     }
                                 };
-                                _context.Device.Add(device);
+                                _context.Camera.AddRange(cameras);
                                 _context.SaveChanges();
                                 code = 0;
 
                             }
                             else
                             {
-                                #region 发送注册设备请求并接收设备下的摄像机信息                    
+                                #region 发送注册设备请求并接收设备下的摄像机信息
+                                model.Id = device.Id;
                                 ProtoBuffer.Models.DeviceInfo emb = GetProtoDevice(model);
-                                emb.did = device.Id;
-                                new System.Threading.Tasks.TaskFactory().StartNew(() =>
-                                {
-                                    ProtoBuffer.Models.DeviceResponse rep = manager.DeveiceAdd(emb, compents.Id);
-                                    if (rep != null && rep.result == 0)
-                                    {
-                                        if (rep.deviceinfos.Count == 1 && rep.deviceinfos[0].camerainfos.Count > 0)
-                                        {
-                                            device.CameraModelList = new List<Camera>();
-                                            var repList = rep.deviceinfos[0].camerainfos;
-                                            int count = 0;
-                                            foreach (var item in repList)
-                                            {
-                                                count++;
-                                                Camera cmodel = new Camera()
-                                                {
-                                                    Enable = item.enable,
-                                                    Id = Guid.NewGuid().ToString(),
-                                                    NickName = string.IsNullOrEmpty(item.nickname) ? "摄像机" + count : item.nickname,
-                                                    IP = item.ip,
-                                                    ShipId = model.ShipId,
-                                                    Index = item.index,
-                                                    DeviceId = device.Id
-                                                };
-                                                device.CameraModelList.Add(cmodel);
-                                            }
-                                        }
-                                        _context.Device.Add(device);
-                                        _context.SaveChangesAsync();
-                                        code = 0;
-                                    }
-                                    else
-                                    {
-                                        msg = "数据修改失败!";
-                                    }
-                                }).Wait(timeout);
+                                SendDataMsg assembly = new SendDataMsg();
+                                assembly.SendDeveiceAdd(emb, compents.Id);
+                                code = 0;
                                 #endregion
                             }
 
                             #endregion
                         }
-                    }                   
+                    }
                 }
                 msg = (code == 1 && msg == "") ? "请求超时。。。" : msg;
+                Thread.Sleep(2000);
                 return new JsonResult(new { code = code, msg = msg });
             }
             catch (Exception ex)
@@ -411,11 +405,8 @@ namespace ShipWeb.Controllers
                                },
                             did = did
                         };
-                        new TaskFactory().StartNew(() => {
-                            var res = manager.DeveiceUpdate(emb, did, component.Id);
-                            code = res;
-                            msg = code == 1 ? "数据修改失败" : "";
-                        }).Wait(timeout);
+                        assembly.SendDeveiceUpdate(emb, component.Id, did);
+                        code = 0;
                     }
                     else
                     {
@@ -443,7 +434,7 @@ namespace ShipWeb.Controllers
                                  nickname=camera.NickName
                                  }
                                },
-                                did = embModel.IP
+                                did = embModel.Id
                             };
                             if (ManagerHelp.IsTest)
                             {
@@ -453,24 +444,12 @@ namespace ShipWeb.Controllers
 
                             }
                             else
-                            {   
-                                new TaskFactory().StartNew(() =>
-                                {
-                                    int result = manager.DeveiceUpdate(emb, embModel.Id, compants.Id);
-                                    if (result == 0)
-                                    {
-                                        _context.Update(camera);
-                                        _context.SaveChangesAsync();
-                                        code = 0;
-                                    }
-                                    else
-                                    {
-                                        msg = "数据修改失败";
-                                    }
-                                }).Wait(timeout);
-
+                            {
+                                _context.Update(camera);
+                                _context.SaveChangesAsync();
+                                assembly.SendDeveiceUpdate(emb, compants.Id, embModel.Id);
+                                code = 0;
                             }
-
                         };
                     }
                     msg = (code == 1 && msg == "") ? "请求超时。。。" : msg;
@@ -523,12 +502,15 @@ namespace ShipWeb.Controllers
                 string msg = "";
                 //陆地端删除设备
                 if (base.user.IsLandHome&&!ManagerHelp.IsTest)
-                { //获取设备的组件ID
+                {
+                    //获取设备的组件ID
                     var compants = _context.Component.FirstOrDefault(c => c.Type == (factory ==(int)Device.Factory.DAHUA ? Component.ComponentType.DHD : Component.ComponentType.HKD));
-                    new TaskFactory().StartNew(() => {
-                        code = manager.DeveiceDelete(id,compants.Id);
-                        msg = code != 0 ? "删除数据失败" : "";
-                    }).Wait(timeout);                   
+                    if (compants==null)
+                    {
+                        return new JsonResult(new { code = 1, msg = "设备组件未启动" });
+                    }
+                   assembly.SendDeveiceDelete(compants.Id, id);
+                   code = 0;             
                 }
                 else
                 {
@@ -537,56 +519,33 @@ namespace ShipWeb.Controllers
                     {
                         return NotFound();
                     }
-                    if (ManagerHelp.IsTest)
+                    var cameras = _context.Camera.Where(c => c.DeviceId == device.Id).ToList();
+                    var cids = string.Join(',', cameras.Select(c => c.Id));
+                    if (cids != "")
                     {
-                        var cameras = _context.Camera.Where(c => c.DeviceId == device.Id).ToList();
-                        var cids = string.Join(',', cameras.Select(c => c.Id));
-                        if (cids != "")
+                        var cameraConfig = _context.Algorithm.Where(c => cids.Contains(c.Id));
+                        if (cameraConfig.Count() > 0)
                         {
-                            var cameraConfig = _context.Algorithm.Where(c => cids.Contains(c.Id));
-                            if (cameraConfig.Count() > 0)
-                            {
-                                //删除摄像机配置表
-                                _context.Algorithm.RemoveRange(cameraConfig);
-                            }
-                            //删除摄像机表
-                            _context.Camera.RemoveRange(cameras);
+                            //删除摄像机配置表
+                            _context.Algorithm.RemoveRange(cameraConfig);
                         }
-                        //删除设备表
-                        _context.Device.Remove(device);
-                        _context.SaveChanges();
-                        code = 0;
+                        //删除摄像机表
+                        _context.Camera.RemoveRange(cameras);
                     }
-                    else
+                    //删除设备表
+                    _context.Device.Remove(device);
+                    _context.SaveChanges();
+                    code = 0;
+                    if (!ManagerHelp.IsTest)
                     {
                         var compants = _context.Component.FirstOrDefault(c => c.Type == (device.factory == Device.Factory.DAHUA ? Component.ComponentType.DHD : Component.ComponentType.HKD));
-                        //先删除服务器上的再删除本地的
-                        new TaskFactory().StartNew(() =>
+                        if (compants==null)
                         {
-                            int resutl = manager.DeveiceDelete(device.Id, compants.Id);
-                            if (resutl == 0)
-                            {
-                                var cameras = _context.Camera.Where(c => c.DeviceId == device.Id).ToList();
-                                var cids = string.Join(',', cameras.Select(c => c.Id));
-                                if (cids != "")
-                                {
-                                    var cameraConfig = _context.Algorithm.Where(c => cids.Contains(c.Id));
-                                    if (cameraConfig.Count() > 0)
-                                    {
-                                        //删除摄像机配置表
-                                        _context.Algorithm.RemoveRange(cameraConfig);
-                                    }
-                                    // 删除摄像机表
-                                    _context.Camera.RemoveRange(cameras);
-                                }
-                                // 删除设备表
-                                _context.Device.Remove(device);
-                                _context.SaveChanges();
-                                code = 0;
-                            }
-                            msg = code != 0 ? "删除数据失败" : "";
-                        }).Wait(timeout);
-
+                            return new JsonResult(new { code = 1, msg = "设备组件未启动" });
+                        }
+                        SendDataMsg assembly = new SendDataMsg();
+                        assembly.SendDeveiceDelete(compants.Id, device.Id);
+                        code = 0;
                     }
                 }
                 msg = (code == 1 && msg == "") ? "请求超时。。。" : msg;

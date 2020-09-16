@@ -262,6 +262,10 @@
         });
         //表单提交
         form.on("submit(doSubmit)", function (frm) {
+            if (!CheckData(frm)) {
+                layer.msg("设备厂商、设备类型、登陆IP数据不能重复");
+                return false;
+            }
             $('#btnSubmit').attr('disabled', 'disabled').addClass(DISABLED);
             var data = {
                 ip: frm.field.ip,
@@ -355,6 +359,20 @@
                 }
             });
         });
+        function CheckData(frm) {
+            var ip = frm.field.ip;
+            var factory = parseInt(frm.field.factory);
+            var type = parseInt(frm.field.type);
+            var id = frm.field.id;
+            var data = table.cache["deviceTable"];
+            for (var i = 0; i < data.length; i++) {
+                if (data[i].id == id) continue;
+                if (data[i].factory == factory && data[i].type == type && data[i].ip == ip) {
+                    return false;
+                }
+            }
+            return true;
+        }
     });
 </script>
 <div>

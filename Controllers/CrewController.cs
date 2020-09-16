@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Http.Headers;
 using System.Reflection.Metadata;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -14,6 +15,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Hosting;
+using Newtonsoft.Json;
 using Org.BouncyCastle.Crypto.Tls;
 using ProtoBuf;
 using ShipWeb.DB;
@@ -25,14 +27,13 @@ namespace ShipWeb.Controllers
 {
     public class CrewController : BaseController
     {
-
-        private readonly MyContext _context;
-        private ProtoManager manager;
+        private readonly MyContext _context;      
         public static Dictionary<string, byte[]> picBytes;
+        private SendDataMsg assembly = new SendDataMsg();
+        int timeout = 5000;
         public CrewController(MyContext context)
         {
             _context = context;
-            manager = new ProtoManager();
         }
 
         // GET: Employees
@@ -115,8 +116,30 @@ namespace ShipWeb.Controllers
         {
             string shipId = base.user.ShipId;
             var compent = _context.Component.FirstOrDefault(c => c.ShipId == shipId && c.Type ==Component.ComponentType.WEB);
-            var data = manager.CrewQuery(compent.Id);
-            var dataShow = from a in data
+            assembly.SendCrewQuery(compent.Id);
+            List<ProtoBuffer.Models.CrewInfo> crewInfos = new List<ProtoBuffer.Models.CrewInfo>();
+            try
+            {
+                bool flag = true;
+                new TaskFactory().StartNew(() =>
+                {
+                    while (flag)
+                    {
+                        if (ManagerHelp.Reponse != "")
+                        {
+                            crewInfos = JsonConvert.DeserializeObject<List<ProtoBuffer.Models.CrewInfo>>(ManagerHelp.Reponse);
+                            flag = false;
+                        }
+                        Thread.Sleep(500);
+                    }
+                }).Wait(timeout);
+                flag = false;
+            }
+            catch (Exception)
+            {
+            }
+            ManagerHelp.Reponse = "";
+            var dataShow = from a in crewInfos
                            select new
                            {
                                a.job,
@@ -134,7 +157,7 @@ namespace ShipWeb.Controllers
             {
                 code = 0,
                 data = dataShow,
-                count= data.Count(),
+                count= crewInfos.Count(),
                 isSet = !string.IsNullOrEmpty(shipId) ? base.user.EnableConfigure : false
             };
             return new JsonResult(result);
@@ -224,7 +247,8 @@ namespace ShipWeb.Controllers
                                     }
                                 }
                             }
-                            code = manager.CrewAdd(emp, component.Id);
+                            assembly.SendCrewAdd(emp,component.Id);
+                            code = 0;
                         }
                         else
                         {
@@ -243,8 +267,8 @@ namespace ShipWeb.Controllers
                                     emp.pictures.Add(Encoding.UTF8.GetBytes(item));
                                 }
                             }
-                            int result = manager.CrewUpdate(emp, component.Id);
-                            code = result;
+                            assembly.SendCrewUpdate(emp,component.Id);
+                            code = 0;
                         }
                         //清除已经上传了的图片
                         foreach (var item in ids)
@@ -349,6 +373,22 @@ namespace ShipWeb.Controllers
                     {
                         picBytes.Remove(item);
                     }
+                    //发送netmq消息
+                    List<byte[]> bytes = new List<byte[]>();
+                    foreach (var item in employee.employeePictures)
+                    {
+                        bytes.Add(item.Picture);
+                    }
+                    ProtoBuffer.Models.CrewInfo crewInfo = new ProtoBuffer.Models.CrewInfo()
+                    {
+                        job = employee.Job,
+                        name = employee.Name,
+                        uid = employee.Id,
+                        pictures = bytes
+                    };
+                    if (!string.IsNullOrEmpty(id)) { assembly.SendCrewUpdate(crewInfo); }
+                    else { assembly.SendCrewAdd(crewInfo); }
+                    
                 }
                 return new JsonResult(new { code = 0 });
             }
@@ -386,7 +426,8 @@ namespace ShipWeb.Controllers
                     }
                     string shipId = base.user.Id;
                     var component = _context.Component.FirstOrDefault(c => c.ShipId == shipId && c.Type == Component.ComponentType.WEB);
-                    manager.CrewDelete(id,component.Id);
+                   
+                    assembly.SendCrewDelete(id,component.Id);
                     return new JsonResult(new { code = 0, msg = "删除成功!" });
                 }
                 if (id == null)
@@ -407,6 +448,7 @@ namespace ShipWeb.Controllers
                 //删除船员
                 _context.Crew.Remove(employee);
                 _context.SaveChanges();
+                assembly.SendCrewDelete(id);
                 return new JsonResult(new { code = 0, msg = "删除成功!" });
             }
             catch (Exception ex)

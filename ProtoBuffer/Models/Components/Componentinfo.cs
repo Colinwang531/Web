@@ -30,7 +30,11 @@ namespace ShipWeb.ProtoBuffer.Models
 			/// <summary>
 			/// 报警组件
 			/// </summary>
-			ALM = 5
+			ALM = 5,
+			/// <summary>
+			/// 算法组件
+			/// </summary>
+		    AI=6
 		}
 		/// <summary>
 		/// 注册类型
