@@ -792,6 +792,7 @@ function SetShipList(shipName) {
 }
 //月报警量统计
 function SetMonthAlarmStatis() {
+    $("#yearMonth").html("("+new Date().getFullYear() + "年" + (new Date().getMonth() + 1)+"月)");
     var myChartMonthAlarm = echarts.init(document.getElementById('myChartMonthAlarm'));
     $.get("/Home/GetMonthAlarmStatis", function (res) {
         //长度为月天数总数的数组，填充默认值0
