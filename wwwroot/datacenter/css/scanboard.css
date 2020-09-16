@@ -395,7 +395,7 @@ body {
     padding-left: 5px;
 }
 
-#myChart1 {
+#myChartMonthAlarm {
     height: 220px;
 }
 
@@ -719,7 +719,7 @@ body {
             padding: 15px 25px 15px 15px;
         }
 
-    #myChart1 {
+    #myChartMonthAlarm {
         height: 220px;
     }
 
@@ -896,7 +896,7 @@ body {
             padding: 15px 25px 15px 15px;
         }
 
-    #myChart1 {
+    #myChartMonthAlarm {
         height: 188px;
     }
 
@@ -1078,7 +1078,7 @@ body {
             width: 24px;
         }
 
-    #myChart1 {
+    #myChartMonthAlarm {
         height: 160px;
     }
 
@@ -1273,7 +1273,7 @@ body {
             width: 24px;
         }
 
-    #myChart1 {
+    #myChartMonthAlarm {
         height: 160px;
     }
 
@@ -1463,7 +1463,7 @@ body {
             display: none;
         }
 
-            .btnLayer .search form button.icoSearch {
+            .btnLayer .search form span.icoSearch {
                 float: left;
                 margin-right: 10px;
                 cursor: pointer;
@@ -2308,7 +2308,7 @@ body {
                 padding: 6px 15px;
             }
 
-                .btnLayer .search form button.icoSearch {
+                .btnLayer .search form span.icoSearch {
                     margin-right: 10px;
                     margin-top: 2px;
                 }
@@ -2515,7 +2515,7 @@ body {
                 padding: 3px 15px;
             }
 
-                .btnLayer .search form button.icoSearch {
+                .btnLayer .search form span.icoSearch {
                     margin-right: 10px;
                     margin-top: 3px;
                 }
@@ -2722,7 +2722,7 @@ body {
                 padding: 3px 15px;
             }
 
-                .btnLayer .search form button.icoSearch {
+                .btnLayer .search form span.icoSearch {
                     margin-right: 10px;
                     margin-top: 3px;
                 }

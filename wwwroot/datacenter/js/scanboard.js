@@ -27,7 +27,6 @@ $(function () {
         }
     }
 
-
     //顶部时间
     function getTime() {
         var myDate = new Date();
@@ -55,79 +54,30 @@ $(function () {
     }
     setInterval(getTime, 1000);
 
-    //月运单量统计图
-    var myChart1 = echarts.init(document.getElementById('myChart1'));
-    var option1 = {
-        tooltip: {
-            trigger: 'item',
-            formatter: function (params) {
-                var res = '本月' + params.name + '号运单数：' + params.data;
-                return res;
-            }
-        },
-        grid: {
-            top: '5%',
-            left: '0%',
-            width: '100%',
-            height: '95%',
-            containLabel: true
-        },
-        xAxis: {
-            data: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'],
-            axisLabel: {
-                show: true,
-                textStyle: {
-                    fontSize: '12px',
-                    color: '#fff',
-                }
-            },
-            axisLine: {
-                lineStyle: {
-                    color: '#fff',
-                    width: 1,
-                }
-            }
-        },
+    //地图上的搜索
+    $('.searchBtn').on('click', function () {
+        $(this).hide();
+        $('.searchInner').addClass('open');
+        setTimeout(function () {
+            $('.searchInner').find('form').show();
+        }, 400);
+    });
+    $('.search').on('click', function (event) {
+        event.stopPropagation();
+    });
+    $('body').on('click', function () {
+        $('.searchInner').find('form').hide();
+        $('.searchInner').removeClass('open');
+        setTimeout(function () {
+            $('.searchBtn').show();
+        }, 400);
+    });
+    $("#subSearch").click(function () {
+        var text = $("#subText").val().trim();
+        if (text == "") return;
+        SetShipList(text);
+    })
 
-        yAxis: {
-            axisLabel: {
-                show: true,
-                textStyle: {
-                    fontSize: '12px',
-                    color: '#fff',
-                }
-            },
-            axisLine: {
-                lineStyle: {
-                    color: '#fff',
-                    width: 1,
-                }
-            },
-            splitLine: {
-                show: false,
-            }
-        },
-
-        series: {
-            name: '',
-            type: 'bar',
-            barWidth: 10,
-            data: ['5', '14', '3', '6', '8', '18', '11', '4', '8', '7', '16', '13', '6', '10', '11', '9', '19', '13', '4', '20', '12', '7', '13', '15', '8', '3', '9', '16', '11', '16', '8'],
-            itemStyle: {
-                normal: {
-                    barBorderRadius: [5, 5, 5, 5],
-                    color: new echarts.graphic.LinearGradient(
-                        0, 0, 0, 1,
-                        [
-                            { offset: 0, color: '#3876cd' },
-                            { offset: 0.5, color: '#45b4e7' },
-                            { offset: 1, color: '#54ffff' }
-                        ]
-                    ),
-                },
-            },
-        },
-    }
 
     function totalNum(obj, speed) {
         var singalNum = 0;
@@ -184,7 +134,6 @@ $(function () {
         totalNum($('#indicator2'), 1);
         totalNum($('#indicator3'), 1);
 
-        myChart1.setOption(option1);
     }, 500);
 
     var summaryPie1, summaryPie2, summaryPie3, summaryBar, summaryLine;
@@ -636,7 +585,7 @@ $(function () {
     };
 
     $(window).resize(function () {
-        myChart1.resize();
+        myChartMonthAlarm.resize();
         try {
             summaryPie1.resize();
             summaryPie2.resize();
@@ -649,236 +598,11 @@ $(function () {
     });
 
 
-    //地图上的搜索
-    $('.searchBtn').on('click', function () {
-        $(this).hide();
-        $('.searchInner').addClass('open');
-        setTimeout(function () {
-            $('.searchInner').find('form').show();
-        }, 400);
-    });
-
-    $('.search').on('click', function (event) {
-        event.stopPropagation();
-    });
-    $('body').on('click', function () {
-        $('.searchInner').find('form').hide();
-        $('.searchInner').removeClass('open');
-        setTimeout(function () {
-            $('.searchBtn').show();
-        }, 400);
-    });
-
-    //车辆状态滚动条样式
-    $('.stateUl').niceScroll({
-        cursorcolor: "#045978",//#CC0071 光标颜色
-        cursoropacitymax: 0.6, //改变不透明度非常光标处于活动状态（scrollabar“可见”状态），范围从1到0
-        touchbehavior: false, //使光标拖动滚动像在台式电脑触摸设备
-        cursorwidth: "4px", //像素光标的宽度
-        cursorborder: "0", // 	游标边框css定义
-        cursorborderradius: "4px",//以像素为光标边界半径
-        autohidemode: false //是否隐藏滚动条
-    });
-
-
-    //车辆信息工作时间表
-    //模拟数据
-    var carData = [
-        {
-            dateLable: "2018-01-01 星期一",
-            data: {
-                workTime: [
-                    { start: "07:30", end: "13:15" },
-                    { start: "14:40", end: "21:50" }
-                ],
-                standard: [
-                    { start: "00:00", end: "05:00" },
-                    { start: "08:00", end: "12:00" },
-                    { start: "14:00", end: "19:00" }
-                ]
-            }
-        },
-        {
-            dateLable: "2018-01-02 星期二",
-            data: {
-                workTime: [
-                    { start: "03:10", end: "09:40" }
-                ],
-                standard: [
-                    { start: "00:00", end: "05:00" },
-                    { start: "08:00", end: "12:00" },
-                    { start: "14:00", end: "19:00" }
-                ]
-            }
-        },
-        {
-            dateLable: "2018-01-03 星期三",
-            data: {
-                workTime: [
-                    { start: "06:15", end: "14:08" },
-                    { start: "15:53", end: "24:00" }
-                ],
-                standard: [
-                    { start: "00:00", end: "05:00" },
-                    { start: "08:00", end: "12:00" },
-                    { start: "14:00", end: "19:00" }
-                ]
-            }
-        },
-        {
-            dateLable: "2018-01-04 星期四",
-            data: {
-                workTime: [
-                    { start: "00:00", end: "07:32" },
-                    { start: "12:20", end: "19:50" }
-                ],
-                standard: [
-                    { start: "00:00", end: "05:00" },
-                    { start: "08:00", end: "12:00" },
-                    { start: "14:00", end: "19:00" }
-                ]
-            }
-        },
-        {
-            dateLable: "2018-01-05 星期五",
-            data: {
-                workTime: [
-                    { start: "06:15", end: "17:20" }
-                ],
-                standard: [
-                    { start: "00:00", end: "05:00" },
-                    { start: "08:00", end: "12:00" },
-                    { start: "14:00", end: "19:00" }
-                ]
-            }
-        },
-        {
-            dateLable: "2018-01-06 星期六",
-            data: {
-                workTime: [
-                    { start: "14:40", end: "22:38" }
-                ],
-                standard: [
-                    { start: "00:00", end: "05:00" },
-                    { start: "08:00", end: "12:00" },
-                    { start: "14:00", end: "19:00" }
-                ]
-            }
-        },
-        {
-            dateLable: "2018-01-07 星期天",
-            data: {
-                workTime: [
-                    { start: "06:30", end: "12:20" },
-                    { start: "14:25", end: "20:33" }
-                ],
-                standard: [
-                    { start: "00:00", end: "05:00" },
-                    { start: "08:00", end: "12:00" },
-                    { start: "14:00", end: "19:00" }
-                ]
-            }
-        }
-    ];
-
-    function Schedule() {
-        var Item = $('.dataBox');
-        var Size = Item.eq(0).width();
-        var oDay = 24 * 60;
-
-        function getMin(timeStr) {
-            var timeArray = timeStr.split(":");
-            var Min = parseInt(timeArray[0]) * 60 + parseInt(timeArray[1]);
-            return Min;
-        }
-
-        //在时间轴上添加工作时间数据
-        Item.each(function (i, ele) {
-            var ItemData = carData[i];
-            function addData(obj, dataParam) {
-                for (var j = 0; j < dataParam.length; j++) {
-                    var pos, wid, workCeil, sDate, sStart, sEnd, sConsume;
-                    pos = getMin(dataParam[j].start) / oDay * 100 + '%';
-                    wid = (getMin(dataParam[j].end) - getMin(dataParam[j].start)) / oDay * 100 + '%';
-                    sDate = ItemData.dateLable;
-                    sStart = dataParam[j].start;
-                    sEnd = dataParam[j].end;
-                    sConsume = getMin(dataParam[j].end) - getMin(dataParam[j].start);
-                    workCeil = '<span style="width: ' + wid + ';left: ' + pos + '" sDate="' + sDate + '" sStart="' + sStart + '" sEnd="' + sEnd + '" sConsume="' + sConsume + '"></span>';
-                    obj.append(workCeil);
-                }
-            }
-            addData($(ele).find('.workTime'), ItemData.data.workTime);
-            addData($(ele).find('.standard'), ItemData.data.standard);
-        });
-
-        //添加总用时与总单数
-        var Total = $('.totalItem');
-        Total.each(function (i, ele) {
-            var ItemData = carData[i].data.workTime;
-            var timeUsed = 0;
-            for (var j = 0; j < ItemData.length; j++) {
-                timeUsed += getMin(ItemData[j].end) - getMin(ItemData[j].start);
-            }
-            var realHour = Math.floor(timeUsed / 60);
-            $(ele).find('span').eq(0).html(realHour + ':' + (timeUsed - realHour * 60));
-            $(ele).find('span').eq(1).html(ItemData.length);
-        });
-    };
-    Schedule();
-
-    //鼠标移入运单显示信息框
-    $('.workTime').on('mouseenter', 'span', function (ev) {
-        var x = ev.clientX;
-        var y = ev.clientY;
-        var sDate, sStart, sEnd, sConsume, infos, sHour, sMin;
-        sDate = $(this).attr("sDate");
-        sStart = $(this).attr("sStart");
-        sEnd = $(this).attr("sEnd");
-        sConsume = $(this).attr("sConsume");
-        sHour = Math.floor(sConsume / 60);
-        sMin = sConsume - sHour * 60;
-
-        infos = '<div class="workTimeInfo" style="left:' + x + 'px;top:' + y + 'px"><p>日期：' + sDate + '</p><p>开始时间：' + sStart + '</p><p>结束时间：' + sEnd + '</p><p>总用时：' + sHour + '小时' + sMin + '分钟</p></div>';
-        $('body').append(infos);
-    });
-    $('.workTime').on('mouseout', function () {
-        $('.workTimeInfo').remove();
-    });
-
-
-    //车辆信息弹出框的显示隐藏效果
-    $('.infoBtn').on('click', function () {
-        $('.filterbg').show();
-        $('.carInfo').show();
-        $('.carInfo').width('3px');
-        $('.carInfo').animate({ height: '76%' }, 400, function () {
-            $('.carInfo').animate({ width: '82%' }, 400);
-        });
-        setTimeout(function () {
-            $('.infoBox').show();
-            $('.carClose').css('display', 'block');
-        }, 800);
-
-    });
-    $('.carClose').on('click', function () {
-        $('.carClose').css('display', 'none');
-        $('.infoBox').hide();
-
-        $('.carInfo').animate({ width: '3px' }, 400, function () {
-            $('.carInfo').animate({ height: 0 }, 400);
-        });
-        setTimeout(function () {
-            $('.filterbg').hide();
-            $('.carInfo').hide();
-            $('.carInfo').width(0);
-        }, 800);
-    });
-
-
+    //加载后端数据
     SetAlarmType();
     SetDataStatis();
-    SetShipList();
+    SetShipList(null);
+    SetMonthAlarmStatis();
     SetCountInfo();
     SetAttendance();
 });
@@ -999,7 +723,7 @@ function SetDataStatis() {
 }
 
 //船舶信息集合 高德地图展示
-function SetShipList() {
+function SetShipList(shipName) {
     var map = new AMap.Map("myMap", {
         resizeEnable: true,
         zoom: 7,
@@ -1009,6 +733,7 @@ function SetShipList() {
     $.ajax({
         type: "get",
         url: "/Home/GetShipList",
+        data: { shipName: shipName },
         success: function (res) {
             res.forEach(function (item, index) {
                 if (item.coordinate == null || item.coordinate == "") return;
@@ -1066,7 +791,88 @@ function SetShipList() {
         }
     });
 }
+//月报警量统计
+function SetMonthAlarmStatis() {
+    //月运单量统计图
+    var myChartMonthAlarm = echarts.init(document.getElementById('myChartMonthAlarm'));
+    var optionMonthAlarm = {
+        tooltip: {
+            trigger: 'item',
+            formatter: function (params) {
+                var res = '本月' + params.name + '号运单数：' + params.data;
+                return res;
+            }
+        },
+        grid: {
+            top: '5%',
+            left: '0%',
+            width: '100%',
+            height: '95%',
+            containLabel: true
+        },
+        xAxis: {
+            data: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'],
+            axisLabel: {
+                show: true,
+                textStyle: {
+                    fontSize: '12px',
+                    color: '#fff',
+                }
+            },
+            axisLine: {
+                lineStyle: {
+                    color: '#fff',
+                    width: 1,
+                }
+            }
+        },
 
+        yAxis: {
+            axisLabel: {
+                show: true,
+                textStyle: {
+                    fontSize: '12px',
+                    color: '#fff',
+                }
+            },
+            axisLine: {
+                lineStyle: {
+                    color: '#fff',
+                    width: 1,
+                }
+            },
+            splitLine: {
+                show: false,
+            }
+        },
+
+        series: {
+            name: '',
+            type: 'bar',
+            barWidth: 10,
+            data: ['5', '14', '3', '6', '8', '18', '11', '4', '8', '7', '16', '13', '6', '10', '11', '9', '19', '13', '4', '20', '12', '7', '13', '15', '8', '3', '9', '16', '11', '16', '8'],
+            itemStyle: {
+                normal: {
+                    barBorderRadius: [5, 5, 5, 5],
+                    color: new echarts.graphic.LinearGradient(
+                        0, 0, 0, 1,
+                        [
+                            { offset: 0, color: '#3876cd' },
+                            { offset: 0.5, color: '#45b4e7' },
+                            { offset: 1, color: '#54ffff' }
+                        ]
+                    ),
+                },
+            },
+        },
+    }
+    $.get("/Home/GetMonthAlarmStatis", function (res) {
+        debugger;
+    });
+    setTimeout(function () {
+        myChartMonthAlarm.setOption(optionMonthAlarm);
+    }, 500);
+}
 
 //基本信息
 function SetCountInfo() {
@@ -1106,6 +912,7 @@ function SetAttendance() {
         }
     })
 }
+
 
 //处理数据库里返回的经纬度字符串数组，转为二维Float类型数组
 function handleArrayStr(lineArr) {

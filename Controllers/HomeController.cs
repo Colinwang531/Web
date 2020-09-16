@@ -103,16 +103,34 @@ namespace ShipWeb.Controllers
         /// <summary>
         /// 获取船舶集合
         /// </summary>
-        /// <param name="month"></param>
+        /// <param name="shipName"></param>
         /// <returns></returns>
-        public JsonResult GetShipList()
+        public JsonResult GetShipList(string shipName)
         {
-            var result = _context.Ship.ToList(); 
-            var crews = _context.Crew;           
+            List<Ship> result = null;
+            if (!string.IsNullOrEmpty(shipName))
+                result = _context.Ship.Where(s => s.Name.Contains(shipName)).ToList();
+            else
+                result = _context.Ship.ToList();
+            var crews = _context.Crew;
             foreach (var item in result)
             {
                 item.CrewNum = crews.Where(s => s.ShipId.Equals(item.Id)).Count();
             }
+            return Json(result);
+        }
+        /// <summary>
+        /// 获取月报警量统计
+        /// </summary>
+        /// <returns></returns>
+        public JsonResult GetMonthAlarmStatis()
+        {
+            DateTime now = DateTime.Now;
+            DateTime startTime = now.AddDays(1 - now.Day);//本月月初
+            DateTime endTime = startTime.AddMonths(1).AddDays(-1);//本月月末
+
+            string sql = $"SELECT DATE_FORMAT(Time,'%Y-%m-%d') as time,count(*) as count from Alarm where '{startTime:yyyy-MM-dd 00:00:00}' < Time and '{endTime:yyyy-MM-dd 23:59:59}' >Time GROUP BY time ORDER BY time";
+            var result = DapperContext.Query<MonthAlarm>(sql);
             return Json(result);
         }
 
@@ -142,7 +160,7 @@ namespace ShipWeb.Controllers
             DateTime startTime = now.AddDays(1 - now.Day);//本月月初
             DateTime endTime = startTime.AddMonths(1).AddDays(-1);//本月月末
             string sql = $"SELECT DISTINCT(a.id),a.Job,a.Name,a.ShipId,a.Name as CrewName,b.Name as ShipName,c.Time,c.Behavior,  TRUNCATE((select ((select count(*) from(select aa.Time, aa.CrewId from Attendance as aa where aa.CrewId = a.Id and aa.Time >= DATE('{startTime:yyyy-MM-dd 00:00:00}') and aa.Time <= DATE('{endTime:yyyy-MM-dd 23:59:59}'))tt) / 22 * 100.00) as chuqin),2) as Rate from Crew a LEFT JOIN Ship b on a.ShipId = b.Id LEFT JOIN Attendance c on a.Id = c.CrewId ORDER BY c.Time DESC LIMIT 100";
-            var result = _context.Crew.FromSqlRaw(sql);
+            var result = _context.CrewAttendance.FromSqlRaw(sql);
             return Json(result);
         }
         #endregion

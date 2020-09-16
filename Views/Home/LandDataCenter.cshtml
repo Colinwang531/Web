@@ -9,7 +9,7 @@
     <meta http-equiv="refresh" content="600" />
     <title>数据中心大屏-禹创</title>
     <link href="~/datacenter/css/reset.css" rel="stylesheet" />
-    <link href="~/datacenter/css/scanboard.css?version=202009071621" rel="stylesheet" />
+    <link href="~/datacenter/css/scanboard.css?version=202009161621" rel="stylesheet" />
     <link href="~/datacenter/css/animsition.css" rel="stylesheet" />
     <link href="~/datacenter/css/jquery.shCircleLoader.css" rel="stylesheet" />
     <script src="~/datacenter/js/jquery.js"></script>
@@ -107,12 +107,12 @@
                                 <div class="searchInner">
                                     <a href="javascript:;" class="searchBtn"><span class="icoSearch"></span></a>
                                     <form class="searchForm">
-                                        <button class="icoSearch"></button>
-                                        <input type="text" name="" placeholder="请搜索车辆">
+                                        <span class="icoSearch" id="subSearch"></span>
+                                        <input type="text" id="subText" name="" placeholder="请输入船名搜索">
                                     </form>
                                 </div>
                             </div>
-                            <a href="javascript:;" class="infoBtn"><span class="icoCar"></span></a>
+                            @*<a href="javascript:;" class="infoBtn"><span class="icoCar"></span></a>*@
                         </div>
                         <div id="myMap" class="item"></div>
                     </div>
@@ -120,9 +120,9 @@
                     <!--月运单量统计图-->
                     <div class="billChart">
                         <div class="itemTit">
-                            <span class="border-blue"><s>月运单量统计图</s><small>(2020年09月)</small></span>
+                            <span class="border-blue">月报警量统计图<small>(2020年09月)</small></span>
                         </div>
-                        <div id="myChart1"></div>
+                        <div id="myChartMonthAlarm"></div>
                     </div>
                 </div>
             </div>
@@ -223,315 +223,11 @@
             </div>
         </div>
     </div>
-
-    <div class="carInfo">
-        <a href="javascript:;" class="carClose"></a>
-        <div class="infoBox">
-            <div class="infoTop">
-                <div class="infoTit">
-                    <img src="~/datacenter/images/tit3.png">
-                </div>
-            </div>
-            <div class="infoMain">
-                <div class="infoLeft fl">
-                    <div class="topSearch">
-                        <form>
-                            <button></button>
-                            <input type="text" name="" placeholder="请输入车牌号搜索">
-                        </form>
-                    </div>
-                    <div class="carState">
-                        <h3>
-                            <span class="fl">车牌号码</span>
-                            <span class="fr">状态</span>
-                        </h3>
-                        <ul class="stateUl">
-                            <li>
-                                <p>粤A3456344</p>
-                                <span class="work">工作</span>
-                            </li>
-                            <li>
-                                <p>粤A3456344</p>
-                                <span class="nowork">休息</span>
-                            </li>
-                            <li>
-                                <p>粤A3456344</p>
-                                <span class="work">工作</span>
-                            </li>
-                            <li>
-                                <p>粤A3456344</p>
-                                <span class="nowork">休息</span>
-                            </li>
-                            <li>
-                                <p>粤A3456344</p>
-                                <span class="work">工作</span>
-                            </li>
-                            <li>
-                                <p>粤A3456344</p>
-                                <span class="nowork">休息</span>
-                            </li>
-                            <li>
-                                <p>粤A3456344</p>
-                                <span class="work">工作</span>
-                            </li>
-                            <li>
-                                <p>粤A3456344</p>
-                                <span class="nowork">休息</span>
-                            </li>
-                            <li>
-                                <p>粤A3456344</p>
-                                <span class="work">工作</span>
-                            </li>
-                            <li>
-                                <p>粤A3456344</p>
-                                <span class="nowork">休息</span>
-                            </li>
-                            <li>
-                                <p>粤A3456344</p>
-                                <span class="work">工作</span>
-                            </li>
-                            <li>
-                                <p>粤A3456344</p>
-                                <span class="nowork">休息</span>
-                            </li>
-                            <li>
-                                <p>粤A3456344</p>
-                                <span class="work">工作</span>
-                            </li>
-                            <li>
-                                <p>粤A3456344</p>
-                                <span class="nowork">休息</span>
-                            </li>
-                            <li>
-                                <p>粤A3456344</p>
-                                <span class="work">工作</span>
-                            </li>
-                            <li>
-                                <p>粤A3456344</p>
-                                <span class="nowork">休息</span>
-                            </li>
-                            <li>
-                                <p>粤A3456344</p>
-                                <span class="work">工作</span>
-                            </li>
-                            <li>
-                                <p>粤A3456344</p>
-                                <span class="nowork">休息</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="infoRight fr">
-                    <div class="rightWp">
-                        <div class="carIntro">
-                            <div class="introBox fl">
-                                <div class="carImg fl">
-                                    <img src="~/datacenter/images/ship.png">
-                                </div>
-                                <div class="carText fl clearfix">
-                                    <p>车辆类型：大车</p>
-                                    <p>本周工作时长：34.45小时</p>
-                                    <p>车牌号码：粤A3456344</p>
-                                    <p>统计时段：2018-1-12至2018-2-13</p>
-                                    <p>可载容量：20.0方</p>
-                                    <p>当前状态：<span class="color-green">工作</span></p>
-                                </div>
-                            </div>
-                            <div class="driver fr">
-                                <div class="photo">
-                                    <img src="~/datacenter/images/photo.jpg">
-                                </div>
-                                <p>司机：李思林</p>
-                            </div>
-                        </div>
-                        <div class="timetable">
-                            <div class="topTool">
-                                <div class="tableExplain fl">
-                                    <div class="itemExplain fl">
-                                        <span class="bg-green"></span>
-                                        <p>司机工作时间</p>
-                                    </div>
-                                    <div class="itemExplain fl">
-                                        <span class="bg-blue"></span>
-                                        <p>标准白晚班时间</p>
-                                    </div>
-                                </div>
-                                <div class="topBtns fr">
-                                    <a href="javascript:;" class="prevWeek">上一周</a>
-                                    <a href="javascript:;" class="nextWeek">下一周</a>
-                                </div>
-                            </div>
-                            <div class="tiemWp">
-                                <div class="timeInner">
-                                    <div class="weekList">
-                                        <div class="weekItem">
-                                            <div class="space1"></div>
-                                            <p>星期一</p>
-                                        </div>
-                                        <div class="weekItem">
-                                            <div class="space1"></div>
-                                            <p>星期二</p>
-                                        </div>
-                                        <div class="weekItem">
-                                            <div class="space1"></div>
-                                            <p>星期三</p>
-                                        </div>
-                                        <div class="weekItem">
-                                            <div class="space1"></div>
-                                            <p>星期四</p>
-                                        </div>
-                                        <div class="weekItem">
-                                            <div class="space1"></div>
-                                            <p>星期五</p>
-                                        </div>
-                                        <div class="weekItem">
-                                            <div class="space1"></div>
-                                            <p>星期六</p>
-                                        </div>
-                                        <div class="weekItem">
-                                            <div class="space1"></div>
-                                            <p>星期天</p>
-                                        </div>
-                                    </div>
-                                    <div class="timeBox">
-                                        <div class="dataContainer">
-                                            <div class="dataBox">
-                                                <div class="space1"></div>
-                                                <div class="workTime"></div>
-                                                <div class="space2"></div>
-                                                <div class="standard"></div>
-                                                <div class="space3"></div>
-                                            </div>
-                                            <div class="dataBox">
-                                                <div class="space1"></div>
-                                                <div class="workTime"></div>
-                                                <div class="space2"></div>
-                                                <div class="standard"></div>
-                                                <div class="space3"></div>
-                                            </div>
-                                            <div class="dataBox">
-                                                <div class="space1"></div>
-                                                <div class="workTime"></div>
-                                                <div class="space2"></div>
-                                                <div class="standard"></div>
-                                                <div class="space3"></div>
-                                            </div>
-                                            <div class="dataBox">
-                                                <div class="space1"></div>
-                                                <div class="workTime"></div>
-                                                <div class="space2"></div>
-                                                <div class="standard"></div>
-                                                <div class="space3"></div>
-                                            </div>
-                                            <div class="dataBox">
-                                                <div class="space1"></div>
-                                                <div class="workTime"></div>
-                                                <div class="space2"></div>
-                                                <div class="standard"></div>
-                                                <div class="space3"></div>
-                                            </div>
-                                            <div class="dataBox">
-                                                <div class="space1"></div>
-                                                <div class="workTime"></div>
-                                                <div class="space2"></div>
-                                                <div class="standard"></div>
-                                                <div class="space3"></div>
-                                            </div>
-                                            <div class="dataBox">
-                                                <div class="space1"></div>
-                                                <div class="workTime"></div>
-                                                <div class="space2"></div>
-                                                <div class="standard"></div>
-                                                <div class="space3"></div>
-                                            </div>
-                                        </div>
-                                        <div class="timeLine line1"><span>0:00</span></div>
-                                        <div class="timeLine line2"><span>3:00</span></div>
-                                        <div class="timeLine line3"><span>6:00</span></div>
-                                        <div class="timeLine line4"><span>9:00</span></div>
-                                        <div class="timeLine line5"><span>12:00</span></div>
-                                        <div class="timeLine line6"><span>15:00</span></div>
-                                        <div class="timeLine line7"><span>18:00</span></div>
-                                        <div class="timeLine line8"><span>21:00</span></div>
-                                        <div class="timeLine line9"><span>24:00</span></div>
-                                    </div>
-                                </div>
-                                <div class="totalTable">
-                                    <div class="totalTit">
-                                        <span>总用时/天</span>
-                                        <span>总单数/天</span>
-                                    </div>
-                                    <div class="totalData">
-                                        <div class="totalItem">
-                                            <div class="space1"></div>
-                                            <div class="tatleWp">
-                                                <span>0.00</span>
-                                                <span>0</span>
-                                            </div>
-                                            <div class="totalBar"></div>
-                                        </div>
-                                        <div class="totalItem">
-                                            <div class="space1"></div>
-                                            <div class="tatleWp">
-                                                <span>0.00</span>
-                                                <span>0</span>
-                                            </div>
-                                            <div class="totalBar"></div>
-                                        </div>
-                                        <div class="totalItem">
-                                            <div class="space1"></div>
-                                            <div class="tatleWp">
-                                                <span>0.00</span>
-                                                <span>0</span>
-                                            </div>
-                                            <div class="totalBar"></div>
-                                        </div>
-                                        <div class="totalItem">
-                                            <div class="space1"></div>
-                                            <div class="tatleWp">
-                                                <span>0.00</span>
-                                                <span>0</span>
-                                            </div>
-                                            <div class="totalBar"></div>
-                                        </div>
-                                        <div class="totalItem">
-                                            <div class="space1"></div>
-                                            <div class="tatleWp">
-                                                <span>0.00</span>
-                                                <span>0</span>
-                                            </div>
-                                            <div class="totalBar"></div>
-                                        </div>
-                                        <div class="totalItem">
-                                            <div class="space1"></div>
-                                            <div class="tatleWp">
-                                                <span>0.00</span>
-                                                <span>0</span>
-                                            </div>
-                                            <div class="totalBar"></div>
-                                        </div>
-                                        <div class="totalItem">
-                                            <div class="space1"></div>
-                                            <div class="tatleWp">
-                                                <span>0.00</span>
-                                                <span>0</span>
-                                            </div>
-                                            <div class="totalBar"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
     <canvas id="canvas" style="position: absolute;top: 0;left: 0;"></canvas>
 </body>
 </html>
 <script src="~/datacenter/js/bg.js"></script>
-<script src="~/datacenter/js/scanboard.js?version=202009142234"></script>
+<script src="~/datacenter/js/scanboard.js?version=202009161288"></script>
 <script src="~/datacenter/js/fontscroll.js"></script>
 <script src="~/datacenter/js/jquery.animsition.js"></script>
 <script src="~/datacenter/js/jquery.nicescroll.js"></script>

@@ -67,13 +67,17 @@ namespace ShipWeb.DB
         /// </summary>
         public DbSet<Crew> Crew { get; set; }
         /// <summary>
+        /// 船员考勤
+        /// </summary>
+        public DbSet<CrewAttendance> CrewAttendance { get; set; }
+        /// <summary>
         /// 船员图片
         /// </summary>
         public DbSet<CrewPicture> CrewPicture { get; set; }
         /// <summary>
         /// 报警
         /// </summary>
-        public DbSet<Alarm> Alarm { get; set; }
+        public DbSet<Alarm> Alarm { get; set; }          
         /// <summary>
         /// 报警位置
         /// </summary>
