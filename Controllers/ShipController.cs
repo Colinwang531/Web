@@ -17,9 +17,9 @@ namespace ShipWeb.Controllers
     public class ShipController : BaseController
     {
         private readonly MyContext _context;
-        private ProtoManager manager = new ProtoManager();
         private int timeout = 5000;//超时退出时间单位秒
         private ILogger<ShipController> _logger;
+        private SendDataMsg assembly = new SendDataMsg();
         public ShipController(MyContext context, ILogger<ShipController>logger)
         {
             _context = context;
@@ -99,31 +99,40 @@ namespace ShipWeb.Controllers
                     else
                     {
                         var nextIdentity = compents.FirstOrDefault(c => c.ShipId == item.Id).Id;
-                        new TaskFactory().StartNew(() =>
-                        {                           
-                            ProtoBuffer.Models.ComponentResponse rep = manager.ComponentQuery(nextIdentity);
-                            if (rep.result == 0)
+                        assembly.SendStatusQuery(nextIdentity);
+                        ProtoBuffer.Models.StatusResponse response = new ProtoBuffer.Models.StatusResponse();
+                        try
+                        {
+                            bool flag = true;
+                            new TaskFactory().StartNew(() =>
                             {
-                                var info = rep.componentinfos.Where(c => c.type == ProtoBuffer.Models.ComponentInfo.Type.WEB);
-                                if (info.Count() > 0)
+                                while (flag)
                                 {
-                                    model.Line = true;//在线
-                                    ProtoBuffer.Models.StatusResponse strep = manager.StatusQuery();
-                                    if (strep.result == 0)
+                                    if (ManagerHelp.Reponse != "")
                                     {
-                                        model.Name = strep.name;
-                                        model.flag = strep.flag;
-                                        //从船舶端过来的船名与陆地端不同时，更改陆地端的船名
-                                        if (item.Name != strep.name)
-                                        {
-                                            item.Name = strep.name;
-                                            _context.Ship.Update(item);
-                                            _context.SaveChanges();
-                                        }
+                                        response = JsonConvert.DeserializeObject<ProtoBuffer.Models.StatusResponse>(ManagerHelp.Reponse);
+                                        flag = false;
                                     }
                                 }
+                            }).Wait(timeout);
+                            flag = false;
+                        }
+                        catch (Exception)
+                        {
+                        }
+                        if (response.result==0)
+                        {
+                            model.Line = true;//在线
+                            model.Name = response.name;
+                            model.flag = response.flag;
+                            //从船舶端过来的船名与陆地端不同时，更改陆地端的船名
+                            if (item.Name != response.name)
+                            {
+                                item.Name = response.name;
+                                _context.Ship.Update(item);
+                                _context.SaveChanges();
                             }
-                        }).Wait(timeout);
+                        }
                     }
                     list.Add(model);
                 }
@@ -159,25 +168,19 @@ namespace ShipWeb.Controllers
                 {
                     var component = _context.Component.FirstOrDefault(c => c.Type == Component.ComponentType.WEB && c.ShipId == id);
                     #region 陆地端登陆船舶端修改船状态
-                    new TaskFactory().StartNew(() => {
-                        ShipWeb.ProtoBuffer.Models.StatusRequest sr = new ShipWeb.ProtoBuffer.Models.StatusRequest()
-                        {
-                            type = ShipWeb.ProtoBuffer.Models.StatusRequest.Type.SAIL,
-                            flag = type
-                        };
-                        var res = manager.StatussSet(sr, component.Id);
-                        sr = new ProtoBuffer.Models.StatusRequest()
-                        {
-                            type = ProtoBuffer.Models.StatusRequest.Type.NAME,
-                            text = name
-                        };
-                        var res1 = manager.StatussSet(sr,component.Id);
-                        if (res.result==0&&res1.result==0)
-                        {
-                            return new JsonResult(new { code = 0 });
-                        }
-                        return new JsonResult(new { code = 1, msg = "修改数据失败" });
-                    }).Wait(timeout);
+                    ShipWeb.ProtoBuffer.Models.StatusRequest sr = new ShipWeb.ProtoBuffer.Models.StatusRequest()
+                    {
+                        type = ShipWeb.ProtoBuffer.Models.StatusRequest.Type.SAIL,
+                        flag = type
+                    };
+                    assembly.SendStatusSet(sr, component.Id);
+                    sr = new ProtoBuffer.Models.StatusRequest()
+                    {
+                        type = ProtoBuffer.Models.StatusRequest.Type.NAME,
+                        text = name
+                    };
+                    assembly.SendStatusSet(sr, component.Id);                   
+                    return new JsonResult(new { code = 0 });
                     #endregion
                 }
                 else
@@ -197,39 +200,26 @@ namespace ShipWeb.Controllers
                         _context.SaveChanges();
                         if (!ManagerHelp.IsTest)
                         {
-                            new TaskFactory().StartNew(() => {
-                                ShipWeb.ProtoBuffer.Models.StatusRequest sr = new ShipWeb.ProtoBuffer.Models.StatusRequest()
+                            ShipWeb.ProtoBuffer.Models.StatusRequest sr = new ShipWeb.ProtoBuffer.Models.StatusRequest()
+                            {
+                                type = ShipWeb.ProtoBuffer.Models.StatusRequest.Type.SAIL,
+                                flag = type
+                            };
+                            assembly.SendStatusSet(sr);
+                            if (ship.Name != name)
+                            {
+                                sr = new ProtoBuffer.Models.StatusRequest()
                                 {
-                                    type = ShipWeb.ProtoBuffer.Models.StatusRequest.Type.SAIL,
-                                    flag = type
+                                    type = ProtoBuffer.Models.StatusRequest.Type.NAME,
+                                    text = name
                                 };
-                                if (type == (int)Ship.Type.AUTO)
-                                {
-                                    var result = manager.StatussSet(sr);
-                                    if (result.result == 0)
-                                    {
-                                        ship.Flag = result.flag;
-                                        _context.Ship.Update(ship);
-                                        _context.SaveChanges();
-                                    }
-
-                                }
-                                if (ship.Name != name)
-                                {
-                                    sr = new ProtoBuffer.Models.StatusRequest()
-                                    {
-                                        type = ProtoBuffer.Models.StatusRequest.Type.NAME,
-                                        text = name
-                                    };
-                                    manager.StatussSet(sr);
-                                }
-                            }).Wait(timeout);
+                                assembly.SendStatusSet(sr);
+                            }
                         }
                     }
                     return new JsonResult(new { code = 0 });
                     #endregion
                 }
-                return new JsonResult(new { code = 1, msg = "请求超时。。。" });
             }
             catch (Exception ex)
             {

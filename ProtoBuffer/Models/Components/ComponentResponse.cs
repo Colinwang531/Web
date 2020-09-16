@@ -19,6 +19,8 @@ namespace ShipWeb.ProtoBuffer.Models
         /// </summary>
         [ProtoMember(2)]
         public string cid { get; set; }
+
+        [ProtoMember(3)]
         /// <summary>
         /// 组件信息
         /// </summary>

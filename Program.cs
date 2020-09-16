@@ -30,7 +30,7 @@ namespace ShipWeb
                 string inputPort = args[3];
                 Console.WriteLine(inputPort);
                 string IP = "tcp://"+inputIp+":"+inputPort;
-                ProtoManager.IP = IP;
+                //ProtoManager.IP = IP;
             }
             CreateHostBuilder(args).Build().Run();
         }

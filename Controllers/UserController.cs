@@ -21,11 +21,9 @@ namespace ShipWeb.Controllers
     public class UserController : BaseController
     {
         private readonly MyContext _context;
-        private ProtoManager manager;
         public UserController(MyContext context)
         {
             _context = context;
-            manager = new ProtoManager();
         }
 
         // GET: User

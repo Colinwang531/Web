@@ -15,7 +15,8 @@ namespace ShipWeb.Models
             WEB=2,
             HKD=3,
             DHD=4,
-            ALM=5
+            ALM=5,
+            AI=6
         }
         /// <summary>
         /// 主键id

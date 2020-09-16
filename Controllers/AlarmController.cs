@@ -130,8 +130,9 @@ namespace ShipWeb.Controllers
             }
             var ship = _context.Ship.Where(c =>c.Id==shipId).FirstOrDefault();
             var list = GetDate(model, 1, 1000000, out total);
-            string time = startTime + "~" + endTime; 
-            string html =ManagerHelp.GetHtml(list, time,ship.Name);          
+            string time = startTime + "~" + endTime;
+            var address=HttpContext.Request.Scheme + "://" + HttpContext.Request.Host;
+            string html =ManagerHelp.GetHtml(list, time,ship.Name, address);          
             //生成PDF
             var pdfBytes = _PDFService.CreatePDF(html);
 
