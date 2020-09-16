@@ -34,6 +34,7 @@ namespace ShipWeb.DB
             modelBuilder.Entity<Attendance>();
             modelBuilder.Entity<AttendancePicture>(); 
             modelBuilder.Entity<Fleet>();
+            modelBuilder.Entity<ReceiveLog>();
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -94,6 +95,10 @@ namespace ShipWeb.DB
         /// 船队管理
         /// </summary>
         public DbSet<Fleet> Fleet { get; set; }
+        /// <summary>
+        /// 接收日志
+        /// </summary>
+        public DbSet<ReceiveLog> ReceiveLog { get; set; }
 
         #region 扩展查询对象
         /// <summary>
