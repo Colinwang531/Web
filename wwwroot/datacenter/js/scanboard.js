@@ -78,7 +78,7 @@ $(function () {
         SetShipList(text);
     })
 
-
+    //统计数字增长的动画(Dom对象,增长速度)
     function totalNum(obj, speed) {
         var singalNum = 0;
         var timer;
@@ -127,14 +127,14 @@ $(function () {
             }, speed);
         });
 
-        //总计运单数
-        totalNum($('#totalNum'), 1000);
+        //总计报警数
+        totalNum($('#totalNum'), 2);
         //基本信息
         totalNum($('#indicator1'), 1);
         totalNum($('#indicator2'), 1);
         totalNum($('#indicator3'), 1);
-
     }, 500);
+
 
     var summaryPie1, summaryPie2, summaryPie3, summaryBar, summaryLine;
     var pieData;
@@ -602,6 +602,7 @@ $(function () {
     SetDataStatis();
     SetShipList(null);
     SetMonthAlarmStatis();
+    SetAlarmCount();
     SetCountInfo();
     SetAttendance();
 });
@@ -720,7 +721,6 @@ function SetDataStatis() {
         }
     });
 }
-
 //船舶信息集合 高德地图展示
 function SetShipList(shipName) {
     var map = new AMap.Map("myMap", {
@@ -792,17 +792,17 @@ function SetShipList(shipName) {
 }
 //月报警量统计
 function SetMonthAlarmStatis() {
-    $("#yearMonth").html("("+new Date().getFullYear() + "年" + (new Date().getMonth() + 1)+"月)");
+    $("#yearMonth").html("(" + new Date().getFullYear() + "年" + (new Date().getMonth() + 1) + "月)");
     var myChartMonthAlarm = echarts.init(document.getElementById('myChartMonthAlarm'));
     $.get("/Home/GetMonthAlarmStatis", function (res) {
         //长度为月天数总数的数组，填充默认值0
         let dataArray = Array.apply(null, Array(getCountDays())).map(() => "0");
         res.forEach(function (item, index) {
             //具体天数          
-            var thisDay = new Date(item.time).getDate();         
+            var thisDay = new Date(item.time).getDate();
             dataArray[thisDay - 1] = item.count.toString();
         });
-        
+
         var optionMonthAlarm = {
             tooltip: {
                 trigger: 'item',
@@ -878,7 +878,12 @@ function SetMonthAlarmStatis() {
         }, 500);
     });
 }
-
+//总计报警数
+function SetAlarmCount() {
+    $.get("/Home/GetAlarmCount", function (res) {
+        $('#totalNum').attr("total", res);
+    });
+}
 //基本信息
 function SetCountInfo() {
     $.get("/Home/GetCountInfo", function (res) {

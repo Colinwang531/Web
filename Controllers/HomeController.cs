@@ -133,6 +133,15 @@ namespace ShipWeb.Controllers
             var result = DapperContext.Query<MonthAlarm>(sql);
             return Json(result);
         }
+        /// <summary>
+        /// 总计报警数
+        /// </summary>
+        /// <returns></returns>
+        public JsonResult GetAlarmCount()
+        {
+            var result = DapperContext.QueryFirstOrDefault<int>("SELECT count(1) FROM Alarm");
+            return Json(result);
+        }
 
         /// <summary>
         /// 基本信息
