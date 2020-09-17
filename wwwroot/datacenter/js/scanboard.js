@@ -104,7 +104,12 @@ $(function () {
             var timer;
 
             $(ele).find('h4').html(zero + '%');
-            if (PGNum < 10) {
+            //负数处理
+            if (PGNum <= 0) {
+                $(ele).find('.progressBar span').addClass('bg-blue1');
+                $(ele).find('h3 i').addClass('color-blue1');
+            }
+            else if (PGNum < 10) {
                 $(ele).find('.progressBar span').addClass('bg-red');
                 $(ele).find('h3 i').addClass('color-red');
             } else if (PGNum >= 10 && PGNum < 50) {
@@ -122,6 +127,11 @@ $(function () {
                 zero++;
                 $(ele).find('h4').html(zero + '%');
                 if (zero == PGNum) {
+                    clearInterval(timer);
+                }
+                //负数处理
+                else if (zero >= Math.abs(PGNum)) {
+                    $(ele).find('h4').html(-zero + '%');
                     clearInterval(timer);
                 }
             }, speed);
@@ -599,6 +609,7 @@ $(function () {
 
     //加载后端数据
     SetAlarmType();
+    SetMonthAlarmCount();
     SetDataStatis();
     SetShipList(null);
     SetMonthAlarmStatis();
@@ -678,7 +689,53 @@ function SetAlarmType(month) {
         }
     })
 }
+//各类型环比统计
+function SetMonthAlarmCount() {
+    $.get("/Home/GetMonthAlarmCount", function (res) {
+        if (res == null) return;
+        let temp = "";
+        res.forEach(function (item) {
+            let alarmType;
+            switch (item.Type) {
+                case 1:
+                    alarmType = "安全帽";
+                    break;
+                case 2:
+                    alarmType = "打电话";
+                    break;
+                case 3:
+                    alarmType = "睡觉";
+                    break;
+                case 4:
+                    alarmType = "打架";
+                    break;
+                default:
+                    alarmType = "未知";
+                    break;
+            }
 
+            let chain;
+            if (item.upMonth == 0)
+                chain = Math.round(item.currentMonth * 100);
+            else
+                chain = Math.round((item.currentMonth - item.upMonth) / item.upMonth * 100);
+
+            temp += '<li><div class="fontInner clearfix" style="width: 98%;">' +
+                '<span>' + alarmType + '</span>' +
+                '<span style="color: #45c6a6;">' + item.upMonth + '</span>' +
+                '<span style="color: #45c7b7;">' + item.currentMonth + '</span>' +
+                '<span style="color: #45c8c8;">' + (item.currentMonth - item.upMonth) + '</span>' +
+                '<span><div class="progress" progress="' + chain + '%">' +
+                '<h3><i><h4></h4></i></h3>' +
+                '</div></span>' +
+                '</div></li>';
+        });
+        $("#FontScrollAlarm ul").empty();
+        $("#FontScrollAlarm ul").append(temp);
+        //文字滚动
+        $('#FontScrollAlarm').FontScroll({ time: 3000, num: 1 });
+    });
+}
 //设备数据统计
 function SetDataStatis() {
     var myCountStatis = echarts.init(document.getElementById('myCountStatis'));

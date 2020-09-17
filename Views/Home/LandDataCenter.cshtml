@@ -9,7 +9,7 @@
     <meta http-equiv="refresh" content="600" />
     <title>数据中心大屏-禹创</title>
     <link href="~/datacenter/css/reset.css" rel="stylesheet" />
-    <link href="~/datacenter/css/scanboard.css?version=202009161621" rel="stylesheet" />
+    <link href="~/datacenter/css/scanboard.css?version=202009161622" rel="stylesheet" />
     <link href="~/datacenter/css/animsition.css" rel="stylesheet" />
     <link href="~/datacenter/css/jquery.shCircleLoader.css" rel="stylesheet" />
     <script src="~/datacenter/js/jquery.js"></script>
@@ -59,33 +59,24 @@
                 </div>
 
                 <!--各阶段平均用时统计-->
-                <div class="item" style="height:30%">
+                <div class="item billState" style="height:30%">
                     <div class="itemTit">
-                        <span class="border-green"><s>各阶段平均用时统计</s></span>
+                        <span class="border-green">各类型环比统计</span>
                     </div>
                     <div class="itemCon">
-                        <ul class="listStyle">
-                            <li class="clearfix">
-                                <span>下单…配车</span>
-                                <span><strong>3.4</strong>秒</span>
-                            </li>
-                            <li class="clearfix">
-                                <span>配车…装货</span>
-                                <span><strong>24</strong>分钟</span>
-                            </li>
-                            <li class="clearfix">
-                                <span>到厂卸货</span>
-                                <span><strong>14</strong>分钟</span>
-                            </li>
-                            <li class="clearfix">
-                                <span>装回收器具</span>
-                                <span><strong>7</strong>分钟</span>
-                            </li>
-                            <li class="clearfix">
-                                <span>卸回收器具</span>
-                                <span><strong>5</strong>分钟</span>
-                            </li>
-                        </ul>
+                        <div class="StateBoxAlarm">
+                            <div class="StateTit" style="width: 98%;">
+                                <span>报警类型</span>
+                                <span>上月报警</span>
+                                <span>本月报警</span>
+                                <span>增量</span>
+                                <span>环比</span>
+                            </div>
+                            <div id="FontScrollAlarm">
+                                <ul>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -227,7 +218,7 @@
 </body>
 </html>
 <script src="~/datacenter/js/bg.js"></script>
-<script src="~/datacenter/js/scanboard.js?version=202009161278"></script>
+<script src="~/datacenter/js/scanboard.js?version=202009161280"></script>
 <script src="~/datacenter/js/fontscroll.js"></script>
 <script src="~/datacenter/js/jquery.animsition.js"></script>
 <script src="~/datacenter/js/jquery.nicescroll.js"></script>

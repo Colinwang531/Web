@@ -44,7 +44,9 @@ body {
 .color-blue {
     color: #1eb6fe !important;
 }
-
+.color-blue1 {
+    color: #884799 !important;
+}
 .color-red {
     color: #ff0e0d !important;
 }
@@ -91,6 +93,10 @@ body {
 
 .bg-red {
     background-color: #ff0e0d !important;
+}
+
+.bg-blue1 {
+    background-color: #884799 !important;
 }
 
 .wp {
@@ -329,7 +335,7 @@ body {
 
 .listStyle li span {
     float: left;
-    width: 50%;
+    width: 25%;
     color: #fff;
     font-size: 15px;
     height: 32px;
@@ -492,6 +498,45 @@ body {
     border-bottom: 1px dashed #404040;
 }
 
+.billState .StateBoxAlarm span {
+    float: left;
+    width: 33%;
+    height: 37px;
+    line-height: 37px;
+    color: #fff;
+    overflow: hidden;
+    text-overflow: ellipsis
+}
+
+    .billState .StateBoxAlarm span:nth-child(1) {
+        width: 20%;
+    }
+
+    .billState .StateBoxAlarm span:nth-child(2) {
+        width: 20%;
+    }
+
+    .billState .StateBoxAlarm span:nth-child(3) {
+        width: 20%;
+    }
+
+    .billState .StateBoxAlarm span:nth-child(4) {
+        width: 20%;
+        text-align: center;
+        border-radius: 5px;
+        height: 20px;
+        line-height: 20px;
+        margin-top: 8.5px;
+    }
+
+    .billState .StateBoxAlarm span:nth-child(5) {
+        width: 20%;
+    }
+
+.billState .StateBoxAlarm .fontInner {
+    border-bottom: 1px dashed #404040;
+}
+
 .billState .progress {
     height: 6px;
     position: relative;
@@ -529,6 +574,15 @@ body {
     overflow: hidden;
 }
 
+#FontScrollAlarm {
+    height: 115px;
+    overflow: hidden;
+    text-align: center;
+}
+
+    #FontScrollAlarm h3 {
+        position: relative;
+    }
 
 .filterbg {
     width: 100%;
@@ -785,6 +839,49 @@ body {
             width: 22%;
         }
 
+    .billState .StateBox .fontInner {
+        border-bottom: 1px dashed #404040;
+    }
+
+    .billState .StateBoxAlarm span {
+        float: left;
+        width: 33%;
+        height: 37px;
+        line-height: 37px;
+        color: #fff;
+        overflow: hidden;
+        text-overflow: ellipsis
+    }
+
+        .billState .StateBoxAlarm span:nth-child(1) {
+            width: 20%;
+        }
+
+        .billState .StateBoxAlarm span:nth-child(2) {
+            width: 20%;
+        }
+
+        .billState .StateBoxAlarm span:nth-child(3) {
+            width: 20%;
+        }
+
+        .billState .StateBoxAlarm span:nth-child(4) {
+            width: 20%;
+            text-align: center;
+            border-radius: 5px;
+            height: 20px;
+            line-height: 20px;
+            margin-top: 8.5px;
+        }
+
+        .billState .StateBoxAlarm span:nth-child(5) {
+            width: 20%;
+        }
+
+    .billState .StateBoxAlarm .fontInner {
+        border-bottom: 1px dashed #404040;
+    }
+
     .billState .progress {
         margin-top: 15px;
     }
@@ -799,7 +896,14 @@ body {
         height: 228px;
     }
 
-
+    #FontScrollAlarm {
+        height: 115px;
+        overflow: hidden;
+        text-align: center;
+    }
+        #FontScrollAlarm h3 {
+            position: relative;
+        }
     .popup .popupClose {
         width: 40px;
         height: 40px;
@@ -962,6 +1066,49 @@ body {
             width: 22%;
         }
 
+    .billState .StateBox .fontInner {
+        border-bottom: 1px dashed #404040;
+    }
+
+    .billState .StateBoxAlarm span {
+        float: left;
+        width: 33%;
+        height: 37px;
+        line-height: 37px;
+        color: #fff;
+        overflow: hidden;
+        text-overflow: ellipsis
+    }
+
+        .billState .StateBoxAlarm span:nth-child(1) {
+            width: 20%;
+        }
+
+        .billState .StateBoxAlarm span:nth-child(2) {
+            width: 20%;
+        }
+
+        .billState .StateBoxAlarm span:nth-child(3) {
+            width: 20%;
+        }
+
+        .billState .StateBoxAlarm span:nth-child(4) {
+            width: 20%;
+            text-align: center;
+            border-radius: 5px;
+            height: 20px;
+            line-height: 20px;
+            margin-top: 8.5px;
+        }
+
+        .billState .StateBoxAlarm span:nth-child(5) {
+            width: 20%;
+        }
+
+    .billState .StateBoxAlarm .fontInner {
+        border-bottom: 1px dashed #404040;
+    }
+
     .billState .progress {
         margin-top: 15px;
     }
@@ -976,7 +1123,14 @@ body {
         height: 190px;
     }
 
-
+    #FontScrollAlarm {
+        height: 77px;
+        overflow: hidden;
+        text-align: center;
+    }
+        #FontScrollAlarm h3 {
+            position: relative;
+        }
     .popup .popupClose {
         width: 36px;
         height: 36px;
@@ -1145,6 +1299,49 @@ body {
             width: 22%;
         }
 
+    .billState .StateBox .fontInner {
+        border-bottom: 1px dashed #404040;
+    }
+
+    .billState .StateBoxAlarm span {
+        float: left;
+        width: 33%;
+        height: 37px;
+        line-height: 37px;
+        color: #fff;
+        overflow: hidden;
+        text-overflow: ellipsis
+    }
+
+        .billState .StateBoxAlarm span:nth-child(1) {
+            width: 20%;
+        }
+
+        .billState .StateBoxAlarm span:nth-child(2) {
+            width: 20%;
+        }
+
+        .billState .StateBoxAlarm span:nth-child(3) {
+            width: 20%;
+        }
+
+        .billState .StateBoxAlarm span:nth-child(4) {
+            width: 20%;
+            text-align: center;
+            border-radius: 5px;
+            height: 20px;
+            line-height: 20px;
+            margin-top: 8.5px;
+        }
+
+        .billState .StateBoxAlarm span:nth-child(5) {
+            width: 20%;
+        }
+
+    .billState .StateBoxAlarm .fontInner {
+        border-bottom: 1px dashed #404040;
+    }
+
     .billState .progress {
         margin-top: 12px;
     }
@@ -1159,7 +1356,14 @@ body {
         height: 128px;
     }
 
-
+    #FontScrollAlarm {
+        height: 15px;
+        overflow: hidden;
+        text-align: center;
+    }
+        #FontScrollAlarm h3 {
+            position: relative;
+        }
     .popup .popupClose {
         width: 32px;
         height: 32px;
@@ -1340,6 +1544,49 @@ body {
             width: 22%;
         }
 
+    .billState .StateBox .fontInner {
+        border-bottom: 1px dashed #404040;
+    }
+
+    .billState .StateBoxAlarm span {
+        float: left;
+        width: 33%;
+        height: 37px;
+        line-height: 37px;
+        color: #fff;
+        overflow: hidden;
+        text-overflow: ellipsis
+    }
+
+        .billState .StateBoxAlarm span:nth-child(1) {
+            width: 20%;
+        }
+
+        .billState .StateBoxAlarm span:nth-child(2) {
+            width: 20%;
+        }
+
+        .billState .StateBoxAlarm span:nth-child(3) {
+            width: 20%;
+        }
+
+        .billState .StateBoxAlarm span:nth-child(4) {
+            width: 20%;
+            text-align: center;
+            border-radius: 5px;
+            height: 20px;
+            line-height: 20px;
+            margin-top: 8.5px;
+        }
+
+        .billState .StateBoxAlarm span:nth-child(5) {
+            width: 20%;
+        }
+
+    .billState .StateBoxAlarm .fontInner {
+        border-bottom: 1px dashed #404040;
+    }
+
     .billState .progress {
         margin-top: 12px;
     }
@@ -1354,7 +1601,14 @@ body {
         height: 128px;
     }
 
-
+    #FontScrollAlarm {
+        height: 15px;
+        overflow: hidden;
+        text-align: center;
+    }
+        #FontScrollAlarm h3 {
+            position: relative;
+        }
     .popup .popupClose {
         width: 32px;
         height: 32px;

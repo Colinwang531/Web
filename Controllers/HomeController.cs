@@ -86,6 +86,22 @@ namespace ShipWeb.Controllers
         }
 
         /// <summary>
+        /// 获取当月上月报警数量 计算环比
+        /// </summary>
+        /// <returns></returns>
+        public JsonResult GetMonthAlarmCount()
+        {          
+            DateTime now =DateTime.Now;
+            var upStartTime = now.AddMonths(-1).AddDays(1 - now.Day);//上月月初
+            var upEndTime = upStartTime.AddMonths(1).AddDays(-1);//上月月末
+            var currentStartTime = now.AddDays(1 - now.Day);//本月月初
+            var currentEndTime = currentStartTime.AddMonths(1).AddDays(-1);//本月月末
+
+            var result = DapperContext.Query<object>($"SELECT a.Type,COUNT(CASE WHEN('{currentStartTime:yyyy-MM-dd 00:00:00}' < a.Time and '{currentEndTime:yyyy-MM-dd 23:59:59}' > a.Time) THEN 1 ELSE   null END) currentMonth, COUNT(CASE WHEN('{upStartTime:yyyy-MM-dd 00:00:00}' < a.Time and '{upEndTime:yyyy-MM-dd 23:59:59}' > a.Time) THEN 1 ELSE   null END) upMonth from Alarm a GROUP BY a.Type ORDER BY a.Type ");
+            return Json(result);
+        }
+
+        /// <summary>
         /// 数据统计
         /// </summary>
         /// <returns></returns>
