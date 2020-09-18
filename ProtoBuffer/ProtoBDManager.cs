@@ -245,9 +245,8 @@ namespace ShipWeb.ProtoBuffer
                 List<CrewInfo> list = new List<CrewInfo>();
                 //获取船员信息
                 var dbempl = _context.Crew.Where(c =>(!string.IsNullOrEmpty(uid) ? c.Id == uid : 1 == 1)).ToList();
-                var picIds = string.Join(',', dbempl.Select(c => c.Id));
                 //获取船员图片
-                var pics = _context.CrewPicture.Where(c => picIds.Contains(c.CrewId)).ToList();
+                var pics = _context.CrewPicture.ToList();
                 foreach (var item in dbempl)
                 {
                     CrewInfo em = new CrewInfo()
@@ -260,8 +259,8 @@ namespace ShipWeb.ProtoBuffer
                     var picList = pics.Where(c => c.CrewId == item.Id);
                     foreach (var itpic in picList)
                     {
-                        //string pic = Encoding.UTF8.GetString(itpic.Picture);
-                        //byte[] by = Encoding.UTF8.GetBytes(itpic.Id + "," + pic);
+                        string pic = Encoding.UTF8.GetString(itpic.Picture);
+                        byte[] by = Encoding.UTF8.GetBytes(itpic.Id + "," + pic);
                         em.pictures.Add(itpic.Picture);
                     }
                     list.Add(em);
