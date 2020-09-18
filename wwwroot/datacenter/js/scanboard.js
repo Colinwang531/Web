@@ -96,6 +96,7 @@ $(function () {
         }
     }
     setTimeout(function () {
+        //数字百分比样式处理
         $('.progress').each(function (i, ele) {
             var PG = $(ele).attr('progress');
             var PGNum = parseInt(PG);
@@ -105,9 +106,13 @@ $(function () {
 
             $(ele).find('h4').html(zero + '%');
             //负数处理
-            if (PGNum <= 0) {
-                $(ele).find('.progressBar span').addClass('bg-blue1');
-                $(ele).find('h3 i').addClass('color-blue1');
+            if (PGNum < 0) {
+                $(ele).find('.progressBar span').addClass('bg-purple');
+                $(ele).find('h3 i').addClass('color-purple');
+            }
+            else if (PGNum == 0) {
+                $(ele).find('.progressBar span').addClass('bg-gray');
+                $(ele).find('h3 i').addClass('color-gray');
             }
             else if (PGNum < 10) {
                 $(ele).find('.progressBar span').addClass('bg-red');
@@ -131,7 +136,7 @@ $(function () {
                 }
                 //负数处理
                 else if (zero >= Math.abs(PGNum)) {
-                    $(ele).find('h4').html(-zero + '%');
+                    $(ele).find('h4').html(PGNum + '%');
                     clearInterval(timer);
                 }
             }, speed);
@@ -559,7 +564,7 @@ $(function () {
         summaryLine.setOption(lineOption);
     }
 
-    //弹窗
+    //弹窗部分 未完待续
     $('.summaryBtn').on('click', function () {
         $('.filterbg').show();
         $('.popup').show();
@@ -606,6 +611,7 @@ $(function () {
             return false;
         }
     });
+
 
     //加载后端数据
     SetAlarmType();

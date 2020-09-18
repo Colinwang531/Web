@@ -44,9 +44,15 @@ body {
 .color-blue {
     color: #1eb6fe !important;
 }
-.color-blue1 {
+
+.color-gray {
+    color: #9ca6b3 !important;
+}
+
+.color-purple {
     color: #884799 !important;
 }
+
 .color-red {
     color: #ff0e0d !important;
 }
@@ -91,12 +97,16 @@ body {
     background-color: #1eb6fe !important;
 }
 
-.bg-red {
-    background-color: #ff0e0d !important;
+.bg-gray {
+    background-color: #9ca6b3 !important;
 }
 
-.bg-blue1 {
+.bg-purple {
     background-color: #884799 !important;
+}
+
+.bg-red {
+    background-color: #ff0e0d !important;
 }
 
 .wp {
@@ -901,9 +911,11 @@ body {
         overflow: hidden;
         text-align: center;
     }
+
         #FontScrollAlarm h3 {
             position: relative;
         }
+
     .popup .popupClose {
         width: 40px;
         height: 40px;
@@ -1128,9 +1140,11 @@ body {
         overflow: hidden;
         text-align: center;
     }
+
         #FontScrollAlarm h3 {
             position: relative;
         }
+
     .popup .popupClose {
         width: 36px;
         height: 36px;
@@ -1361,9 +1375,11 @@ body {
         overflow: hidden;
         text-align: center;
     }
+
         #FontScrollAlarm h3 {
             position: relative;
         }
+
     .popup .popupClose {
         width: 32px;
         height: 32px;
@@ -1606,9 +1622,11 @@ body {
         overflow: hidden;
         text-align: center;
     }
+
         #FontScrollAlarm h3 {
             position: relative;
         }
+
     .popup .popupClose {
         width: 32px;
         height: 32px;
