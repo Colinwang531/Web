@@ -34,7 +34,11 @@ namespace ShipWeb.ProtoBuffer.Models
 			/// <summary>
 			/// 算法组件
 			/// </summary>
-		    AI=6
+		    AI=6,
+			/// <summary>
+			/// 流媒体组件
+			/// </summary>
+			MED = 7
 		}
 		/// <summary>
 		/// 注册类型

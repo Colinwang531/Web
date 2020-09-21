@@ -432,14 +432,16 @@ namespace ShipWeb.ProtoBuffer
                                  a.DectectSecond,
                                  a.Track,
                                  a.Similar,
-                                 d.NickName
+                                 d.NickName,
+                                 d.Index,
+                                 d.DeviceId
                              };
                 foreach (var item in config)
                 {
                     AlgorithmInfo cf = new AlgorithmInfo()
                     {
                         aid = item.Id + "," + item.NickName,
-                        cid=item.Cid,
+                        cid=item.DeviceId+":"+item.Cid+":"+item.Index,
                         type = (AlgorithmInfo.Type)item.Type,
                         gpu = item.GPU,
                         similar = item.Similar,

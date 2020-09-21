@@ -23,6 +23,7 @@ namespace ShipWeb.Controllers
         private ILogger<AlgorithmController> _logger;
         //缓存船舶端的设备信息
         List<ProtoBuffer.Models.DeviceInfo> boatDevices = new List<ProtoBuffer.Models.DeviceInfo>();
+        List<Camera> cameras = new List<Camera>();
         public AlgorithmController(MyContext context, ILogger<AlgorithmController> logger) 
         {
             _context = context;
@@ -70,7 +71,6 @@ namespace ShipWeb.Controllers
         }
         public IActionResult LandLoad()
         {
-            List<Camera> cameras = new List<Camera>();
             string shipId = base.user.ShipId;
             var comtent = _context.Component.FirstOrDefault(c => c.ShipId == shipId&&c.Type==Component.ComponentType.WEB);
             List<ProtoBuffer.Models.AlgorithmInfo> protoDate = new List<ProtoBuffer.Models.AlgorithmInfo>();
@@ -172,7 +172,9 @@ namespace ShipWeb.Controllers
                     string msg = "";
                     if (base.user.IsLandHome&&!ManagerHelp.IsTest)
                     {
-                        ProtoBuffer.Models.AlgorithmInfo algorithm = GetProtoAlgorithm(viewModel);
+                        var cam=cameras.FirstOrDefault(c => c.Id == viewModel.Cid);
+                        string cid = cam.DeviceId + ":" + cam.Id + ":" + cam.Index;
+                        ProtoBuffer.Models.AlgorithmInfo algorithm = GetProtoAlgorithm(viewModel,cid);
                         var compent = _context.Component.Where(c => c.ShipId == shipId && (c.Type == Component.ComponentType.WEB || c.Type == Component.ComponentType.AI));
                         if (compent == null)
                         {
@@ -246,7 +248,9 @@ namespace ShipWeb.Controllers
                                 _context.Algorithm.Update(algo);
                             }
                             viewModel.Id = algo.Id;
-                            ProtoBuffer.Models.AlgorithmInfo algorithm = GetProtoAlgorithm(viewModel);
+                            var camera = _context.Camera.FirstOrDefault(c => c.Id == viewModel.Cid);
+                            string cid = camera.DeviceId + ":" + camera.Id + ":" + camera.Index;
+                            ProtoBuffer.Models.AlgorithmInfo algorithm = GetProtoAlgorithm(viewModel,cid);
                             if (SendData(algorithm, compent.Id))
                             {
                                 _context.SaveChanges();
@@ -406,11 +410,12 @@ namespace ShipWeb.Controllers
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        private ProtoBuffer.Models.AlgorithmInfo GetProtoAlgorithm(AlgorithmViewModel model) 
+        private ProtoBuffer.Models.AlgorithmInfo GetProtoAlgorithm(AlgorithmViewModel model,string cid) 
         {
             ProtoBuffer.Models.AlgorithmInfo info = new ProtoBuffer.Models.AlgorithmInfo()
             {
-                cid = model.Id==""? model.Cid : (model.Id + ","+model.Cid),
+                cid =cid,
+                aid=model.Id,
                 gpu = model.GPU,
                 similar = (float)model.Similar,
                 dectectfirst = (float)model.DectectFirst,
