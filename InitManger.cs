@@ -243,5 +243,52 @@ namespace ShipWeb
             }
             #endregion
         }
+        public static void TestAttendance()
+        {
+            var pathDir = AppContext.BaseDirectory + "/testImg/";
+            var images = Directory.GetFiles(pathDir);
+            using (var context = new MyContext())
+            {
+                int index = 0;
+                foreach (var item in images)
+                {
+                    FileStream fs = new FileStream(item, FileMode.Open, FileAccess.Read);
+                    byte[] byt = new byte[fs.Length];
+                    fs.Read(byt, 0, Convert.ToInt32(fs.Length));
+                    fs.Close();
+                    string pics = Convert.ToBase64String(byt);
+                    string ids = string.Join(',', context.Attendance.Select(d => d.CrewId));
+                    var crew = context.Crew.Where(c=>!ids.Contains(c.Id)).ToList();
+                    string shipId = "2eb85d83-1144-428d-a640-54b7a343851a";
+                    string crewId = crew[index].Id;
+                    for (int i = 0; i < 2; i++)
+                    {
+                        string identity = Guid.NewGuid().ToString();
+                        Attendance attendance = new Attendance()
+                        {
+                            Behavior = i,
+                            Id = identity,
+                            CameraId =i==0? "bc03715d-eb40-48f6-8fd3-174534353fa8": "f0b180bd-68d0-4811-bc97-dec5fe57b501",
+                            ShipId = shipId,
+                            Time = DateTime.Now,
+                            CrewId = crewId,
+                            attendancePictures = new List<AttendancePicture>()
+                            {
+                                new AttendancePicture ()
+                                {
+                                     AttendanceId=identity,
+                                     Id=Guid.NewGuid().ToString(),
+                                     Picture= Encoding.UTF8.GetBytes(pics),
+                                     ShipId=shipId
+                                }
+                            }
+                        };
+                        context.Attendance.Add(attendance);
+                    }
+                    index++;
+                }
+                context.SaveChanges();
+            }
+        }
     }
 }
