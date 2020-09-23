@@ -169,8 +169,6 @@ namespace ShipWeb.Controllers
                 var viewModel = JsonConvert.DeserializeObject<AlgorithmViewModel>(model);
                 if (viewModel != null)
                 {
-                    int code = 1;
-                    string msg = "";
                     if (base.user.IsLandHome&&!ManagerHelp.IsTest)
                     {
                         string identity = GetIdentity(viewModel.Type);
@@ -185,14 +183,14 @@ namespace ShipWeb.Controllers
                         if (SendData(algorithm,(shipId + ":" + identity)))
                         {
                             _context.SaveChanges();
-                            code = 0;
                         }
-                        return new JsonResult(new { code = code, msg = msg });
+                        return new JsonResult(new { code = 0});
                     }
                     else
                     {
                         Algorithm algo = new Algorithm();
-                        if (!DataCheck(viewModel,algo,ref msg))
+                        string msg = "";
+                        if (!DataCheck(viewModel,ref algo,ref msg))
                         {
                             return new JsonResult(new { code = 1, msg = msg });
                         }
@@ -220,6 +218,7 @@ namespace ShipWeb.Controllers
                             }
                             else
                             {
+                                algo.Id = viewModel.Id;
                                 _context.Algorithm.Update(algo);
                             }
                             viewModel.Id = algo.Id;
@@ -229,7 +228,6 @@ namespace ShipWeb.Controllers
                             if (SendData(algorithm, identity))
                             {
                                 _context.SaveChanges();
-                                code = 0;
                                 #region 发送二次请求 暂时不用
                                 ////根据摄像机获取设备下的通讯ID
                                 //var factory = _context.Device.FirstOrDefault(c => c.Id == (_context.Camera.FirstOrDefault(d => d.Id == viewModel.Cid).DeviceId)).factory;
@@ -246,8 +244,6 @@ namespace ShipWeb.Controllers
                                 //}
                                 #endregion
                             }
-                            code = 1;
-                            msg = "请求超时";
                         }
                         else
                         {
@@ -259,22 +255,23 @@ namespace ShipWeb.Controllers
                             algo.DectectSecond = viewModel.DectectSecond;
                             algo.Track = viewModel.Track;
                             algo.ShipId = base.user.ShipId;
-                            if (!string.IsNullOrEmpty(viewModel.Id))
+                            if (string.IsNullOrEmpty(viewModel.Id))
                             {
                                 algo.Id = Guid.NewGuid().ToString();
                                 _context.Algorithm.Add(algo);
                             }
                             else
                             {
+                                algo.Id = viewModel.Id;
                                 _context.Algorithm.Update(algo);
                             }
                             _context.SaveChanges();
-                            code = 0;
                         }
+                        return new JsonResult(new { code = 0 });
                     }
                   
                 }
-                return new JsonResult(new { code = 1, msg = "处理界面数据失败" });
+                return new JsonResult(new { code = 1, msg = "操作界面数据失败!" });
             }
             catch (Exception ex)
             {
@@ -318,7 +315,7 @@ namespace ShipWeb.Controllers
        /// <param name="algo"></param>
        /// <param name="msg"></param>
        /// <returns></returns>
-        public bool DataCheck(AlgorithmViewModel viewModel,Algorithm algo, ref string msg) 
+        public bool DataCheck(AlgorithmViewModel viewModel,ref Algorithm algo, ref string msg) 
         {
             if (!string.IsNullOrEmpty(viewModel.Id))
             {
