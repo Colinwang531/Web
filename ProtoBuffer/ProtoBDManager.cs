@@ -539,7 +539,7 @@ namespace ShipWeb.ProtoBuffer
                     {
                         Id = cid,
                         Name = "WEB",
-                        Type = ShipWeb.Models.Component.ComponentType.WEB,
+                        Type = ComponentType.WEB,
                         ShipId = shipId
                     };
                     ManagerHelp.Cid = cid;
@@ -549,42 +549,22 @@ namespace ShipWeb.ProtoBuffer
             }
             return 0;
         }
-        public static int ComponentAddRange(List<ComponentInfo> components,string shipId)
+        public static int ComponentAddRange(List<ComponentInfo> components)
         {
             using (var context = new MyContext())
             {
-                var com = context.Component.Where(c=>c.Type!=ShipWeb.Models.Component.ComponentType.WEB&&c.ShipId==shipId);
+                var com = context.Component.Where(c=>c.Type!=ComponentType.WEB);
                 context.Component.RemoveRange(com);
+                if (components == null) return 1;
                 foreach (var item in components)
                 {
-                    if (item.type == ComponentInfo.Type.WEB) continue;
-                    string name = "";
-                    switch (item.type)
-                    {
-                        case ComponentInfo.Type.XMQ:
-                            name = "消息分发";
-                            break;
-                        case ComponentInfo.Type.HKD:
-                            name = "海康";
-                            break;
-                        case ComponentInfo.Type.DHD:
-                            name = "大华";
-                            break;
-                        case ComponentInfo.Type.ALM:
-                            name = "报警";
-                            break;
-                        case ComponentInfo.Type.AI:
-                            name = "算法";
-                            break;
-                        default:
-                            break;
-                    }
+                    if (item.type == ComponentInfo.Type.WEB&&item.componentid==ManagerHelp.Cid) continue;                   
                     ShipWeb.Models.Component model = new ShipWeb.Models.Component()
                     {
-                        Id = item.cid,
-                        Name = name,
-                        Type =(ShipWeb.Models.Component.ComponentType)item.type,
-                        ShipId = shipId
+                        Id = item.componentid,
+                        CommId=item.commid,
+                        Name = item.cname,
+                        Type =(ComponentType)item.type
                     };
                     context.Component.Add(model);
                 }

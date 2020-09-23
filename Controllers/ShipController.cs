@@ -76,64 +76,20 @@ namespace ShipWeb.Controllers
         /// 陆地端获取船信息
         /// </summary>
         /// <returns></returns>
-        public async Task<IActionResult> LoadAll()
+        public IActionResult LoadAll()
         {
             try
             {
-                var ship = await _context.Ship.ToListAsync();
                 List<ShipViewModel> list = new List<ShipViewModel>();
-                var compents = _context.Component.Where(c => c.Type == Component.ComponentType.WEB && c.ShipId != null).ToList();
-                foreach (var item in ship)
+                var compents = _context.Component.Where(c => c.Type ==ComponentType.WEB && c.CommId!="").ToList();
+                foreach (var item in compents)
                 {
                     ShipViewModel model = new ShipViewModel()
                     {
-                        Id = item.Id,
+                        Id = item.CommId,
                         Name = item.Name,
-                        Line=false//默认离线
+                        Line = item.Line == 0 ? true : false//默认离线
                     };
-                    if (ManagerHelp.IsTest)
-                    {
-                        model.Line = true;
-                        model.flag = item.Flag;
-                    }
-                    else
-                    {
-                        var nextIdentity = compents.FirstOrDefault(c => c.ShipId == item.Id).Id;
-                        assembly.SendStatusQuery(nextIdentity);
-                        ProtoBuffer.Models.StatusResponse response = new ProtoBuffer.Models.StatusResponse();
-                        try
-                        {
-                            bool flag = true;
-                            new TaskFactory().StartNew(() =>
-                            {
-                                while (flag)
-                                {
-                                    if (ManagerHelp.Reponse != "")
-                                    {
-                                        response = JsonConvert.DeserializeObject<ProtoBuffer.Models.StatusResponse>(ManagerHelp.Reponse);
-                                        flag = false;
-                                    }
-                                }
-                            }).Wait(timeout);
-                            flag = false;
-                        }
-                        catch (Exception)
-                        {
-                        }
-                        if (response.result==0)
-                        {
-                            model.Line = true;//在线
-                            model.Name = response.name;
-                            model.flag = response.flag;
-                            //从船舶端过来的船名与陆地端不同时，更改陆地端的船名
-                            if (item.Name != response.name)
-                            {
-                                item.Name = response.name;
-                                _context.Ship.Update(item);
-                                _context.SaveChanges();
-                            }
-                        }
-                    }
                     list.Add(model);
                 }
                 var result = new
@@ -166,22 +122,25 @@ namespace ShipWeb.Controllers
                 }
                 if (base.user.IsLandHome&&!ManagerHelp.IsTest)
                 {
-                    var component = _context.Component.FirstOrDefault(c => c.Type == Component.ComponentType.WEB && c.ShipId == id);
-                    #region 陆地端登陆船舶端修改船状态
-                    ShipWeb.ProtoBuffer.Models.StatusRequest sr = new ShipWeb.ProtoBuffer.Models.StatusRequest()
+                    string identity = base.user.ShipId;
+                    var components = _context.Component.Where(c => c.Type ==ComponentType.AI).ToList();
+                    foreach (var item in components)
                     {
-                        type = ShipWeb.ProtoBuffer.Models.StatusRequest.Type.SAIL,
-                        flag = type
-                    };
-                    assembly.SendStatusSet(sr, component.Id);
-                    sr = new ProtoBuffer.Models.StatusRequest()
-                    {
-                        type = ProtoBuffer.Models.StatusRequest.Type.NAME,
-                        text = name
-                    };
-                    assembly.SendStatusSet(sr, component.Id);                   
+                        ShipWeb.ProtoBuffer.Models.StatusRequest sr = new ShipWeb.ProtoBuffer.Models.StatusRequest()
+                        {
+                            type = ShipWeb.ProtoBuffer.Models.StatusRequest.Type.SAIL,
+                            flag = type
+                        };
+                        assembly.SendStatusSet(sr, identity + ":"+item.CommId);
+                        sr = new ProtoBuffer.Models.StatusRequest()
+                        {
+                            type = ProtoBuffer.Models.StatusRequest.Type.NAME,
+                            text = name
+                        };
+                        assembly.SendStatusSet(sr, identity + ":" + item.CommId);
+
+                    }   
                     return new JsonResult(new { code = 0 });
-                    #endregion
                 }
                 else
                 {
@@ -200,21 +159,27 @@ namespace ShipWeb.Controllers
                         _context.SaveChanges();
                         if (!ManagerHelp.IsTest)
                         {
-                            ShipWeb.ProtoBuffer.Models.StatusRequest sr = new ShipWeb.ProtoBuffer.Models.StatusRequest()
+                           var components= _context.Component.Where(c => c.Type ==ComponentType.AI).ToList();
+                            foreach (var item in components)
                             {
-                                type = ShipWeb.ProtoBuffer.Models.StatusRequest.Type.SAIL,
-                                flag = type
-                            };
-                            assembly.SendStatusSet(sr);
-                            if (ship.Name != name)
-                            {
-                                sr = new ProtoBuffer.Models.StatusRequest()
+                                ShipWeb.ProtoBuffer.Models.StatusRequest sr = new ShipWeb.ProtoBuffer.Models.StatusRequest()
                                 {
-                                    type = ProtoBuffer.Models.StatusRequest.Type.NAME,
-                                    text = name
+                                    type = ShipWeb.ProtoBuffer.Models.StatusRequest.Type.SAIL,
+                                    flag = type
                                 };
-                                assembly.SendStatusSet(sr);
+                                assembly.SendStatusSet(sr,item.CommId);
+                                if (ship.Name != name)
+                                {
+                                    sr = new ProtoBuffer.Models.StatusRequest()
+                                    {
+                                        type = ProtoBuffer.Models.StatusRequest.Type.NAME,
+                                        text = name
+                                    };
+                                    assembly.SendStatusSet(sr,item.CommId);
+                                }
+
                             }
+                           
                         }
                     }
                     return new JsonResult(new { code = 0 });

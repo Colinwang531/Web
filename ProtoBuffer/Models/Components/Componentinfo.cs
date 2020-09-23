@@ -49,11 +49,18 @@ namespace ShipWeb.ProtoBuffer.Models
 		/// 组件ID
 		/// </summary>
 		[ProtoMember(2)]
-		public string cid { get; set; }
+		public string componentid { get; set; }
+
+		[ProtoMember(3)]
+		/// <summary>
+		/// 通讯ID
+		/// </summary>
+		public string commid { get; set; }
+
 		/// <summary>
 		/// 组件名称
 		/// </summary>
-		[ProtoMember(3)]
+		[ProtoMember(4)]
 		public string cname { get; set; }
 	}
 }

@@ -57,11 +57,12 @@ namespace ShipWeb.Controllers
             else
             {
                 string identity = "";
+                List<Component> components = new List<Component>();
                 if (base.user.IsLandHome)
                 {
-                    string shipId = base.user.ShipId;
-                    var shipIdentity = _context.Component.FirstOrDefault(c => c.ShipId == shipId && c.Type == Models.Component.ComponentType.WEB);
-                    identity = shipIdentity.Id;
+                    string shipId = base.user.ShipId;//陆地端登陆时存放的是组件ID
+                    var shipIdentity = _context.Component.FirstOrDefault(c => c.Id==shipId&&c.Type == ComponentType.WEB);
+                    identity = shipIdentity.CommId;
                 }
                 SendDataMsg assembly = new SendDataMsg();
                 assembly.SendComponentQuery(identity);
@@ -97,31 +98,10 @@ namespace ShipWeb.Controllers
                     foreach (var item in response.componentinfos)
                     {
                         if (item.type == ProtoBuffer.Models.ComponentInfo.Type.WEB) continue;
-                        string name = "";
-                        switch (item.type)
-                        {
-                            case ProtoBuffer.Models.ComponentInfo.Type.XMQ:
-                                name = "消息分发";
-                                break;
-                            case ProtoBuffer.Models.ComponentInfo.Type.HKD:
-                                name = "海康";
-                                break;
-                            case ProtoBuffer.Models.ComponentInfo.Type.DHD:
-                                name = "大华";
-                                break;
-                            case ProtoBuffer.Models.ComponentInfo.Type.ALM:
-                                name = "报警";
-                                break;
-                            case ProtoBuffer.Models.ComponentInfo.Type.AI:
-                                name = "算法";
-                                break;
-                            default:
-                                break;
-                        }
                         ComponentViewModel model = new ComponentViewModel()
                         {
-                            Id = item.cid,
-                            name = name,
+                            Id = item.componentid,
+                            name = item.cname,
                             type = (int)item.type
                         };
                         list.Add(model);

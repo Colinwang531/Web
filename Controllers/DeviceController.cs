@@ -33,13 +33,19 @@ namespace ShipWeb.Controllers
             _logger = logger;
         }
 
-       
-        public IActionResult Index(bool isShow=false,string id="",string shipName="")
+        /// <summary>
+        /// 设备界面显示
+        /// </summary>
+        /// <param name="isShow"></param>
+        /// <param name="id">不为空时是陆地端跳转</param>
+        /// <param name="shipName"></param>
+        /// <returns></returns>
+        public IActionResult Index(bool isShow = false, string id = "", string shipName = "")
         {
             if (!string.IsNullOrEmpty(id))
             {
                 string browsertoken = HttpContext.Request.Cookies["token"];
-                if (browsertoken!=null)
+                if (browsertoken != null)
                 {
                     string urlstr = HttpContext.Session.GetString(browsertoken);
                     user = JsonConvert.DeserializeObject<UserToken>(urlstr);
@@ -51,13 +57,44 @@ namespace ShipWeb.Controllers
                     HttpContext.Session.SetString(browsertoken, userStr);
                     //写入浏览器token
                     HttpContext.Response.Cookies.Append("token", browsertoken);
-                }               
+                }
                 //陆地端过来不显示报警信息
                 ManagerHelp.IsShowAlarm = false;
                 ViewBag.LoginName = base.user.Name;
-                ViewBag.ShipName = base.user.ShipName; 
+                ViewBag.ShipName = base.user.ShipName;
                 ViewBag.src = "/Device/Index";
                 ViewBag.layuithis = "device";
+
+                #region 缓存当前船下的组件信息，提供给设备，算法，船员，船状态操作
+                assembly.SendComponentQuery(id);
+                Task.Factory.StartNew(state =>
+                {
+                    while (ManagerHelp.Reponse == "")
+                    {
+                        Thread.Sleep(100);
+                    }
+                    ProtoBuffer.Models.ComponentResponse response = JsonConvert.DeserializeObject<ProtoBuffer.Models.ComponentResponse>(ManagerHelp.Reponse);
+                    ManagerHelp.Reponse = "";
+                    List<ComponentToken> tokens = new List<ComponentToken>();
+                    if (response.result == 0 && response.componentinfos != null)
+                    {
+                        foreach (var item in response.componentinfos)
+                        {
+                            ComponentToken token = new ComponentToken()
+                            {
+                                Id = item.componentid,
+                                CommId = item.commid,
+                                Name = item.cname,
+                                Type = (ComponentType)item.type
+                            };
+                            tokens.Add(token);
+                        }
+                    }
+                    string com = JsonConvert.SerializeObject(tokens);
+                    HttpContext.Session.SetString("comtoken", com);
+                }, TaskCreationOptions.LongRunning);
+
+                #endregion
             }
             ViewBag.IsLandHome = base.user.IsLandHome;
             ViewBag.IsShowLayout = isShow;
@@ -113,7 +150,7 @@ namespace ShipWeb.Controllers
         {
             List<DeviceViewModel> list = new List<DeviceViewModel>();
             string shipId = base.user.ShipId;
-            var devIdentity = _context.Component.FirstOrDefault(c => c.ShipId == shipId).Id;
+            var devIdentity = _context.Component.FirstOrDefault(c => c.Id == shipId).CommId;
             assembly.SendDeveiceQuery(devIdentity);
             List<ProtoBuffer.Models.DeviceInfo> devices = new List<ProtoBuffer.Models.DeviceInfo>();
             try
@@ -245,92 +282,51 @@ namespace ShipWeb.Controllers
                         }
                         else
                         {
-                            var component = _context.Component.FirstOrDefault(c => c.ShipId == shipId && c.Type == (model.Factory == (int)Device.Factory.DAHUA ? Component.ComponentType.DHD : Component.ComponentType.HKD));
+                            string identity = GetIdentity(model.Factory);
+                            if (identity == null)
+                            {
+                                return new JsonResult(new { code = 1, msg = Enum.GetName(typeof(ComponentType), Convert.ToInt32(model.Factory)) + "组件未启动" });
+                            }
                             ProtoBuffer.Models.DeviceInfo emb = GetProtoDevice(model);
                             if (!string.IsNullOrEmpty(model.Id))
                             {
-                                assembly.SendDeveiceUpdate(emb, component.Id, model.Id);
+                                assembly.SendDeveiceUpdate(emb, shipId + ":" + identity, model.Id);
                             }
                             else
                             {
-                                assembly.SendDeveiceAdd(emb, component.Id);
+                                assembly.SendDeveiceAdd(emb, shipId + ":" + identity);
                             }
                             code = 0;
                         }
                     }
                     else
                     {
-                        var compents = _context.Component.FirstOrDefault(c => c.Type == (model.Factory == (int)Device.Factory.DAHUA ? Component.ComponentType.DHD : Component.ComponentType.HKD));
+                        Device device = new Device();
                         if (!string.IsNullOrEmpty(model.Id))
                         {
-                            #region 修改
-                            var device = _context.Device.FirstOrDefault(c => c.Id == model.Id);
+                            device = _context.Device.FirstOrDefault(c => c.Id == model.Id);
                             if (device == null)
                             {
                                 return new JsonResult(new { code = 1, msg = "数据不存在" });
                             }
-                            //测试数据 
-                            if (ManagerHelp.IsTest)
-                            {
-                                device.IP = model.IP;
-                                device.Name = model.Name;
-                                device.Nickname = model.Nickname;
-                                device.Password = model.Password;
-                                device.Port = model.Port;
-                                device.type = (Device.Type)model.Type;
-                                device.factory = (Device.Factory)model.Factory;
-                                device.Enable = model.Enable;
-                                _context.Device.Update(device);
-                                _context.SaveChanges();
-                                code = 0;
-                            }
-                            else
-                            {
-                                if (compents == null)
-                                {
-                                    return new JsonResult(new { code = 1, msg = "设备组件未启动" });
-                                }
-                                ProtoBuffer.Models.DeviceResponse response = new ProtoBuffer.Models.DeviceResponse();
-                                device.IP = model.IP;
-                                device.Name = model.Name;
-                                device.Nickname = model.Nickname;
-                                device.Password = model.Password;
-                                device.Port = model.Port;
-                                device.type = (Device.Type)model.Type;
-                                device.factory = (Device.Factory)model.Factory;
-                                device.Enable = model.Enable;
-                                _context.Device.Update(device);
-                                _context.SaveChanges();
-                                code = 0;
-                                ProtoBuffer.Models.DeviceInfo emb = GetProtoDevice(model);
-                                SendDataMsg assembly = new SendDataMsg();
-                                assembly.SendDeveiceUpdate(emb, compents.Id, device.Id);
-                                
-                            }
-                            #endregion
                         }
-                        else
+                        device.IP = model.IP;
+                        device.Name = model.Name;
+                        device.Nickname = model.Nickname;
+                        device.Password = model.Password;
+                        device.Port = model.Port;
+                        device.type = (Device.Type)model.Type;
+                        device.factory = (Device.Factory)model.Factory;
+                        device.Enable = model.Enable;
+                        if (ManagerHelp.IsTest)
                         {
-                            #region 添加
-                            Device device = new Device()
+                            if (string.IsNullOrEmpty(model.Id))
                             {
-                                IP = model.IP,
-                                Name = model.Name,
-                                Nickname = model.Nickname,
-                                Password = model.Password,
-                                Port = model.Port,
-                                type = (Device.Type)model.Type,
-                                factory = (Device.Factory)model.Factory,
-                                Id = Guid.NewGuid().ToString(),
-                                ShipId = base.user.ShipId,
-                                Enable = model.Enable
-                            };
-                            _context.Device.Add(device);
-                            _context.SaveChanges();
-                            if (ManagerHelp.IsTest)
-                            {
+                                device.Id = Guid.NewGuid().ToString();
+                                device.ShipId = base.user.ShipId;
+                                _context.Device.Add(device);
                                 //测试数据
-                                List <Camera> cameras = new List<Camera>() {
+                                List<Camera> cameras = new List<Camera>() {
                                     new Camera(){
                                      DeviceId = device.Id,
                                      Enable = false,
@@ -351,22 +347,40 @@ namespace ShipWeb.Controllers
                                     }
                                 };
                                 _context.Camera.AddRange(cameras);
-                                _context.SaveChanges();
-                                code = 0;
-
                             }
                             else
                             {
-                                #region 发送注册设备请求并接收设备下的摄像机信息
+                                _context.Device.Update(device);
+                            }
+                            _context.SaveChanges();
+                            code = 0;
+                        }
+                        else
+                        {
+                            string identity = GetIdentity(model.Type);
+                            if (identity == "")
+                            {
+                                return new JsonResult(new { code = 1, msg = Enum.GetName(typeof(ComponentType), Convert.ToInt32(device.factory)) + "组件未启动" });
+                            }
+                            SendDataMsg assembly = new SendDataMsg();
+                            if (string.IsNullOrEmpty(model.Id))
+                            {
+                                device.Id = Guid.NewGuid().ToString();
+                                device.ShipId = base.user.ShipId;
+                                _context.Device.Add(device);
+                                _context.SaveChanges();
                                 model.Id = device.Id;
                                 ProtoBuffer.Models.DeviceInfo emb = GetProtoDevice(model);
-                                SendDataMsg assembly = new SendDataMsg();
-                                assembly.SendDeveiceAdd(emb, compents.Id);
-                                code = 0;
-                                #endregion
+                                assembly.SendDeveiceAdd(emb, identity);
                             }
-
-                            #endregion
+                            else
+                            {
+                                _context.Device.Update(device);
+                                _context.SaveChanges();
+                                ProtoBuffer.Models.DeviceInfo emb = GetProtoDevice(model);
+                                assembly.SendDeveiceUpdate(emb, identity, device.Id);
+                            }
+                            code = 0;
                         }
                     }
                 }
@@ -393,7 +407,11 @@ namespace ShipWeb.Controllers
                     if (base.user.IsLandHome&&!ManagerHelp.IsTest)
                     {
                         string shipId = base.user.ShipId;
-                        var component = _context.Component.FirstOrDefault(c => c.ShipId == shipId && c.Type == (factory == (int)Device.Factory.DAHUA ? Component.ComponentType.DHD : Component.ComponentType.HKD));
+                        string identity = GetIdentity(factory);
+                        if (identity=="")
+                        {
+                            return new JsonResult(new { code = 1, msg = Enum.GetName(typeof(ComponentType), Convert.ToInt32(factory)) + "组件未启动" });
+                        }
                         ProtoBuffer.Models.DeviceInfo emb = new ProtoBuffer.Models.DeviceInfo()
                         {
                             camerainfos = new List<ProtoBuffer.Models.CameraInfo>() {
@@ -405,7 +423,7 @@ namespace ShipWeb.Controllers
                                },
                             did = did
                         };
-                        assembly.SendDeveiceUpdate(emb, component.Id, did);
+                        assembly.SendDeveiceUpdate(emb, shipId+":"+identity, did);
                         code = 0;
                     }
                     else
@@ -422,7 +440,7 @@ namespace ShipWeb.Controllers
                         if (embModel != null)
                         {
                             //获取设备的组件ID
-                            var compants = _context.Component.FirstOrDefault(c => c.Type == (embModel.factory == Device.Factory.DAHUA ? Component.ComponentType.DHD : Component.ComponentType.HKD));
+                            string identity = GetIdentity(factory);
                             ProtoBuffer.Models.DeviceInfo emb = new ProtoBuffer.Models.DeviceInfo()
                             {
                                 camerainfos = new List<ProtoBuffer.Models.CameraInfo>() {
@@ -447,7 +465,7 @@ namespace ShipWeb.Controllers
                             {
                                 _context.Update(camera);
                                 _context.SaveChangesAsync();
-                                assembly.SendDeveiceUpdate(emb, compants.Id, embModel.Id);
+                                assembly.SendDeveiceUpdate(emb, identity, embModel.Id);
                                 code = 0;
                             }
                         };
@@ -503,13 +521,14 @@ namespace ShipWeb.Controllers
                 //陆地端删除设备
                 if (base.user.IsLandHome&&!ManagerHelp.IsTest)
                 {
+                    string shipId = base.user.ShipId;
                     //获取设备的组件ID
-                    var compants = _context.Component.FirstOrDefault(c => c.Type == (factory ==(int)Device.Factory.DAHUA ? Component.ComponentType.DHD : Component.ComponentType.HKD));
-                    if (compants==null)
+                    string identity = GetIdentity(factory);
+                    if (identity == "")
                     {
-                        return new JsonResult(new { code = 1, msg = "设备组件未启动" });
+                        return new JsonResult(new { code = 1, msg = Enum.GetName(typeof(ComponentType), Convert.ToInt32(factory)) + "组件未启动" });
                     }
-                   assembly.SendDeveiceDelete(compants.Id, id);
+                   assembly.SendDeveiceDelete(shipId + ":"+identity, id);
                    code = 0;             
                 }
                 else
@@ -538,13 +557,14 @@ namespace ShipWeb.Controllers
                     code = 0;
                     if (!ManagerHelp.IsTest)
                     {
-                        var compants = _context.Component.FirstOrDefault(c => c.Type == (device.factory == Device.Factory.DAHUA ? Component.ComponentType.DHD : Component.ComponentType.HKD));
-                        if (compants==null)
+                        //获取设备的组件ID
+                        string identity = GetIdentity(factory);
+                        if (identity == "")
                         {
-                            return new JsonResult(new { code = 1, msg = "设备组件未启动" });
+                            return new JsonResult(new { code = 1, msg = Enum.GetName(typeof(ComponentType), Convert.ToInt32(factory)) + "组件未启动" });
                         }
                         SendDataMsg assembly = new SendDataMsg();
-                        assembly.SendDeveiceDelete(compants.Id, device.Id);
+                        assembly.SendDeveiceDelete(identity, device.Id);
                         code = 0;
                     }
                 }
@@ -557,6 +577,35 @@ namespace ShipWeb.Controllers
                 return new JsonResult(new { code = 1, msg = "删除失败!" + ex.Message });
             }
 
+        }
+
+        /// <summary>
+        /// 获取所添加设备的通讯ID
+        /// </summary>
+        /// <param name="factory"></param>
+        /// <returns></returns>
+        private string GetIdentity(int factory)
+        {
+            if (base.user.IsLandHome)
+            {
+                string tokenstr = HttpContext.Session.GetString("comtoken");
+                List<ComponentToken> tokens = JsonConvert.DeserializeObject<List<ComponentToken>>(tokenstr);
+                var component = tokens.FirstOrDefault(c => c.Type == (factory == (int)Device.Factory.DAHUA ? ComponentType.DHD : ComponentType.HKD));
+                if (component!=null)
+                {
+                    return component.CommId;
+                }
+            }
+            else
+            {
+                //获取设备的组件ID
+                var component = _context.Component.FirstOrDefault(c => c.Type == (factory == (int)Device.Factory.DAHUA ? ComponentType.DHD : ComponentType.HKD));
+                if (component!=null)
+                {
+                    return component.CommId;
+                }
+            }
+            return "";
         }
     }
 }

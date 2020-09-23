@@ -14,6 +14,7 @@ namespace ShipWeb.Controllers
     public class BaseController : Controller
     {
         public UserToken user;
+
         /// <summary>  
         /// 请求过滤处理
         ///</summary> 

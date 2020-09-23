@@ -115,8 +115,7 @@ namespace ShipWeb.Controllers
         private IActionResult LandLoad()
         {
             string shipId = base.user.ShipId;
-            var compent = _context.Component.FirstOrDefault(c => c.ShipId == shipId && c.Type ==Component.ComponentType.WEB);
-            assembly.SendCrewQuery(compent.Id);
+            assembly.SendCrewQuery(shipId);
             List<ProtoBuffer.Models.CrewInfo> crewInfos = new List<ProtoBuffer.Models.CrewInfo>();
             try
             {
@@ -224,7 +223,11 @@ namespace ShipWeb.Controllers
                     if (base.user.IsLandHome&&!ManagerHelp.IsTest)
                     {
                         string shipId = base.user.ShipId;
-                        var component = _context.Component.FirstOrDefault(c => c.ShipId == shipId && c.Type == Component.ComponentType.WEB);
+                        string identity = GetIdentity();
+                        if (identity == "")
+                        {
+                            return new JsonResult(new { code = 1, msg = "人脸组件未启动" });
+                        }
                         ShipWeb.ProtoBuffer.Models.CrewInfo emp = new ShipWeb.ProtoBuffer.Models.CrewInfo()
                         {
                             job = job,
@@ -247,7 +250,7 @@ namespace ShipWeb.Controllers
                                     }
                                 }
                             }
-                            assembly.SendCrewAdd(emp,component.Id);
+                            assembly.SendCrewAdd(emp,shipId+":"+identity);
                             code = 0;
                         }
                         else
@@ -267,7 +270,7 @@ namespace ShipWeb.Controllers
                                     emp.pictures.Add(Encoding.UTF8.GetBytes(item));
                                 }
                             }
-                            assembly.SendCrewUpdate(emp,component.Id);
+                            assembly.SendCrewUpdate(emp,shipId+":"+identity);
                             code = 0;
                         }
                         //清除已经上传了的图片
@@ -373,22 +376,29 @@ namespace ShipWeb.Controllers
                     {
                         picBytes.Remove(item);
                     }
-                    //发送netmq消息
-                    List<byte[]> bytes = new List<byte[]>();
-                    foreach (var item in employee.employeePictures)
+                    if (!ManagerHelp.IsTest)
                     {
-                        bytes.Add(item.Picture);
+                        string identity = GetIdentity();
+                        if (identity == "")
+                        {
+                            return new JsonResult(new { code = 1, msg = "人脸组件未启动" });
+                        }
+                        //发送netmq消息
+                        List<byte[]> bytes = new List<byte[]>();
+                        foreach (var item in employee.employeePictures)
+                        {
+                            bytes.Add(item.Picture);
+                        }
+                        ProtoBuffer.Models.CrewInfo crewInfo = new ProtoBuffer.Models.CrewInfo()
+                        {
+                            job = employee.Job,
+                            name = employee.Name,
+                            uid = employee.Id,
+                            pictures = bytes
+                        };
+                        if (!string.IsNullOrEmpty(id)) { assembly.SendCrewUpdate(crewInfo, identity); }
+                        else { assembly.SendCrewAdd(crewInfo, identity); }
                     }
-                    ProtoBuffer.Models.CrewInfo crewInfo = new ProtoBuffer.Models.CrewInfo()
-                    {
-                        job = employee.Job,
-                        name = employee.Name,
-                        uid = employee.Id,
-                        pictures = bytes
-                    };
-                    if (!string.IsNullOrEmpty(id)) { assembly.SendCrewUpdate(crewInfo); }
-                    else { assembly.SendCrewAdd(crewInfo); }
-                    
                 }
                 return new JsonResult(new { code = 0 });
             }
@@ -419,37 +429,49 @@ namespace ShipWeb.Controllers
                 //陆地端远程删除船员
                 if (base.user.IsLandHome&&!ManagerHelp.IsTest)
                 {
-                   
                     if (id == null)
                     {
                         return NotFound();
                     }
                     string shipId = base.user.Id;
-                    var component = _context.Component.FirstOrDefault(c => c.ShipId == shipId && c.Type == Component.ComponentType.WEB);
-                   
-                    assembly.SendCrewDelete(id,component.Id);
+                    string identity=GetIdentity();
+                    if (identity=="")
+                    {
+                        return new JsonResult(new { code = 1, msg = "人脸组件未启动" });
+                    }
+                    assembly.SendCrewDelete(id,shipId+":"+identity);
                     return new JsonResult(new { code = 0, msg = "删除成功!" });
                 }
-                if (id == null)
+                else
                 {
-                    return NotFound();
+                    if (id == null)return NotFound();
+                    var employee = _context.Crew.Find(id);
+                    if (employee == null) return NotFound();
+                    var employeePictures = _context.CrewPicture.Where(e => e.CrewId == employee.Id).ToList();
+                    if (employeePictures.Count() > 0)
+                    {
+                        //删除船员图片
+                        _context.CrewPicture.RemoveRange(employeePictures);
+                    }
+                    if (!ManagerHelp.IsTest)
+                    {
+                        string identity = GetIdentity();
+                        if (identity == "")
+                        {
+                            return new JsonResult(new { code = 1, msg = "人脸组件未启动" });
+                        }
+                        assembly.SendCrewDelete(identity);
+                        //删除船员
+                        _context.Crew.Remove(employee);
+                        _context.SaveChanges();
+                    }
+                    else
+                    { //删除船员
+                        _context.Crew.Remove(employee);
+                        _context.SaveChanges();
+                    }
+                    return new JsonResult(new { code = 0, msg = "删除成功!" });
                 }
-                var employee = _context.Crew.Find(id);
-                if (employee == null)
-                {
-                    return NotFound();
-                }
-                var employeePictures = _context.CrewPicture.Where(e => e.CrewId == employee.Id).ToList();
-                if (employeePictures.Count() > 0)
-                {
-                    //删除船员图片
-                    _context.CrewPicture.RemoveRange(employeePictures);
-                }
-                //删除船员
-                _context.Crew.Remove(employee);
-                _context.SaveChanges();
-                assembly.SendCrewDelete(id);
-                return new JsonResult(new { code = 0, msg = "删除成功!" });
             }
             catch (Exception ex)
             {
@@ -457,5 +479,33 @@ namespace ShipWeb.Controllers
             }
         }
 
+        /// <summary>
+        /// 获取船员的通讯ID
+        /// </summary>
+        /// <param name="factory"></param>
+        /// <returns></returns>
+        private string GetIdentity()
+        {
+            if (base.user.IsLandHome)
+            {
+                string tokenstr = HttpContext.Session.GetString("comtoken");
+                List<ComponentToken> tokens = JsonConvert.DeserializeObject<List<ComponentToken>>(tokenstr);
+                var component = tokens.FirstOrDefault(c => c.Type == ComponentType.AI&&c.Name==ManagerHelp.FaceName);
+                if (component != null)
+                {
+                    return component.CommId;
+                }
+            }
+            else
+            {
+                //获取设备的组件ID
+                var component = _context.Component.FirstOrDefault(c => c.Type == ComponentType.AI && c.Name == ManagerHelp.FaceName);
+                if (component != null)
+                {
+                    return component.CommId;
+                }
+            }
+            return "";
+        }
     }
 }

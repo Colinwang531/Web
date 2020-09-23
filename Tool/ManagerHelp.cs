@@ -37,6 +37,14 @@ namespace ShipWeb.Tool
         /// 存放proto返回的消息
         /// </summary>
         public static string Reponse = "";
+        /// <summary>
+        /// 人脸算法组件名称
+        /// </summary>
+        public static string FaceName="FaceRecognize";
+        /// <summary>
+        /// 是否初使化
+        /// </summary>
+        public static bool isInit = false;
         //int aa;
         //单例控制dealer只有一个。
         public ManagerHelp()
