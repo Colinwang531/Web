@@ -12,6 +12,7 @@ using ShipWeb.Interface;
 using ShipWeb.Models;
 using ShipWeb.ProtoBuffer;
 using ShipWeb.Tool;
+using Microsoft.AspNetCore.Http;
 
 namespace ShipWeb.Controllers
 {
@@ -23,6 +24,7 @@ namespace ShipWeb.Controllers
         private ILogger<AlgorithmController> _logger;
         //缓存船舶端的设备信息
         List<ProtoBuffer.Models.DeviceInfo> boatDevices = new List<ProtoBuffer.Models.DeviceInfo>();
+        List<Camera> cameras = new List<Camera>();
         public AlgorithmController(MyContext context, ILogger<AlgorithmController> logger) 
         {
             _context = context;
@@ -70,9 +72,8 @@ namespace ShipWeb.Controllers
         }
         public IActionResult LandLoad()
         {
-            List<Camera> cameras = new List<Camera>();
             string shipId = base.user.ShipId;
-            var comtent = _context.Component.FirstOrDefault(c => c.ShipId == shipId&&c.Type==Component.ComponentType.WEB);
+            var comtent = _context.Component.FirstOrDefault(c => c.ShipId == shipId&&c.Type==ComponentType.WEB);
             List<ProtoBuffer.Models.AlgorithmInfo> protoDate = new List<ProtoBuffer.Models.AlgorithmInfo>();
             assembly.SendAlgorithmQuery(comtent.Id);
             try
@@ -168,65 +169,39 @@ namespace ShipWeb.Controllers
                 var viewModel = JsonConvert.DeserializeObject<AlgorithmViewModel>(model);
                 if (viewModel != null)
                 {
-                    int code = 1;
-                    string msg = "";
                     if (base.user.IsLandHome&&!ManagerHelp.IsTest)
                     {
-                        ProtoBuffer.Models.AlgorithmInfo algorithm = GetProtoAlgorithm(viewModel);
-                        var compent = _context.Component.Where(c => c.ShipId == shipId && (c.Type == Component.ComponentType.WEB || c.Type == Component.ComponentType.AI));
-                        if (compent == null)
+                        string identity = GetIdentity(viewModel.Type);
+                        if (identity == null)
                         {
-                            return new JsonResult(new { code = 1, msg = "当前船舶未启动算法组件" });
+                            string name = GetViewName((AlgorithmType)viewModel.Type);
+                            return new JsonResult(new { code = 1, msg = "算法【" + name + "】组件未启动" });
                         }
-                        //当前船的通讯ID
-                        string shipIdentity = compent.FirstOrDefault(c => c.Type == Component.ComponentType.WEB&&c.ShipId==shipId).Id;
-                        //当前船上对应的算法通讯ID
-                        string algoIdentity= compent.FirstOrDefault(c => c.Type == Component.ComponentType.AI).Id;
-                        if (SendData(algorithm,(shipIdentity + ":" + algoIdentity)))
+                        var cam = cameras.FirstOrDefault(c => c.Id == viewModel.Cid);
+                        string cid = cam.DeviceId + ":" + cam.Id + ":" + cam.Index;
+                        ProtoBuffer.Models.AlgorithmInfo algorithm = GetProtoAlgorithm(viewModel, cid);
+                        if (SendData(algorithm,(shipId + ":" + identity)))
                         {
                             _context.SaveChanges();
-                            code = 0;
-                            #region 发送二次请求，暂时不用
-                            //int factory = 0;
-                            ////根据摄像机获取设备下的通讯ID
-                            //foreach (var item in boatDevices)
-                            //{
-                            //    if (item.camerainfos.Where(c => c.cid == viewModel.Cid).Any())
-                            //    {
-                            //        factory=(int)item.factory;
-                            //    }
-                            //}
-                            //var comp = _context.Component.FirstOrDefault(c =>c.Type==(factory==(int)Device.Factory.HIKVISION?Component.ComponentType.HKD:Component.ComponentType.DHD));
-                            //if (comp == null)
-                            //{
-                            //    //查询算法组件并入库
-                            //    assembly.SendComponentQuery();
-                            //    return new JsonResult(new { code = 1, msg = "算法里摄像机对应的设备组件未启动" });
-                            //}
-                            //if (SendData(algorithm, (shipIdentity+":"+comp.Id)))
-                            //{
-                            //    _context.SaveChanges();
-                            //    code = 0;
-                            //}
-                            #endregion
                         }
-                        return new JsonResult(new { code = code, msg = msg });
+                        return new JsonResult(new { code = 0});
                     }
                     else
                     {
                         Algorithm algo = new Algorithm();
-                        if (DataCheck(viewModel,algo,ref msg))
+                        string msg = "";
+                        if (!DataCheck(viewModel,ref algo,ref msg))
                         {
                             return new JsonResult(new { code = 1, msg = msg });
                         }
                         if (!ManagerHelp.IsTest)
                         {
-                            var compent = _context.Component.FirstOrDefault(c => c.Type == Component.ComponentType.AI);
-                            if (compent == null)
+                            //获取枚举对应的名称
+                            string identity = GetIdentity(viewModel.Type);
+                            if (identity == null)
                             {
-                                //查询算法组件并入库
-                                assembly.SendComponentQuery();
-                                return new JsonResult(new { code = 1, msg = "算法组件未启动" });
+                                string name = GetViewName((AlgorithmType)viewModel.Type);
+                                return new JsonResult(new { code = 1, msg = "算法【"+name+"】组件未启动" });
                             }
                             algo.GPU = viewModel.GPU;
                             algo.Type = (AlgorithmType)viewModel.Type;
@@ -243,18 +218,20 @@ namespace ShipWeb.Controllers
                             }
                             else
                             {
+                                algo.Id = viewModel.Id;
                                 _context.Algorithm.Update(algo);
                             }
                             viewModel.Id = algo.Id;
-                            ProtoBuffer.Models.AlgorithmInfo algorithm = GetProtoAlgorithm(viewModel);
-                            if (SendData(algorithm, compent.Id))
+                            var camera = _context.Camera.FirstOrDefault(c => c.Id == viewModel.Cid);
+                            string cid = camera.DeviceId + ":" + camera.Id + ":" + camera.Index;
+                            ProtoBuffer.Models.AlgorithmInfo algorithm = GetProtoAlgorithm(viewModel,cid);
+                            if (SendData(algorithm, identity))
                             {
                                 _context.SaveChanges();
-                                code = 0;
                                 #region 发送二次请求 暂时不用
                                 ////根据摄像机获取设备下的通讯ID
                                 //var factory = _context.Device.FirstOrDefault(c => c.Id == (_context.Camera.FirstOrDefault(d => d.Id == viewModel.Cid).DeviceId)).factory;
-                                //compent = _context.Component.FirstOrDefault(c => c.Type == (factory == Device.Factory.HIKVISION ? Component.ComponentType.HKD : Component.ComponentType.DHD));
+                                //compent = _context.Component.FirstOrDefault(c => c.Type == (factory == Device.Factory.HIKVISION ? ComponentType.HKD : ComponentType.DHD));
                                 //if (compent == null)
                                 //{
                                 //    //查询算法组件并入库
@@ -267,8 +244,6 @@ namespace ShipWeb.Controllers
                                 //}
                                 #endregion
                             }
-                            code = 1;
-                            msg = "请求超时";
                         }
                         else
                         {
@@ -280,22 +255,23 @@ namespace ShipWeb.Controllers
                             algo.DectectSecond = viewModel.DectectSecond;
                             algo.Track = viewModel.Track;
                             algo.ShipId = base.user.ShipId;
-                            if (!string.IsNullOrEmpty(viewModel.Id))
+                            if (string.IsNullOrEmpty(viewModel.Id))
                             {
                                 algo.Id = Guid.NewGuid().ToString();
                                 _context.Algorithm.Add(algo);
                             }
                             else
                             {
+                                algo.Id = viewModel.Id;
                                 _context.Algorithm.Update(algo);
                             }
                             _context.SaveChanges();
-                            code = 0;
                         }
+                        return new JsonResult(new { code = 0 });
                     }
                   
                 }
-                return new JsonResult(new { code = 1, msg = "处理界面数据失败" });
+                return new JsonResult(new { code = 1, msg = "操作界面数据失败!" });
             }
             catch (Exception ex)
             {
@@ -339,7 +315,7 @@ namespace ShipWeb.Controllers
        /// <param name="algo"></param>
        /// <param name="msg"></param>
        /// <returns></returns>
-        public bool DataCheck(AlgorithmViewModel viewModel,Algorithm algo, ref string msg) 
+        public bool DataCheck(AlgorithmViewModel viewModel,ref Algorithm algo, ref string msg) 
         {
             if (!string.IsNullOrEmpty(viewModel.Id))
             {
@@ -406,11 +382,12 @@ namespace ShipWeb.Controllers
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        private ProtoBuffer.Models.AlgorithmInfo GetProtoAlgorithm(AlgorithmViewModel model) 
+        private ProtoBuffer.Models.AlgorithmInfo GetProtoAlgorithm(AlgorithmViewModel model,string cid) 
         {
             ProtoBuffer.Models.AlgorithmInfo info = new ProtoBuffer.Models.AlgorithmInfo()
             {
-                cid = model.Id==""? model.Cid : (model.Id + ","+model.Cid),
+                cid =cid,
+                aid=model.Id,
                 gpu = model.GPU,
                 similar = (float)model.Similar,
                 dectectfirst = (float)model.DectectFirst,
@@ -434,6 +411,68 @@ namespace ShipWeb.Controllers
                 return new JsonResult(new { code = 0 });
             }
             return new JsonResult(new { code = 1, msg = "未接收到要删除的数据"});
+        }
+
+        /// <summary>
+        /// 获取所添加算法的通讯ID
+        /// </summary>
+        /// <param name="factory"></param>
+        /// <returns></returns>
+        private string GetIdentity(int type)
+        {
+            string name = Enum.GetName(typeof(AlgorithmType), type);
+            if (name== "ATTENDANCE_IN"||name== "ATTENDANCE_OUT")
+            {
+                name = ManagerHelp.FaceName.ToUpper();
+            }
+            if (base.user.IsLandHome)
+            {
+                string tokenstr = HttpContext.Session.GetString("comtoken");
+                List<ComponentToken> tokens = JsonConvert.DeserializeObject<List<ComponentToken>>(tokenstr);
+                var component = tokens.FirstOrDefault(c => c.Type == ComponentType.AI&&c.Name.ToUpper()==name);
+                if (component != null)
+                {
+                    return component.CommId;
+                }
+            }
+            else
+            {
+                //获取设备的组件ID
+                var component = _context.Component.FirstOrDefault(c => c.Type == ComponentType.AI && c.Name.ToUpper() == name);
+                if (component != null)
+                {
+                    return component.CommId;
+                }
+            }
+            return "";
+        }
+        private string GetViewName(AlgorithmType type)
+        {
+            string name = "";
+            switch (type)
+            {
+                case AlgorithmType.HELMET:
+                    name = "安全帽";
+                    break;
+                case AlgorithmType.PHONE:
+                    name = "打电话";
+                    break;
+                case AlgorithmType.SLEEP:
+                    name = "睡觉";
+                    break;
+                case AlgorithmType.FIGHT:
+                    name = "打架";
+                    break;
+                case AlgorithmType.ATTENDANCE_IN:
+                    name = "考勤入";
+                    break;
+                case AlgorithmType.ATTENDANCE_OUT:
+                    name = "考勤出";
+                    break;
+                default:
+                    break;
+            }
+            return name;
         }
     }
 }

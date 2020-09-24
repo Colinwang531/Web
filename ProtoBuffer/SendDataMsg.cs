@@ -227,7 +227,7 @@ namespace ShipWeb.ProtoBuffer
                     }
                 }
             };
-            if (!string.IsNullOrEmpty(cid)) msg.component.componentrequest.componentinfo.cid = cid;
+            if (!string.IsNullOrEmpty(cid)) msg.component.componentrequest.componentinfo.componentid = cid;
             dealer.Send(msg);
         }
         /// <summary>
@@ -266,7 +266,7 @@ namespace ShipWeb.ProtoBuffer
                     {
                         componentinfo = new ComponentInfo()
                         {
-                            cid = cid
+                            componentid = cid
                         }
                     }
                 }
@@ -366,7 +366,8 @@ namespace ShipWeb.ProtoBuffer
         /// 发送设备删除请求
         /// </summary>
         /// <param name="did"></param>
-        public void SendDeveiceDelete(string nextIdentity,string did) {
+        public void SendDeveiceDelete(string nextIdentity,string did) 
+        {
             MSG msg = new MSG()
             {
                 type = MSG.Type.DEVICE,

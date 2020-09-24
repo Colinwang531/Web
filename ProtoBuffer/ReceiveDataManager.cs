@@ -49,11 +49,22 @@ namespace ShipWeb.ProtoBuffer
                     break;
                 case Models.Component.Command.QUERY_REQ:
                     break;
-                case Models.Component.Command.QUERY_REP:
-                    ManagerHelp.Reponse = JsonConvert.SerializeObject(component.componentresponse);
-                    if (component.componentresponse != null && component.componentresponse.result == 0)
+                case Models.Component.Command.QUERY_REP:                                      
+                    if (ManagerHelp.isInit)
                     {
-                        ProtoBDManager.ComponentAddRange(component.componentresponse.componentinfos, shipId);
+                        ManagerHelp.Reponse = "";
+                        if (component.componentresponse != null && component.componentresponse.result == 0)
+                        {
+                            ProtoBDManager.ComponentAddRange(component.componentresponse.componentinfos);
+                        }
+                        //发送船员状态
+                        InitManger.InitStatus();
+                        //发送设备信息
+                        InitManger.InitDevice();
+                    }
+                    else
+                    {
+                        ManagerHelp.Reponse = JsonConvert.SerializeObject(component.componentresponse);
                     }
                     break;
                 default:
@@ -121,6 +132,14 @@ namespace ShipWeb.ProtoBuffer
                     if (device.deviceresponse.result == 0 && device.deviceresponse.deviceinfos != null)
                     {
                         ProtoBDManager.DeviceAdd(device.deviceresponse.deviceinfos[0]);
+                        if (ManagerHelp.isInit)
+                        {
+                            //发送算法信息
+                            InitManger.InitAlgorithm();
+                            //发送船员信息
+                            InitManger.InitCrew();
+                            ManagerHelp.isInit = false;
+                        }
                     }
                     break;
                 case Models.Device.Command.DELETE_REQ:
@@ -224,16 +243,16 @@ namespace ShipWeb.ProtoBuffer
             ProtoBDManager.AddReceiveLog<ShipWeb.ProtoBuffer.Models.Status>("Status", status);
             switch (status.command)
             {
-                case Status.Command.SET_REQ:
+                case Status.Command.SET_REQ://设置船状态
                     if (status.statusrequest != null)
                     {
                         ProtoBDManager.ShipSet(status.statusrequest);
                     }
                     break;
-                case Status.Command.SET_REP:
+                case Status.Command.SET_REP://接收设备成功与否
                     if (status.statusresponse!=null)
                     {
-                        ProtoBDManager.ShipSet(status.statusresponse.flag);
+                       // ProtoBDManager.ShipSet(status.statusresponse.flag);
                     }
                     break;
                 case Status.Command.QUERY_REQ:

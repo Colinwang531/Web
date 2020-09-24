@@ -34,7 +34,11 @@ namespace ShipWeb.ProtoBuffer.Models
 			/// <summary>
 			/// 算法组件
 			/// </summary>
-		    AI=6
+		    AI=6,
+			/// <summary>
+			/// 流媒体组件
+			/// </summary>
+			MED = 7
 		}
 		/// <summary>
 		/// 注册类型
@@ -45,11 +49,18 @@ namespace ShipWeb.ProtoBuffer.Models
 		/// 组件ID
 		/// </summary>
 		[ProtoMember(2)]
-		public string cid { get; set; }
+		public string componentid { get; set; }
+
+		[ProtoMember(3)]
+		/// <summary>
+		/// 通讯ID
+		/// </summary>
+		public string commid { get; set; }
+
 		/// <summary>
 		/// 组件名称
 		/// </summary>
-		[ProtoMember(3)]
+		[ProtoMember(4)]
 		public string cname { get; set; }
 	}
 }

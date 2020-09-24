@@ -51,7 +51,7 @@ namespace ShipWeb.ProtoBuffer.Models
 		[ProtoMember(2)]
 		public int gpu { get; set; }
 		/// <summary>
-		/// 摄像机uuid标识
+		/// 摄像机ID(组合ID【设备ID:摄像机ID:摄像机通道】)
 		/// </summary>
 		[ProtoMember(3)]
 		public string cid { get; set; }

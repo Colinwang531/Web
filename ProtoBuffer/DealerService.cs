@@ -26,7 +26,6 @@ namespace ShipWeb.ProtoBuffer
                 if (dealer == null)
                 {
                     dealer = new DealerSocket();
-                    ReceiveDataManager manager = new ReceiveDataManager();
                     dealer.Connect(AppSettingHelper.GetSectionValue("IP"));
                     //等待时间10秒
                     //dealer.Options.Linger=new TimeSpan(0,0,10);
@@ -34,47 +33,7 @@ namespace ShipWeb.ProtoBuffer
                     dealer.Options.Identity = Encoding.UTF8.GetBytes(commID);
                     Task.Factory.StartNew(state =>
                     {
-                        while (true)
-                        {
-                            var mQFrames = dealer.ReceiveMultipartMessage(5);
-                            byte[] mory = mQFrames.Last.ToByteArray();
-                            MSG revmsg = ProtoBufHelp.DeSerialize<MSG>(mory);
-                            //taskList.Add(new TaskFactory().StartNew(() =>
-                            //{
-                            if (revmsg.type == MSG.Type.ALARM)
-                            {
-                                if (revmsg.alarm.alarminfo != null)
-                                {
-                                    ProtoBDManager.AlarmAdd(revmsg.alarm.alarminfo);
-                                }
-                                else
-                                {
-                                    manager.AlarmData();
-                                }
-                            }
-                            else if (revmsg.type == MSG.Type.ALGORITHM)
-                            {
-                                manager.AlgorithmData(revmsg.algorithm);
-                            }
-                            else if (revmsg.type == MSG.Type.CREW)
-                            {
-                                manager.CrewData(revmsg.crew);
-                            }
-                            else if (revmsg.type == MSG.Type.DEVICE)
-                            {
-                                manager.DeviceData(revmsg.device);
-                            }
-                            else if (revmsg.type == MSG.Type.STATUS)
-                            {
-                                manager.StatusData(revmsg.status);
-                            }
-                            else if (revmsg.type == MSG.Type.COMPONENT)
-                            {
-                                manager.ComponentData(revmsg.component);
-                            }
-                            //}));
-                            //Thread.Sleep(100);
-                        }
+                        Receive();
                     }, TaskCreationOptions.LongRunning);
                 }
             }
@@ -105,5 +64,47 @@ namespace ShipWeb.ProtoBuffer
             }
         }
 
+        private void Receive() 
+        {
+            ReceiveDataManager manager = new ReceiveDataManager();
+            while (true)
+            {
+                var mQFrames = dealer.ReceiveMultipartMessage(5);
+                byte[] mory = mQFrames.Last.ToByteArray();
+                MSG revmsg = ProtoBufHelp.DeSerialize<MSG>(mory);              
+                if (revmsg.type == MSG.Type.ALARM)
+                {
+                    if (revmsg.alarm.alarminfo != null)
+                    {
+                        ProtoBDManager.AlarmAdd(revmsg.alarm.alarminfo);
+                    }
+                    else
+                    {
+                        manager.AlarmData();
+                    }
+                }
+                else if (revmsg.type == MSG.Type.ALGORITHM)
+                {
+                    manager.AlgorithmData(revmsg.algorithm);
+                }
+                else if (revmsg.type == MSG.Type.CREW)
+                {
+                    manager.CrewData(revmsg.crew);
+                }
+                else if (revmsg.type == MSG.Type.DEVICE)
+                {
+                    manager.DeviceData(revmsg.device);
+                }
+                else if (revmsg.type == MSG.Type.STATUS)
+                {
+                    manager.StatusData(revmsg.status);
+                }
+                else if (revmsg.type == MSG.Type.COMPONENT)
+                {
+                    manager.ComponentData(revmsg.component);
+                }
+                Thread.Sleep(100);
+            }
+        }
     }
 }

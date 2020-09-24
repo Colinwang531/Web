@@ -90,7 +90,7 @@ namespace ShipWeb.ProtoBuffer.Models
 		[ProtoMember(1)]
 		public string cid { get; set; }
 		/// <summary>
-		/// 摄像机序号
+		/// 摄像机通道
 		/// </summary>
 		[ProtoMember(2)]
 		public int index { get; set; }
