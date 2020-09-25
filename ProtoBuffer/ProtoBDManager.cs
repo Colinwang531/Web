@@ -543,9 +543,15 @@ namespace ShipWeb.ProtoBuffer
         {
             using (var context = new MyContext())
             {
+                if (components == null) return 1;
                 var com = context.Component.Where(c=>c.Type!=ComponentType.WEB);
                 context.Component.RemoveRange(com);
-                if (components == null) return 1;
+                string shipId = "";
+                var ship = context.Ship.FirstOrDefault();
+                if (ship!=null)
+                {
+                    shipId = ship.Id;
+                }
                 foreach (var item in components)
                 {
                     if (item.type == ComponentInfo.Type.WEB&&item.componentid==ManagerHelp.Cid) continue;                   
@@ -554,7 +560,8 @@ namespace ShipWeb.ProtoBuffer
                         Id = item.componentid,
                         CommId=item.commid,
                         Name = item.cname,
-                        Type =(ComponentType)item.type
+                        Type =(ComponentType)item.type,
+                        ShipId= shipId
                     };
                     context.Component.Add(model);
                 }

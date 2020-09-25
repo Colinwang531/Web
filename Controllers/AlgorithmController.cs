@@ -172,7 +172,7 @@ namespace ShipWeb.Controllers
                     if (base.user.IsLandHome&&!ManagerHelp.IsTest)
                     {
                         string identity = GetIdentity(viewModel.Type);
-                        if (identity == null)
+                        if (string.IsNullOrEmpty(identity))
                         {
                             string name = GetViewName((AlgorithmType)viewModel.Type);
                             return new JsonResult(new { code = 1, msg = "算法【" + name + "】组件未启动" });
@@ -202,7 +202,7 @@ namespace ShipWeb.Controllers
                         {
                             //获取枚举对应的名称
                             string identity = GetIdentity(viewModel.Type);
-                            if (identity == null)
+                            if (string.IsNullOrEmpty(identity))
                             {
                                 string name = GetViewName((AlgorithmType)viewModel.Type);
                                 return new JsonResult(new { code = 1, msg = "算法【"+name+"】组件未启动" });
@@ -436,6 +436,7 @@ namespace ShipWeb.Controllers
             if (base.user.IsLandHome)
             {
                 string tokenstr = HttpContext.Session.GetString("comtoken");
+                if (string.IsNullOrEmpty(tokenstr)) return "";
                 List<ComponentToken> tokens = JsonConvert.DeserializeObject<List<ComponentToken>>(tokenstr);
                 var component = tokens.FirstOrDefault(c => c.Type == ComponentType.AI&&c.Name.ToUpper()==name);
                 if (component != null)

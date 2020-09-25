@@ -513,6 +513,7 @@ namespace ShipWeb.Controllers
             if (base.user.IsLandHome)
             {
                 string tokenstr = HttpContext.Session.GetString("comtoken");
+                if (string.IsNullOrEmpty(tokenstr)) return "";
                 List<ComponentToken> tokens = JsonConvert.DeserializeObject<List<ComponentToken>>(tokenstr);
                 var component = tokens.FirstOrDefault(c => c.Type == ComponentType.AI&&c.Name==ManagerHelp.FaceName);
                 if (component != null)

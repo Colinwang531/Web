@@ -60,6 +60,7 @@ namespace ShipWeb.Controllers
                 }
                 //陆地端过来不显示报警信息
                 ManagerHelp.IsShowAlarm = false;
+                ManagerHelp.isInit = false;
                 ViewBag.LoginName = base.user.Name;
                 ViewBag.ShipName = base.user.ShipName;
                 ViewBag.src = "/Device/Index";
@@ -581,6 +582,7 @@ namespace ShipWeb.Controllers
             if (base.user.IsLandHome)
             {
                 string tokenstr = HttpContext.Session.GetString("comtoken");
+                if (string.IsNullOrEmpty(tokenstr)) return "";
                 List<ComponentToken> tokens = JsonConvert.DeserializeObject<List<ComponentToken>>(tokenstr);
                 var component = tokens.FirstOrDefault(c => c.Type == (factory == (int)Device.Factory.DAHUA ? ComponentType.DHD : ComponentType.HKD));
                 if (component!=null)
