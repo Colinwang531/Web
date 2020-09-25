@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using NuGet.Frameworks;
 using ProtoBuf;
 using ShipWeb.DB;
 using ShipWeb.Models;
 using ShipWeb.ProtoBuffer;
+using ShipWeb.ProtoBuffer.Models;
 using ShipWeb.Tool;
 
 namespace ShipWeb.Controllers
@@ -81,7 +84,7 @@ namespace ShipWeb.Controllers
             try
             {
                 List<ShipViewModel> list = new List<ShipViewModel>();
-                var compents = _context.Component.Where(c => c.Type ==ComponentType.WEB && c.CommId!="").ToList();
+                var compents = _context.Component.Where(c => c.Type ==ComponentType.WEB && c.CommId!=null).ToList();
                 foreach (var item in compents)
                 {
                     ShipViewModel model = new ShipViewModel()
@@ -90,6 +93,10 @@ namespace ShipWeb.Controllers
                         Name = item.Name,
                         Line = item.Line == 0 ? true : false//默认离线
                     };
+                    if (item.Line==0)
+                    {
+                        model.flag = GetSailType(item.CommId);
+                    }
                     list.Add(model);
                 }
                 var result = new
@@ -106,7 +113,30 @@ namespace ShipWeb.Controllers
                 return new JsonResult(new { code = 1, msg = "获取数据失败!" + ex.Message });
             }
         }
-       
+        /// <summary>
+        /// 获取实时船舶航行状态
+        /// </summary>
+        /// <param name="identity"></param>
+        /// <returns></returns>
+        private bool GetSailType(string identity) 
+        {
+            assembly.SendStatusQuery(identity);
+            bool flag = true;
+            new TaskFactory().StartNew(() => {
+                while (ManagerHelp.Reponse==""&&flag)
+                {
+                    Thread.Sleep(100);
+                }
+            }).Wait(3000);
+            flag = false;
+            if (ManagerHelp.Reponse!="")
+            {
+                var response=JsonConvert.DeserializeObject<StatusResponse>(ManagerHelp.Reponse);
+                ManagerHelp.Reponse = "";
+                if (response != null) return response.flag;
+            }
+            return false;
+        }
         /// <summary>
         /// 保存船状态
         /// </summary>

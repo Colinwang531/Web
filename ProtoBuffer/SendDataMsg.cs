@@ -1,4 +1,5 @@
-﻿using ShipWeb.Interface;
+﻿using NuGet.Frameworks;
+using ShipWeb.Interface;
 using ShipWeb.ProtoBuffer.Models;
 using System;
 using System.Collections.Generic;
@@ -15,7 +16,7 @@ namespace ShipWeb.ProtoBuffer
         /// 组合返回数据
         /// </summary>
         /// <param name="algorithms"></param>
-        public void SendAlgorithmRN(List<AlgorithmInfo> algorithms)
+        public void SendAlgorithmRN(Algorithm.Command command,List<AlgorithmInfo> algorithms=null,int status=0)
         {
             MSG sendMsg = new MSG()
             {
@@ -28,7 +29,7 @@ namespace ShipWeb.ProtoBuffer
                     algorithmresponse = new AlgorithmResponse()
                     {
                         configures = algorithms,
-                        result = 0
+                        result = status
                     }
                 }
             };
@@ -38,7 +39,7 @@ namespace ShipWeb.ProtoBuffer
         /// 组合返回数据
         /// </summary>
         /// <param name="algorithms"></param>
-        public void SendDeviceRN(string did, List<DeviceInfo> devices)
+        public void SendDeviceRN(Device.Command command,string did, List<DeviceInfo> devices=null,int status=0)
         {
             MSG sendMsg = new MSG()
             {
@@ -47,12 +48,12 @@ namespace ShipWeb.ProtoBuffer
                 timestamp = ProtoBufHelp.TimeSpan(),
                 device = new Device()
                 {
-                    command = Device.Command.QUERY_REP,
+                    command = command,
                     deviceresponse = new DeviceResponse()
                     {
                         did = did,
                         deviceinfos = devices,
-                        result = 0
+                        result = status
                     }
                 }
             };
@@ -62,7 +63,7 @@ namespace ShipWeb.ProtoBuffer
         /// 组合返回数据
         /// </summary>
         /// <param name="algorithms"></param>
-        public void SendCrewRN(List<CrewInfo> crews)
+        public void SendCrewRN(Crew.Command command,List<CrewInfo> crews=null, int status = 0)
         {
             MSG sendMsg = new MSG()
             {
@@ -71,10 +72,10 @@ namespace ShipWeb.ProtoBuffer
                 timestamp = ProtoBufHelp.TimeSpan(),
                 crew = new Crew()
                 {
-                    command = Crew.Command.QUERY_REP,
+                    command = command,
                     crewresponse = new CrewResponse()
                     {
-                        result = 0,
+                        result = status,
                         crewinfos = crews
                     }
                 }
@@ -85,7 +86,7 @@ namespace ShipWeb.ProtoBuffer
         /// 组合返回数据
         /// </summary>
         /// <param name="status"></param>
-        public void SendStatusRN(ShipWeb.Models.Ship ship) 
+        public void SendStatusRN(Status.Command command, ShipWeb.Models.Ship ship,int status=0) 
         {
             MSG msg = new MSG()
             {
@@ -94,11 +95,11 @@ namespace ShipWeb.ProtoBuffer
                 timestamp = ProtoBufHelp.TimeSpan(),
                 status = new Status()
                 {
-                    command = Status.Command.QUERY_REP,
+                    command = command,
                     statusresponse = new StatusResponse() {
                         flag = ship.Flag,
                         name = ship.Name,
-                        result = 0
+                        result = status
                     }
                 }
             };
@@ -306,7 +307,7 @@ namespace ShipWeb.ProtoBuffer
             MSG msg = new MSG()
             {
                 type = MSG.Type.ALGORITHM,
-                sequence = 3,
+                sequence = 5,
                 timestamp = ProtoBufHelp.TimeSpan(),
                 algorithm = new Algorithm()
                 {

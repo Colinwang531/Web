@@ -115,42 +115,34 @@ namespace ShipWeb.ProtoBuffer
         /// <returns></returns>
         public static int DeviceAdd(DeviceInfo protoModel)
         {
-            using (var _context = new MyContext())
+            if (protoModel != null)
             {
-                if (protoModel != null)
+                using (var _context = new MyContext())
                 {
-                    var model = _context.Device.FirstOrDefault(c=>c.Id==protoModel.did);
-                    if (model == null) return -1;
-                    string shipId = model.ShipId;
-                    string id = model.Id;                     
-                    if (protoModel.camerainfos!=null&&protoModel.camerainfos.Count > 0)
+                    string shipId = _context.Ship.FirstOrDefault().Id;
+                    ShipWeb.Models.Device model = _context.Device.FirstOrDefault(c => c.Id == protoModel.did);
+                    if (protoModel == null)
                     {
-                        var dbCameras = _context.Camera.Where(c => c.DeviceId == id).ToList();
-                        _context.Camera.RemoveRange(dbCameras);
-                        List<Camera> cameras = new List<Camera>();
-                        var camers = protoModel.camerainfos;
-                        foreach (var item in camers)
-                        {
-                            ShipWeb.Models.Camera cam = new ShipWeb.Models.Camera()
-                            {
-                                DeviceId = id,
-                                Enable = item.enable,
-                                Id = item.cid,
-                                Index = item.index,
-                                IP = item.ip,
-                                NickName = string.IsNullOrEmpty(item.nickname) ? "摄像机" + item.index : item.nickname,
-                                ShipId = shipId
-                            };
-                            cameras.Add(cam);
-                        }
-                        _context.Camera.AddRange(cameras);
-                        _context.SaveChanges();
-                    }
-                  
+                        model = new ShipWeb.Models.Device();
+                    };
+                    model.factory = (ShipWeb.Models.Device.Factory)protoModel.factory;
+                    model.IP = protoModel.ip;
+                    model.Name = protoModel.name;
+                    model.Nickname = protoModel.nickname;
+                    model.Password = protoModel.password;
+                    model.Port = protoModel.port;
+                    model.type = (ShipWeb.Models.Device.Type)protoModel.type;
+                    model.Enable = protoModel.enable;
+                    model.Id = protoModel.did;
+                    model.ShipId = shipId; ;
+                    if (protoModel == null) _context.Device.Add(model);
+                    else  _context.Device.Update(model);
+                    _context.SaveChanges();
+                    AddCameras(protoModel.camerainfos, protoModel.did);
                     return 0;
                 }
-                return 1;
             }
+            return 1;
         }
         /// <summary>
         /// 设备修改
@@ -176,28 +168,50 @@ namespace ShipWeb.ProtoBuffer
                         model.type = (ShipWeb.Models.Device.Type)protoModel.type;
                         model.Enable = protoModel.enable;
                         _context.Device.Update(model);
-                    }                    
-                    if (protoModel.camerainfos!=null&&protoModel.camerainfos.Count > 0)
-                    {
-                        string cids = string.Join(',', protoModel.camerainfos.Select(c => c.cid));
-                        var cams = protoModel.camerainfos;
-                        var camList = _context.Camera.Where(c => c.DeviceId == model.Id&& cids.Contains(c.Id)).ToList();
-                        foreach (var item in cams)
-                        {
-                            if (camList.Where(c => c.Id == item.cid).Any())
-                            {
-                                var carmera = camList.FirstOrDefault(c => c.Id == item.cid);
-                                carmera.Enable = item.enable;
-                                carmera.NickName = item.nickname;
-                                _context.Camera.Update(carmera);
-                            }
-                        }
-                    }
+                    } 
                     _context.SaveChanges();
+                    AddCameras(protoModel.camerainfos, did);
                     return 0;
                 }
                 return 1;
             }
+        }
+
+        /// <summary>
+        /// 添加摄像机
+        /// </summary>
+        /// <param name="cameraInfos"></param>
+        /// <param name="did"></param>
+        /// <returns></returns>
+        public static int AddCameras(List<CameraInfo> cameraInfos,string did) 
+        {
+            if (cameraInfos!=null)
+            {
+                using (var _context = new MyContext())
+                {
+                    var dbCameras = _context.Camera.Where(c => c.DeviceId == did).ToList();
+                    _context.Camera.RemoveRange(dbCameras);
+                    string shipId = _context.Ship.FirstOrDefault().Id;
+                    List<Camera> cameras = new List<Camera>();
+                    foreach (var item in cameraInfos)
+                    {
+                        ShipWeb.Models.Camera cam = new ShipWeb.Models.Camera()
+                        {
+                            DeviceId = did,
+                            Enable = item.enable,
+                            Id = item.cid,
+                            Index = item.index,
+                            IP = item.ip,
+                            NickName = string.IsNullOrEmpty(item.nickname) ? "摄像机" + item.index : item.nickname,
+                            ShipId = shipId
+                        };
+                        cameras.Add(cam);
+                    }
+                    _context.AddRange(cameras);
+                    _context.SaveChanges();
+                }
+            }
+            return 1;
         }
         /// <summary>
         /// 设备删除
@@ -254,14 +268,13 @@ namespace ShipWeb.ProtoBuffer
                         job = item.Job,
                         name = item.Name,
                         uid =item.Id,
-                        pictures = new List<byte[]>()
+                        pictures =new List<string> ()
                     };
                     var picList = pics.Where(c => c.CrewId == item.Id);
                     foreach (var itpic in picList)
                     {
-                        string pic = Encoding.UTF8.GetString(itpic.Picture);
-                        byte[] by = Encoding.UTF8.GetBytes(itpic.Id + "," + pic);
-                        em.pictures.Add(itpic.Picture);
+                        string pic = Convert.ToBase64String(itpic.Picture);
+                        em.pictures.Add(pic);
                     }
                     list.Add(em);
                 }
@@ -285,34 +298,46 @@ namespace ShipWeb.ProtoBuffer
                     {
                         return 2;
                     }
-                    string id = Guid.NewGuid().ToString();
-                    ShipWeb.Models.Crew employee = new ShipWeb.Models.Crew()
+                    dbemp = _context.Crew.FirstOrDefault(c => c.Id == protoModel.uid);
+                    if (dbemp==null)
                     {
-                        Id = id,
-                        Job = protoModel.job,
-                        Name = protoModel.name,
-                        ShipId = shipId
-                    };
-                    if (protoModel.pictures!=null&&protoModel.pictures.Count > 0)
-                    {
-                        employee.employeePictures = new List<ShipWeb.Models.CrewPicture>();
-                        var pics = protoModel.pictures;
-                        foreach (var item in pics)
+                        ShipWeb.Models.Crew employee = new ShipWeb.Models.Crew()
                         {
-                            employee.employeePictures.Add(new ShipWeb.Models.CrewPicture()
-                            {
-                                CrewId = id,
-                                Id = Guid.NewGuid().ToString(),
-                                Picture = item,
-                                ShipId = shipId
-                            });
-                        }
-                    }
-                    _context.Crew.Add(employee);
-                    _context.SaveChanges();
+                            Id = protoModel.uid,
+                            Job = protoModel.job,
+                            Name = protoModel.name,
+                            ShipId = shipId
+                        };
+                        _context.Crew.Add(employee);
+                        _context.SaveChanges();
+                    }                   
+                    AddCrewPicture(protoModel.pictures, shipId, protoModel.uid);
                     return 0;
                 }
                 return 1;
+            }
+        }
+        private static void AddCrewPicture(List<string> list, string shipId, string crewId)
+        {
+            if (list!=null&& list.Count>0)
+            {
+                using (var context=new MyContext())
+                {
+                    var pices = context.CrewPicture.Where(c => c.CrewId == crewId).ToList();
+                    if (pices.Count > 0) context.RemoveRange(pices);
+                    foreach (var item in list)
+                    {
+                        CrewPicture model= new ShipWeb.Models.CrewPicture()
+                        {
+                            CrewId = crewId,
+                            Id = Guid.NewGuid().ToString(),
+                            Picture = Convert.FromBase64String(item),
+                            ShipId = shipId
+                        };
+                        context.CrewPicture.Add(model);
+                    }
+                    context.SaveChanges();
+                }
             }
         }
         /// <summary>
@@ -336,43 +361,10 @@ namespace ShipWeb.ProtoBuffer
                             return 2;
                         }
                         model.Job = protoModel.job;
-                        model.Name = protoModel.name;
-                        var pics = _context.CrewPicture.Where(c => c.CrewId == model.Id);
-                        //记录数据库中存在的图片ID
-                        List<string> dbIds = new List<string>();
-                        if (protoModel.pictures!=null&&protoModel.pictures.Count > 0)
-                        {
-                            var protoPic = protoModel.pictures;
-                            foreach (var item in protoPic)
-                            {
-                                string str = Encoding.UTF8.GetString(item);
-                                var ids = str.Split(',');
-                                if (ids.Length>1)
-                                {
-                                    ShipWeb.Models.CrewPicture pic = new ShipWeb.Models.CrewPicture()
-                                    {
-                                        CrewId = model.Id,
-                                        Id =ids[0],
-                                        Picture =Encoding.UTF8.GetBytes(ids[1]),
-                                        ShipId = model.ShipId
-                                    };
-                                    _context.CrewPicture.Add(pic);
-                                }
-                                else if (pics.Where(c => c.Id == ids[0]).Any())
-                                {
-                                    dbIds.Add(ids[0]);
-                                }
-                            }
-
-                        }
-                        //查找当前船员下需要删除的图片
-                        var delPicList = pics.Where(c => !dbIds.Contains(c.Id)).ToList();
-                        if (delPicList.Count > 0)
-                        {
-                            _context.CrewPicture.RemoveRange(delPicList);
-                        }
+                        model.Name = protoModel.name;                        
                         _context.Crew.Update(model);
                         _context.SaveChanges();
+                        AddCrewPicture(protoModel.pictures, model.ShipId, protoModel.uid);
                         return 0;
                     }
                     return 1;
@@ -460,36 +452,33 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="list"></param>
         /// <returns></returns>
-        public static int AlgorithmSet(AlgorithmInfo protoModel) 
+        public static int AlgorithmSet(AlgorithmInfo protoModel)
         {
-            using (var _context = new MyContext())
+            if (protoModel != null)
             {
-                try
+                using (var _context = new MyContext())
                 {
-                    if (protoModel!=null)
-                    {                       
-                        if (protoModel.cid.Split(',') .Length>1)
+                    try
+                    {
+                        if (protoModel.aid != "")
                         {
-                            string id = protoModel.cid.Split(',')[0];
-                            string cid = protoModel.cid.Split(',')[1];
-                           
-                            var algo = _context.Algorithm.FirstOrDefault(c => c.Id == id);
+                            var algo = _context.Algorithm.FirstOrDefault(c => c.Id == protoModel.aid);
                             if (algo == null) return 1;
                             if (protoModel.type == AlgorithmInfo.Type.ATTENDANCE_IN || protoModel.type == AlgorithmInfo.Type.ATTENDANCE_OUT)
                             {
-                                var data = _context.Algorithm.FirstOrDefault(c =>c.Cid == cid && (c.Type == AlgorithmType.ATTENDANCE_IN || c.Type == AlgorithmType.ATTENDANCE_OUT));
+                                var data = _context.Algorithm.FirstOrDefault(c => c.Cid == protoModel.cid && (c.Type == AlgorithmType.ATTENDANCE_IN || c.Type == AlgorithmType.ATTENDANCE_OUT));
                                 if (data != null && data.Id != algo.Id)
                                 {
                                     return 2;
                                 }
-                            }                           
+                            }
                             algo.GPU = protoModel.gpu;
                             algo.DectectFirst = protoModel.dectectfirst;
                             algo.DectectSecond = protoModel.dectectsecond;
                             algo.Track = protoModel.track;
                             algo.Similar = protoModel.similar;
                             algo.Type = (ShipWeb.Models.AlgorithmType)protoModel.type;
-                            algo.Cid = cid;
+                            algo.Cid = protoModel.cid;
                             _context.Algorithm.Update(algo);
                         }
                         else
@@ -517,15 +506,16 @@ namespace ShipWeb.ProtoBuffer
                             };
                             _context.Algorithm.Add(model);
                         }
-                    }   
-                    _context.SaveChanges();
-                    return 0;
-                }
-                catch (Exception ex)
-                {
-                    return 1;
+                        _context.SaveChanges();
+                        return 0;
+                    }
+                    catch (Exception ex)
+                    {
+                        return 1;
+                    }
                 }
             }
+            return 1;
         }
 
         public static int ComponentAdd(string cid,string shipId)
@@ -571,6 +561,51 @@ namespace ShipWeb.ProtoBuffer
                 context.SaveChanges();
             }
             return 0;
+        }
+        /// <summary>
+        /// 陆地端修改组件信息
+        /// </summary>
+        /// <param name="components"></param>
+        public static void ComponentUpdateRange(List<ComponentInfo> components) 
+        {
+            if (components!=null)
+            {
+                using (var context=new MyContext())
+                {
+                    var list = context.Component.Where(c => c.Id!=ManagerHelp.Cid&&c.Type==ComponentType.WEB).ToList();
+                    List<string> str = new List<string>();
+                    foreach (var item in components)
+                    {
+                        if (item.componentid == ManagerHelp.Cid) continue;
+                        if (list.Where(c=>c.Id==item.componentid).Any())
+                        {
+                            str.Add(item.componentid);
+                        }
+                        else
+                        {
+                            ShipWeb.Models.Component component = new ShipWeb.Models.Component()
+                            {
+                                CommId = item.commid,
+                                Id = item.componentid,
+                                Line = 0,
+                                Name = item.cname,
+                                Type = (ShipWeb.Models.ComponentType)item.type
+                            };
+                            context.Component.Add(component);
+                        }
+                    }
+                    if (list.Count!=str.Count)
+                    {
+                        var delcom= list.Where(c => !str.Contains(c.Id)).ToList();
+                        foreach (var item in delcom)
+                        {
+                            item.Line = 1;
+                            context.Update(item);
+                        }
+                        context.SaveChanges();
+                    }
+                }
+            }
         }
         /// <summary>
         /// 陆地端设备船信息

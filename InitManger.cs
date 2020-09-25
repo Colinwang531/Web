@@ -34,13 +34,12 @@ namespace ShipWeb
             using (var context = new MyContext())
             {
                 //船舶端组件注册
-                var comList = context.Component.FirstOrDefault(c=>c.Type==ComponentType.WEB);
+                var comList = context.Component.FirstOrDefault(c=>c.Type==ComponentType.WEB&&c.CommId==null);
                 if (comList!=null)
                 {
                     ManagerHelp.Cid = comList.Id;
                 }
                 //Component();
-                ManagerHelp.isInit = true;
                 BoatInit();
             }
         }
@@ -71,12 +70,12 @@ namespace ShipWeb
                     context.SaveChanges();
                 }
             }
-            ManagerHelp.isInit = true;
             SendDataMsg assembly = new SendDataMsg();
             //发送组件注册请求
             assembly.SendComponentSign("WEB", ManagerHelp.Cid);
             //发送查询请求
             assembly.SendComponentQuery();
+            ManagerHelp.isInit = true;
         }
         /// <summary>
         /// 陆地端注册
@@ -87,6 +86,7 @@ namespace ShipWeb
             assembly.SendComponentSign("WEB", ManagerHelp.Cid);
             assembly.SendComponentQuery();
             ManagerHelp.isInit = false;
+            ManagerHelp.isLand = true;
         }
         /// <summary>
         /// 初使化船状态
@@ -162,7 +162,6 @@ namespace ShipWeb
         /// </summary>
         public static void InitAlgorithm() 
         {
-            List<Models.Component> list = new List<Models.Component>();
             using (var con = new MyContext())
             {
                 var components = con.Component.Where(c => c.Type == ComponentType.AI).ToList();
@@ -192,24 +191,18 @@ namespace ShipWeb
         /// <param name="nextIdentity"></param>
         public static void InitCrew() 
         {
-            List<Models.Component> list = new List<Models.Component>();
             using (var con = new MyContext())
             {
-                list = con.Component.Where(c => c.Type != ComponentType.WEB).ToList();
-            }
-            SendDataMsg assembly = new SendDataMsg();
-            var crewInfos=ProtoBDManager.CrewQuery();
-            foreach (var item in crewInfos)
-            {
-                string nextIdentity = "";
-                //查询安全帽的通讯ID
-                if (list.Where(c => c.Type == ComponentType.XMQ).Any())
+                var component = con.Component.FirstOrDefault(c => c.Type != ComponentType.AI && c.Name == ManagerHelp.FaceName);
+                if (component != null)
                 {
-                    nextIdentity = list.FirstOrDefault(c => c.Type == ComponentType.XMQ).CommId;
+                    SendDataMsg assembly = new SendDataMsg();
+                    var crewInfos = ProtoBDManager.CrewQuery();
+                    foreach (var item in crewInfos)
+                    {
+                        assembly.SendCrewAdd(item, component.CommId);
+                    }
                 }
-                //海康和大华组件尚未启动则不需要发送组件注册消息
-                if (nextIdentity == "") continue;
-                assembly.SendCrewAdd(item, nextIdentity);
             }
         }
         /// <summary>
@@ -220,7 +213,16 @@ namespace ShipWeb
             if (!string.IsNullOrEmpty(ManagerHelp.Cid))
             {
                 SendDataMsg assembly = new SendDataMsg();
-                assembly.SendComponentSign("WEB", ManagerHelp.Cid);
+                if (!ManagerHelp.isLand)
+                {
+                    //船舶端发送注册请求
+                    assembly.SendComponentSign("WEB", ManagerHelp.Cid);
+                }
+                else
+                {
+                    //陆地端定时更新组件信息
+                    assembly.SendComponentQuery();
+                }
             }
         }
         /// <summary>

@@ -183,8 +183,12 @@ namespace ShipWeb.Controllers
                         if (SendData(algorithm,(shipId + ":" + identity)))
                         {
                             _context.SaveChanges();
+                            return new JsonResult(new { code = 0 });
                         }
-                        return new JsonResult(new { code = 0});
+                        else
+                        {
+                            return new JsonResult(new { code = 1, msg = "网络连接超时!" });
+                        }
                     }
                     else
                     {
@@ -213,13 +217,13 @@ namespace ShipWeb.Controllers
                             algo.ShipId = base.user.ShipId;
                             if (!string.IsNullOrEmpty(viewModel.Id))
                             {
-                                algo.Id = Guid.NewGuid().ToString();
-                                _context.Algorithm.Add(algo);
+                                algo.Id = viewModel.Id;
+                                _context.Algorithm.Update(algo);
                             }
                             else
                             {
-                                algo.Id = viewModel.Id;
-                                _context.Algorithm.Update(algo);
+                                algo.Id = Guid.NewGuid().ToString();
+                                _context.Algorithm.Add(algo);
                             }
                             viewModel.Id = algo.Id;
                             var camera = _context.Camera.FirstOrDefault(c => c.Id == viewModel.Cid);
@@ -243,6 +247,10 @@ namespace ShipWeb.Controllers
                                 //    code = 0;
                                 //}
                                 #endregion
+                            }
+                            else
+                            {
+                                return new JsonResult(new { code = 1, msg = "网络连接超时!" });
                             }
                         }
                         else

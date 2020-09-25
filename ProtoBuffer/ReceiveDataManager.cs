@@ -62,6 +62,13 @@ namespace ShipWeb.ProtoBuffer
                         //发送设备信息
                         InitManger.InitDevice();
                     }
+                    else if (ManagerHelp.isLand)
+                    {
+                        if (component.componentresponse != null && component.componentresponse.result == 0)
+                        {
+                            ProtoBDManager.ComponentUpdateRange(component.componentresponse.componentinfos);
+                        }
+                    }
                     else
                     {
                         ManagerHelp.Reponse = JsonConvert.SerializeObject(component.componentresponse);
@@ -83,33 +90,29 @@ namespace ShipWeb.ProtoBuffer
             {
                 case Models.Algorithm.Command.CONFIGURE_REQ:
                     var request = algorithm.algorithmrequest;
-                    if (request.algorithminfo != null)
-                    {
-                        ProtoBDManager.AlgorithmSet(request.algorithminfo);
-                    }
+                    int result = ProtoBDManager.AlgorithmSet(request.algorithminfo);
+                    manager.SendAlgorithmRN(Models.Algorithm.Command.CONFIGURE_REP, null, result);
+                    break;
+                case Models.Algorithm.Command.QUERY_REQ:
+                    var algorithms = ProtoBDManager.AlgorithmQuery();
+                    manager.SendAlgorithmRN(Models.Algorithm.Command.QUERY_REP, algorithms);
                     break;
                 case Models.Algorithm.Command.CONFIGURE_REP:
                     var response = algorithm.algorithmresponse;
-                    //ManagerHelp.Reponse=JsonConvert.SerializeObject(response);
-                    if (response.result == 0 && response.configures != null && response.configures.Count > 0)
+                    if (response.result == 0)
                     {
                         ManagerHelp.Reponse = "OK";
                     }
                     break;
-                case Models.Algorithm.Command.QUERY_REQ:
-                    var query = algorithm.algorithmrequest;
-                    var algorithms = ProtoBDManager.AlgorithmQuery();
-                    manager.SendAlgorithmRN(algorithms);
-                    break;
                 case Models.Algorithm.Command.QUERY_REP:
-                    if (algorithm.algorithmresponse!=null&&algorithm.algorithmresponse.result==0&&algorithm.algorithmresponse.configures!=null)
+                    if (algorithm.algorithmresponse != null && algorithm.algorithmresponse.result == 0 && algorithm.algorithmresponse.configures != null)
                     {
                         ManagerHelp.Reponse = JsonConvert.SerializeObject(algorithm.algorithmresponse.configures);
                     }
                     break;
                 default:
                     break;
-            }       
+            }      
         }
         /// <summary>
         /// 设备处理
@@ -124,14 +127,47 @@ namespace ShipWeb.ProtoBuffer
                 case Models.Device.Command.NEW_REQ:
                     if (device.devicerequest!=null)
                     {
-                        ProtoBDManager.DeviceAdd(device.devicerequest.deviceinfo);
+                        var result=ProtoBDManager.DeviceAdd(device.devicerequest.deviceinfo);
+                        manager.SendDeviceRN(Models.Device.Command.NEW_REP, device.devicerequest.deviceinfo.did,null,result);
+                    }
+                    else
+                    {
+                        manager.SendDeviceRN(Models.Device.Command.NEW_REP, "", null, 1);
                     }
                     break;
+                case Models.Device.Command.DELETE_REQ:
+                    if (device.devicerequest != null && !string.IsNullOrEmpty(device.devicerequest.did))
+                    {
+                        var result=ProtoBDManager.DeviceDelete(device.devicerequest.did);
+                        manager.SendDeviceRN(Models.Device.Command.DELETE_REP, device.devicerequest.did, null,result);
+                    }
+                    else
+                    {
+                        manager.SendDeviceRN(Models.Device.Command.DELETE_REP, "", null, 1);
+                    }
+                    break;
+                case Models.Device.Command.MODIFY_REQ:
+                    if (device.devicerequest != null && !string.IsNullOrEmpty(device.devicerequest.did))
+                    {
+                        int result=ProtoBDManager.DeviceUpdate(device.devicerequest.did, device.devicerequest.deviceinfo);
+                        manager.SendDeviceRN(Models.Device.Command.MODIFY_REP, device.devicerequest.deviceinfo.did, null,result);
+                    }
+                    else
+                    {
+                        manager.SendDeviceRN(Models.Device.Command.MODIFY_REP, "", null, 1);
+                    }
+                    break;
+                case Models.Device.Command.QUERY_REQ:
+                    var info = device.devicerequest == null ? null : device.devicerequest.deviceinfo;
+                    string did = device.devicerequest != null ? device.devicerequest.did : "";
+                    var devices = ProtoBDManager.DeviceQuery(info, did);
+                    manager.SendDeviceRN(Models.Device.Command.QUERY_REP, did, devices);
+                    break;
                 case Models.Device.Command.NEW_REP:
-                    //ManagerHelp.Reponse = JsonConvert.SerializeObject(device.deviceresponse);
                     if (device.deviceresponse.result == 0 && device.deviceresponse.deviceinfos != null)
                     {
-                        ProtoBDManager.DeviceAdd(device.deviceresponse.deviceinfos[0]);
+                        var dev = device.deviceresponse.deviceinfos[0];
+                        ProtoBDManager.AddCameras(dev.camerainfos,dev.did);
                         if (ManagerHelp.isInit)
                         {
                             //发送算法信息
@@ -142,22 +178,10 @@ namespace ShipWeb.ProtoBuffer
                         }
                     }
                     break;
-                case Models.Device.Command.DELETE_REQ:
-                    if (device.devicerequest!=null&&!string.IsNullOrEmpty(device.devicerequest.did))
-                    {
-                        ProtoBDManager.DeviceDelete(device.devicerequest.did);
-                    }
-                    break;
                 case Models.Device.Command.DELETE_REP:
                     if (device.deviceresponse.result == 0 )
                     {
-                        ProtoBDManager.DeviceDelete(device.deviceresponse.did);
-                    }
-                    break;
-                case Models.Device.Command.MODIFY_REQ:
-                    if (device.devicerequest!=null&&!string.IsNullOrEmpty(device.devicerequest.did))
-                    {
-                        ProtoBDManager.DeviceUpdate(device.devicerequest.did, device.devicerequest.deviceinfo);
+                        //ProtoBDManager.DeviceDelete(device.deviceresponse.did);
                     }
                     break;
                 case Models.Device.Command.MODIFY_REP:
@@ -165,12 +189,6 @@ namespace ShipWeb.ProtoBuffer
                     {
                         ProtoBDManager.DeviceUpdate(device.deviceresponse.did, device.deviceresponse.deviceinfos[0]);
                     }
-                    break;
-                case Models.Device.Command.QUERY_REQ:
-                    var info = device.devicerequest == null ? null : device.devicerequest.deviceinfo;
-                    string did = device.devicerequest != null ? device.devicerequest.did : "";
-                    var devices=ProtoBDManager.DeviceQuery(info, did);
-                    manager.SendDeviceRN(did, devices);
                     break;
                 case Models.Device.Command.QUERY_REP:
                     if (device.deviceresponse!=null&&device.deviceresponse.result==0&&device.deviceresponse.deviceinfos!=null)
@@ -186,32 +204,37 @@ namespace ShipWeb.ProtoBuffer
         /// 船员处理
         /// </summary>
         /// <param name="crew"></param>
-        public void CrewData(ShipWeb.ProtoBuffer.Models.Crew crew) 
+        public void CrewData(ShipWeb.ProtoBuffer.Models.Crew crew)
         {
+            int result = 1;//响应状态
             switch (crew.command)
             {
                 case Models.Crew.Command.NEW_REQ:
+                  
                     if (crew.crewrequest != null)
                     {
-                        ProtoBDManager.CrewAdd(crew.crewrequest.crewinfo);
+                        result=ProtoBDManager.CrewAdd(crew.crewrequest.crewinfo);
                     }
+                    manager.SendCrewRN(Models.Crew.Command.NEW_REP, null, result);
                     break;
                 case Models.Crew.Command.DELETE_REQ:
                     if (crew.crewrequest != null)
                     {
-                        ProtoBDManager.CrewDelete(crew.crewrequest.crewinfo.uid);
+                         result=ProtoBDManager.CrewDelete(crew.crewrequest.crewinfo.uid);
                     }
+                    manager.SendCrewRN(Models.Crew.Command.DELETE_REP, null, result);
                     break;
                 case Models.Crew.Command.MODIFY_REQ:
                     if (crew.crewrequest != null)
                     {
-                        ProtoBDManager.CrewUpdate(crew.crewrequest.crewinfo);
+                         result=ProtoBDManager.CrewUpdate(crew.crewrequest.crewinfo);
                     }
+                    manager.SendCrewRN(Models.Crew.Command.DELETE_REP, null, result);
                     break;
                 case Models.Crew.Command.QUERY_REQ:
                     string uid = crew.crewrequest != null && crew.crewrequest.crewinfo != null ? crew.crewrequest.crewinfo.uid : "";
                     var crews = ProtoBDManager.CrewQuery(uid);
-                    manager.SendCrewRN(crews);
+                    manager.SendCrewRN(Models.Crew.Command.QUERY_REP,crews);
                     break;
                 case Models.Crew.Command.NEW_REP:
                     if (crew.crewresponse!=null&&crew.crewresponse.result==0)
@@ -244,20 +267,22 @@ namespace ShipWeb.ProtoBuffer
             switch (status.command)
             {
                 case Status.Command.SET_REQ://设置船状态
+                    int result = 1;
                     if (status.statusrequest != null)
                     {
-                        ProtoBDManager.ShipSet(status.statusrequest);
+                        result = ProtoBDManager.ShipSet(status.statusrequest);
                     }
+                    manager.SendStatusRN(Status.Command.SET_REP, null, result);
+                    break;
+                case Status.Command.QUERY_REQ:
+                    var ship = ProtoBDManager.StatusQuery();
+                    manager.SendStatusRN(Status.Command.QUERY_REP, ship);
                     break;
                 case Status.Command.SET_REP://接收设备成功与否
                     if (status.statusresponse!=null)
                     {
                        // ProtoBDManager.ShipSet(status.statusresponse.flag);
                     }
-                    break;
-                case Status.Command.QUERY_REQ:
-                    var ship=ProtoBDManager.StatusQuery();
-                    manager.SendStatusRN(ship);
                     break;
                 case Status.Command.QUERY_REP:
                     if (status.statusresponse!=null)

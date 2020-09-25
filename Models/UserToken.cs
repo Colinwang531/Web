@@ -27,7 +27,7 @@ namespace ShipWeb.Models
         /// </summary>
         public bool Enablequery { get; set; }
         /// <summary>
-        /// 船ID
+        /// 船舶端登陆时此值为舶ID,陆地端登陆时此值为单个船的通讯ID
         /// </summary>
         public string ShipId { get; set; }
         /// <summary>

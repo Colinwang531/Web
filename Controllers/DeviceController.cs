@@ -149,58 +149,50 @@ namespace ShipWeb.Controllers
         private IActionResult LandLoad()
         {
             List<DeviceViewModel> list = new List<DeviceViewModel>();
-            string shipId = base.user.ShipId;
-            var devIdentity = _context.Component.FirstOrDefault(c => c.Id == shipId).CommId;
-            assembly.SendDeveiceQuery(devIdentity);
-            List<ProtoBuffer.Models.DeviceInfo> devices = new List<ProtoBuffer.Models.DeviceInfo>();
-            try
+            string identity = base.user.ShipId;
+            //发送查询设备请求
+            assembly.SendDeveiceQuery(identity);
+            bool flag = true;
+            new TaskFactory().StartNew(() =>
             {
-                bool flag = true;
-                new TaskFactory().StartNew(() =>
+                while (flag && ManagerHelp.Reponse == "")
                 {
-                    while (flag)
+                    Thread.Sleep(500);
+                }
+            }).Wait(timeout);
+            flag = false;
+            if (ManagerHelp.Reponse != "")
+            {
+                List<ProtoBuffer.Models.DeviceInfo> devices = JsonConvert.DeserializeObject<List<ProtoBuffer.Models.DeviceInfo>>(ManagerHelp.Reponse);
+                ManagerHelp.Reponse = "";
+                foreach (var item in devices)
+                {
+                    DeviceViewModel model = new DeviceViewModel()
                     {
-                        if (ManagerHelp.Reponse != "")
+                        Enable = item.enable,
+                        Factory = (int)item.factory,
+                        Id = item.did,
+                        IP = item.ip,
+                        Name = item.name,
+                        Nickname = item.nickname,
+                        Password = item.password,
+                        Port = item.port,
+                        Type = (int)item.type
+                    };
+                    var cam = item.camerainfos;
+                    model.cameraViews = new List<CameraViewModel>();
+                    foreach (var it in cam)
+                    {
+                        model.cameraViews.Add(new CameraViewModel()
                         {
-                            devices = JsonConvert.DeserializeObject<List<ProtoBuffer.Models.DeviceInfo>>(ManagerHelp.Reponse);
-                            flag = false;
-                        }
-                        Thread.Sleep(500);
+                            Index = it.index,
+                            Id = it.cid,
+                            Enable = it.enable,
+                            IP = it.ip,
+                            NickName = it.nickname,
+                            DeviceId = item.did
+                        });
                     }
-                }).Wait(timeout);
-                flag = false;
-            }
-            catch (Exception)
-            {
-            }
-            ManagerHelp.Reponse = "";
-            foreach (var item in devices)
-            {
-                DeviceViewModel model = new DeviceViewModel()
-                {
-                    Enable = item.enable,
-                    Factory = (int)item.factory,
-                    Id = item.did,
-                    IP = item.ip,
-                    Name = item.name,
-                    Nickname = item.nickname,
-                    Password = item.password,
-                    Port = item.port,
-                    Type = (int)item.type
-                };
-                var cam = item.camerainfos;
-                model.cameraViews = new List<CameraViewModel>();
-                foreach (var it in cam)
-                {
-                    model.cameraViews.Add(new CameraViewModel()
-                    {
-                        Index = it.index,
-                        Id = it.cid,
-                        Enable = it.enable,
-                        IP = it.ip,
-                        NickName = it.nickname,
-                        DeviceId = item.did
-                    });
                 }
             }
             var result = new

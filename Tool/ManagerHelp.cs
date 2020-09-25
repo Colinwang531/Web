@@ -45,6 +45,10 @@ namespace ShipWeb.Tool
         /// 是否初使化
         /// </summary>
         public static bool isInit = false;
+        /// <summary>
+        /// 是否陆地端给定时间刷新船是否失去联系
+        /// </summary>
+        public static bool isLand = false;
         //int aa;
         //单例控制dealer只有一个。
         public ManagerHelp()
