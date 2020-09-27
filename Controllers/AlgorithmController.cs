@@ -23,8 +23,8 @@ namespace ShipWeb.Controllers
         SendDataMsg assembly = new SendDataMsg();
         private ILogger<AlgorithmController> _logger;
         //缓存船舶端的设备信息
-        List<ProtoBuffer.Models.DeviceInfo> boatDevices = new List<ProtoBuffer.Models.DeviceInfo>();
-        List<Camera> cameras = new List<Camera>();
+        private static List<ProtoBuffer.Models.DeviceInfo> boatDevices = new List<ProtoBuffer.Models.DeviceInfo>();
+        private static  List<Camera> cameras;
         public AlgorithmController(MyContext context, ILogger<AlgorithmController> logger) 
         {
             _context = context;
@@ -72,29 +72,40 @@ namespace ShipWeb.Controllers
         }
         public IActionResult LandLoad()
         {
-            string shipId = base.user.ShipId;
-            var comtent = _context.Component.FirstOrDefault(c => c.ShipId == shipId&&c.Type==ComponentType.WEB);
+            string identtity = base.user.ShipId;          
             List<ProtoBuffer.Models.AlgorithmInfo> protoDate = new List<ProtoBuffer.Models.AlgorithmInfo>();
-            assembly.SendAlgorithmQuery(comtent.Id);
+            assembly.SendAlgorithmQuery(identtity);
+            assembly.SendDeveiceQuery(identtity);
+            bool flag = true;
+            new TaskFactory().StartNew(() =>
+            {
+                while (flag)
+                {
+                    if (ManagerHelp.AlgorithmReponse!=""&& ManagerHelp.DeviceReponse!="")
+                    {
+                        flag = false;
+                    }
+                    Thread.Sleep(100);
+                }
+            }).Wait(timeout);
+            flag = false;
             try
             {
-                bool flag = true;
-                new TaskFactory().StartNew(() =>
+                if (ManagerHelp.AlgorithmReponse != "")
                 {
-                    while (flag)
-                    {
-                        if (ManagerHelp.Reponse != "")
-                        {
-                            protoDate = JsonConvert.DeserializeObject<List<ProtoBuffer.Models.AlgorithmInfo>>(ManagerHelp.Reponse);
-                            flag = false;
-                        }
-                    }
-                }).Wait(timeout);
-                flag = false;
+                    protoDate = JsonConvert.DeserializeObject<List<ProtoBuffer.Models.AlgorithmInfo>>(ManagerHelp.AlgorithmReponse);
+                }
+                if (ManagerHelp.DeviceReponse!="")
+                {
+                    boatDevices = JsonConvert.DeserializeObject<List<ProtoBuffer.Models.DeviceInfo>>(ManagerHelp.DeviceReponse);
+                }
+                ManagerHelp.AlgorithmReponse = "";
+                ManagerHelp.DeviceReponse = "";
             }
             catch (Exception)
             {
             }
+            cameras = new List<Camera>();
             var data = from a in protoDate
                        select new
                        {
@@ -103,34 +114,11 @@ namespace ShipWeb.Controllers
                            Type = a.type,
                            GPU = a.gpu,
                            Similar = a.similar,
-                           NickName = a.cid.Split(',')[1],
+                           NickName = a.aid.Split(',')[1],
                            DectectFirst = a.dectectfirst,
                            DectectSecond = a.dectectsecond,
                            Track = a.track
-                       };
-            assembly.SendDeveiceQuery(comtent.Id);
-            
-            try
-            {
-                bool flag = true;
-                new TaskFactory().StartNew(() =>
-                {
-                    while (flag)
-                    {
-                        if (ManagerHelp.Reponse != "")
-                        {
-                            boatDevices = JsonConvert.DeserializeObject<List<ProtoBuffer.Models.DeviceInfo>>(ManagerHelp.Reponse);
-                            flag = false;
-                        }
-                        Thread.Sleep(500);
-                    }
-                }).Wait(timeout);
-                flag = false;
-            }
-            catch (Exception)
-            {
-            }
-            ManagerHelp.Reponse = "";
+                       };       
             foreach (var item in boatDevices)
             {
                 var camList = item.camerainfos;
@@ -139,7 +127,8 @@ namespace ShipWeb.Controllers
                     Camera model = new Camera()
                     {
                         Id = cam.cid,
-                        NickName = cam.nickname
+                        NickName = cam.nickname,
+                        DeviceId=item.did
                     };
                     cameras.Add(model);
                 }
@@ -169,10 +158,12 @@ namespace ShipWeb.Controllers
                 var viewModel = JsonConvert.DeserializeObject<AlgorithmViewModel>(model);
                 if (viewModel != null)
                 {
+                    int code = 1;
+                    string errMsg = "";
                     if (base.user.IsLandHome&&!ManagerHelp.IsTest)
                     {
                         string identity = GetIdentity(viewModel.Type);
-                        if (identity == null)
+                        if (string.IsNullOrEmpty(identity))
                         {
                             string name = GetViewName((AlgorithmType)viewModel.Type);
                             return new JsonResult(new { code = 1, msg = "算法【" + name + "】组件未启动" });
@@ -180,11 +171,13 @@ namespace ShipWeb.Controllers
                         var cam = cameras.FirstOrDefault(c => c.Id == viewModel.Cid);
                         string cid = cam.DeviceId + ":" + cam.Id + ":" + cam.Index;
                         ProtoBuffer.Models.AlgorithmInfo algorithm = GetProtoAlgorithm(viewModel, cid);
-                        if (SendData(algorithm,(shipId + ":" + identity)))
+                        code = SendData(algorithm, (shipId + ":" + identity));
+                        if(code==0)
                         {
                             _context.SaveChanges();
                         }
-                        return new JsonResult(new { code = 0});
+                        else if (code == 400)errMsg = "网络请求超时。。。";
+                        else errMsg = "算法配置失败";
                     }
                     else
                     {
@@ -198,7 +191,7 @@ namespace ShipWeb.Controllers
                         {
                             //获取枚举对应的名称
                             string identity = GetIdentity(viewModel.Type);
-                            if (identity == null)
+                            if (string.IsNullOrEmpty(identity))
                             {
                                 string name = GetViewName((AlgorithmType)viewModel.Type);
                                 return new JsonResult(new { code = 1, msg = "算法【"+name+"】组件未启动" });
@@ -213,21 +206,23 @@ namespace ShipWeb.Controllers
                             algo.ShipId = base.user.ShipId;
                             if (!string.IsNullOrEmpty(viewModel.Id))
                             {
-                                algo.Id = Guid.NewGuid().ToString();
-                                _context.Algorithm.Add(algo);
+                                algo.Id = viewModel.Id;
+                                _context.Algorithm.Update(algo);
                             }
                             else
                             {
-                                algo.Id = viewModel.Id;
-                                _context.Algorithm.Update(algo);
+                                algo.Id = Guid.NewGuid().ToString();
+                                _context.Algorithm.Add(algo);
                             }
                             viewModel.Id = algo.Id;
                             var camera = _context.Camera.FirstOrDefault(c => c.Id == viewModel.Cid);
                             string cid = camera.DeviceId + ":" + camera.Id + ":" + camera.Index;
                             ProtoBuffer.Models.AlgorithmInfo algorithm = GetProtoAlgorithm(viewModel,cid);
-                            if (SendData(algorithm, identity))
+                            code = SendData(algorithm, identity);
+                            if (code == 0)
                             {
                                 _context.SaveChanges();
+                                SendStatus(identity);
                                 #region 发送二次请求 暂时不用
                                 ////根据摄像机获取设备下的通讯ID
                                 //var factory = _context.Device.FirstOrDefault(c => c.Id == (_context.Camera.FirstOrDefault(d => d.Id == viewModel.Cid).DeviceId)).factory;
@@ -244,6 +239,9 @@ namespace ShipWeb.Controllers
                                 //}
                                 #endregion
                             }
+                            else if (code == 2)errMsg = "网络请求超时。。。";
+                            else errMsg = "算法配置失败";
+
                         }
                         else
                         {
@@ -266,10 +264,10 @@ namespace ShipWeb.Controllers
                                 _context.Algorithm.Update(algo);
                             }
                             _context.SaveChanges();
+                            code = 0;
                         }
-                        return new JsonResult(new { code = 0 });
                     }
-                  
+                    return new JsonResult(new { code = code, msg = errMsg });
                 }
                 return new JsonResult(new { code = 1, msg = "操作界面数据失败!" });
             }
@@ -279,34 +277,28 @@ namespace ShipWeb.Controllers
                 return new JsonResult(new { code = 1, msg = "数据保存失败!" + ex.Message });
             }
         }
-        private bool SendData(ProtoBuffer.Models.AlgorithmInfo algorithm, string nextIdentity) 
+        private int SendData(ProtoBuffer.Models.AlgorithmInfo algorithm, string nextIdentity)
         {
+            int result = 1;
             assembly.SendAlgorithmSet(algorithm, nextIdentity);
-            try
+            bool flag = true;
+            new TaskFactory().StartNew(() =>
             {
-                bool flag = true;
-                new TaskFactory().StartNew(() =>
+                while (flag && ManagerHelp.AlgorithmReponse == "")
                 {
-                    while (flag)
-                    {
-                        if (ManagerHelp.Reponse != "")
-                        {
-                            flag = false;
-                        }
-                        Thread.Sleep(500);
-                    }
-                }).Wait(timeout);
-                flag = false;
-            }
-            catch (Exception)
+                    Thread.Sleep(100);
+                }
+            }).Wait(timeout);
+            flag = false;
+            if (ManagerHelp.AlgorithmReponse != "")
             {
+                return Convert.ToInt32(ManagerHelp.AlgorithmReponse);
             }
-            if (ManagerHelp.Reponse == "OK")
+            else
             {
-                ManagerHelp.Reponse = "";
-                return true;
+                result = 400;//网络超时
             }
-            return false;
+            return result;
         }
        /// <summary>
        /// 数据校验
@@ -428,6 +420,7 @@ namespace ShipWeb.Controllers
             if (base.user.IsLandHome)
             {
                 string tokenstr = HttpContext.Session.GetString("comtoken");
+                if (string.IsNullOrEmpty(tokenstr)) return "";
                 List<ComponentToken> tokens = JsonConvert.DeserializeObject<List<ComponentToken>>(tokenstr);
                 var component = tokens.FirstOrDefault(c => c.Type == ComponentType.AI&&c.Name.ToUpper()==name);
                 if (component != null)
@@ -473,6 +466,16 @@ namespace ShipWeb.Controllers
                     break;
             }
             return name;
+        }
+        private void SendStatus(string identity) 
+        {
+            var ship = _context.Ship.FirstOrDefault();
+            ProtoBuffer.Models.StatusRequest request = new ProtoBuffer.Models.StatusRequest()
+            {
+                flag = (int)ship.type,
+                type = ProtoBuffer.Models.StatusRequest.Type.SAIL
+            };
+            assembly.SendStatusSet(request, identity);
         }
     }
 }

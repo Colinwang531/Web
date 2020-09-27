@@ -37,7 +37,7 @@ namespace ShipWeb
             services.AddSession(options =>
             {
                 options.IdleTimeout = TimeSpan.FromSeconds(Convert.ToDouble(timeSpan));
-                options.Cookie.HttpOnly = true;
+                options.Cookie.HttpOnly = false;
                 options.Cookie.IsEssential = true;
             });
             services.AddDbContext<MyContext>(options => options.UseMySQL(AppSettingHelper.GetConnectionString("dbconn")));

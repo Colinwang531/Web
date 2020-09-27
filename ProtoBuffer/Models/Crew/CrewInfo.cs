@@ -28,6 +28,6 @@ namespace ShipWeb.ProtoBuffer.Models
         /// 雇员照片
         /// </summary>
         [ProtoMember(4)]
-        public List<byte[]> pictures { get; set; }
+        public List<string> pictures { get; set; }
     }
 }

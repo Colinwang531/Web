@@ -217,7 +217,7 @@
         var html = "";
         if (dt.length>0) {
             for (var i = 0; i < dt.length; i++) {
-                var pics = dt[i].employeePictures;
+                var pics = dt[i].crewPictureViewModels;
                 var src = "/images/ship/crewhead.png";
                 if (pics.length > 0) {
                     src = "data:image/jpeg;base64," + pics[0].picture;
@@ -303,7 +303,7 @@
                         $("#hidId").val(id);
                         $("#txtName").val(crewData[i].name);
                         $("#txtJob").val(crewData[i].job);
-                        var pics = crewData[i].employeePictures;
+                        var pics = crewData[i].crewPictureViewModels;
                         for (var j = 0; j < pics.length; j++) {
                             var src = "data:image/jpeg;base64," + pics[j].picture;
                             AddImage(src, pics[j].id);

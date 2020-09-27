@@ -59,6 +59,7 @@ namespace ShipWeb.Controllers
                 ViewBag.helmet = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.HELMET).Count();
                 ViewBag.phone = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.PHONE).Count();
             }
+            ManagerHelp.isInit = false;
             return View();
         }
         public IActionResult AlarmList(string type,bool flag=false,bool isShip=false) 
