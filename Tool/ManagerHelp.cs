@@ -36,7 +36,11 @@ namespace ShipWeb.Tool
         /// <summary>
         /// 存放proto返回的消息
         /// </summary>
-        public static string Reponse = "";
+        public static string CrewReponse = "";
+        public static string DeviceReponse = "";
+        public static string ComponentReponse = "";
+        public static string AlgorithmReponse = "";
+        public static string StatusReponse = "";
         /// <summary>
         /// 人脸算法组件名称
         /// </summary>

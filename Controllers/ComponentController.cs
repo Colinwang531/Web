@@ -63,25 +63,28 @@ namespace ShipWeb.Controllers
                 List<Models.Component> components = new List<Models.Component>();
                 if (base.user.IsLandHome)
                 {
-                    var shipIdentity = _context.Component.FirstOrDefault(c => c.Id == shipId && c.Type == ComponentType.WEB);
+                    var shipIdentity = _context.Component.FirstOrDefault(c => c.CommId == shipId && c.Type == ComponentType.WEB);
                     identity = shipIdentity.CommId;
                 }
                 SendDataMsg assembly = new SendDataMsg();
                 assembly.SendComponentQuery(identity);
                 ProtoBuffer.Models.ComponentResponse response = new ProtoBuffer.Models.ComponentResponse();
                 //Task.WhenAny();
+                bool flag = true;
                 new TaskFactory().StartNew(() =>
                 {
-                    while (ManagerHelp.Reponse == "")
+                    while (ManagerHelp.ComponentReponse == ""&&flag)
                     {
                         Thread.Sleep(100);
                     }
                 }).Wait(3000);
+                flag = false;
                 try
                 {
-                    if (ManagerHelp.Reponse != "")
+                    if (ManagerHelp.ComponentReponse != "")
                     {
-                        response = JsonConvert.DeserializeObject<ProtoBuffer.Models.ComponentResponse>(ManagerHelp.Reponse);
+                        response = JsonConvert.DeserializeObject<ProtoBuffer.Models.ComponentResponse>(ManagerHelp.ComponentReponse);
+                        ManagerHelp.ComponentReponse="";
                         if (response.result == 0 && response.componentinfos != null && response.componentinfos.Count > 0)
                         {
                             SaveData(response.componentinfos);

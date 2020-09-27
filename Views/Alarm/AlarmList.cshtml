@@ -44,7 +44,7 @@
             var data = {
                 shipId: obj.field.ship,
                 name: obj.field.name,
-                type: $("#hidtype").val(),
+                type: $("#slType").val(),
                 startTime: obj.field.startTime,
                 endTime: obj.field.endTime
             }
@@ -73,6 +73,7 @@
                             slHtml += '<option value="' + sl[i].id + '">' + sl[i].name + '</option>'
                         }
                         $("#slShip").html(slHtml);
+                        $("#slType").val($("#hidtype").val());
                         layui.use('form', function () {
                             var form = layui.form;
                             form.render();
@@ -203,7 +204,7 @@
 <input type="hidden" id="hidtype" value="@ViewBag.type" />
 <div style="width:96%;margin-top:30px">
     <div style="margin-left:30px">
-        <label style="font-family:STZhongsong;font-weight:bold;width:300px;font:normal;font-size:28px;">@ViewBag.TypeName 报警</label>
+        <label style="font-family:STZhongsong;font-weight:bold;width:300px;font:normal;font-size:28px;">报警</label>
         <div style="float:right">
             <a href="/Alarm/AlarmInfo?flag=@ViewBag.IsShowLayout" style="font-size:14px;color:#005DFF">返回上级</a>
         </div>    
@@ -219,6 +220,16 @@
                     </select>
                 </div>
             }
+            <label class="layui-form-label">报警类型</label>
+            <div class="layui-input-inline">
+                <select name="type" id="slType" style="width: 208px ">
+                    <option value="">所有类型</option>
+                    <option value="1">安全帽</option>
+                    <option value="2" >玩手机</option>
+                    <option value="3">睡觉</option>
+                    <option value="4">打架</option>
+                </select>
+            </div>
 
             <label class="layui-form-label">摄像机名称</label>
             <div class="layui-input-inline">
@@ -232,7 +243,7 @@
             <div class="layui-input-inline">
                 <input name="endTime" class="layui-input" id="dtEndTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off" style="width: 208px " readonly>
             </div>
-            <div class="layui-input-inline" style="margin-left:30px;width:300px">
+            <div class="layui-input-inline" style="margin-left:30px;width:250px">
                 <button class="layui-btn" type="submit" lay-submit="" lay-filter="query" style="background-color:#2F6BFF;width:98px;font-size:12px">搜索</button>
                 <a href="#" onclick="Export()" class="layui-btn" style="background-color:#2F6BFF;width:98px;font-size:12px">导出</a>
             </div>

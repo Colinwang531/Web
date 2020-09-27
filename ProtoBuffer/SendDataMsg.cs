@@ -25,7 +25,7 @@ namespace ShipWeb.ProtoBuffer
                 timestamp = ProtoBufHelp.TimeSpan(),
                 algorithm = new Algorithm()
                 {
-                    command = Algorithm.Command.QUERY_REP,
+                    command = command,
                     algorithmresponse = new AlgorithmResponse()
                     {
                         configures = algorithms,
@@ -97,8 +97,8 @@ namespace ShipWeb.ProtoBuffer
                 {
                     command = command,
                     statusresponse = new StatusResponse() {
-                        flag = ship.Flag,
-                        name = ship.Name,
+                        flag = ship==null?false: ship.Flag,
+                        name = ship==null?"":ship.Name,
                         result = status
                     }
                 }

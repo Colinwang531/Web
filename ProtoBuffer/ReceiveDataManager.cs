@@ -30,6 +30,7 @@ namespace ShipWeb.ProtoBuffer
         {
             //添加日志
             ProtoBDManager.AddReceiveLog<ShipWeb.ProtoBuffer.Models.Component>("Component", component);
+            ManagerHelp.ComponentReponse = "";
             switch (component.command)
             {
                 case Models.Component.Command.SIGNIN_REQ:
@@ -49,16 +50,15 @@ namespace ShipWeb.ProtoBuffer
                     break;
                 case Models.Component.Command.QUERY_REQ:
                     break;
-                case Models.Component.Command.QUERY_REP:                                      
+                case Models.Component.Command.QUERY_REP: 
                     if (ManagerHelp.isInit)
                     {
-                        ManagerHelp.Reponse = "";
                         if (component.componentresponse != null && component.componentresponse.result == 0)
                         {
                             ProtoBDManager.ComponentAddRange(component.componentresponse.componentinfos);
                         }
                         //发送船员状态
-                        InitManger.InitStatus();
+                        //InitManger.InitStatus();
                         //发送设备信息
                         InitManger.InitDevice();
                     }
@@ -71,7 +71,7 @@ namespace ShipWeb.ProtoBuffer
                     }
                     else
                     {
-                        ManagerHelp.Reponse = JsonConvert.SerializeObject(component.componentresponse);
+                        ManagerHelp.ComponentReponse = JsonConvert.SerializeObject(component.componentresponse);
                     }
                     break;
                 default:
@@ -98,16 +98,12 @@ namespace ShipWeb.ProtoBuffer
                     manager.SendAlgorithmRN(Models.Algorithm.Command.QUERY_REP, algorithms);
                     break;
                 case Models.Algorithm.Command.CONFIGURE_REP:
-                    var response = algorithm.algorithmresponse;
-                    if (response.result == 0)
-                    {
-                        ManagerHelp.Reponse = "OK";
-                    }
+                    ManagerHelp.AlgorithmReponse = algorithm.algorithmresponse.result.ToString();
                     break;
                 case Models.Algorithm.Command.QUERY_REP:
                     if (algorithm.algorithmresponse != null && algorithm.algorithmresponse.result == 0 && algorithm.algorithmresponse.configures != null)
                     {
-                        ManagerHelp.Reponse = JsonConvert.SerializeObject(algorithm.algorithmresponse.configures);
+                        ManagerHelp.AlgorithmReponse = JsonConvert.SerializeObject(algorithm.algorithmresponse.configures);
                     }
                     break;
                 default:
@@ -177,23 +173,25 @@ namespace ShipWeb.ProtoBuffer
                             ManagerHelp.isInit = false;
                         }
                     }
+                    if (!ManagerHelp.isInit)
+                    {
+                        ManagerHelp.DeviceReponse = device.deviceresponse.result.ToString();
+                    }
                     break;
                 case Models.Device.Command.DELETE_REP:
-                    if (device.deviceresponse.result == 0 )
-                    {
-                        //ProtoBDManager.DeviceDelete(device.deviceresponse.did);
-                    }
+                    ManagerHelp.DeviceReponse = device.deviceresponse.result.ToString();
                     break;
                 case Models.Device.Command.MODIFY_REP:
                     if (device.deviceresponse.result == 0 && device.deviceresponse.deviceinfos != null)
                     {
                         ProtoBDManager.DeviceUpdate(device.deviceresponse.did, device.deviceresponse.deviceinfos[0]);
                     }
+                    ManagerHelp.DeviceReponse = device.deviceresponse.result.ToString();
                     break;
                 case Models.Device.Command.QUERY_REP:
                     if (device.deviceresponse!=null&&device.deviceresponse.result==0&&device.deviceresponse.deviceinfos!=null)
                     {
-                        ManagerHelp.Reponse = JsonConvert.SerializeObject(device.deviceresponse.deviceinfos); 
+                        ManagerHelp.DeviceReponse = JsonConvert.SerializeObject(device.deviceresponse.deviceinfos); 
                     }
                     break;
                 default:
@@ -237,19 +235,18 @@ namespace ShipWeb.ProtoBuffer
                     manager.SendCrewRN(Models.Crew.Command.QUERY_REP,crews);
                     break;
                 case Models.Crew.Command.NEW_REP:
-                    if (crew.crewresponse!=null&&crew.crewresponse.result==0)
-                    {
-
-                    }
+                    ManagerHelp.CrewReponse = crew.crewresponse.result.ToString();
                     break;
                 case Models.Crew.Command.DELETE_REP:
+                    ManagerHelp.CrewReponse = crew.crewresponse.result.ToString();
                     break;
                 case Models.Crew.Command.MODIFY_REP:
+                    ManagerHelp.CrewReponse = crew.crewresponse.result.ToString();
                     break;
                 case Models.Crew.Command.QUERY_REP:
                     if (crew.crewresponse!=null&&crew.crewresponse.result==0&&crew.crewresponse.crewinfos!=null)
                     {
-                        ManagerHelp.Reponse = JsonConvert.SerializeObject(crew.crewresponse.crewinfos);
+                        ManagerHelp.CrewReponse = JsonConvert.SerializeObject(crew.crewresponse.crewinfos);
                     }
                     break;
                 default:
@@ -279,15 +276,13 @@ namespace ShipWeb.ProtoBuffer
                     manager.SendStatusRN(Status.Command.QUERY_REP, ship);
                     break;
                 case Status.Command.SET_REP://接收设备成功与否
-                    if (status.statusresponse!=null)
-                    {
-                       // ProtoBDManager.ShipSet(status.statusresponse.flag);
-                    }
+
+                    ManagerHelp.StatusReponse = status.statusresponse.result.ToString();
                     break;
                 case Status.Command.QUERY_REP:
                     if (status.statusresponse!=null)
                     {
-                        ManagerHelp.Reponse = JsonConvert.SerializeObject(status.statusresponse);
+                        ManagerHelp.StatusReponse = JsonConvert.SerializeObject(status.statusresponse);
                     }
                     break;
                 default:

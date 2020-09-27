@@ -130,6 +130,12 @@
         //保存
         form.on("submit(doSubmit)", function (frm) {           
             $('#btnSubmit').attr('disabled', 'disabled').addClass(DISABLED);
+            if (frm.field.camera == "") {
+                return layer.msg("摄像机不能为容", { icon: 2 });
+            }
+            if (frm.field.type=="") {
+                return layer.msg("算法类型不能为容", { icon: 2 });
+            }
             var data = {
                 id: frm.field.id,
                 type: parseInt(frm.field.type),
@@ -295,8 +301,8 @@
                 <div class="layui-input-inline">
                     <select name="gpu" id="slgpu" lay-verify="required">
                         <option value="">请选择</option>
-                        <option value="0">0</option>
                         <option value="1">1</option>
+                        <option value="2">2</option>
                     </select>
                 </div>
             </div>

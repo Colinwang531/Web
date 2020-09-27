@@ -552,19 +552,29 @@ namespace ShipWeb.ProtoBuffer
                 {
                     shipId = ship.Id;
                 }
+                List<ShipWeb.Models.Component> list = new List<ShipWeb.Models.Component>();
+                //获取到的数据除WEB外，如果组件重复，那么它的通讯ID取最后一个
                 foreach (var item in components)
                 {
-                    if (item.type == ComponentInfo.Type.WEB&&item.componentid==ManagerHelp.Cid) continue;                   
-                    ShipWeb.Models.Component model = new ShipWeb.Models.Component()
+                    if (item.type == ComponentInfo.Type.WEB&&item.componentid==ManagerHelp.Cid) continue;
+                    if (list.Where(c=>c.Id==item.componentid).Any())
                     {
-                        Id = item.componentid,
-                        CommId=item.commid,
-                        Name = item.cname,
-                        Type =(ComponentType)item.type,
-                        ShipId= shipId
-                    };
-                    context.Component.Add(model);
+                        list.FirstOrDefault(c => c.Id == item.componentid).CommId=item.commid;
+                    }
+                    else
+                    {
+                        ShipWeb.Models.Component model = new ShipWeb.Models.Component()
+                        {
+                            Id = item.componentid,
+                            CommId = item.commid,
+                            Name = item.cname,
+                            Type = (ComponentType)item.type,
+                            ShipId = shipId
+                        };
+                        list.Add(model);
+                    }
                 }
+                context.Component.AddRange(list);
                 context.SaveChanges();
             }
             return 0;
