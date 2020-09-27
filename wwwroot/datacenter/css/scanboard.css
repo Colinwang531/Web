@@ -1784,6 +1784,16 @@ body {
         left: 9px;
     }
 
+    .btnLayer .icoMapTheme {
+        display: block;
+        width: 26px;
+        height: 26px;
+        background: url(../images/s_ico10.png);
+        position: relative;
+        top: 12px;
+        left: 12px;
+    }
+
 .carInfo {
     width: 0;
     height: 0;
@@ -2598,6 +2608,16 @@ body {
             top: 10.8px;
             left: 6px;
         }
+
+        .btnLayer .icoMapTheme {
+            display: block;
+            width: 26px;
+            height: 26px;
+            background: url(../images/s_ico10.png);
+            position: relative;
+            top: 12px;
+            left: 12px;
+        }
 }
 
 @media screen and (max-width: 1439px) and (min-width: 1366px) {
@@ -2805,6 +2825,16 @@ body {
             top: 9px;
             left: 5px;
         }
+
+        .btnLayer .icoMapTheme {
+            display: block;
+            width: 26px;
+            height: 26px;
+            background: url(../images/s_ico10.png);
+            position: relative;
+            top: 12px;
+            left: 12px;
+        }
 }
 
 @media screen and (max-width: 1365px) {
@@ -3011,5 +3041,15 @@ body {
             background-size: 100% 100%;
             top: 9px;
             left: 5px;
+        }
+
+        .btnLayer .icoMapTheme {
+            display: block;
+            width: 26px;
+            height: 26px;
+            background: url(../images/s_ico10.png);
+            position: relative;
+            top: 12px;
+            left: 12px;
         }
 }

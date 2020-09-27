@@ -151,8 +151,8 @@ $(function () {
     }, 500);
 
 
+    /**弹窗部分 未完待续 Start*/
     var summaryPie1, summaryPie2, summaryPie3, summaryBar, summaryLine;
-    var pieData;
     function setSummary() {
         summaryPie1 = echarts.init(document.getElementById('summaryPie1'));
         summaryPie2 = echarts.init(document.getElementById('summaryPie2'));
@@ -564,7 +564,6 @@ $(function () {
         summaryLine.setOption(lineOption);
     }
 
-    //弹窗部分 未完待续
     $('.summaryBtn').on('click', function () {
         $('.filterbg').show();
         $('.popup').show();
@@ -611,8 +610,21 @@ $(function () {
             return false;
         }
     });
+    /**弹窗部分 未完待续 End*/
 
 
+    //地图主题下拉菜单
+    $("#mapthemeShow").hide();
+    $("#mapthemeli").hover(function () {
+        $("#mapthemeShow").show();
+    }, function () {
+        $("#mapthemeShow").hide();
+    })
+    $("#mapthemeShow").hover(function () {
+        $("#mapthemeShow").show();
+    }, function () {
+        $("#mapthemeShow").hide();
+    })
     //加载后端数据
     SetAlarmType();
     SetMonthAlarmCount();
@@ -739,7 +751,7 @@ function SetMonthAlarmCount() {
         $("#FontScrollAlarm ul").empty();
         $("#FontScrollAlarm ul").append(temp);
         //文字滚动
-        $('#FontScrollAlarm').FontScroll({ time: 3000, num: 1 });
+        $('#FontScrollAlarm').FontScroll({ time: 5000, num: 1 });
     });
 }
 //设备数据统计
@@ -786,12 +798,16 @@ function SetDataStatis() {
 }
 //船舶信息集合 高德地图展示
 function SetShipList(shipName) {
+    var mapStyle = localStorage.getItem('mapStyle');
+    if (mapStyle == null) mapStyle = "darkblue";
+
     var map = new AMap.Map("myMap", {
         resizeEnable: true,
         zoom: 7,
-        mapStyle: 'amap://styles/darkblue',
+        //mapStyle: 'amap://styles/darkblue',
         //center: [120.394045, 35.988562]
     });
+    map.setMapStyle('amap://styles/' + mapStyle);
     $.ajax({
         type: "get",
         url: "/Home/GetShipList",
@@ -986,6 +1002,12 @@ function SetAttendance() {
     })
 }
 
+//设置地图主题
+function SetMapTheme(maptheme) {
+    if (maptheme == null || maptheme == "") return;
+    localStorage.setItem('mapStyle', maptheme);
+    SetShipList(null);
+}
 //获取本月的天数总数
 function getCountDays() {
     var curDate = new Date();

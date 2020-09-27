@@ -9,7 +9,7 @@
     <meta http-equiv="refresh" content="600" />
     <title>数据中心大屏-禹创</title>
     <link href="~/datacenter/css/reset.css" rel="stylesheet" />
-    <link href="~/datacenter/css/scanboard.css?version=202009161638" rel="stylesheet" />
+    <link href="~/datacenter/css/scanboard.css?version=202009161640" rel="stylesheet" />
     <link href="~/datacenter/css/animsition.css" rel="stylesheet" />
     <link href="~/datacenter/css/jquery.shCircleLoader.css" rel="stylesheet" />
     <script src="~/datacenter/js/jquery.js"></script>
@@ -104,6 +104,73 @@
                                 </div>
                             </div>
                             @*<a href="javascript:;" class="infoBtn"><span class="icoCar"></span></a>*@
+                            <div class="maptheme">
+                                <ul class="clearfix">
+                                    <li id="mapthemeli">
+                                        <a href="javascript:;" class="infoBtn"><span class="icoMapTheme"></span></a>
+                                        <div id="mapthemeShow" style="display: none">
+                                            <ul>
+                                                <li><a onclick="SetMapTheme('normal');">标准</a></li>
+                                                <li><a onclick="SetMapTheme('dark');">幻影黑</a></li>
+                                                <li><a onclick="SetMapTheme('light');">月光银</a></li>
+                                                <li><a onclick="SetMapTheme('whitesmoke');">远山黛</a></li>
+                                                <li><a onclick="SetMapTheme('fresh');">草色青</a></li>
+                                                <li><a onclick="SetMapTheme('grey');">雅士灰</a></li>
+                                                <li><a onclick="SetMapTheme('graffiti');">涂鸦</a></li>
+                                                <li><a onclick="SetMapTheme('macaron');">马卡龙</a></li>
+                                                <li><a onclick="SetMapTheme('blue');">靛青蓝</a></li>
+                                                <li><a onclick="SetMapTheme('darkblue');">极夜蓝</a></li>
+                                                <li><a onclick="SetMapTheme('wine');">酱籽</a></li>
+                                            </ul>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                            <style type="text/css">
+                                .maptheme ul li#mapthemeli {
+                                    width: 100px;
+                                    position: relative;
+                                }
+
+                                #mapthemeShow {
+                                    width: 48px;
+                                    height: auto;
+                                    background: #fff;
+                                    border: 1px #d0d0d0 solid;
+                                    border-radius: 10px;
+                                    position: absolute;
+                                    top: 48px;
+                                    left: 0px;
+                                }
+
+                                    #mapthemeShow ul {
+                                        float: none;
+                                        margin: 5px 0px;
+                                    }
+
+                                        #mapthemeShow ul li {
+                                            width: 100px;
+                                            height: 24px;
+                                            margin-left: 0px;
+                                            float: none;
+                                            text-align:center;
+                                        }
+
+                                            #mapthemeShow ul li a {
+                                                font: 12px/24px "Microsoft Yahei";
+                                                color: #666666;
+                                                border: none;
+                                                border-radius: 0px;
+                                                cursor: pointer;
+                                                
+                                            }
+
+                                                #mapthemeShow ul li a:hover {
+                                                    background: #40b0e9;
+                                                    height: 24px;
+                                                    border-radius: 10px;
+                                                }
+                            </style>
                         </div>
                         <div id="myMap" class="item"></div>
                     </div>
@@ -218,7 +285,7 @@
 </body>
 </html>
 <script src="~/datacenter/js/bg.js"></script>
-<script src="~/datacenter/js/scanboard.js?version=202009241112"></script>
+<script src="~/datacenter/js/scanboard.js?version=202009241114"></script>
 @*<script src="~/datacenter/js/fontscroll.js"></script>*@
 <script src="~/datacenter/js/fontscroll-1.2.js"></script>
 <script src="~/datacenter/js/jquery.animsition.js"></script>
