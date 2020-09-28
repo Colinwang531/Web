@@ -54,12 +54,14 @@ $(function () {
     }
     setInterval(getTime, 1000);
 
-    //地图上的搜索
+    //地图上的船舶搜索
     $('.searchBtn').on('click', function () {
         $(this).hide();
         $('.searchInner').addClass('open');
         setTimeout(function () {
             $('.searchInner').find('form').show();
+            $("#subText").val("");
+            $("#subTextList").empty();
         }, 400);
     });
     $('.search').on('click', function (event) {
@@ -72,19 +74,41 @@ $(function () {
             $('.searchBtn').show();
         }, 400);
     });
+    //加载船下拉列表
+    $("#subText").focus(function () {
+        let data = { shipName: $("#subText").val() };
+        $.get("/Home/GetShipList", data, function (res) {
+            let temp = "";
+            res.forEach(function (item, index) {
+                temp += '<li onclick="SetSearchOption(\'' + item.name + '\')">' + item.name + '</li>';
+            });
+            $("#subTextList").empty();
+            $("#subTextList").append(temp);
+        });
+    });
+    $("#subText").on("input propertychange",function () {
+        let data = { shipName: $("#subText").val() };
+        $.get("/Home/GetShipList", data, function (res) {
+            let temp = "";
+            res.forEach(function (item, index) {
+                temp += '<li onclick="SetSearchOption(\'' + item.name + '\')">' + item.name + '</li>';
+            });
+            $("#subTextList").empty();
+            $("#subTextList").append(temp);
+        });
+    });
     $("#subSearch").click(function () {
         var text = $("#subText").val().trim();
-        if (text == "") return;
         SetShipList(text);
     })
-    $('#subText').bind('keypress', function (event) {      
+    $('#subText').bind('keypress', function (event) {
         if (event.keyCode == 13) {
             var text = $("#subText").val().trim();
-            if (text == "") return;
             SetShipList(text);
             return false;
         }
     });
+
 
     //统计数字增长的动画(Dom对象,增长速度)
     function totalNum(obj, speed) {
@@ -1010,6 +1034,11 @@ function SetAttendance() {
     })
 }
 
+//设置船舶下拉选中
+function SetSearchOption(shipName) {
+    $("#subText").val(shipName);
+    $("#subText").focus();
+}
 //设置地图主题
 function SetMapTheme(maptheme) {
     if (maptheme == null || maptheme == "") return;

@@ -1769,6 +1769,30 @@ body {
                     opacity: 1;
                 }
 
+            .btnLayer .search form ul {
+                float: left;
+                border-radius: 5px;
+                width: 185px;
+                background-color: #fff;
+                margin-left: 16%;
+                cursor: pointer;
+                z-index: 1;
+                position: relative;
+            }
+
+                .btnLayer .search form ul li {
+                    height: 24px;
+                    line-height: 24px;
+                    margin: 5px 10px;
+                    font: 12px/24px "Microsoft Yahei";
+                    color: #666666;
+                }
+                    .btnLayer .search form ul li:hover {
+                        background: #40b0e9;
+                        height: 24px;
+                        border-radius: 5px;
+                    }
+
     .btnLayer a.infoBtn {
         background: rgba(0,222,255,0.2);
         border-radius: 100%;
@@ -1793,6 +1817,51 @@ body {
         top: 12px;
         left: 12px;
     }
+
+#mapthemeli {
+    width: 100px;
+    position: relative;
+}
+
+#mapthemeShow {
+    width: 48px;
+    height: auto;
+    background: #fff;
+    border: 1px #d0d0d0 solid;
+    border-radius: 10px;
+    position: absolute;
+    top: 48px;
+    left: 0px;
+}
+
+    #mapthemeShow ul {
+        float: none;
+        margin: 5px 0px;
+    }
+
+        #mapthemeShow ul li {
+            width: 100px;
+            height: 24px;
+            margin-left: 0px;
+            float: none;
+            text-align: center;
+        }
+
+            #mapthemeShow ul li a {
+                font: 12px/24px "Microsoft Yahei";
+                color: #666666;
+                border: none;
+                border-radius: 0px;
+                cursor: pointer;
+            }
+
+                #mapthemeShow ul li a:hover {
+                    background: #40b0e9;
+                    height: 24px;
+                    border-radius: 10px;
+                }
+
+
 
 .carInfo {
     width: 0;
@@ -2599,6 +2668,25 @@ body {
                     width: 166px;
                 }
 
+                .btnLayer .search form ul {
+                    float: left;
+                    border-radius: 5px;
+                    width: 185px;
+                    background-color: #fff;
+                    margin-left: 16%;
+                    cursor: pointer;
+                    z-index: 1;
+                    position: relative;
+                }
+
+                    .btnLayer .search form ul li {
+                        height: 24px;
+                        line-height: 24px;
+                        margin: 5px 10px;
+                        font: 12px/24px "Microsoft Yahei";
+                        color: #666666;
+                    }
+
         .btnLayer .icoCar {
             display: block;
             width: 24px;
@@ -2618,6 +2706,49 @@ body {
             top: 12px;
             left: 12px;
         }
+
+    #mapthemeli {
+        width: 100px;
+        position: relative;
+    }
+
+    #mapthemeShow {
+        width: 48px;
+        height: auto;
+        background: #fff;
+        border: 1px #d0d0d0 solid;
+        border-radius: 10px;
+        position: absolute;
+        top: 48px;
+        left: 0px;
+    }
+
+        #mapthemeShow ul {
+            float: none;
+            margin: 5px 0px;
+        }
+
+            #mapthemeShow ul li {
+                width: 100px;
+                height: 24px;
+                margin-left: 0px;
+                float: none;
+                text-align: center;
+            }
+
+                #mapthemeShow ul li a {
+                    font: 12px/24px "Microsoft Yahei";
+                    color: #666666;
+                    border: none;
+                    border-radius: 0px;
+                    cursor: pointer;
+                }
+
+                    #mapthemeShow ul li a:hover {
+                        background: #40b0e9;
+                        height: 24px;
+                        border-radius: 10px;
+                    }
 }
 
 @media screen and (max-width: 1439px) and (min-width: 1366px) {
@@ -2816,6 +2947,25 @@ body {
                     width: 166px;
                 }
 
+                .btnLayer .search form ul {
+                    float: left;
+                    border-radius: 5px;
+                    width: 185px;
+                    background-color: #fff;
+                    margin-left: 16%;
+                    cursor: pointer;
+                    z-index: 1;
+                    position: relative;
+                }
+
+                    .btnLayer .search form ul li {
+                        height: 24px;
+                        line-height: 24px;
+                        margin: 5px 10px;
+                        font: 12px/24px "Microsoft Yahei";
+                        color: #666666;
+                    }
+
         .btnLayer .icoCar {
             display: block;
             width: 20px;
@@ -2835,6 +2985,49 @@ body {
             top: 12px;
             left: 12px;
         }
+
+    #mapthemeli {
+        width: 100px;
+        position: relative;
+    }
+
+    #mapthemeShow {
+        width: 48px;
+        height: auto;
+        background: #fff;
+        border: 1px #d0d0d0 solid;
+        border-radius: 10px;
+        position: absolute;
+        top: 48px;
+        left: 0px;
+    }
+
+        #mapthemeShow ul {
+            float: none;
+            margin: 5px 0px;
+        }
+
+            #mapthemeShow ul li {
+                width: 100px;
+                height: 24px;
+                margin-left: 0px;
+                float: none;
+                text-align: center;
+            }
+
+                #mapthemeShow ul li a {
+                    font: 12px/24px "Microsoft Yahei";
+                    color: #666666;
+                    border: none;
+                    border-radius: 0px;
+                    cursor: pointer;
+                }
+
+                    #mapthemeShow ul li a:hover {
+                        background: #40b0e9;
+                        height: 24px;
+                        border-radius: 10px;
+                    }
 }
 
 @media screen and (max-width: 1365px) {
@@ -3033,6 +3226,25 @@ body {
                     width: 166px;
                 }
 
+                .btnLayer .search form ul {
+                    float: left;
+                    border-radius: 5px;
+                    width: 185px;
+                    background-color: #fff;
+                    margin-left: 16%;
+                    cursor: pointer;
+                    z-index: 1;
+                    position: relative;
+                }
+
+                    .btnLayer .search form ul li {
+                        height: 24px;
+                        line-height: 24px;
+                        margin: 5px 10px;
+                        font: 12px/24px "Microsoft Yahei";
+                        color: #666666;
+                    }
+
         .btnLayer .icoCar {
             display: block;
             width: 20px;
@@ -3052,4 +3264,47 @@ body {
             top: 12px;
             left: 12px;
         }
+
+    #mapthemeli {
+        width: 100px;
+        position: relative;
+    }
+
+    #mapthemeShow {
+        width: 48px;
+        height: auto;
+        background: #fff;
+        border: 1px #d0d0d0 solid;
+        border-radius: 10px;
+        position: absolute;
+        top: 48px;
+        left: 0px;
+    }
+
+        #mapthemeShow ul {
+            float: none;
+            margin: 5px 0px;
+        }
+
+            #mapthemeShow ul li {
+                width: 100px;
+                height: 24px;
+                margin-left: 0px;
+                float: none;
+                text-align: center;
+            }
+
+                #mapthemeShow ul li a {
+                    font: 12px/24px "Microsoft Yahei";
+                    color: #666666;
+                    border: none;
+                    border-radius: 0px;
+                    cursor: pointer;
+                }
+
+                    #mapthemeShow ul li a:hover {
+                        background: #40b0e9;
+                        height: 24px;
+                        border-radius: 10px;
+                    }
 }
