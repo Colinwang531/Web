@@ -77,6 +77,14 @@ $(function () {
         if (text == "") return;
         SetShipList(text);
     })
+    $('#subText').bind('keypress', function (event) {      
+        if (event.keyCode == 13) {
+            var text = $("#subText").val().trim();
+            if (text == "") return;
+            SetShipList(text);
+            return false;
+        }
+    });
 
     //统计数字增长的动画(Dom对象,增长速度)
     function totalNum(obj, speed) {
