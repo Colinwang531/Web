@@ -86,7 +86,7 @@ $(function () {
             $("#subTextList").append(temp);
         });
     });
-    $("#subText").on("input propertychange",function () {
+    $("#subText").on("input propertychange", function () {
         let data = { shipName: $("#subText").val() };
         $.get("/Home/GetShipList", data, function (res) {
             let temp = "";
@@ -629,9 +629,12 @@ $(function () {
         $('.popup').hide();
         $('.popup').width(0);
     };
+    /**弹窗部分 未完待续 End*/
 
+    //自适应调整
+    var myChartMonthAlarmResize = echarts.init(document.getElementById('myChartMonthAlarm'));
     $(window).resize(function () {
-        myChartMonthAlarm.resize();
+        myChartMonthAlarmResize.resize();
         try {
             summaryPie1.resize();
             summaryPie2.resize();
@@ -642,7 +645,6 @@ $(function () {
             return false;
         }
     });
-    /**弹窗部分 未完待续 End*/
 
 
     //地图主题下拉菜单
