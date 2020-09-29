@@ -257,7 +257,8 @@ body {
     border-radius: inherit;
     font-weight: 100;
     margin: 10px 0px -1px 0px;
-    z-index: 2147483647;
+    z-index: 1;
+    position:relative;
 }
 
     #main .item .month #upMonth {
@@ -585,7 +586,7 @@ body {
 }
 
 #FontScrollAlarm {
-    height: 115px;
+    height: 153px;
     overflow: hidden;
     text-align: center;
 }
