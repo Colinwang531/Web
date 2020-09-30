@@ -30,11 +30,15 @@ namespace ShipWeb.Controllers
 
         public ActionResult Index()
         {
-            ViewBag.loginip = AppSettingHelper.GetSectionValue("Video:loginip");
-            ViewBag.port = AppSettingHelper.GetSectionValue("Video:port");
-            ViewBag.username = AppSettingHelper.GetSectionValue("Video:username");
-            ViewBag.password = AppSettingHelper.GetSectionValue("Video:password");
-            ViewBag.autoPlay = AppSettingHelper.GetSectionValue("Video:autoPlay").ToLower();            
+            var temp = DapperContext.Query<Models.Device>($"SELECT * FROM Device").FirstOrDefault();
+            if (temp != null)
+            {
+                ViewBag.loginip = temp.IP;
+                ViewBag.port = temp.Port;
+                ViewBag.username = temp.Name;
+                ViewBag.password = temp.Password;
+                ViewBag.autoPlay = "true";
+            }
             return View();
         }
 
