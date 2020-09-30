@@ -10,6 +10,7 @@ using Microsoft.Extensions.Logging;
 using NetMQ.Sockets;
 using ProtoBuf;
 using ShipWeb.ProtoBuffer;
+using ShipWeb.Tool;
 
 namespace ShipWeb
 {
@@ -30,7 +31,7 @@ namespace ShipWeb
                 string inputPort = args[3];
                 Console.WriteLine(inputPort);
                 string IP = "tcp://"+inputIp+":"+inputPort;
-                //ProtoManager.IP = IP;
+                ManagerHelp.IP = IP;
             }
             CreateHostBuilder(args).Build().Run();
         }

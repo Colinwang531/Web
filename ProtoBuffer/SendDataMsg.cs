@@ -317,6 +317,26 @@ namespace ShipWeb.ProtoBuffer
             dealer.Send(msg, algoIdentity);
         }
         /// <summary>
+        /// 缺岗请求
+        /// </summary>
+        /// <param name="captureInfo"></param>
+        /// <param name="identity"></param>
+        public void SendCapture(CaptureInfo captureInfo,string identity)
+        {
+            MSG msg = new MSG()
+            {
+                type = MSG.Type.EVENT,
+                sequence =11,
+                timestamp = ProtoBufHelp.TimeSpan(),
+                evt=new Event()
+                {
+                    command = Event.Command.CAPTURE_JPEG_REQ,
+                    captureinfo = captureInfo
+                }
+            };
+            dealer.Send(msg, identity);
+        }
+        /// <summary>
         /// 发送设备增加请求
         /// </summary>
         /// <param name="deviceInfo"></param>

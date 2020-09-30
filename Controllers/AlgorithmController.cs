@@ -162,7 +162,7 @@ namespace ShipWeb.Controllers
                     string errMsg = "";
                     if (base.user.IsLandHome&&!ManagerHelp.IsTest)
                     {
-                        string identity = GetIdentity(viewModel.Type);
+                        string identity = GetIdentity(viewModel.Type,viewModel.Cid);
                         if (string.IsNullOrEmpty(identity))
                         {
                             string name = GetViewName((AlgorithmType)viewModel.Type);
@@ -190,7 +190,7 @@ namespace ShipWeb.Controllers
                         if (!ManagerHelp.IsTest)
                         {
                             //获取枚举对应的名称
-                            string identity = GetIdentity(viewModel.Type);
+                            string identity = GetIdentity(viewModel.Type,viewModel.Cid);
                             if (string.IsNullOrEmpty(identity))
                             {
                                 string name = GetViewName((AlgorithmType)viewModel.Type);
@@ -410,7 +410,7 @@ namespace ShipWeb.Controllers
         /// </summary>
         /// <param name="factory"></param>
         /// <returns></returns>
-        private string GetIdentity(int type)
+        private string GetIdentity(int type,string cid)
         {
             string name = Enum.GetName(typeof(AlgorithmType), type);
             if (name== "ATTENDANCE_IN"||name== "ATTENDANCE_OUT")
@@ -422,19 +422,44 @@ namespace ShipWeb.Controllers
                 string tokenstr = HttpContext.Session.GetString("comtoken");
                 if (string.IsNullOrEmpty(tokenstr)) return "";
                 List<ComponentToken> tokens = JsonConvert.DeserializeObject<List<ComponentToken>>(tokenstr);
-                var component = tokens.FirstOrDefault(c => c.Type == ComponentType.AI&&c.Name.ToUpper()==name);
-                if (component != null)
+                if (type == (int)AlgorithmType.CAPTURE)
                 {
-                    return component.CommId;
+                    //查询当前摄机是否存在
+                    var camera=cameras.FirstOrDefault(c => c.Id == cid);
+                    if (camera == null) return "";
+                    //获取摄像机所对应的设备
+                    var device=boatDevices.FirstOrDefault(c => c.did == camera.DeviceId);
+                    if (device == null) return "";
+                    var comtype = ComponentType.DHD;
+                    if(device.factory == ProtoBuffer.Models.DeviceInfo.Factory.HIKVISION ) comtype= ComponentType.HKD;                 
+                    //获取当前设备所对应的组件信息 
+                    var component = tokens.FirstOrDefault(c => c.Type == comtype);
+                    if (component != null) return component.CommId;//取出组件ID
                 }
+                else
+                {
+                    var component = tokens.FirstOrDefault(c => c.Type == ComponentType.AI && c.Name.ToUpper() == name);
+                    if (component != null) return component.CommId;
+                }
+               
             }
             else
             {
-                //获取设备的组件ID
-                var component = _context.Component.FirstOrDefault(c => c.Type == ComponentType.AI && c.Name.ToUpper() == name);
-                if (component != null)
+                //算法配置的是缺岗时通讯ID传入的是设备的通讯ID
+                if (type==(int)AlgorithmType.CAPTURE)
                 {
-                    return component.CommId;
+                    //获取当前摄像机所对应的设备ID
+                    var device = _context.Device.FirstOrDefault(c => c.Id == (_context.Camera.FirstOrDefault(c => c.Id == cid).DeviceId));
+                    if (device == null) return ""; 
+                    //从组件表中查出当前摄像机所有设备的通讯ID
+                    var component = _context.Component.FirstOrDefault(c => c.Type == (device.factory == Device.Factory.DAHUA ? ComponentType.DHD : ComponentType.HKD));
+                    if(component!=null) return component.CommId;
+                }
+                else
+                {
+                    //获取设备的组件ID
+                    var component = _context.Component.FirstOrDefault(c => c.Type == ComponentType.AI && c.Name.ToUpper() == name);
+                    if (component != null)return component.CommId;
                 }
             }
             return "";

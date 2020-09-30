@@ -17,13 +17,21 @@ namespace ShipWeb.Tool
 {
     public class ManagerHelp
     {
-        private static ManagerHelp _manager = null;
+       // private static ManagerHelp _manager = null;
         /// <summary>
         /// 组件ID（组件注册成功后返回的ID）
         /// </summary>
         public static string Cid = "";
         //是否启动模似数据
         public static bool IsTest = AppSettingHelper.GetSectionValue("IsSimulate")=="true"?true:false;
+        /// <summary>
+        /// 发布IP
+        /// </summary>
+        public static string PublisherIP = AppSettingHelper.GetSectionValue("PublisherIP");
+        /// <summary>
+        /// mq绑定的地址
+        /// </summary>
+        public static string IP = AppSettingHelper.GetSectionValue("IP");
         /// <summary>
         /// 是否显示返回陆地端菜单
         /// </summary>
@@ -45,6 +53,7 @@ namespace ShipWeb.Tool
         /// 人脸算法组件名称
         /// </summary>
         public static string FaceName="FaceRecognize";
+        public static List<AtWork> atWorks=null;
         /// <summary>
         /// 是否初使化
         /// </summary>
@@ -55,16 +64,16 @@ namespace ShipWeb.Tool
         public static bool isLand = false;
         //int aa;
         //单例控制dealer只有一个。
-        public ManagerHelp()
-        {
-            lock (Cid_Lock)
-            {
-                if (Cid == null)
-                {
-                    _manager = new ManagerHelp();
-                }
-            }
-        }
+        //public ManagerHelp()
+        //{
+        //    lock (Cid_Lock)
+        //    {
+        //        if (Cid == null)
+        //        {
+        //            _manager = new ManagerHelp();
+        //        }
+        //    }
+        //}
        
         /// <summary>
         /// 未做转换的字节流

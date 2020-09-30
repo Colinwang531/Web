@@ -231,7 +231,7 @@ namespace ShipWeb.Controllers
                     Id = item.Id,
                     Name = item.Name,
                     NickName = item.NickName,
-                    Picture = Convert.FromBase64String(Encoding.UTF8.GetString(item.Picture)),
+                    Picture = item.Picture, //Convert.FromBase64String(Encoding.UTF8.GetString(item.Picture)),
                     Type = (int)item.Type,
                     Time = item.Time.ToString("yyyy-MM-dd HH:mm:ss"),
                     H = item.H,

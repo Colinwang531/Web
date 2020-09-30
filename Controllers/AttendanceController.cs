@@ -90,13 +90,12 @@ namespace ShipWeb.Controllers
             }
         }
         private List<AttendanceViewModel> GetData(DateTime dt , int pageIndex, int pageSize,out int total) 
-        {
-            string shipId = base.user.ShipId;           
+        {      
             total = _context.Crew.Count();
             var crews = _context.Crew.ToList();
             var startTime =DateTime.Parse(dt.ToString("yyyy-MM-dd 00:00:00"));
-            var endTime = DateTime.Parse(dt.ToString("yyyy-MM-dd 23:59:59")); ;
-            var attdata = _context.Attendance.Where(c => c.Time >= startTime && c.Time <= endTime && c.ShipId == shipId).ToList();
+            var endTime = DateTime.Parse(dt.ToString("yyyy-MM-dd 23:59:59")); 
+            var attdata = _context.Attendance.Where(c => c.Time >= startTime && c.Time <= endTime).ToList();
             var ids = string.Join(',', attdata.Select(c => c.Id));
             var pices = _context.AttendancePicture.Where(c => ids.Contains(c.AttendanceId)).ToList();
             List<AttendanceViewModel> list = new List<AttendanceViewModel>(); 
@@ -106,7 +105,7 @@ namespace ShipWeb.Controllers
                 {
                     Name = item.Name,
                     attendances = new List<AttendanceView>()
-                };                ;
+                };                
                 if (attdata.Where(c => c.CrewId == item.Id).Any())
                 {
                     var attes = attdata.Where(c => c.CrewId == item.Id);
@@ -120,7 +119,7 @@ namespace ShipWeb.Controllers
                         if (pices.Where(c => c.AttendanceId == attd.Id).Any())
                         {
                             var picture = pices.Where(c => c.AttendanceId == attd.Id).FirstOrDefault().Picture;
-                            ad.Picture = Convert.FromBase64String(Encoding.UTF8.GetString(picture));
+                            ad.Picture = picture;
                         }
                         model.attendances.Add(ad);
                     }

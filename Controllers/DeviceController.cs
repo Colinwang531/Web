@@ -637,6 +637,7 @@ namespace ShipWeb.Controllers
             {
                 result = 400;//请求超时
             }
+            ManagerHelp.DeviceReponse = "";
             return result;
         }
     }

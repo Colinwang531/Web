@@ -58,7 +58,7 @@ namespace ShipWeb.ProtoBuffer
                             ProtoBDManager.ComponentAddRange(component.componentresponse.componentinfos);
                         }
                         //发送船员状态
-                        //InitManger.InitStatus();
+                        InitManger.InitStatus();
                         //发送设备信息
                         InitManger.InitDevice();
                     }
@@ -72,6 +72,10 @@ namespace ShipWeb.ProtoBuffer
                     else
                     {
                         ManagerHelp.ComponentReponse = JsonConvert.SerializeObject(component.componentresponse);
+                        if (component.componentresponse != null && component.componentresponse.result == 0)
+                        {
+                            ProtoBDManager.ComponentAddRange(component.componentresponse.componentinfos);
+                        }
                     }
                     break;
                 default:
@@ -109,6 +113,24 @@ namespace ShipWeb.ProtoBuffer
                 default:
                     break;
             }      
+        }
+        /// <summary>
+        /// 缺岗信息
+        /// </summary>
+        /// <param name="captureInfo"></param>
+        public void CaptureData(Event evt) 
+        {
+            switch (evt.command)
+            {
+                case Event.Command.CAPTURE_JPEG_REQ:
+                    break;
+                case Event.Command.CAPTURE_JPEG_REP:
+                    ProtoBDManager.CaptureAdd(evt.captureinfo);
+                    break;
+                default:
+                    break;
+            }
+
         }
         /// <summary>
         /// 设备处理
@@ -297,6 +319,7 @@ namespace ShipWeb.ProtoBuffer
             var alarmInfos=ProtoBDManager.GetAlarmInfo(DateTime.Now, DateTime.Now.AddDays(1));
             foreach (var item in alarmInfos)
             {
+                //将船舶的报警信息发给陆地端
                 manager.SendAlarm("", item);
             };
            

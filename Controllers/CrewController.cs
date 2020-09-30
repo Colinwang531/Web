@@ -323,6 +323,7 @@ namespace ShipWeb.Controllers
                         _context.Crew.Add(employee);
                     }
                     _context.SaveChanges();
+                    code = 0;
                     //清除已经上传了的图片
                     foreach (var item in ids)
                     {

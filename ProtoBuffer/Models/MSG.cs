@@ -45,7 +45,11 @@ namespace ShipWeb.ProtoBuffer.Models
 			/// <summary>
 			/// 用户
 			/// </summary>
-			USER = 7
+			USER = 7,
+			/// <summary>
+			/// 缺岗
+			/// </summary>
+			EVENT = 8
 		}
 		/// <summary>
 		/// 消息类型 必填
@@ -97,5 +101,11 @@ namespace ShipWeb.ProtoBuffer.Models
 		/// </summary>
 		[ProtoMember(10)]
 		public User user { get; set; }
+
+		[ProtoMember(11)]
+		/// <summary>
+		/// 缺岗
+		/// </summary>
+		public Event evt{ get;set; }
 	}
 }

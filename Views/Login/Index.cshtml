@@ -34,18 +34,22 @@
                 if (res.code == 1) {
                     alert(res.msg);
                 } else {
-                    var type = $("#slType").val(); //$(':radio[name="rdo"]:checked').val();                   
-                    if (type == 1) {
-                        if (res.flag) {
-                            window.location.href = "/Alarm/AlarmInfo?flag=true&isShip=true";//如果船存在就跳到报警页面
-                        }
-                        else {
-                            window.location.href = "/Ship/Edit?isShow=true";//船不存在就先添加船
-                        }
-                    } else {
-                        //window.location.href = "/Home/LandHome";
-                        window.location.href = "/Home/LandDataCenter";//跳转到数据中心大屏
-                    }
+                    //登陆的是陆地端
+                    //window.location.href = "/Home/LandDataCenter";//跳转到数据中心大屏
+                    //登陆的是船舶端
+                    window.location.href = "/Alarm/AlarmInfo?flag=true&isShip=true";//如果船存在就跳到报警页面
+                    //var type = $("#slType").val(); //$(':radio[name="rdo"]:checked').val();                   
+                    //if (type == 1) {
+                    //    if (res.flag) {
+                    //        window.location.href = "/Alarm/AlarmInfo?flag=true&isShip=true";//如果船存在就跳到报警页面
+                    //    }
+                    //    else {
+                    //        window.location.href = "/Ship/Edit?isShow=true";//船不存在就先添加船
+                    //    }
+                    //} else {
+                    //    //window.location.href = "/Home/LandHome";
+                    //    window.location.href = "/Home/LandDataCenter";//跳转到数据中心大屏
+                    //}
                 }
             }
         })
@@ -107,7 +111,7 @@
             <tr>
                 <td> <input type="password" id="txtPwd" name="password" maxlength="32" placeholder="请输入密码"  style="width:82%;margin-left:40px;height:48px;padding-left:16px" class="layui-input" value="123456"></td>
             </tr>
-            <tr>
+            @*<tr>
                 <td>
                     <select id="slType" style="height:38px;border:1px solid #fff;width:150px;margin-left:40px">
                         <option value="1">船舶</option>
@@ -115,7 +119,7 @@
                     </select>
 
                 </td>
-            </tr>
+            </tr>*@
             <tr>
                 <td style="padding-bottom:73px;padding-top:30px">
                     <button type="submit" class="btn" onclick="Login()">登录</button>

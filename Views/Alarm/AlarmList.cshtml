@@ -91,10 +91,16 @@
             if (dt[i].type == 1) typename = "安全帽";
             else if (dt[i].type == "2") typename = "打电话";
             else if (dt[i].type == "3") typename = "睡觉";
+            else if (dt[i].type == "7") typename == "缺岗";
             var imgId = "img" + i;
             html += '<div class="layui-card card">';
             html += '       <div style="float:left;margin: 24px;">';
-            html += '        <img style="width:210px;height:118px;border-radius: 8px;" id="' + imgId + '" ondblclick="showBigImage(this)" />';
+            if (dt[i].type == "7") {
+                html += '        <img style="width:210px;height:118px;border-radius: 8px;" src="data:image/jpeg;base64,"' + dt[i].picture+' ondblclick="showBigImage(this)" />';
+            } else {
+                html += '        <img style="width:210px;height:118px;border-radius: 8px;" id="' + imgId + '" ondblclick="showBigImage(this)" />';
+                Drawing(dt[i].picture, dt[i].w, dt[i].h, dt[i].x, dt[i].y, imgId);
+            }
             html += '       </div>';
             html += '       <div style="float:left;margin-top:24px">';
             html += '           <label style="font-weight:bold;font:normal;font-size:18px;color:#005DFF">' + dt[i].name + '</label><br /><br />';
@@ -103,7 +109,6 @@
             html += '           <label style="font-size:12px;color:#8C8C8C">报警时间：' + dt[i].time + '</label><br />';
             html += '       </div>';
             html += '</div>';
-            Drawing(dt[i].picture, dt[i].w, dt[i].h, dt[i].x, dt[i].y, imgId);
         }
         $("#divdata").html(html);
         layui.use("laypage", function () {
@@ -225,9 +230,10 @@
                 <select name="type" id="slType" style="width: 208px ">
                     <option value="">所有类型</option>
                     <option value="1">安全帽</option>
-                    <option value="2" >玩手机</option>
+                    <option value="2">玩手机</option>
                     <option value="3">睡觉</option>
                     <option value="4">打架</option>
+                    <option value="7">缺岗</option>
                 </select>
             </div>
 

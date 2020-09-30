@@ -20,6 +20,7 @@ using System.Threading;
 using NetMQ;
 using System.Diagnostics;
 using ShipWeb.Interface;
+using System.Reflection;
 
 namespace ShipWeb
 {
@@ -31,6 +32,7 @@ namespace ShipWeb
         /// </summary>
         public static void Init()
         {
+            ManagerHelp.atWorks = new List<AtWork>();
             using (var context = new MyContext())
             {
                 //船舶端组件注册
@@ -171,16 +173,34 @@ namespace ShipWeb
                     var algorithmInfos = ProtoBDManager.AlgorithmQuery();
                     foreach (var item in algorithmInfos)
                     {
-                        string name = Enum.GetName(typeof(AlgorithmType), Convert.ToInt32(item.type));
-                        if (name == "ATTENDANCE_IN" || name == "ATTENDANCE_OUT")
+                        //配置的是缺岗类型则传入设备的通讯ID
+                        if (item.type==AlgorithmInfo.Type.CAPTURE)
                         {
-                            name = ManagerHelp.FaceName.ToUpper();
+                            var camera = con.Camera.FirstOrDefault(c => c.Id == item.cid);
+                            if (camera == null) continue;
+                            var device = con.Device.FirstOrDefault(c => c.Id == camera.DeviceId);
+                            if (device == null) continue;
+                            var comtype = ComponentType.HKD;
+                            if (device.factory == Models.Device.Factory.DAHUA) comtype = ComponentType.DHD;
+                            var compontent = con.Component.FirstOrDefault(c=>c.Type== comtype);
+                            if (compontent == null) continue;
+                            assembly.SendAlgorithmSet(item, compontent.CommId);
                         }
-                        if (components.Where(c => c.Name.ToUpper() == name).Any())
+                        else
                         {
-                            string identity = components.FirstOrDefault(c => c.Name.ToUpper() == name).CommId;
-                            assembly.SendAlgorithmSet(item, identity);
+                            string name = Enum.GetName(typeof(AlgorithmType), Convert.ToInt32(item.type));
+                            if (name == "ATTENDANCE_IN" || name == "ATTENDANCE_OUT")
+                            {
+                                name = ManagerHelp.FaceName.ToUpper();
+                            }
+                            if (components.Where(c => c.Name.ToUpper() == name).Any())
+                            {
+                                string identity = components.FirstOrDefault(c => c.Name.ToUpper() == name).CommId;
+                                assembly.SendAlgorithmSet(item, identity);
+                            }
+
                         }
+                        
                     }
                 }
             }
@@ -262,12 +282,64 @@ namespace ShipWeb
             }
             #endregion
         }
+
+        /// <summary>
+        /// 发送缺岗通知
+        /// </summary>
+        public static void LoadNotice()
+        {
+            SendDataMsg assembly = new SendDataMsg();
+            Task.Factory.StartNew(state => {
+                //获取间隔时间
+                int departureTime =Convert.ToInt32(AppSettingHelper.GetSectionValue("DepartureTime"));
+                while (true)
+                {
+                    using (var context = new MyContext())
+                    {
+                        //获取船的航行状态
+                        var ship = context.Ship.FirstOrDefault();
+                        if (ship == null) continue;                       
+                        DateTime dt = DateTime.Now;
+                        //ManagerHelp.atWorks 考勤人数的集合
+                        if (ship.Flag && ManagerHelp.atWorks.Count <= 0)
+                        {
+                            var algo = context.Algorithm.Where(c => c.Type == AlgorithmType.CAPTURE);
+                            if (algo.Count() > 0)
+                            {
+                                var camares = context.Camera.Where(c => algo.Select(a => a.Cid).Contains(c.Id));
+                                foreach (var item in camares)
+                                {
+                                    var device = context.Device.FirstOrDefault(c => c.Id == item.DeviceId);
+                                    if (device == null) continue;
+                                    var component = context.Component.FirstOrDefault(c => c.Type == (device.factory == Models.Device.Factory.DAHUA ? ComponentType.DHD : ComponentType.HKD));
+                                    if (component == null) continue;
+                                    CaptureInfo captureInfo = new CaptureInfo()
+                                    {
+                                        cid = item.Id,
+                                        did = item.DeviceId,
+                                        idx = item.Index
+                                    };
+                                    assembly.SendCapture(captureInfo, component.CommId);
+                                }
+                            }
+                        }
+                    }
+                    Thread.Sleep(departureTime * 1000 * 60);//单位毫秒
+                }
+            }, TaskCreationOptions.LongRunning);
+        }
         public static void TestAttendance()
         {
+          
             var pathDir = AppContext.BaseDirectory + "/testImg/";
             var images = Directory.GetFiles(pathDir);
             using (var context = new MyContext())
             {
+                var comList = context.Component.FirstOrDefault(c => c.Type == ComponentType.WEB && c.CommId == null);
+                if (comList != null)
+                {
+                    ManagerHelp.Cid = comList.Id;
+                }
                 int index = 0;
                 foreach (var item in images)
                 {
@@ -275,36 +347,45 @@ namespace ShipWeb
                     byte[] byt = new byte[fs.Length];
                     fs.Read(byt, 0, Convert.ToInt32(fs.Length));
                     fs.Close();
-                    string pics = Convert.ToBase64String(byt);
-                    string ids = string.Join(',', context.Attendance.Select(d => d.CrewId));
-                    var crew = context.Crew.Where(c=>!ids.Contains(c.Id)).ToList();
-                    string shipId = "2eb85d83-1144-428d-a640-54b7a343851a";
-                    string crewId = crew[index].Id;
-                    for (int i = 0; i < 2; i++)
+                    AlarmInfo info = new AlarmInfo()
                     {
-                        string identity = Guid.NewGuid().ToString();
-                        Attendance attendance = new Attendance()
-                        {
-                            Behavior = i,
-                            Id = identity,
-                            CameraId =i==0? "bc03715d-eb40-48f6-8fd3-174534353fa8": "f0b180bd-68d0-4811-bc97-dec5fe57b501",
-                            ShipId = shipId,
-                            Time = DateTime.Now,
-                            CrewId = crewId,
-                            attendancePictures = new List<AttendancePicture>()
-                            {
-                                new AttendancePicture ()
-                                {
-                                     AttendanceId=identity,
-                                     Id=Guid.NewGuid().ToString(),
-                                     Picture= Encoding.UTF8.GetBytes(pics),
-                                     ShipId=shipId
-                                }
-                            }
-                        };
-                        context.Attendance.Add(attendance);
-                    }
-                    index++;
+                        cid = "0b7c18ed-a17b-4cfd-9a29-f52f6baa725a",
+                        uid = "321c896f-3533-428d-bd9e-f59fd2ef20bd",
+                        picture = Convert.ToBase64String(byt),
+                        time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                        type = AlarmInfo.Type.ATTENDANCE_IN
+                    };
+                    ProtoBDManager.AlarmAdd(info);
+                    ///string pics = Convert.ToBase64String(byt);
+                    //string ids = string.Join(',', context.Attendance.Select(d => d.CrewId));
+                    //var crew = context.Crew.Where(c=>!ids.Contains(c.Id)).ToList();
+                    //string shipId = "2eb85d83-1144-428d-a640-54b7a343851a";
+                    //string crewId = crew[index].Id;
+                    //for (int i = 0; i < 2; i++)
+                    //{
+                    //    string identity = Guid.NewGuid().ToString();
+                    //    Attendance attendance = new Attendance()
+                    //    {
+                    //        Behavior = i,
+                    //        Id = identity,
+                    //        CameraId =i==0? "bc03715d-eb40-48f6-8fd3-174534353fa8": "f0b180bd-68d0-4811-bc97-dec5fe57b501",
+                    //        ShipId = shipId,
+                    //        Time = DateTime.Now,
+                    //        CrewId = crewId,
+                    //        attendancePictures = new List<AttendancePicture>()
+                    //        {
+                    //            new AttendancePicture ()
+                    //            {
+                    //                 AttendanceId=identity,
+                    //                 Id=Guid.NewGuid().ToString(),
+                    //                 Picture= byt,//Convert.FromBase64String(pics),
+                    //                 ShipId=shipId
+                    //            }
+                    //        }
+                    //    };
+                    //    context.Attendance.Add(attendance);
+                    //}
+                    //index++;
                 }
                 context.SaveChanges();
             }

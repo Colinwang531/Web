@@ -190,25 +190,29 @@ namespace ShipWeb.ProtoBuffer
                 using (var _context = new MyContext())
                 {
                     var dbCameras = _context.Camera.Where(c => c.DeviceId == did).ToList();
-                    _context.Camera.RemoveRange(dbCameras);
-                    string shipId = _context.Ship.FirstOrDefault().Id;
-                    List<Camera> cameras = new List<Camera>();
-                    foreach (var item in cameraInfos)
+                    if (cameraInfos.Count!=dbCameras.Count)
                     {
-                        ShipWeb.Models.Camera cam = new ShipWeb.Models.Camera()
+                        List<Camera> cameras = new List<Camera>();
+                        string shipId = _context.Ship.FirstOrDefault().Id;
+                        foreach (var item in cameraInfos)
                         {
-                            DeviceId = did,
-                            Enable = item.enable,
-                            Id = item.cid,
-                            Index = item.index,
-                            IP = item.ip,
-                            NickName = string.IsNullOrEmpty(item.nickname) ? "摄像机" + item.index : item.nickname,
-                            ShipId = shipId
-                        };
-                        cameras.Add(cam);
+                            if (!dbCameras.Where(c=>c.Index==item.index).Any())
+                            {
+                                ShipWeb.Models.Camera cam = new ShipWeb.Models.Camera()
+                                {
+                                    DeviceId = did,
+                                    Enable = item.enable,
+                                    Id = Guid.NewGuid().ToString(),
+                                    Index = item.index,
+                                    IP = item.ip,
+                                    NickName = string.IsNullOrEmpty(item.nickname) ? "摄像机" + item.index : item.nickname,
+                                    ShipId = shipId
+                                };
+                                cameras.Add(cam);
+                            }
+                        }
+                        _context.SaveChanges();
                     }
-                    _context.AddRange(cameras);
-                    _context.SaveChanges();
                 }
             }
             return 1;
@@ -412,8 +416,6 @@ namespace ShipWeb.ProtoBuffer
                 List<AlgorithmInfo> list = new List<AlgorithmInfo>();
                 var config = from a in _context.Algorithm
                              join b in _context.Camera on a.Cid equals b.Id
-                             into c
-                             from d in c.DefaultIfEmpty()
                              select new
                              {
                                  a.Id,
@@ -424,9 +426,9 @@ namespace ShipWeb.ProtoBuffer
                                  a.DectectSecond,
                                  a.Track,
                                  a.Similar,
-                                 d.NickName,
-                                 d.Index,
-                                 d.DeviceId
+                                 b.NickName,
+                                 b.Index,
+                                 b.DeviceId
                              };
                 foreach (var item in config)
                 {
@@ -557,11 +559,11 @@ namespace ShipWeb.ProtoBuffer
                 foreach (var item in components)
                 {
                     if (item.type == ComponentInfo.Type.WEB&&item.componentid==ManagerHelp.Cid) continue;
-                    if (list.Where(c=>c.Id==item.componentid).Any())
-                    {
-                        list.FirstOrDefault(c => c.Id == item.componentid).CommId=item.commid;
-                    }
-                    else
+                    //if (list.Where(c=>c.Id==item.componentid).Any())
+                    //{
+                    //    list.FirstOrDefault(c => c.Id == item.componentid).CommId=item.commid;
+                    //}
+                    if(!list.Where(c => c.Id == item.componentid).Any())
                     {
                         ShipWeb.Models.Component model = new ShipWeb.Models.Component()
                         {
@@ -589,7 +591,7 @@ namespace ShipWeb.ProtoBuffer
             {
                 using (var context=new MyContext())
                 {
-                    var list = context.Component.Where(c => c.Id!=ManagerHelp.Cid&&c.Type==ComponentType.WEB).ToList();
+                    var list = context.Component.Where(c => c.Id!=ManagerHelp.Cid&&c.Type!=ComponentType.WEB).ToList();
                     List<string> str = new List<string>();
                     foreach (var item in components)
                     {
@@ -606,7 +608,7 @@ namespace ShipWeb.ProtoBuffer
                                 Id = item.componentid,
                                 Line = 0,
                                 Name = item.cname,
-                                Type = (ShipWeb.Models.ComponentType)item.type
+                                Type = (ComponentType)item.type
                             };
                             context.Component.Add(component);
                         }
@@ -702,7 +704,7 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="msg"></param>
         /// <param name="cid"></param>
-        public static void AlarmAdd(Models.AlarmInfo alarmInfo)
+        public static void AlarmAdd(AlarmInfo alarmInfo)
         {
             using (var context = new MyContext())
             {
@@ -711,30 +713,95 @@ namespace ShipWeb.ProtoBuffer
                 string identity = Guid.NewGuid().ToString();
                 if (alarmInfo != null)
                 {
-                    if (alarmInfo.type == ProtoBuffer.Models.AlarmInfo.Type.ATTENDANCE_IN || alarmInfo.type == ProtoBuffer.Models.AlarmInfo.Type.ATTENDANCE_OUT)
+                    if (alarmInfo.type == AlarmInfo.Type.ATTENDANCE_IN || alarmInfo.type ==AlarmInfo.Type.ATTENDANCE_OUT)
                     {
-                        #region 考勤信息入库
-                        ShipWeb.Models.Attendance attendance = new Attendance()
+                        if (!string.IsNullOrEmpty(alarmInfo.uid))
                         {
-                            Behavior = alarmInfo.type == ProtoBuffer.Models.AlarmInfo.Type.ATTENDANCE_IN ? 0 : 1,
-                            Id = identity,
-                            CameraId = alarmInfo.cid,
-                            ShipId = shipId,
-                            Time = Convert.ToDateTime(alarmInfo.time),
-                            CrewId = alarmInfo.uid,
-                            attendancePictures = new List<AttendancePicture>()
+                            #region 考勤信息入库
+                            DateTime dt = Convert.ToDateTime(alarmInfo.time);
+                            DateTime dtStart = DateTime.Parse(dt.ToString("yyyy-MM-dd 00:00:00"));
+                            DateTime dtEnd = DateTime.Parse(dt.ToString("yyyy-MM-dd 23:59:59"));
+                            //重复打卡只取最后一次
+                            var attes = context.Attendance.FirstOrDefault(c => c.CameraId == alarmInfo.cid && c.CrewId == alarmInfo.uid && (c.Time > dtStart && c.Time <= dtEnd));
+                            if (attes != null)
                             {
-                                new AttendancePicture ()
+                                attes.Time = DateTime.Parse(alarmInfo.time);
+                                var pic = context.AttendancePicture.Where(c => c.AttendanceId == attes.Id).ToList();
+                                if (pic.Count > 0)
                                 {
-                                     AttendanceId=identity,
-                                     Id=Guid.NewGuid().ToString(),
-                                     Picture= Encoding.UTF8.GetBytes(alarmInfo.picture),
-                                     ShipId=shipId
+                                    context.AttendancePicture.RemoveRange(pic);
                                 }
+                                if (!string.IsNullOrEmpty(alarmInfo.picture))
+                                {
+                                    AttendancePicture ap = new AttendancePicture()
+                                    {
+                                        AttendanceId = attes.Id,
+                                        Id = Guid.NewGuid().ToString(),
+                                        Picture = Convert.FromBase64String(alarmInfo.picture),
+                                        ShipId = shipId
+                                    };
+                                    context.AttendancePicture.Add(ap);
+                                }
+                                context.Attendance.Update(attes);
                             }
-                        };
-                        context.Attendance.Add(attendance);
-                        #endregion
+                            else
+                            {
+                                ShipWeb.Models.Attendance attendance = new Attendance()
+                                {
+                                    Behavior = alarmInfo.type == ProtoBuffer.Models.AlarmInfo.Type.ATTENDANCE_IN ? 0 : 1,
+                                    Id = identity,
+                                    CameraId = alarmInfo.cid,
+                                    ShipId = shipId,
+                                    Time = Convert.ToDateTime(alarmInfo.time),
+                                    CrewId = alarmInfo.uid,
+                                    attendancePictures = new List<AttendancePicture>()
+                                {
+                                    new AttendancePicture ()
+                                    {
+                                         AttendanceId=identity,
+                                         Id=Guid.NewGuid().ToString(),
+                                         Picture= Convert.FromBase64String(alarmInfo.picture),
+                                         ShipId=shipId
+                                    }
+                                }
+                                };
+                                context.Attendance.Add(attendance);
+                            }
+                            #endregion
+                            #region 将考勤数据存入内存中
+                            if (alarmInfo.type == AlarmInfo.Type.ATTENDANCE_IN &&(!ManagerHelp.atWorks.Where(c => c.Uid == alarmInfo.uid).Any()))
+                            {
+                                ManagerHelp.atWorks.Add(new AtWork()
+                                {
+                                    Uid = alarmInfo.uid,
+                                    Line = 1
+                                });
+                            }
+                            else if(alarmInfo.type == AlarmInfo.Type.ATTENDANCE_OUT&& ManagerHelp.atWorks.Where(c => c.Uid == alarmInfo.uid).Any())
+                            {
+                                var atwork = ManagerHelp.atWorks.FirstOrDefault(c => c.Uid == alarmInfo.uid);
+                                ManagerHelp.atWorks.Remove(atwork);
+                            }
+                            #endregion
+                            #region 发送考勤给IPad
+                            var crew = context.Crew.FirstOrDefault(c => c.Id == alarmInfo.uid);
+                            if (crew!=null)
+                            {
+                                PublisherService service = new PublisherService();
+                                //考勤类型
+                                int Behavior = (alarmInfo.type == AlarmInfo.Type.ATTENDANCE_IN) ? 0 : 1;
+                                //考勤时间
+                                string SignInTime = alarmInfo.time;
+                                //考勤人员
+                                string EmployeeName = crew.Name;
+                                //考勤图片
+                                string PhotosBuffer = alarmInfo.picture;
+                                string data = Behavior + ","+ SignInTime+"," +EmployeeName+","+PhotosBuffer;
+                                service.Send(data);
+                            }
+                           
+                            #endregion
+                        }
                     }
                     else
                     {
@@ -847,6 +914,38 @@ namespace ShipWeb.ProtoBuffer
                 };
                 context.ReceiveLog.Add(log);
                 context.SaveChanges();
+            }
+        }
+        /// <summary>
+        /// 将缺岗数据插入报警表
+        /// </summary>
+        /// <param name="captureInfo"></param>
+        public static void CaptureAdd(CaptureInfo captureInfo)
+        {
+            try
+            {
+                if (captureInfo != null)
+                {
+                    using (var context = new MyContext())
+                    {
+                        var ship = context.Ship.FirstOrDefault();
+                        ShipWeb.Models.Alarm alarm = new ShipWeb.Models.Alarm()
+                        {
+                            Type = ShipWeb.Models.Alarm.AlarmType.CAPTURE,
+                            Cid = captureInfo.cid,
+                            Id = Guid.NewGuid().ToString(),
+                            Picture = Convert.FromBase64String(captureInfo.picture),
+                            ShipId = ship == null ? "" : ship.Id,
+                            Time = DateTime.Now
+                        };
+                        context.Alarm.Add(alarm);
+                        context.SaveChanges();
+                    }
+                }
+            }
+            catch (Exception )
+            {
+
             }
         }
     }

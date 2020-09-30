@@ -18,6 +18,7 @@ namespace ShipWeb.ProtoBuffer
     {
         private static DealerSocket dealer = null;
         private static object dealer_Lock = new object(); //锁同步
+
         //public static List<Task> taskList = new List<Task>();
         public DealerService()
         {
@@ -26,7 +27,7 @@ namespace ShipWeb.ProtoBuffer
                 if (dealer == null)
                 {
                     dealer = new DealerSocket();
-                    dealer.Connect(AppSettingHelper.GetSectionValue("IP"));
+                    dealer.Connect(ManagerHelp.IP);
                     //等待时间10秒
                     //dealer.Options.Linger=new TimeSpan(0,0,10);
                     string commID = Guid.NewGuid().ToString();
@@ -55,7 +56,6 @@ namespace ShipWeb.ProtoBuffer
                     mqmsg.Append(byt);
                     //发送注册请求
                     dealer.SendMultipartMessage(mqmsg);
-
                 }
             }
             catch (Exception ex)
@@ -102,6 +102,10 @@ namespace ShipWeb.ProtoBuffer
                 else if (revmsg.type == MSG.Type.COMPONENT)
                 {
                     manager.ComponentData(revmsg.component);
+                }
+                else if (revmsg.type==MSG.Type.EVENT)
+                {
+                    manager.CaptureData(revmsg.evt);
                 }
                 Thread.Sleep(100);
             }

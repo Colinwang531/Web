@@ -30,6 +30,10 @@ namespace ShipWeb.Models
         /// <summary>
         /// 考勤出
         /// </summary>
-        ATTENDANCE_OUT = 6
+        ATTENDANCE_OUT = 6,
+        /// <summary>
+        /// 缺岗
+        /// </summary>
+        CAPTURE=7
     }
 }

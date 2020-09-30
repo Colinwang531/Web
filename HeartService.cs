@@ -12,6 +12,7 @@ namespace ShipWeb
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             InitManger.Init();
+            //InitManger.TestAttendance();
             //while (!stoppingToken.IsCancellationRequested)
             //{
             //    try

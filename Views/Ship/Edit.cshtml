@@ -37,8 +37,8 @@
                     if (res.code == 0) {
                         layer.msg("保存成功",{ icon: 1 });
                         var hid = $("#hidId").val();
-                        if (hid == undefined || hid=="") {
-                            load();
+                        if (hid == undefined || hid == "") {
+                            form.render();
                         }
                     } else {
                         layer.msg(res.msg, { icon: 2 });

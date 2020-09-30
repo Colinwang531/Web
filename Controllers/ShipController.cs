@@ -111,7 +111,7 @@ namespace ShipWeb.Controllers
             try
             {
                 List<ShipViewModel> list = new List<ShipViewModel>();
-                var compents = _context.Component.Where(c => c.Type ==ComponentType.WEB && c.CommId!=null).ToList();
+                var compents = _context.Component.Where(c => c.Type ==ComponentType.XMQ && c.CommId!=null).ToList();
                 foreach (var item in compents)
                 {
                     ShipViewModel model = new ShipViewModel()
@@ -189,7 +189,7 @@ namespace ShipWeb.Controllers
                         };
                         assembly.SendStatusSet(sr, identity + ":" + item.CommId);
                     }
-                    code = GetResult();
+                    code = 0;//GetResult();
                 }
                 else
                 {
@@ -228,7 +228,7 @@ namespace ShipWeb.Controllers
                                 }
 
                             }
-                           code= GetResult();
+                            code = 0; //GetResult();
                         }
                     }
                     #endregion
