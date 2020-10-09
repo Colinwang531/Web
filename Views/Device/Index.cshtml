@@ -67,28 +67,6 @@
                 { fixed: 'right', title: '操作', toolbar: '#userBar', align: 'center' }
             ]]
         });
-
-        //监听头部工具栏事件
-        table.on("toolbar(deviceTable)", function (obj) {
-            switch (obj.event) {
-                case 'add':
-                    mainIndex = layer.open({
-                        type: 1,
-                        title: '新增设备',
-                        content: $("#divAddOrUpdate"),
-                        area: ['650px', '370px'],
-                        success: function (index) {
-                            $("#btnSubmit").removeAttr('disabled').removeClass(DISABLED);
-                            $("#hidId").val("");
-                            //清空表单数据
-                            $("#dataFrm")[0].reset();
-                            $("#txtEnable").val(1);
-                            form.render();
-                        }
-                    });
-                    break;
-            };
-        });
         //监听工具条
         table.on('tool(deviceTable)', function (obj) {
             var data = obj.data;
@@ -167,8 +145,12 @@
                     area: ['650px', '370px'],
                     success: function (index) {
                         form.val("dataFrm", data);
-
                         $("#txtEnable").val(data.enable ? 1 : 0);
+                        var flag = false;
+                        if (data.cameraModelList.length > 0) {
+                            flag = true;
+                        }
+                        setDisabled(flag);
                         form.render();
                         //url = "employees/updateEmployees.action";
                     },
@@ -355,6 +337,7 @@
                     //清空表单数据
                     $("#dataFrm")[0].reset();
                     $("#txtEnable").val(1);
+                    setDisabled(false);
                     form.render();
                 }
             });
@@ -373,6 +356,24 @@
             }
             return true;
         }
+        function setDisabled(flag) {
+            if (flag) {
+                $("#slFactory").attr("disabled", "disabled").css("background-color", "#EEEEEE");
+                $("#slType").attr("disabled", "disabled").css("background-color", "#EEEEEE");
+                $("#txtName").attr("disabled", "disabled").css("background-color", "#EEEEEE");
+                $("#txtPwd").attr("disabled", "disabled").css("background-color", "#EEEEEE");
+                $("#txtIp").attr("disabled", "disabled").css("background-color", "#EEEEEE");
+                $("#txtPort").attr("disabled", "disabled").css("background-color", "#EEEEEE");
+            } else {
+                $("#slFactory").removeAttr("disabled").css("background-color", "");
+                $("#slType").removeAttr("disabled").css("background-color", "");
+                $("#txtName").removeAttr("disabled").css("background-color", "");
+                $("#txtPwd").removeAttr("disabled").css("background-color", "");
+                $("#txtIp").removeAttr("disabled").css("background-color", "");
+                $("#txtPort").removeAttr("disabled").css("background-color", "");
+            }
+        }
+
     });
 </script>
 <div>
@@ -402,7 +403,7 @@
             <div class="layui-inline">
                 <label class="layui-form-label">设备厂商：</label>
                 <div class="layui-input-inline">
-                    <select name="factory" class="layui-input">
+                    <select name="factory" id="slFactory" class="layui-input">
                         <option value="1" selected="selected">HIKVISION 海康</option>
                         <option value="2">DAHUA 大华</option>
                         @*<option value="3">EATON 伊顿</option>*@
@@ -412,7 +413,7 @@
             <div class="layui-inline">
                 <label class="layui-form-label">设备类型：</label>
                 <div class="layui-input-inline">
-                    <select name="type" class="layui-input">
+                    <select name="type" id="slType" class="layui-input">
                         <option value="1" selected="selected">DVR</option>
                         <option value="2">NVR</option>
                         <option value="3" selected="selected">IPC</option>
@@ -441,13 +442,13 @@
             <div class="layui-inline">
                 <label class="layui-form-label">登陆名称：</label>
                 <div class="layui-input-inline">
-                    <input type="text" name="name" maxlength="100" lay-verify="required" autocomplete="off" class="layui-input">
+                    <input type="text" name="name" id="txtName" maxlength="100" lay-verify="required" autocomplete="off" class="layui-input">
                 </div>
             </div>
             <div class="layui-inline">
                 <label class="layui-form-label">登陆密码：</label>
                 <div class="layui-input-inline">
-                    <input type="text" name="password" maxlength="100" lay-verify="required" autocomplete="off" class="layui-input">
+                    <input type="text" name="password" id="txtPwd" maxlength="100" lay-verify="required" autocomplete="off" class="layui-input">
                 </div>
             </div>
         </div>
@@ -455,14 +456,14 @@
             <div class="layui-inline">
                 <label class="layui-form-label">登陆IP：</label>
                 <div class="layui-input-inline">
-                    <input type="text" name="ip" maxlength="20" lay-verify="ip" autocomplete="off" class="layui-input">
+                    <input type="text" name="ip" id="txtIp" maxlength="20" lay-verify="ip" autocomplete="off" class="layui-input">
                 </div>
             </div>
 
             <div class="layui-inline">
                 <label class="layui-form-label">登陆端口：</label>
                 <div class="layui-input-inline">
-                    <input type="text" name="port" lay-verify="port" autocomplete="off" class="layui-input">
+                    <input type="text" name="port" id="txtPort" lay-verify="port" autocomplete="off" class="layui-input">
                 </div>
             </div>
         </div>

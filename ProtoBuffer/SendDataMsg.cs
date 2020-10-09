@@ -110,7 +110,7 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="nextIdentity"></param>
         /// <param name="uid"></param>
-        public void SendCrewQuery(string nextIdentity,string uid="")
+        public void SendCrewQuery(string nextIdentity,int uid=0)
         {
             MSG msg = new MSG()
             {
@@ -182,7 +182,7 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="nextIdentity"></param>
         /// <param name="uid"></param>
-        public void SendCrewDelete(string uid,string nextIdentity="")
+        public void SendCrewDelete(int uid,string nextIdentity="")
         {
             MSG msg = new MSG()
             {

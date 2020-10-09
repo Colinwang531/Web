@@ -211,6 +211,7 @@ namespace ShipWeb.ProtoBuffer
                                 cameras.Add(cam);
                             }
                         }
+                        _context.Camera.AddRange(cameras);
                         _context.SaveChanges();
                     }
                 }
@@ -256,13 +257,13 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="uid"></param>
         /// <returns></returns>
-        public static List<CrewInfo> CrewQuery(string uid = "")
+        public static List<CrewInfo> CrewQuery(int uid=0)
         {
             using (var _context = new MyContext())
             {
                 List<CrewInfo> list = new List<CrewInfo>();
                 //获取船员信息
-                var dbempl = _context.Crew.Where(c =>(!string.IsNullOrEmpty(uid) ? c.Id == uid : 1 == 1)).ToList();
+                var dbempl = _context.Crew.Where(c =>(uid>0 ? c.Id == uid : 1 == 1)).ToList();
                 //获取船员图片
                 var pics = _context.CrewPicture.ToList();
                 foreach (var item in dbempl)
@@ -321,7 +322,7 @@ namespace ShipWeb.ProtoBuffer
                 return 1;
             }
         }
-        private static void AddCrewPicture(List<string> list, string shipId, string crewId)
+        private static void AddCrewPicture(List<string> list, string shipId, int crewId)
         {
             if (list!=null&& list.Count>0)
             {
@@ -381,11 +382,11 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="uid"></param>
         /// <returns></returns>
-        public static int CrewDelete(string uid) 
+        public static int CrewDelete(int uid) 
         {
             using (var _context = new MyContext())
             {
-                if (!string.IsNullOrEmpty(uid))
+                if (uid>0)
                 {
                     var model = _context.Crew.FirstOrDefault(c =>c.Id == uid);
                     if (model != null)
@@ -568,7 +569,6 @@ namespace ShipWeb.ProtoBuffer
                         ShipWeb.Models.Component model = new ShipWeb.Models.Component()
                         {
                             Id = item.componentid,
-                            CommId = item.commid,
                             Name = item.cname,
                             Type = (ComponentType)item.type,
                             ShipId = shipId
@@ -604,7 +604,6 @@ namespace ShipWeb.ProtoBuffer
                         {
                             ShipWeb.Models.Component component = new ShipWeb.Models.Component()
                             {
-                                CommId = item.commid,
                                 Id = item.componentid,
                                 Line = 0,
                                 Name = item.cname,
@@ -715,7 +714,7 @@ namespace ShipWeb.ProtoBuffer
                 {
                     if (alarmInfo.type == AlarmInfo.Type.ATTENDANCE_IN || alarmInfo.type ==AlarmInfo.Type.ATTENDANCE_OUT)
                     {
-                        if (!string.IsNullOrEmpty(alarmInfo.uid))
+                        if (alarmInfo.uid>0)
                         {
                             #region 考勤信息入库
                             DateTime dt = Convert.ToDateTime(alarmInfo.time);
@@ -731,13 +730,13 @@ namespace ShipWeb.ProtoBuffer
                                 {
                                     context.AttendancePicture.RemoveRange(pic);
                                 }
-                                if (!string.IsNullOrEmpty(alarmInfo.picture))
+                                if (alarmInfo.picture.Length>0)
                                 {
                                     AttendancePicture ap = new AttendancePicture()
                                     {
                                         AttendanceId = attes.Id,
                                         Id = Guid.NewGuid().ToString(),
-                                        Picture = Convert.FromBase64String(alarmInfo.picture),
+                                        Picture =alarmInfo.picture,
                                         ShipId = shipId
                                     };
                                     context.AttendancePicture.Add(ap);
@@ -760,7 +759,7 @@ namespace ShipWeb.ProtoBuffer
                                     {
                                          AttendanceId=identity,
                                          Id=Guid.NewGuid().ToString(),
-                                         Picture= Convert.FromBase64String(alarmInfo.picture),
+                                         Picture= alarmInfo.picture,
                                          ShipId=shipId
                                     }
                                 }
@@ -795,7 +794,7 @@ namespace ShipWeb.ProtoBuffer
                                 //考勤人员
                                 string EmployeeName = crew.Name;
                                 //考勤图片
-                                string PhotosBuffer = alarmInfo.picture;
+                                byte[] PhotosBuffer = alarmInfo.picture;
                                 string data = Behavior + ","+ SignInTime+"," +EmployeeName+","+PhotosBuffer;
                                 service.Send(data);
                             }
@@ -819,7 +818,7 @@ namespace ShipWeb.ProtoBuffer
                             ShipWeb.Models.Alarm model = new ShipWeb.Models.Alarm()
                             {
                                 Id = identity,
-                                Picture = Encoding.UTF8.GetBytes(alarmInfo.picture),
+                                Picture = alarmInfo.picture,
                                 Time = Convert.ToDateTime(alarmInfo.time),
                                 ShipId = shipId,
                                 Cid = cid,
@@ -875,7 +874,7 @@ namespace ShipWeb.ProtoBuffer
                         time = item.Time.ToString("yyyy-MM-dd HH24:mm:ss"),
                         type = (AlarmInfo.Type)item.Type,
                         position = new List<Models.AlarmPosition>(),
-                        picture=Encoding.UTF8.GetString(item.Picture)
+                        picture=item.Picture
                     };
                     var pos = postions.Where(c => c.AlarmId == item.Id);
                     foreach (var poitem in pos)

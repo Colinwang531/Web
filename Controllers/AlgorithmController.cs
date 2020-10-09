@@ -453,13 +453,13 @@ namespace ShipWeb.Controllers
                     if (device == null) return ""; 
                     //从组件表中查出当前摄像机所有设备的通讯ID
                     var component = _context.Component.FirstOrDefault(c => c.Type == (device.factory == Device.Factory.DAHUA ? ComponentType.DHD : ComponentType.HKD));
-                    if(component!=null) return component.CommId;
+                    if(component!=null) return component.Id;
                 }
                 else
                 {
                     //获取设备的组件ID
                     var component = _context.Component.FirstOrDefault(c => c.Type == ComponentType.AI && c.Name.ToUpper() == name);
-                    if (component != null)return component.CommId;
+                    if (component != null)return component.Id;
                 }
             }
             return "";

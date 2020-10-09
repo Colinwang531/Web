@@ -84,7 +84,7 @@ namespace ShipWeb.Controllers
                             ComponentToken token = new ComponentToken()
                             {
                                 Id = item.componentid,
-                                CommId = item.commid,
+                                //CommId = item.commid,
                                 Name = item.cname,
                                 Type = (ComponentType)item.type
                             };
@@ -608,7 +608,7 @@ namespace ShipWeb.Controllers
                 var component = _context.Component.FirstOrDefault(c => c.Type == (factory == (int)Device.Factory.DAHUA ? ComponentType.DHD : ComponentType.HKD));
                 if (component!=null)
                 {
-                    return component.CommId;
+                    return component.Id;
                 }
             }
             return "";

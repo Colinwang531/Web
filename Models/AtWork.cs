@@ -7,7 +7,7 @@ namespace ShipWeb.Models
 {
     public class AtWork
     {
-        public string Uid { get; set; }
+        public int Uid { get; set; }
         public int Line { get; set; }
     }
 }

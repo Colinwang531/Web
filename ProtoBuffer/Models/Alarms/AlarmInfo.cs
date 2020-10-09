@@ -58,13 +58,13 @@ namespace ShipWeb.ProtoBuffer.Models
 		/// <summary>
 		/// 报警图片
 		/// </summary>
-		public string picture { get; set; }
+		public byte[] picture { get; set; }
 
 		[ProtoMember(5)]
 		public List<AlarmPosition> position { get; set; }
 
 		[ProtoMember(6)]
-		public string uid { get; set; }
+		public int uid { get; set; }
     }
 	/// <summary>
 	/// 报警坐标

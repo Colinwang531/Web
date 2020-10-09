@@ -51,7 +51,7 @@ namespace ShipWeb.ProtoBuffer
                     mqmsg.AppendEmptyFrame();
                     mqmsg.Append("request");
                     string identity = Encoding.UTF8.GetString(dealer.Options.Identity);
-                    mqmsg.Append(identity);
+                    mqmsg.Append(ManagerHelp.Cid);
                     mqmsg.Append(nextIdentity);
                     mqmsg.Append(byt);
                     //发送注册请求

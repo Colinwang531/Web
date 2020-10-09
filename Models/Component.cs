@@ -11,15 +11,11 @@ namespace ShipWeb.Models
     /// </summary>
     public class Component
     {
-        /// <summary>
-        /// 主键id
-        /// </summary>
-        public string Id { get; set; }
 
         /// <summary>
         /// 通讯ID
         /// </summary>
-        public string CommId { get; set; }
+        public string Id { get; set; }
         /// <summary>
         /// 组件类型 1：XMQ，2：WEB ，3：HKD，4：DHD，5：ALM 6:AI 7:MED
         /// </summary>

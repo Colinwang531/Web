@@ -36,13 +36,26 @@ namespace ShipWeb
             using (var context = new MyContext())
             {
                 //船舶端组件注册
-                var comList = context.Component.FirstOrDefault(c=>c.Type==ComponentType.WEB&&c.CommId==null);
+                var comList = context.Component.FirstOrDefault(c=>c.Type==ComponentType.WEB);
                 if (comList!=null)
                 {
                     ManagerHelp.Cid = comList.Id;
                 }
+                var sysdic = context.SysDictionary.ToList();
+                if (sysdic.Count()>0)
+                {
+                    if (sysdic.Where(c => c.key == "NetMqID").Any())
+                    {
+                        ManagerHelp.IP = sysdic.FirstOrDefault(c => c.key == "NetMqID").value;
+                    }
+                    if (sysdic.Where(c=>c.key== "ExportCompany").Any())
+                    {
+                        ManagerHelp.ExportCompany = sysdic.FirstOrDefault(c => c.key == "ExportCompany").value;
+                    }
+                }
                 //Component();
                 BoatInit();
+                //LandInit();
             }
         }
         /// <summary>
@@ -107,7 +120,7 @@ namespace ShipWeb
                 };
                 foreach (var item in components)
                 {
-                    assembly.SendStatusSet(request, item.CommId);
+                    assembly.SendStatusSet(request, item.Id);
                 }
 
             }
@@ -130,11 +143,11 @@ namespace ShipWeb
                 string HKDIdentity = "";
                 if (list.Where(c => c.Type == ComponentType.DHD).Any())
                 {
-                    DHDIdenity = list.FirstOrDefault(c => c.Type == ComponentType.DHD).CommId;
+                    DHDIdenity = list.FirstOrDefault(c => c.Type == ComponentType.DHD).Id;
                 }
                 if (list.Where(c => c.Type == ComponentType.HKD).Any())
                 {
-                    HKDIdentity = list.FirstOrDefault(c => c.Type == ComponentType.HKD).CommId;
+                    HKDIdentity = list.FirstOrDefault(c => c.Type == ComponentType.HKD).Id;
                 }
                 if (HKDIdentity==""&& DHDIdenity=="")
                 {
@@ -184,7 +197,7 @@ namespace ShipWeb
                             if (device.factory == Models.Device.Factory.DAHUA) comtype = ComponentType.DHD;
                             var compontent = con.Component.FirstOrDefault(c=>c.Type== comtype);
                             if (compontent == null) continue;
-                            assembly.SendAlgorithmSet(item, compontent.CommId);
+                            assembly.SendAlgorithmSet(item, compontent.Id);
                         }
                         else
                         {
@@ -195,7 +208,7 @@ namespace ShipWeb
                             }
                             if (components.Where(c => c.Name.ToUpper() == name).Any())
                             {
-                                string identity = components.FirstOrDefault(c => c.Name.ToUpper() == name).CommId;
+                                string identity = components.FirstOrDefault(c => c.Name.ToUpper() == name).Id;
                                 assembly.SendAlgorithmSet(item, identity);
                             }
 
@@ -220,7 +233,7 @@ namespace ShipWeb
                     var crewInfos = ProtoBDManager.CrewQuery();
                     foreach (var item in crewInfos)
                     {
-                        assembly.SendCrewAdd(item, component.CommId);
+                        assembly.SendCrewAdd(item, component.Id);
                     }
                 }
             }
@@ -319,7 +332,7 @@ namespace ShipWeb
                                         did = item.DeviceId,
                                         idx = item.Index
                                     };
-                                    assembly.SendCapture(captureInfo, component.CommId);
+                                    assembly.SendCapture(captureInfo, component.Id);
                                 }
                             }
                         }
@@ -335,7 +348,7 @@ namespace ShipWeb
             var images = Directory.GetFiles(pathDir);
             using (var context = new MyContext())
             {
-                var comList = context.Component.FirstOrDefault(c => c.Type == ComponentType.WEB && c.CommId == null);
+                var comList = context.Component.FirstOrDefault(c => c.Type == ComponentType.WEB && c.Id == null);
                 if (comList != null)
                 {
                     ManagerHelp.Cid = comList.Id;
@@ -350,8 +363,8 @@ namespace ShipWeb
                     AlarmInfo info = new AlarmInfo()
                     {
                         cid = "0b7c18ed-a17b-4cfd-9a29-f52f6baa725a",
-                        uid = "321c896f-3533-428d-bd9e-f59fd2ef20bd",
-                        picture = Convert.ToBase64String(byt),
+                        uid = 1,
+                        picture = byt,
                         time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
                         type = AlarmInfo.Type.ATTENDANCE_IN
                     };

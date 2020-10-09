@@ -19,7 +19,7 @@ namespace ShipWeb.Models
         /// <summary>
         /// 船员表主键id
         /// </summary>s
-        public string CrewId { get; set; }
+        public int CrewId { get; set; }
         /// <summary>
         /// 船表主键id
         /// </summary>

@@ -11,9 +11,9 @@ namespace ShipWeb.Models
     public class Crew
     {
         /// <summary>
-        /// 
+        /// 自增长ID
         /// </summary>
-      public string Id { get; set; }
+       public int Id { get; set; }
         /// <summary>
         /// 船员名字
         /// </summary>

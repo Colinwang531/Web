@@ -75,7 +75,7 @@
                     $("#slCamera").val("");
                     $("#slgpu").val("");
                     form.render();
-                    SetCSS(1);
+                    SetCSS(0);
                 }
             });
         });
@@ -205,32 +205,45 @@
             }
         });
         function SetCSS(value) {
-            if ($("#selType").val() != "") {
-                $("#txtThreshold_1").val("0.5");
-                $("#txtTrack").val("0.5");
+            $("#txtThreshold_2").val("");
+            $("#txtSimilar").val("");
+            $("#txtThreshold_1").val("");
+            $("#txtTrack").val("");
+            //人脸不可设置
+            $("#txtSimilar").attr("disabled", "disabled").css("background-color", "#EEEEEE");
+            //阀值2不可修改
+            $("#txtThreshold_2").attr("disabled", "disabled").css("background-color", "#EEEEEE");
+            if (value != 7) {
+                $("#txtThreshold_1").removeAttr("disabled").css("background-color", "");
+                $("#txtTrack").removeAttr("disabled").css("background-color", "");
             }
-            //人脸相似度是否可填
-            if (value == 5 || value == 6) {
-                $("#txtSimilar").removeAttr("disabled").css("background-color", "");
-                $("#txtThreshold_2").attr("disabled", "disabled").css("background-color", "#EEEEEE");
-                $("#txtThreshold_2").val("");
+            if (value == 1) {
+                $("#txtThreshold_1").val(0.2);
+                $("#txtTrack").val(0.15);
             }//打电话时跟踪阀值可设置
             else if (value == 2) {
                 $("#txtThreshold_2").removeAttr("disabled").css("background-color", "");
-                $("#txtThreshold_2").val(0.5);
-                $("#txtSimilar").attr("disabled", "disabled").css("background-color", "#EEEEEE");
-                $("#txtSimilar").val("");
+                $("#txtThreshold_1").val(0.5);
+                $("#txtThreshold_2").val(0.6);
+                $("#txtTrack").val(0.2);
+            }else if (value == 3) {
+                $("#txtThreshold_1").val(0.65);
+                $("#txtTrack").val(0.15);
             }
-            else {             
-                //人脸不可设置
-                $("#txtSimilar").attr("disabled", "disabled").css("background-color", "#EEEEEE");
-                $("#txtSimilar").val("");
-
-                $("#txtThreshold_2").attr("disabled", "disabled").css("background-color", "#EEEEEE");
-                $("#txtThreshold_2").val("");
+            else if (value == 4) {
+                $("#txtThreshold_1").val(0.99);
+                $("#txtTrack").val(0.1);
+            }
+            //人脸相似度是否可填
+            else if (value == 5 || value == 6) {
+                $("#txtSimilar").removeAttr("disabled").css("background-color", "");
+            } else if (value==7) {               
+                //阀值1不可修改
+                $("#txtThreshold_1").attr("disabled", "disabled").css("background-color", "#EEEEEE");
+                //跟踪阀值不可修改
+                $("#txtTrack").attr("disabled", "disabled").css("background-color", "#EEEEEE");
             }
         }
-
     });
 </script>
 <style>

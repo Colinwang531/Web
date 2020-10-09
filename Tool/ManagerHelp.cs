@@ -31,7 +31,8 @@ namespace ShipWeb.Tool
         /// <summary>
         /// mq绑定的地址
         /// </summary>
-        public static string IP = AppSettingHelper.GetSectionValue("IP");
+        public static string IP = "";
+        public static string ExportCompany = "";
         /// <summary>
         /// 是否显示返回陆地端菜单
         /// </summary>
@@ -111,7 +112,7 @@ namespace ShipWeb.Tool
         /// <returns></returns>
         public static string GetHtml(List<AlarmViewModel> list, string time,string shipName,string address) 
         {
-            string commpany= AppSettingHelper.GetSectionValue("Company");
+            string commpany= ExportCompany;
             var sb = new StringBuilder();
             sb.Append(@"<html>
                             <head>

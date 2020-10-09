@@ -63,8 +63,8 @@ namespace ShipWeb.Controllers
                 List<Models.Component> components = new List<Models.Component>();
                 if (base.user.IsLandHome)
                 {
-                    var shipIdentity = _context.Component.FirstOrDefault(c => c.CommId == shipId && c.Type == ComponentType.WEB);
-                    identity = shipIdentity.CommId;
+                    var shipIdentity = _context.Component.FirstOrDefault(c => c.Id == shipId && c.Type == ComponentType.WEB);
+                    identity = shipIdentity.Id;
                 }
                 SendDataMsg assembly = new SendDataMsg();
                 assembly.SendComponentQuery(identity);
@@ -130,7 +130,7 @@ namespace ShipWeb.Controllers
                     ComponentToken token = new ComponentToken()
                     {
                         Id = item.componentid,
-                        CommId = item.commid,
+                        //CommId = item.commid,
                         Name = item.cname,
                         Type = (ComponentType)item.type
                     };
@@ -150,7 +150,6 @@ namespace ShipWeb.Controllers
                     ShipWeb.Models.Component model = new ShipWeb.Models.Component()
                     {
                         Id = item.componentid,
-                        CommId = item.commid,
                         Name = item.cname,
                         Type = (ComponentType)item.type
                     };

@@ -13,7 +13,7 @@ namespace ShipWeb.ProtoBuffer.Models
     public class CrewInfo
     {
         [ProtoMember(1)]
-        public string uid { get; set; }
+        public int uid { get; set; }
         /// <summary>
         /// 雇员名称
         /// </summary>

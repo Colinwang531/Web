@@ -111,12 +111,12 @@ namespace ShipWeb.Controllers
             try
             {
                 List<ShipViewModel> list = new List<ShipViewModel>();
-                var compents = _context.Component.Where(c => c.Type ==ComponentType.XMQ && c.CommId!=null).ToList();
+                var compents = _context.Component.Where(c => c.Type ==ComponentType.XMQ && c.Id!=null).ToList();
                 foreach (var item in compents)
                 {
                     ShipViewModel model = new ShipViewModel()
                     {
-                        Id = item.CommId,
+                        Id = item.Id,
                         Name = item.Name,
                         Line = item.Line == 0 ? true : false//默认离线
                     };
@@ -181,13 +181,13 @@ namespace ShipWeb.Controllers
                             type = ShipWeb.ProtoBuffer.Models.StatusRequest.Type.SAIL,
                             flag = type
                         };
-                        assembly.SendStatusSet(sr, identity + ":"+item.CommId);
+                        assembly.SendStatusSet(sr, identity + ":"+item.Id);
                         sr = new ProtoBuffer.Models.StatusRequest()
                         {
                             type = ProtoBuffer.Models.StatusRequest.Type.NAME,
                             text = name
                         };
-                        assembly.SendStatusSet(sr, identity + ":" + item.CommId);
+                        assembly.SendStatusSet(sr, identity + ":" + item.Id);
                     }
                     code = 0;//GetResult();
                 }
@@ -216,7 +216,7 @@ namespace ShipWeb.Controllers
                                     type = ShipWeb.ProtoBuffer.Models.StatusRequest.Type.SAIL,
                                     flag = type
                                 };
-                                assembly.SendStatusSet(sr,item.CommId);
+                                assembly.SendStatusSet(sr,item.Id);
                                 if (ship.Name != name)
                                 {
                                     sr = new ProtoBuffer.Models.StatusRequest()
@@ -224,7 +224,7 @@ namespace ShipWeb.Controllers
                                         type = ProtoBuffer.Models.StatusRequest.Type.NAME,
                                         text = name
                                     };
-                                    assembly.SendStatusSet(sr,item.CommId);
+                                    assembly.SendStatusSet(sr,item.Id);
                                 }
 
                             }

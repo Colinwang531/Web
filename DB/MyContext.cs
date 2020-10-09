@@ -35,6 +35,7 @@ namespace ShipWeb.DB
             modelBuilder.Entity<AttendancePicture>(); 
             modelBuilder.Entity<Fleet>();
             modelBuilder.Entity<ReceiveLog>();
+            modelBuilder.Entity<SysDictionary>();
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -100,6 +101,10 @@ namespace ShipWeb.DB
         /// </summary>
         public DbSet<ReceiveLog> ReceiveLog { get; set; }
 
+        /// <summary>
+        /// 接收日志
+        /// </summary>
+        public DbSet<SysDictionary> SysDictionary { get; set; }
         #region 扩展查询对象
         /// <summary>
         /// 船舶数量统计

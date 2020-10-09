@@ -65,7 +65,7 @@ namespace ShipWeb.Models
         /// <summary>
         /// 用户ID
         /// </summary>
-        public string Uid { get; set; }
+        public int Uid { get; set; }
         /// <summary>
         /// 船表主键id
         /// </summary>

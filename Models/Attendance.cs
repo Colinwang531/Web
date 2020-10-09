@@ -14,12 +14,12 @@ namespace ShipWeb.Models
         /// <summary>
         /// 船员表主键id
         /// </summary>
-        public string CrewId { get; set; }
+        public int CrewId { get; set; }
         /// <summary>
         /// 摄像机主键id
         /// </summary>
         public string CameraId { get; set; }
-        /// <summary>
+        /// <summary>s
         /// 行为时间，签入或签出的时间
         /// </summary>
         public DateTime Time { get; set; }

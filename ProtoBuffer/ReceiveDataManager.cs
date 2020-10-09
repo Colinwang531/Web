@@ -206,7 +206,7 @@ namespace ShipWeb.ProtoBuffer
                 case Models.Device.Command.MODIFY_REP:
                     if (device.deviceresponse.result == 0 && device.deviceresponse.deviceinfos != null)
                     {
-                        ProtoBDManager.DeviceUpdate(device.deviceresponse.did, device.deviceresponse.deviceinfos[0]);
+                        ProtoBDManager.DeviceUpdate(device.deviceresponse.deviceinfos[0].did, device.deviceresponse.deviceinfos[0]);
                     }
                     ManagerHelp.DeviceReponse = device.deviceresponse.result.ToString();
                     break;
@@ -252,7 +252,7 @@ namespace ShipWeb.ProtoBuffer
                     manager.SendCrewRN(Models.Crew.Command.DELETE_REP, null, result);
                     break;
                 case Models.Crew.Command.QUERY_REQ:
-                    string uid = crew.crewrequest != null && crew.crewrequest.crewinfo != null ? crew.crewrequest.crewinfo.uid : "";
+                    int uid = crew.crewrequest != null && crew.crewrequest.crewinfo != null ? crew.crewrequest.crewinfo.uid : 0;
                     var crews = ProtoBDManager.CrewQuery(uid);
                     manager.SendCrewRN(Models.Crew.Command.QUERY_REP,crews);
                     break;
