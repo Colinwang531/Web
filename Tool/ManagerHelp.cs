@@ -27,12 +27,19 @@ namespace ShipWeb.Tool
         /// <summary>
         /// 发布IP
         /// </summary>
-        public static string PublisherIP = AppSettingHelper.GetSectionValue("PublisherIP");
+        public static string PublisherIP ="";
         /// <summary>
         /// mq绑定的地址
         /// </summary>
         public static string IP = "";
+        /// <summary>
+        /// 导出时显示的公司名称
+        /// </summary>
         public static string ExportCompany = "";
+        /// <summary>
+        /// 缺岗执行时间单位分名钟
+        /// </summary>
+        public static string DepartureTime = "";
         /// <summary>
         /// 是否显示返回陆地端菜单
         /// </summary>
@@ -87,21 +94,38 @@ namespace ShipWeb.Tool
         /// <returns></returns>
         public static byte[] DrawAlarm(byte[] bytes, int x, int y, int w, int h)
         {
-            byte[] byt = bytes; //Convert.FromBase64String(Encoding.UTF8.GetString(bytes));
             try
             {
-                using (var stream = new MemoryStream(byt, 0, byt.Length, false, true))
+                //string fullPath = "C:/Users/Dell/Desktop/test1.jpg";
+                //byte[] byt = new byte[0];
+                //using (var stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read))
+                //{
+                //    stream.Position = 0;
+                //    Byte[] imgByte = new Byte[stream.Length];//把图片转成 Byte型 二进制流 
+                //    stream.Read(imgByte, 0, imgByte.Length);//把二进制流读入缓冲区 
+                //    stream.Close();
+                //    Image image = Image.FromStream(stream);
+                //    Graphics.FromImage(image).DrawRectangle(new Pen(Brushes.Red, 5), x, y, w, h);
+                //    var ms = new MemoryStream();
+                //    image.Save(ms, ImageFormat.Png);
+                //    return ms.GetBuffer();
+                //}
+
+               
+                using (var stream = new MemoryStream(bytes))
                 {
-                    Image image = Image.FromStream(stream);
-                    Graphics.FromImage(image).DrawRectangle(new Pen(Brushes.Red, 5), x, y, w, h);
+                    stream.Position = 0;
+                    Bitmap bitmap = new Bitmap(stream);
+                    //Image image = Image.FromStream(stream);
+                    Graphics.FromImage(bitmap).DrawRectangle(new Pen(Brushes.Red, 5), x, y, w, h);
                     var ms = new MemoryStream();
-                    image.Save(ms, ImageFormat.Png);
+                    bitmap.Save(ms, ImageFormat.Png);
                     return ms.GetBuffer();
                 }
             }
             catch (Exception ex)
             {
-                return byt;
+                return bytes;
             }
         }
         /// <summary>
@@ -180,8 +204,8 @@ namespace ShipWeb.Tool
                 if (item.Type == 4) typeView = "打架";
                 sb.AppendLine("<label style='font-size:46px;font-weight:bold;'>报警类型： " + typeView + "</label><br/>");
                 sb.AppendLine("<label style='font-size:46px;font-weight:bold;'>报警区域： " + item.NickName + "</label><br/>");
-                byte[] pic = DrawAlarm(item.Picture, item.X, item.Y, item.W, item.H);
-                sb.AppendLine("<img style='width: 960px; height: 550px'  src='data:image/jpeg;base64," + Convert.ToBase64String(pic) + "'/><br/>");
+                byte[] pic = DrawAlarm(Encoding.ASCII.GetBytes(item.Picture), item.X, item.Y, item.W, item.H);
+                sb.AppendLine("<img style='width: 960px; height: 550px'  src='data:image/jpeg;base64," + Encoding.ASCII.GetString(pic) + "'/><br/>");
                 sb.AppendLine("</div>");
             }
             sb.AppendLine("</div></body> </html>");

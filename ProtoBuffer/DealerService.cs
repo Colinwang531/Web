@@ -27,7 +27,8 @@ namespace ShipWeb.ProtoBuffer
                 if (dealer == null)
                 {
                     dealer = new DealerSocket();
-                    dealer.Connect(ManagerHelp.IP);
+                    //dealer.Connect("tcp://192.168.0.21:5556")
+                    dealer.Connect(ManagerHelp.IP); 
                     //等待时间10秒
                     //dealer.Options.Linger=new TimeSpan(0,0,10);
                     string commID = Guid.NewGuid().ToString();

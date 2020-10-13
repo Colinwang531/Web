@@ -19,7 +19,11 @@ namespace ShipWeb.ProtoBuffer
             manager = new SendDataMsg();
             using (var context=new MyContext())
             {
-                shipId = context.Ship.FirstOrDefault().Id;
+                var ship = context.Ship.FirstOrDefault();
+                if (ship!=null)
+                {
+                    shipId = context.Ship.FirstOrDefault().Id;
+                }
             }
         }
         /// <summary>

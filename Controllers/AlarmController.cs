@@ -226,12 +226,13 @@ namespace ShipWeb.Controllers
             var datapage = data.Skip((pageIndex - 1) * pageSize).Take(pageSize);
             foreach (var item in datapage)
             {
+                string picture =  Encoding.ASCII.GetString(item.Picture);
                 AlarmViewModel avm = new AlarmViewModel()
                 {
                     Id = item.Id,
                     Name = item.Name,
                     NickName = item.NickName,
-                    Picture = item.Picture, //Convert.FromBase64String(Encoding.UTF8.GetString(item.Picture)),
+                    Picture = picture,
                     Type = (int)item.Type,
                     Time = item.Time.ToString("yyyy-MM-dd HH:mm:ss"),
                     H = item.H,

@@ -61,10 +61,10 @@ namespace ShipWeb.ProtoBuffer.Models
 		public byte[] picture { get; set; }
 
 		[ProtoMember(5)]
-		public List<AlarmPosition> position { get; set; }
+		public List<AlarmPosition> alarmposition { get; set; }
 
 		[ProtoMember(6)]
-		public int uid { get; set; }
+		public string uid { get; set; }
     }
 	/// <summary>
 	/// 报警坐标

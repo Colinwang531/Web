@@ -12,7 +12,8 @@ namespace ShipWeb
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             InitManger.Init();
-            //InitManger.TestAttendance();
+            //船舶端需要定时检查是否缺岗
+            //InitManger.LoadNotice();
             while (!stoppingToken.IsCancellationRequested)
             {
                 try

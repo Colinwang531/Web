@@ -32,7 +32,6 @@ namespace ShipWeb
         /// </summary>
         public static void Init()
         {
-            ManagerHelp.atWorks = new List<AtWork>();
             using (var context = new MyContext())
             {
                 //船舶端组件注册
@@ -42,18 +41,25 @@ namespace ShipWeb
                     ManagerHelp.Cid = comList.Id;
                 }
                 var sysdic = context.SysDictionary.ToList();
-                if (sysdic.Count()>0)
+                if (sysdic.Count() > 0)
                 {
                     if (sysdic.Where(c => c.key == "NetMqID").Any())
                     {
                         ManagerHelp.IP = sysdic.FirstOrDefault(c => c.key == "NetMqID").value;
                     }
-                    if (sysdic.Where(c=>c.key== "ExportCompany").Any())
+                    if (sysdic.Where(c => c.key == "ExportCompany").Any())
                     {
                         ManagerHelp.ExportCompany = sysdic.FirstOrDefault(c => c.key == "ExportCompany").value;
                     }
+                    if (sysdic.Where(c => c.key == "DepartureTime").Any())
+                    {
+                        ManagerHelp.DepartureTime = sysdic.FirstOrDefault(c => c.key == "DepartureTime").value;
+                    }
+                    if (sysdic.Where(c => c.key == "PublisherIP").Any())
+                    {
+                        ManagerHelp.PublisherIP = sysdic.FirstOrDefault(c => c.key == "PublisherIP").value;
+                    }
                 }
-                //Component();
                 BoatInit();
                 //LandInit();
             }
@@ -304,7 +310,14 @@ namespace ShipWeb
             SendDataMsg assembly = new SendDataMsg();
             Task.Factory.StartNew(state => {
                 //获取间隔时间
-                int departureTime =Convert.ToInt32(AppSettingHelper.GetSectionValue("DepartureTime"));
+                int departureTime = 1;
+                try
+                {
+                    Convert.ToInt32(ManagerHelp.DepartureTime);
+                }
+                catch (Exception)
+                {
+                }
                 while (true)
                 {
                     using (var context = new MyContext())
@@ -314,7 +327,7 @@ namespace ShipWeb
                         if (ship == null) continue;                       
                         DateTime dt = DateTime.Now;
                         //ManagerHelp.atWorks 考勤人数的集合
-                        if (ship.Flag && ManagerHelp.atWorks.Count <= 0)
+                        if (ship.Flag && ManagerHelp.atWorks !=null&& ManagerHelp.atWorks.Count <= 0)
                         {
                             var algo = context.Algorithm.Where(c => c.Type == AlgorithmType.CAPTURE);
                             if (algo.Count() > 0)
@@ -341,67 +354,28 @@ namespace ShipWeb
                 }
             }, TaskCreationOptions.LongRunning);
         }
-        public static void TestAttendance()
+
+        public static void Test() 
         {
-          
-            var pathDir = AppContext.BaseDirectory + "/testImg/";
-            var images = Directory.GetFiles(pathDir);
-            using (var context = new MyContext())
+            using (var context=new MyContext())
             {
-                var comList = context.Component.FirstOrDefault(c => c.Type == ComponentType.WEB && c.Id == null);
-                if (comList != null)
+                PublisherService publisher = new PublisherService();
+                var list = context.Alarm.ToList();
+                foreach (var item in list)
                 {
-                    ManagerHelp.Cid = comList.Id;
+                    //考勤类型
+                    int Behavior = 1;
+                    //考勤时间
+                    string SignInTime = DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss");
+                    //考勤人员
+                    string EmployeeName = "张三";
+                    //考勤图片
+                    string PhotosBuffer = Encoding.ASCII.GetString(item.Picture);
+                    string data = Behavior + "," + SignInTime + "," + EmployeeName + "," + PhotosBuffer;
+                    publisher.Send(data);
                 }
-                int index = 0;
-                foreach (var item in images)
-                {
-                    FileStream fs = new FileStream(item, FileMode.Open, FileAccess.Read);
-                    byte[] byt = new byte[fs.Length];
-                    fs.Read(byt, 0, Convert.ToInt32(fs.Length));
-                    fs.Close();
-                    AlarmInfo info = new AlarmInfo()
-                    {
-                        cid = "0b7c18ed-a17b-4cfd-9a29-f52f6baa725a",
-                        uid = 1,
-                        picture = byt,
-                        time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
-                        type = AlarmInfo.Type.ATTENDANCE_IN
-                    };
-                    ProtoBDManager.AlarmAdd(info);
-                    ///string pics = Convert.ToBase64String(byt);
-                    //string ids = string.Join(',', context.Attendance.Select(d => d.CrewId));
-                    //var crew = context.Crew.Where(c=>!ids.Contains(c.Id)).ToList();
-                    //string shipId = "2eb85d83-1144-428d-a640-54b7a343851a";
-                    //string crewId = crew[index].Id;
-                    //for (int i = 0; i < 2; i++)
-                    //{
-                    //    string identity = Guid.NewGuid().ToString();
-                    //    Attendance attendance = new Attendance()
-                    //    {
-                    //        Behavior = i,
-                    //        Id = identity,
-                    //        CameraId =i==0? "bc03715d-eb40-48f6-8fd3-174534353fa8": "f0b180bd-68d0-4811-bc97-dec5fe57b501",
-                    //        ShipId = shipId,
-                    //        Time = DateTime.Now,
-                    //        CrewId = crewId,
-                    //        attendancePictures = new List<AttendancePicture>()
-                    //        {
-                    //            new AttendancePicture ()
-                    //            {
-                    //                 AttendanceId=identity,
-                    //                 Id=Guid.NewGuid().ToString(),
-                    //                 Picture= byt,//Convert.FromBase64String(pics),
-                    //                 ShipId=shipId
-                    //            }
-                    //        }
-                    //    };
-                    //    context.Attendance.Add(attendance);
-                    //}
-                    //index++;
-                }
-                context.SaveChanges();
             }
+           
         }
     }
 }

@@ -19,7 +19,7 @@ namespace ShipWeb.Models
         /// <summary>
         /// 报警图片
         /// </summary>
-        public byte[] Picture { get; set; }        
+        public string Picture { get; set; }        
         /// <summary>
         /// 报警类型
         /// </summary>
