@@ -17,17 +17,17 @@ namespace ShipWeb.Tool
 {
     public class ManagerHelp
     {
-       // private static ManagerHelp _manager = null;
+        // private static ManagerHelp _manager = null;
         /// <summary>
         /// 组件ID（组件注册成功后返回的ID）
         /// </summary>
         public static string Cid = "";
         //是否启动模似数据
-        public static bool IsTest = AppSettingHelper.GetSectionValue("IsSimulate")=="true"?true:false;
+        public static bool IsTest = AppSettingHelper.GetSectionValue("IsSimulate") == "true" ? true : false;
         /// <summary>
         /// 发布IP
         /// </summary>
-        public static string PublisherIP ="";
+        public static string PublisherIP = "";
         /// <summary>
         /// mq绑定的地址
         /// </summary>
@@ -60,8 +60,8 @@ namespace ShipWeb.Tool
         /// <summary>
         /// 人脸算法组件名称
         /// </summary>
-        public static string FaceName="FaceRecognize";
-        public static List<AtWork> atWorks=null;
+        public static string FaceName = "FaceRecognize";
+        public static List<AtWork> atWorks = null;
         /// <summary>
         /// 是否初使化
         /// </summary>
@@ -82,7 +82,7 @@ namespace ShipWeb.Tool
         //        }
         //    }
         //}
-       
+
         /// <summary>
         /// 未做转换的字节流
         /// </summary>
@@ -92,8 +92,17 @@ namespace ShipWeb.Tool
         /// <param name="w"></param>
         /// <param name="h"></param>
         /// <returns></returns>
-        public static byte[] DrawAlarm(byte[] bytes, int x, int y, int w, int h)
+        public static byte[] DrawAlarm(string pir, int x, int y, int w, int h)
         {
+            //byte[] bytes = Encoding.ASCII.GetBytes("data:image/jpeg;base64," + pir);
+            //byte[] bytes = Encoding.ASCII.GetBytes(pir);
+            string dummyData = pir.Trim().Replace("%", "").Replace(",", "").Replace(" ", "+");
+            if (dummyData.Length % 4 > 0)
+            {
+                dummyData = dummyData.PadRight(dummyData.Length + 4 - dummyData.Length % 4, '=');
+            }
+            
+            byte[] bytes = Convert.FromBase64String(dummyData);
             try
             {
                 //string fullPath = "C:/Users/Dell/Desktop/test1.jpg";
@@ -109,17 +118,17 @@ namespace ShipWeb.Tool
                 //    var ms = new MemoryStream();
                 //    image.Save(ms, ImageFormat.Png);
                 //    return ms.GetBuffer();
-                //}
+                //}                              
 
-               
                 using (var stream = new MemoryStream(bytes))
                 {
+                    Image image = Image.FromStream(stream);
+
                     stream.Position = 0;
-                    Bitmap bitmap = new Bitmap(stream);
-                    //Image image = Image.FromStream(stream);
-                    Graphics.FromImage(bitmap).DrawRectangle(new Pen(Brushes.Red, 5), x, y, w, h);
+
+                    Graphics.FromImage(image).DrawRectangle(new Pen(Brushes.Red, 5), x, y, w, h);
                     var ms = new MemoryStream();
-                    bitmap.Save(ms, ImageFormat.Png);
+                    image.Save(ms, ImageFormat.Png);
                     return ms.GetBuffer();
                 }
             }
@@ -134,9 +143,9 @@ namespace ShipWeb.Tool
         /// <param name="list"></param>
         /// <param name="time"></param>
         /// <returns></returns>
-        public static string GetHtml(List<AlarmViewModel> list, string time,string shipName,string address) 
+        public static string GetHtml(List<AlarmViewModel> list, string time, string shipName, string address)
         {
-            string commpany= ExportCompany;
+            string commpany = ExportCompany;
             var sb = new StringBuilder();
             sb.Append(@"<html>
                             <head>
@@ -179,10 +188,10 @@ namespace ShipWeb.Tool
                             </head>
                               <body>
                                 <div style='text-align: center'>");
-            string url = AppDomain.CurrentDomain.BaseDirectory+ "/images/head.jpg";
+            string url = AppDomain.CurrentDomain.BaseDirectory + "/images/head.jpg";
             sb.Append("<img style='width:100%;heihgt:100%;' src='data:image/jpeg;base64," + WebImageToBase64(url) + "'><br>");
             sb.Append("<label style='font-size:65px;font-weight:bold;letter-spacing:5px'>航安人工智能系统报警报告</label><br>");
-            string src = AppDomain.CurrentDomain.BaseDirectory+ "/images/title.jpg";
+            string src = AppDomain.CurrentDomain.BaseDirectory + "/images/title.jpg";
             sb.Append("<img style='width:100%;heihgt:100%;' src='data:image/jpeg;base64," + WebImageToBase64(src) + "'><br>");
             sb.Append(@"<table>
                                 <tr>
@@ -204,7 +213,9 @@ namespace ShipWeb.Tool
                 if (item.Type == 4) typeView = "打架";
                 sb.AppendLine("<label style='font-size:46px;font-weight:bold;'>报警类型： " + typeView + "</label><br/>");
                 sb.AppendLine("<label style='font-size:46px;font-weight:bold;'>报警区域： " + item.NickName + "</label><br/>");
-                byte[] pic = DrawAlarm(Encoding.ASCII.GetBytes(item.Picture), item.X, item.Y, item.W, item.H);
+                byte[] pic = DrawAlarm(item.Picture, item.X, item.Y, item.W, item.H);
+
+
                 sb.AppendLine("<img style='width: 960px; height: 550px'  src='data:image/jpeg;base64," + Encoding.ASCII.GetString(pic) + "'/><br/>");
                 sb.AppendLine("</div>");
             }

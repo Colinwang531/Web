@@ -14,19 +14,19 @@ namespace ShipWeb
             InitManger.Init();
             //船舶端需要定时检查是否缺岗
             //InitManger.LoadNotice();
-            while (!stoppingToken.IsCancellationRequested)
-            {
-                try
-                {
-                    //心跳
-                    InitManger.HeartBeat();
-                }
-                catch (Exception ex)
-                {
-                    //LogHelper.Error(ex.Message);
-                }
-                await Task.Delay(1000 * 30, stoppingToken);//单位秒
-            }
+            //while (!stoppingToken.IsCancellationRequested)
+            //{
+            //    try
+            //    {
+            //        //心跳
+            //        InitManger.HeartBeat();
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        //LogHelper.Error(ex.Message);
+            //    }
+            //    await Task.Delay(1000 * 30, stoppingToken);//单位秒
+            //}
         }
     }
 }
