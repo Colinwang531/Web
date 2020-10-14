@@ -2700,12 +2700,13 @@ body {
 
         .btnLayer .icoMapTheme {
             display: block;
-            width: 26px;
-            height: 26px;
+            width: 22px;
+            height: 22px;
             background: url(../images/s_ico10.png);
             position: relative;
-            top: 12px;
-            left: 12px;
+            top: 8px;
+            left: 8px;
+            background-size: 100% 100%;
         }
 
     #mapthemeli {
@@ -2714,13 +2715,13 @@ body {
     }
 
     #mapthemeShow {
-        width: 48px;
+        width: 37px;
         height: auto;
         background: #fff;
         border: 1px #d0d0d0 solid;
         border-radius: 10px;
         position: absolute;
-        top: 48px;
+        top: 36px;
         left: 0px;
     }
 
@@ -2979,12 +2980,13 @@ body {
 
         .btnLayer .icoMapTheme {
             display: block;
-            width: 26px;
-            height: 26px;
+            width: 18px;
+            height: 18px;
             background: url(../images/s_ico10.png);
             position: relative;
-            top: 12px;
-            left: 12px;
+            top: 8px;
+            left: 8px;
+            background-size: 100% 100%;
         }
 
     #mapthemeli {
@@ -2993,13 +2995,13 @@ body {
     }
 
     #mapthemeShow {
-        width: 48px;
+        width: 37px;
         height: auto;
         background: #fff;
         border: 1px #d0d0d0 solid;
         border-radius: 10px;
         position: absolute;
-        top: 48px;
+        top: 30px;
         left: 0px;
     }
 
@@ -3017,11 +3019,12 @@ body {
             }
 
                 #mapthemeShow ul li a {
-                    font: 12px/24px "Microsoft Yahei";
+                    font: 10px/20px "Microsoft Yahei";
                     color: #666666;
                     border: none;
                     border-radius: 0px;
                     cursor: pointer;
+                    width: 36px;
                 }
 
                     #mapthemeShow ul li a:hover {
@@ -3258,12 +3261,13 @@ body {
 
         .btnLayer .icoMapTheme {
             display: block;
-            width: 26px;
-            height: 26px;
+            width: 18px;
+            height: 18px;
             background: url(../images/s_ico10.png);
             position: relative;
-            top: 12px;
-            left: 12px;
+            top: 6px;
+            left: 6px;
+            background-size: 100% 100%;
         }
 
     #mapthemeli {
@@ -3272,13 +3276,13 @@ body {
     }
 
     #mapthemeShow {
-        width: 48px;
+        width: 37px;
         height: auto;
         background: #fff;
         border: 1px #d0d0d0 solid;
         border-radius: 10px;
         position: absolute;
-        top: 48px;
+        top: 30px;
         left: 0px;
     }
 
@@ -3296,11 +3300,12 @@ body {
             }
 
                 #mapthemeShow ul li a {
-                    font: 12px/24px "Microsoft Yahei";
+                    font: 8px/16px "Microsoft Yahei";
                     color: #666666;
                     border: none;
                     border-radius: 0px;
                     cursor: pointer;
+                    width: 36px;
                 }
 
                     #mapthemeShow ul li a:hover {
