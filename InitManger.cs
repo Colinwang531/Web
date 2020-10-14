@@ -60,7 +60,7 @@ namespace ShipWeb
                         ManagerHelp.PublisherIP = sysdic.FirstOrDefault(c => c.key == "PublisherIP").value;
                     }
                 }
-                //BoatInit();
+                BoatInit();
                 //LandInit();
             }
         }
