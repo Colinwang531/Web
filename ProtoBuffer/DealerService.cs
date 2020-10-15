@@ -41,7 +41,7 @@ namespace ShipWeb.ProtoBuffer
             }
         }
 
-        public void Send(MSG msg, string nextIdentity = "")
+        public void Send(MSG msg, string nextIdentity = "",string head= "request")
         {
             try
             {
@@ -50,9 +50,11 @@ namespace ShipWeb.ProtoBuffer
                     byte[] byt = ProtoBufHelp.Serialize<MSG>(msg);
                     NetMQMessage mqmsg = new NetMQMessage(5);
                     mqmsg.AppendEmptyFrame();
-                    mqmsg.Append("request");
+                    mqmsg.Append(head);
                     string identity = Encoding.UTF8.GetString(dealer.Options.Identity);
+                    //from
                     mqmsg.Append(ManagerHelp.Cid);
+                    //to
                     mqmsg.Append(nextIdentity);
                     mqmsg.Append(byt);
                     //发送注册请求
@@ -65,14 +67,14 @@ namespace ShipWeb.ProtoBuffer
             }
         }
 
-        private void Receive() 
+        public void Receive() 
         {
             ReceiveDataManager manager = new ReceiveDataManager();
             while (true)
             {
                 var mQFrames = dealer.ReceiveMultipartMessage(5);
                 byte[] mory = mQFrames.Last.ToByteArray();
-                MSG revmsg = ProtoBufHelp.DeSerialize<MSG>(mory);              
+                MSG revmsg = ProtoBufHelp.DeSerialize<MSG>(mory);
                 if (revmsg.type == MSG.Type.ALARM)
                 {
                     if (revmsg.alarm.alarminfo != null)
@@ -104,7 +106,7 @@ namespace ShipWeb.ProtoBuffer
                 {
                     manager.ComponentData(revmsg.component);
                 }
-                else if (revmsg.type==MSG.Type.EVENT)
+                else if (revmsg.type == MSG.Type.EVENT)
                 {
                     manager.CaptureData(revmsg.evt);
                 }

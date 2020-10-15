@@ -29,7 +29,6 @@ namespace ShipWeb.Controllers
         public IActionResult Load()
         {
             List<ComponentViewModel> list = new List<ComponentViewModel>();
-            string shipId = base.user.ShipId;//陆地端登陆时存放的是组件ID
             if (ManagerHelp.IsTest)
             {
                 list.Add(new ComponentViewModel()
@@ -59,13 +58,8 @@ namespace ShipWeb.Controllers
             }
             else
             {
-                string identity = "";
+                string identity = base.user.ShipId;
                 List<Models.Component> components = new List<Models.Component>();
-                if (base.user.IsLandHome)
-                {
-                    var shipIdentity = _context.Component.FirstOrDefault(c => c.Id == shipId && c.Type == ComponentType.WEB);
-                    identity = shipIdentity.Id;
-                }
                 SendDataMsg assembly = new SendDataMsg();
                 assembly.SendComponentQuery(identity);
                 ProtoBuffer.Models.ComponentResponse response = new ProtoBuffer.Models.ComponentResponse();

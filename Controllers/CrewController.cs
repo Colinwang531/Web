@@ -145,7 +145,7 @@ namespace ShipWeb.Controllers
             {
                 CrewViewModel model = new CrewViewModel()
                 {
-                    Id = item.uid,
+                    Id =Convert.ToInt32(item.uid),
                     Job = item.job,
                     Name = item.name,
                     crewPictureViewModels = new List<CrewPictureViewModel>()
@@ -334,16 +334,17 @@ namespace ShipWeb.Controllers
                         }
                         _context.SaveChanges();
                         //发送netmq消息
-                        List<string> bytes = new List<string>();
-                        foreach (var item in employee.employeePictures)
+                        var dbPic=_context.CrewPicture.Where(c => c.CrewId == employee.Id).ToList();
+                        List<string> bytes =new List<string> ();
+                        foreach (var item in dbPic)
                         {
-                            bytes.Add(Encoding.UTF8.GetString(item.Picture));
+                            bytes.Add(Convert.ToBase64String(item.Picture));
                         }
                         ProtoBuffer.Models.CrewInfo crewInfo = new ProtoBuffer.Models.CrewInfo()
                         {
                             job = employee.Job,
                             name = employee.Name,
-                            uid = employee.Id,
+                            uid = employee.Id.ToString(),
                             pictures = bytes
                         };
                         if (id>0) { assembly.SendCrewUpdate(crewInfo, identity); }
@@ -414,7 +415,7 @@ namespace ShipWeb.Controllers
             {
                 job = job,
                 name = name,
-                uid = id
+                uid = id.ToString()
             };
             emp.pictures = new List<string>();
             List<CrewPictureViewModel> vmPicList = new List<CrewPictureViewModel>();

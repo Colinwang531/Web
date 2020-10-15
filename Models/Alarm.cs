@@ -10,6 +10,9 @@ namespace ShipWeb.Models
     /// </summary>
     public class Alarm
     {
+        public Alarm() {
+            CreatDate = DateTime.Now;
+        }
         public enum AlarmType
         {
             /// <summary>
@@ -70,6 +73,10 @@ namespace ShipWeb.Models
         /// 船表主键id
         /// </summary>
         public string ShipId { get; set; }
+        /// <summary>
+        /// 入库时间
+        /// </summary>
+        public DateTime CreatDate { get; set; }
         public List<AlarmPosition> alarmPositions { get; set; }
     }
 }

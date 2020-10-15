@@ -119,7 +119,7 @@ namespace ShipWeb.Controllers
                         if (pices.Where(c => c.AttendanceId == attd.Id).Any())
                         {
                             var picture = pices.Where(c => c.AttendanceId == attd.Id).FirstOrDefault().Picture;
-                            ad.Picture = picture;
+                            ad.Picture =Convert.ToBase64String(picture);
                         }
                         model.attendances.Add(ad);
                     }

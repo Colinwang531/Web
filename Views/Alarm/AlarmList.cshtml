@@ -144,7 +144,6 @@
         var img = new Image();
         img.src = "data:image/jpeg;base64," + pic;
         img.onload = function () {
-            debugger;
             canvas.width = this.width;
             canvas.height = this.height;
             cxt.drawImage(this, 0, 0, this.width, this.height);

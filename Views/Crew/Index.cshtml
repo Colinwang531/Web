@@ -220,7 +220,7 @@
                 var pics = dt[i].crewPictureViewModels;
                 var src = "/images/ship/crewhead.png";
                 if (pics.length > 0) {
-                    src = "data:image/jpeg;base64," + pics[0].picture;
+                    src = "data:image/jpeg;base64," +  pics[0].picture;
                 }
                 var job = dt[i].job.length > 25 ? dt[i].job.substring(0, 25) + "..." : dt[i].job;
                 html += '<div class="layui-card card" style = "float:left;margin-top:20px;margin-left:30px;text-align:center;">';

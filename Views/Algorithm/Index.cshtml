@@ -237,6 +237,9 @@
             //人脸相似度是否可填
             else if (value == 5 || value == 6) {
                 $("#txtSimilar").removeAttr("disabled").css("background-color", "");
+                $("#txtThreshold_1").val(0.2);
+                $("#txtTrack").val(0.15);
+                $("#txtSimilar").val(0.52);
             } else if (value==7) {               
                 //阀值1不可修改
                 $("#txtThreshold_1").attr("disabled", "disabled").css("background-color", "#EEEEEE");

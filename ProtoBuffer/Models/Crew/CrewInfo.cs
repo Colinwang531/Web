@@ -12,8 +12,11 @@ namespace ShipWeb.ProtoBuffer.Models
     [ProtoContract]
     public class CrewInfo
     {
+        /// <summary>
+        /// 船员ID（整形的字符串）
+        /// </summary>
         [ProtoMember(1)]
-        public int uid { get; set; }
+        public string uid { get; set; }
         /// <summary>
         /// 雇员名称
         /// </summary>

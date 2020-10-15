@@ -74,25 +74,28 @@ namespace ShipWeb.Controllers
                     {
                         Thread.Sleep(100);
                     }
-                    ProtoBuffer.Models.ComponentResponse response = JsonConvert.DeserializeObject<ProtoBuffer.Models.ComponentResponse>(ManagerHelp.ComponentReponse);
-                    ManagerHelp.ComponentReponse = "";
-                    List<ComponentToken> tokens = new List<ComponentToken>();
-                    if (response.result == 0 && response.componentinfos != null)
+                    if (ManagerHelp.ComponentReponse != "")
                     {
-                        foreach (var item in response.componentinfos)
+                        ProtoBuffer.Models.ComponentResponse response = JsonConvert.DeserializeObject<ProtoBuffer.Models.ComponentResponse>(ManagerHelp.ComponentReponse);
+                        ManagerHelp.ComponentReponse = "";
+                        List<ComponentToken> tokens = new List<ComponentToken>();
+                        if (response.result == 0 && response.componentinfos != null)
                         {
-                            ComponentToken token = new ComponentToken()
+                            foreach (var item in response.componentinfos)
                             {
-                                Id = item.componentid,
-                                //CommId = item.commid,
-                                Name = item.cname,
-                                Type = (ComponentType)item.type
-                            };
-                            tokens.Add(token);
+                                ComponentToken token = new ComponentToken()
+                                {
+                                    Id = item.componentid,
+                                    //CommId = item.commid,
+                                    Name = item.cname,
+                                    Type = (ComponentType)item.type
+                                };
+                                tokens.Add(token);
+                            }
                         }
+                        string com = JsonConvert.SerializeObject(tokens);
+                        HttpContext.Session.SetString("comtoken", com);
                     }
-                    string com = JsonConvert.SerializeObject(tokens);
-                    HttpContext.Session.SetString("comtoken", com);
                 }).Wait(timeout);
                 flag = false;
                 #endregion
@@ -281,7 +284,7 @@ namespace ShipWeb.Controllers
                         string identity = GetIdentity(model.Factory);
                         if (identity == null)
                         {
-                            return new JsonResult(new { code = 1, msg = Enum.GetName(typeof(ComponentType), Convert.ToInt32(model.Factory)) + "组件未启动" });
+                            return new JsonResult(new { code = 1, msg = Enum.GetName(typeof(Device.Factory), Convert.ToInt32(model.Factory)) + "组件未启动" });
                         }
                         ProtoBuffer.Models.DeviceInfo emb = GetProtoDevice(model);
                         if (!string.IsNullOrEmpty(model.Id))
@@ -316,47 +319,14 @@ namespace ShipWeb.Controllers
                     device.Enable = model.Enable;
                     if (ManagerHelp.IsTest)
                     {
-                        if (string.IsNullOrEmpty(model.Id))
-                        {
-                            device.Id = Guid.NewGuid().ToString();
-                            device.ShipId = base.user.ShipId;
-                            _context.Device.Add(device);
-                            //测试数据
-                            List<Camera> cameras = new List<Camera>() {
-                                    new Camera(){
-                                     DeviceId = device.Id,
-                                     Enable = false,
-                                     Id = Guid.NewGuid().ToString(),
-                                     NickName ="摄像机1",
-                                     IP ="127.0.0.1",
-                                     ShipId = base.user.ShipId,
-                                     Index = 1
-                                    },
-                                    new Camera(){
-                                     DeviceId = device.Id,
-                                     Enable = false,
-                                     Id = Guid.NewGuid().ToString(),
-                                     NickName ="摄像机2",
-                                     IP = "127.0.0.1",
-                                     ShipId = base.user.ShipId,
-                                     Index = 2
-                                    }
-                                };
-                            _context.Camera.AddRange(cameras);
-                        }
-                        else
-                        {
-                            _context.Device.Update(device);
-                        }
-                        _context.SaveChanges();
-                        code = 0;
+                        code = GetSimulate(model, device);
                     }
                     else
                     {
                         string identity = GetIdentity(model.Factory);
                         if (identity == "")
                         {
-                            return new JsonResult(new { code = 1, msg = Enum.GetName(typeof(ComponentType), Convert.ToInt32(device.factory)) + "组件未启动" });
+                            return new JsonResult(new { code = 1, msg = Enum.GetName(typeof(Device.Factory), Convert.ToInt32(device.factory)) + "组件未启动" });
                         }
                         SendDataMsg assembly = new SendDataMsg();
                         if (string.IsNullOrEmpty(model.Id))
@@ -390,6 +360,46 @@ namespace ShipWeb.Controllers
                 return new JsonResult(new { code = 1, msg = "数据保存失败!" + ex.Message });
             }
         }
+        private int GetSimulate(DeviceViewModel model, Device device)
+        {
+            int code;
+            if (string.IsNullOrEmpty(model.Id))
+            {
+                device.Id = Guid.NewGuid().ToString();
+                device.ShipId = base.user.ShipId;
+                _context.Device.Add(device);
+                //测试数据
+                List<Camera> cameras = new List<Camera>() {
+                                    new Camera(){
+                                     DeviceId = device.Id,
+                                     Enable = false,
+                                     Id = Guid.NewGuid().ToString(),
+                                     NickName ="摄像机1",
+                                     IP ="127.0.0.1",
+                                     ShipId = base.user.ShipId,
+                                     Index = 1
+                                    },
+                                    new Camera(){
+                                     DeviceId = device.Id,
+                                     Enable = false,
+                                     Id = Guid.NewGuid().ToString(),
+                                     NickName ="摄像机2",
+                                     IP = "127.0.0.1",
+                                     ShipId = base.user.ShipId,
+                                     Index = 2
+                                    }
+                                };
+                _context.Camera.AddRange(cameras);
+            }
+            else
+            {
+                _context.Device.Update(device);
+            }
+            _context.SaveChanges();
+            code = 0;
+            return code;
+        }
+
         public IActionResult CamSave(string id, string did, int factory, string nickName, string enable)
         {
             if (ModelState.IsValid)
@@ -405,7 +415,7 @@ namespace ShipWeb.Controllers
                         string identity = GetIdentity(factory);
                         if (identity=="")
                         {
-                            return new JsonResult(new { code = 1, msg = Enum.GetName(typeof(ComponentType), Convert.ToInt32(factory)) + "组件未启动" });
+                            return new JsonResult(new { code = 1, msg = Enum.GetName(typeof(Device.Factory), Convert.ToInt32(factory)) + "组件未启动" });
                         }
                         ProtoBuffer.Models.DeviceInfo emb = new ProtoBuffer.Models.DeviceInfo()
                         {
@@ -522,7 +532,7 @@ namespace ShipWeb.Controllers
                     string identity = GetIdentity(factory);
                     if (identity == "")
                     {
-                        return new JsonResult(new { code = 1, msg = Enum.GetName(typeof(ComponentType), Convert.ToInt32(factory)) + "组件未启动" });
+                        return new JsonResult(new { code = 1, msg = Enum.GetName(typeof(Device.Factory), Convert.ToInt32(factory)) + "组件未启动" });
                     }
                    assembly.SendDeveiceDelete(shipId + ":"+identity, id);
                    code = GetResult();             
@@ -555,7 +565,7 @@ namespace ShipWeb.Controllers
                         string identity = GetIdentity(factory);
                         if (identity == "")
                         {
-                            return new JsonResult(new { code = 1, msg = Enum.GetName(typeof(ComponentType), Convert.ToInt32(factory)) + "组件未启动" });
+                            return new JsonResult(new { code = 1, msg = Enum.GetName(typeof(Device.Factory), Convert.ToInt32(factory)) + "组件未启动" });
                         }
                         SendDataMsg assembly = new SendDataMsg();
                         assembly.SendDeveiceDelete(identity, device.Id);
@@ -629,7 +639,7 @@ namespace ShipWeb.Controllers
                 }
             }).Wait(timeout);
             flag = false;
-            if (ManagerHelp.DeviceReponse!=null)
+            if (!string.IsNullOrEmpty(ManagerHelp.DeviceReponse))
             {
                 result = Convert.ToInt32(ManagerHelp.DeviceReponse);
             }

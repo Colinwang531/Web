@@ -96,6 +96,7 @@ namespace ShipWeb
             assembly.SendComponentSign("WEB", ManagerHelp.Cid);
             //发送查询请求
             assembly.SendComponentQuery();
+            ManagerHelp.atWorks = new List<AtWork>();
             ManagerHelp.isInit = true;
         }
         /// <summary>
@@ -107,7 +108,7 @@ namespace ShipWeb
             assembly.SendComponentSign("WEB", ManagerHelp.Cid);
             assembly.SendComponentQuery();
             ManagerHelp.isInit = false;
-            ManagerHelp.isLand = true;
+            ManagerHelp.isLandHert = true;
         }
         /// <summary>
         /// 初使化船状态
@@ -252,7 +253,7 @@ namespace ShipWeb
             if (!string.IsNullOrEmpty(ManagerHelp.Cid))
             {
                 SendDataMsg assembly = new SendDataMsg();
-                if (!ManagerHelp.isLand)
+                if (!ManagerHelp.isLandHert)
                 {
                     //船舶端发送注册请求
                     assembly.SendComponentSign("WEB", ManagerHelp.Cid);
@@ -360,7 +361,7 @@ namespace ShipWeb
             using (var context=new MyContext())
             {
                 PublisherService publisher = new PublisherService();
-                var list = context.Alarm.ToList();
+                var list = context.AttendancePicture.Take(5).ToList();
                 foreach (var item in list)
                 {
                     //考勤类型
@@ -370,7 +371,7 @@ namespace ShipWeb
                     //考勤人员
                     string EmployeeName = "张三";
                     //考勤图片
-                    string PhotosBuffer = Encoding.ASCII.GetString(item.Picture);
+                    string PhotosBuffer = Convert.ToBase64String(item.Picture);
                     string data = Behavior + "," + SignInTime + "," + EmployeeName + "," + PhotosBuffer;
                     publisher.Send(data);
                 }

@@ -27,6 +27,6 @@ namespace ShipWeb.Models
         /// <summary>
         /// 考勤图片
         /// </summary>
-        public byte[] Picture { get; set; }
+        public string Picture { get; set; }
     }
 }

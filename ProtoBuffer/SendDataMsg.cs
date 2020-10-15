@@ -33,7 +33,7 @@ namespace ShipWeb.ProtoBuffer
                     }
                 }
             };
-            dealer.Send(sendMsg);
+            dealer.Send(sendMsg,"upstream","response");
         }
         /// <summary>
         /// 组合返回数据
@@ -57,7 +57,7 @@ namespace ShipWeb.ProtoBuffer
                     }
                 }
             };
-            dealer.Send(sendMsg);
+            dealer.Send(sendMsg, "upstream", "response");
         }
         /// <summary>
         /// 组合返回数据
@@ -80,7 +80,7 @@ namespace ShipWeb.ProtoBuffer
                     }
                 }
             };
-            dealer.Send(sendMsg);
+            dealer.Send(sendMsg,"upstream", "response");
         }
         /// <summary>
         /// 组合返回数据
@@ -103,7 +103,7 @@ namespace ShipWeb.ProtoBuffer
                     }
                 }
             };
-            dealer.Send(msg);
+            dealer.Send(msg, "upstream", "response");
         }
         /// <summary>
         /// 查询船员
@@ -124,7 +124,7 @@ namespace ShipWeb.ProtoBuffer
                     {
                         crewinfo = new CrewInfo()
                         {
-                            uid = uid
+                            uid = uid.ToString()
                         }
                     }
                 }
@@ -196,7 +196,7 @@ namespace ShipWeb.ProtoBuffer
                     {
                         crewinfo = new CrewInfo()
                         {
-                            uid = uid
+                            uid = uid.ToString()
                         }
                     }
                 }

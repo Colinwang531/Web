@@ -197,7 +197,7 @@ namespace ShipWeb.Controllers
                 DateTime dtEnd = DateTime.Parse(model.EndTime);
                 alarmData = alarmData.Where(c => c.Time <= dtEnd);
             }
-            var alarm = alarmData.ToList();
+            var alarm = alarmData.OrderByDescending(c=>c.CreatDate).ToList();
             var cids = string.Join(',', alarm.Select(c => c.Cid));
             //查询摄像机信息
             var camera = _context.Camera.Where(c => (string.IsNullOrEmpty(model.Name) ? 1 == 1 : c.NickName.Contains(model.Name)) && cids.Contains(c.Id)).ToList();
@@ -226,7 +226,7 @@ namespace ShipWeb.Controllers
             var datapage = data.Skip((pageIndex - 1) * pageSize).Take(pageSize);
             foreach (var item in datapage)
             {
-                string picture =  Encoding.ASCII.GetString(item.Picture);
+                string picture =  Convert.ToBase64String(item.Picture);
                 AlarmViewModel avm = new AlarmViewModel()
                 {
                     Id = item.Id,
