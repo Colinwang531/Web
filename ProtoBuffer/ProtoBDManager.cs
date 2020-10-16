@@ -540,6 +540,11 @@ namespace ShipWeb.ProtoBuffer
             }
             return 0;
         }
+        /// <summary>
+        /// 船舶端添加组件
+        /// </summary>
+        /// <param name="components"></param>
+        /// <returns></returns>
         public static int ComponentAddRange(List<ComponentInfo> components)
         {
             using (var context = new MyContext())
@@ -677,8 +682,8 @@ namespace ShipWeb.ProtoBuffer
             }
         }
 
-        public static int ShipSet(bool status) {
-
+        public static int ShipSet(bool status) 
+        {
             try
             {
                 using (var _context = new MyContext())
@@ -719,6 +724,8 @@ namespace ShipWeb.ProtoBuffer
         /// <param name="cid"></param>
         public static void AlarmAdd(AlarmInfo alarmInfo)
         {
+            //添加日志
+            ProtoBDManager.AddReceiveLog<ShipWeb.ProtoBuffer.Models.AlarmInfo>("Alarm", alarmInfo);
             using (var context = new MyContext())
             {
                 var ship = context.Ship.FirstOrDefault();
@@ -744,8 +751,7 @@ namespace ShipWeb.ProtoBuffer
                     }
                     else
                     {
-                        #region 报警信息入库
-                       
+                        #region 报警信息入库                       
                         ShipWeb.Models.Alarm model = new ShipWeb.Models.Alarm()
                         {
                             Id = Guid.NewGuid().ToString(),
@@ -776,10 +782,12 @@ namespace ShipWeb.ProtoBuffer
                             }
                         }
                         context.Alarm.Add(model);
-
+                        context.SaveChanges();
+                        SendDataMsg sendData = new SendDataMsg();
+                        //向陆地端推送报警信息
+                        sendData.SendAlarm("", alarmInfo);
                         #endregion
                     }
-                    context.SaveChanges();
                 }
             }
         }
@@ -852,6 +860,7 @@ namespace ShipWeb.ProtoBuffer
                                     }
                     };
                     context.Attendance.Add(attendance);
+                    context.SaveChanges();
                 }
                 #endregion
                 #region 将考勤数据存入内存中

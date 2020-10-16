@@ -107,13 +107,10 @@ namespace ShipWeb.Controllers
         }
         public IActionResult Load() 
         {
-            if (!ManagerHelp.IsTest)
-            {
                 if (base.user.IsLandHome)
                 {
                     return LandLoad();
-                }
-            }           
+                }     
             string shipId = base.user.ShipId;
             var data = _context.Device.Where(c => c.ShipId == shipId).ToList(); 
             var ids = string.Join(',', data.Select(c => c.Id));
@@ -228,59 +225,6 @@ namespace ShipWeb.Controllers
                 //陆地端远程添加设备
                 if (base.user.IsLandHome)
                 {
-                    if (ManagerHelp.IsTest)
-                    {
-                        if (!string.IsNullOrEmpty(model.Id))
-                        {
-                            var device = _context.Device.FirstOrDefault(c => c.Id == model.Id);
-                            if (device == null)
-                            {
-                                return new JsonResult(new { code = 1, msg = "数据不存在" });
-                            }
-                            device.IP = model.IP;
-                            device.Name = model.Name;
-                            device.Nickname = model.Nickname;
-                            device.Password = model.Password;
-                            device.Port = model.Port;
-                            device.type = (Device.Type)model.Type;
-                            device.factory = (Device.Factory)model.Factory;
-                            device.Enable = model.Enable;
-                            _context.Device.Update(device);
-
-                        }
-                        else
-                        {
-                            Device device = new Device()
-                            {
-                                IP = model.IP,
-                                Name = model.Name,
-                                Nickname = model.Nickname,
-                                Password = model.Password,
-                                Port = model.Port,
-                                type = (Device.Type)model.Type,
-                                factory = (Device.Factory)model.Factory,
-                                Id = Guid.NewGuid().ToString(),
-                                ShipId = base.user.ShipId,
-                                Enable = model.Enable
-                            };
-                            device.CameraModelList = new List<Camera>() {
-                                    new Camera(){
-                                         DeviceId=device.Id,
-                                         Id=Guid.NewGuid().ToString(),
-                                         Index=111,
-                                         IP="192.168.0.21",
-                                         Enable=true,
-                                         ShipId=shipId,
-                                         NickName="甲板"
-                                    }
-                                };
-                            _context.Device.Add(device);
-                        }
-                        _context.SaveChanges();
-                        code = 0;
-                    }
-                    else
-                    {
                         string identity = GetIdentity(model.Factory);
                         if (identity == null)
                         {
@@ -296,7 +240,7 @@ namespace ShipWeb.Controllers
                             assembly.SendDeveiceAdd(emb, shipId + ":" + identity);
                         }
                         code = GetResult();
-                    }
+                    
                 }
                 else
                 {
@@ -317,12 +261,7 @@ namespace ShipWeb.Controllers
                     device.type = (Device.Type)model.Type;
                     device.factory = (Device.Factory)model.Factory;
                     device.Enable = model.Enable;
-                    if (ManagerHelp.IsTest)
-                    {
-                        code = GetSimulate(model, device);
-                    }
-                    else
-                    {
+                 
                         string identity = GetIdentity(model.Factory);
                         if (identity == "")
                         {
@@ -347,7 +286,7 @@ namespace ShipWeb.Controllers
                             assembly.SendDeveiceUpdate(emb, identity, device.Id);
                         }
                         code = GetResult();
-                    }
+                    
                 }
 
                 if (code == 400) msg = "请求超时。。。";
@@ -360,45 +299,6 @@ namespace ShipWeb.Controllers
                 return new JsonResult(new { code = 1, msg = "数据保存失败!" + ex.Message });
             }
         }
-        private int GetSimulate(DeviceViewModel model, Device device)
-        {
-            int code;
-            if (string.IsNullOrEmpty(model.Id))
-            {
-                device.Id = Guid.NewGuid().ToString();
-                device.ShipId = base.user.ShipId;
-                _context.Device.Add(device);
-                //测试数据
-                List<Camera> cameras = new List<Camera>() {
-                                    new Camera(){
-                                     DeviceId = device.Id,
-                                     Enable = false,
-                                     Id = Guid.NewGuid().ToString(),
-                                     NickName ="摄像机1",
-                                     IP ="127.0.0.1",
-                                     ShipId = base.user.ShipId,
-                                     Index = 1
-                                    },
-                                    new Camera(){
-                                     DeviceId = device.Id,
-                                     Enable = false,
-                                     Id = Guid.NewGuid().ToString(),
-                                     NickName ="摄像机2",
-                                     IP = "127.0.0.1",
-                                     ShipId = base.user.ShipId,
-                                     Index = 2
-                                    }
-                                };
-                _context.Camera.AddRange(cameras);
-            }
-            else
-            {
-                _context.Device.Update(device);
-            }
-            _context.SaveChanges();
-            code = 0;
-            return code;
-        }
 
         public IActionResult CamSave(string id, string did, int factory, string nickName, string enable)
         {
@@ -409,7 +309,7 @@ namespace ShipWeb.Controllers
                     int code = 1;
                     string msg = "";
                     //陆地端远程修改摄像机信息
-                    if (base.user.IsLandHome&&!ManagerHelp.IsTest)
+                    if (base.user.IsLandHome)
                     {
                         string shipId = base.user.ShipId;
                         string identity = GetIdentity(factory);
@@ -459,20 +359,12 @@ namespace ShipWeb.Controllers
                                },
                                 did = embModel.Id
                             };
-                            if (ManagerHelp.IsTest)
-                            {
-                                _context.Update(camera);
-                                _context.SaveChangesAsync();
-                                code = 0;
-
-                            }
-                            else
-                            {
+                            
                                 _context.Update(camera);
                                 _context.SaveChangesAsync();
                                 assembly.SendDeveiceUpdate(emb, identity, embModel.Id);
                                 code = GetResult();
-                            }
+                            
                         };
                     }
                     if (code == 2) msg = "请求超时。。。";
@@ -525,7 +417,7 @@ namespace ShipWeb.Controllers
                 int code = 1;
                 string msg = "";
                 //陆地端删除设备
-                if (base.user.IsLandHome&&!ManagerHelp.IsTest)
+                if (base.user.IsLandHome)
                 {
                     string shipId = base.user.ShipId;
                     //获取设备的组件ID
@@ -558,9 +450,7 @@ namespace ShipWeb.Controllers
                         _context.Camera.RemoveRange(cameras);
                     }
                     //删除设备表
-                    _context.Device.Remove(device);                   
-                    if (!ManagerHelp.IsTest)
-                    {
+                    _context.Device.Remove(device);   
                         //获取设备的组件ID
                         string identity = GetIdentity(factory);
                         if (identity == "")
@@ -574,12 +464,7 @@ namespace ShipWeb.Controllers
                             _context.SaveChanges();
                             code = 0;
                         }
-                    }
-                    else
-                    {
-                        _context.SaveChanges();
-                        code = 0;
-                    }
+                   
                 }
 
                 if (code == 2) msg = "请求超时。。。";
@@ -601,12 +486,13 @@ namespace ShipWeb.Controllers
         /// <returns></returns>
         private string GetIdentity(int factory)
         {
+            var type = ManagerHelp.GetComponentType((int)factory);
             if (base.user.IsLandHome)
             {
                 string tokenstr = HttpContext.Session.GetString("comtoken");
                 if (string.IsNullOrEmpty(tokenstr)) return "";
                 List<ComponentToken> tokens = JsonConvert.DeserializeObject<List<ComponentToken>>(tokenstr);
-                var component = tokens.FirstOrDefault(c => c.Type == (factory == (int)Device.Factory.DAHUA ? ComponentType.DHD : ComponentType.HKD));
+                var component = tokens.FirstOrDefault(c => c.Type == type);
                 if (component!=null)
                 {
                     return component.CommId;
@@ -615,7 +501,7 @@ namespace ShipWeb.Controllers
             else
             {
                 //获取设备的组件ID
-                var component = _context.Component.FirstOrDefault(c => c.Type == (factory == (int)Device.Factory.DAHUA ? ComponentType.DHD : ComponentType.HKD));
+                var component = _context.Component.FirstOrDefault(c => c.Type == type);
                 if (component!=null)
                 {
                     return component.Id;

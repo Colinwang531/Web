@@ -13,6 +13,8 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Runtime.InteropServices;
+using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace ShipWeb.Tool
 {
@@ -23,8 +25,6 @@ namespace ShipWeb.Tool
         /// 组件ID（组件注册成功后返回的ID）
         /// </summary>
         public static string Cid = "";
-        //是否启动模似数据
-        public static bool IsTest = AppSettingHelper.GetSectionValue("IsSimulate") == "true" ? true : false;
         /// <summary>
         /// 发布IP
         /// </summary>
@@ -267,6 +267,16 @@ namespace ShipWeb.Tool
             {
                 return string.Empty;
             }
+        }
+        /// <summary>
+        /// 获取组件类型
+        /// </summary>
+        /// <param name="factory"></param>
+        /// <returns></returns>
+        public static ComponentType GetComponentType(int factory)
+        {
+            if (factory == (int)Device.Factory.HIKVISION) return ComponentType.HKD;
+            return ComponentType.DHD;
         }
     }
 }

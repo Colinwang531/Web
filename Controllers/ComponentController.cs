@@ -29,78 +29,53 @@ namespace ShipWeb.Controllers
         public IActionResult Load()
         {
             List<ComponentViewModel> list = new List<ComponentViewModel>();
-            if (ManagerHelp.IsTest)
+            string identity = "";
+            if (base.user.IsLandHome)
             {
-                list.Add(new ComponentViewModel()
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    name = Enum.GetName(typeof(ComponentType), Convert.ToInt32(ComponentType.DHD)),
-                    type = (int)ComponentType.DHD
-                });
-                list.Add(new ComponentViewModel()
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    name = Enum.GetName(typeof(ComponentType), Convert.ToInt32(ComponentType.ALM)),
-                    type = (int)ComponentType.ALM
-                });
-                list.Add(new ComponentViewModel()
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    name = Enum.GetName(typeof(ComponentType), Convert.ToInt32(ComponentType.MED)),
-                    type = (int)ComponentType.MED
-                });
-                list.Add(new ComponentViewModel()
-                {
-                    Id = Guid.NewGuid().ToString(),
-                    name = Enum.GetName(typeof(ComponentType), Convert.ToInt32(ComponentType.HKD)),
-                    type = (int)ComponentType.HKD
-                });
+                identity = base.user.ShipId;
             }
-            else
+            List<Models.Component> components = new List<Models.Component>();
+            SendDataMsg assembly = new SendDataMsg();
+            assembly.SendComponentQuery(identity);
+            ProtoBuffer.Models.ComponentResponse response = new ProtoBuffer.Models.ComponentResponse();
+            //Task.WhenAny();
+            bool flag = true;
+            new TaskFactory().StartNew(() =>
             {
-                string identity = base.user.ShipId;
-                List<Models.Component> components = new List<Models.Component>();
-                SendDataMsg assembly = new SendDataMsg();
-                assembly.SendComponentQuery(identity);
-                ProtoBuffer.Models.ComponentResponse response = new ProtoBuffer.Models.ComponentResponse();
-                //Task.WhenAny();
-                bool flag = true;
-                new TaskFactory().StartNew(() =>
+                while (ManagerHelp.ComponentReponse == "" && flag)
                 {
-                    while (ManagerHelp.ComponentReponse == ""&&flag)
-                    {
-                        Thread.Sleep(100);
-                    }
-                }).Wait(3000);
-                flag = false;
-                try
+                    Thread.Sleep(100);
+                }
+            }).Wait(3000);
+            flag = false;
+            try
+            {
+                if (ManagerHelp.ComponentReponse != "")
                 {
-                    if (ManagerHelp.ComponentReponse != "")
+                    response = JsonConvert.DeserializeObject<ProtoBuffer.Models.ComponentResponse>(ManagerHelp.ComponentReponse);
+                    ManagerHelp.ComponentReponse = "";
+                    if (response.result == 0 && response.componentinfos != null && response.componentinfos.Count > 0)
                     {
-                        response = JsonConvert.DeserializeObject<ProtoBuffer.Models.ComponentResponse>(ManagerHelp.ComponentReponse);
-                        ManagerHelp.ComponentReponse="";
-                        if (response.result == 0 && response.componentinfos != null && response.componentinfos.Count > 0)
+                        SaveData(response.componentinfos);
+                        foreach (var item in response.componentinfos)
                         {
-                            SaveData(response.componentinfos);
-                            foreach (var item in response.componentinfos)
+                            if (item.type == ProtoBuffer.Models.ComponentInfo.Type.WEB) continue;
+                            ComponentViewModel model = new ComponentViewModel()
                             {
-                                if (item.type == ProtoBuffer.Models.ComponentInfo.Type.WEB) continue;
-                                ComponentViewModel model = new ComponentViewModel()
-                                {
-                                    Id = item.componentid,
-                                    name = item.cname,
-                                    type = (int)item.type
-                                };
-                                list.Add(model);
-                            }
+                                Id = item.componentid,
+                                name = item.cname,
+                                type = (int)item.type
+                            };
+                            list.Add(model);
                         }
                     }
                 }
-                catch (Exception)
-                {
-                    
-                }
             }
+            catch (Exception)
+            {
+
+            }
+
             var data = new
             {
                 code = 0,

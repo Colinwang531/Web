@@ -54,8 +54,7 @@ namespace ShipWeb.ProtoBuffer
                     break;
                 case Models.Component.Command.QUERY_REQ:
                     break;
-                case Models.Component.Command.QUERY_REP:
-                    ManagerHelp.ComponentReponse = JsonConvert.SerializeObject(component.componentresponse);
+                case Models.Component.Command.QUERY_REP:                  
                     //船舶端初使化后的查询
                     if (ManagerHelp.isInit)
                     {
@@ -63,12 +62,6 @@ namespace ShipWeb.ProtoBuffer
                         {
                             ProtoBDManager.ComponentAddRange(component.componentresponse.componentinfos);
                         }
-                        //发送船员状态
-                        InitManger.InitStatus();
-                        //发送设备信息
-                        InitManger.InitDevice();
-                        //初使化是不需要此值
-                        ManagerHelp.ComponentReponse = "";
                     }
                     else if (ManagerHelp.isLandHert)
                     {
@@ -77,6 +70,7 @@ namespace ShipWeb.ProtoBuffer
                             ProtoBDManager.ComponentUpdateRange(component.componentresponse.componentinfos);
                         }
                     }
+                    ManagerHelp.ComponentReponse = JsonConvert.SerializeObject(component.componentresponse);
                     break;
                 default:
                     break;
@@ -181,24 +175,13 @@ namespace ShipWeb.ProtoBuffer
                     var devices = ProtoBDManager.DeviceQuery(info, did);
                     manager.SendDeviceRN(Models.Device.Command.QUERY_REP, did, devices);
                     break;
-                case Models.Device.Command.NEW_REP:
+                case Models.Device.Command.NEW_REP:                   
                     if (device.deviceresponse.result == 0 && device.deviceresponse.deviceinfos != null)
                     {
                         var dev = device.deviceresponse.deviceinfos[0];
                         ProtoBDManager.AddCameras(dev.camerainfos,dev.did);
-                        if (ManagerHelp.isInit)
-                        {
-                            //发送算法信息
-                            InitManger.InitAlgorithm();
-                            //发送船员信息
-                            InitManger.InitCrew();
-                            ManagerHelp.isInit = false;
-                        }
                     }
-                    if (!ManagerHelp.isInit)
-                    {
-                        ManagerHelp.DeviceReponse = device.deviceresponse.result.ToString();
-                    }
+                    ManagerHelp.DeviceReponse = device.deviceresponse.result.ToString();
                     break;
                 case Models.Device.Command.DELETE_REP:
                     ManagerHelp.DeviceReponse = device.deviceresponse.result.ToString();

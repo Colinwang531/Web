@@ -40,7 +40,15 @@ namespace ShipWeb
                 options.Cookie.HttpOnly = false;
                 options.Cookie.IsEssential = true;
             });
-            services.AddDbContext<MyContext>(options => options.UseMySQL(AppSettingHelper.GetConnectionString("dbconn")));
+            try
+            {
+                services.AddDbContext<MyContext>(options => options.UseMySQL(AppSettingHelper.GetConnectionString("dbconn")));
+
+            }
+            catch (Exception)
+            {
+                return;
+            }
             services.AddRazorPages(options =>
             {
                 //options.Conventions.Add(new DefaultRouteRemovalPageRouteModelConvention(String.Empty));

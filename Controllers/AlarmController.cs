@@ -201,13 +201,9 @@ namespace ShipWeb.Controllers
             var cids = string.Join(',', alarm.Select(c => c.Cid));
             //查询摄像机信息
             var camera = _context.Camera.Where(c => (string.IsNullOrEmpty(model.Name) ? 1 == 1 : c.NickName.Contains(model.Name)) && cids.Contains(c.Id)).ToList();
-            var ids = string.Join(',', alarm.Select(c => c.Id));
-            //查询位置信息
-            var pics = _context.AlarmPosition.Where(c => ids.Contains(c.AlarmId)).ToList();
             //组合数据
             var data = from a in alarm
                        join b in camera on a.Cid equals b.Id
-                       join c in pics on a.Id equals c.AlarmId
                        join d in ship on a.ShipId equals d.Id
                        select new
                        {
@@ -216,14 +212,13 @@ namespace ShipWeb.Controllers
                            d.Name,
                            b.NickName,
                            a.Type,
-                           a.Picture,
-                           c.X,
-                           c.Y,
-                           c.W,
-                           c.H
+                           a.Picture
                        };
             total = data.Count();
             var datapage = data.Skip((pageIndex - 1) * pageSize).Take(pageSize);
+            var ids = string.Join(',', datapage.Select(c => c.Id));
+            //查询位置信息
+            var pics = _context.AlarmPosition.Where(c => ids.Contains(c.AlarmId)).ToList();
             foreach (var item in datapage)
             {
                 string picture =  Convert.ToBase64String(item.Picture);
@@ -235,11 +230,18 @@ namespace ShipWeb.Controllers
                     Picture = picture,
                     Type = (int)item.Type,
                     Time = item.Time.ToString("yyyy-MM-dd HH:mm:ss"),
-                    H = item.H,
-                    W = item.W,
-                    X = item.X,
-                    Y = item.Y
                 };
+                if (pics!=null&&pics.Count>0)
+                {
+                    if (pics.Where(c=>c.AlarmId==item.Id).Any())
+                    {
+                        var pic = pics.FirstOrDefault(c => c.AlarmId == item.Id);
+                        avm.H = pic.H;
+                        avm.W = pic.W;
+                        avm.X = pic.X;
+                        avm.Y = pic.Y;
+                    }
+                }
                 list.Add(avm);
             }
             return list;

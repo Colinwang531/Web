@@ -31,6 +31,7 @@
                         else if (e.type == 4) return "打架";
                         else if (e.type == 5) return "考勤入";
                         else if (e.type == 6) return "考勤出";
+                        else return "缺岗";
                     }
                 },
                 { field: 'nickName', title: "摄像机名称" },
@@ -142,7 +143,7 @@
                 cid: frm.field.camera,
                 gpu: frm.field.gpu,
                 similar: frm.field.similar == "" ? 0 : parseFloat(frm.field.similar),
-                dectectFirst: parseFloat(frm.field.dectectFirst),
+                dectectFirst: frm.field.dectectFirst==""?0: parseFloat(frm.field.dectectFirst),
                 dectectSecond: frm.field.dectectSecond == "" ? 0 :parseFloat(frm.field.dectectSecond),
                 track: frm.field.track == "" ? 0 : parseFloat(frm.field.track)
             };
@@ -192,15 +193,21 @@
             },
             threshold: function (value) {
                 var reg = /^0\.(0([1-9])|([1-9]\d)|([1-9]))$/;
-                if (!new RegExp(reg).test(value)) {
-                    return "阀值的取值范围是0-1，如0.99";
+                var type = $("#selType").val();
+                if (type!=7) {
+                    if (!new RegExp(reg).test(value)) {
+                        return "阀值的取值范围是0-1，如0.99";
+                    }
                 }
+               
             },
             threshold2: function (value) {
                 var type = $("#selType").val();
                 var reg = /^0\.(0([1-9])|([1-9]\d)|([1-9]))$/;
-                if (!new RegExp(reg).test(value) && type == 2) {
-                    return "阀值的取值范围是0-1，如0.99";
+                if (type != 7) {
+                    if (!new RegExp(reg).test(value) && type == 2) {
+                        return "阀值的取值范围是0-1，如0.99";
+                    }
                 }
             }
         });

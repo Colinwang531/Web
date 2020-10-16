@@ -63,7 +63,7 @@ namespace ShipWeb.Controllers
             try
             {
                 Ship ship = new Ship();                 
-                if (base.user.IsLandHome&&!ManagerHelp.IsTest)
+                if (base.user.IsLandHome)
                 {
                     string identity = base.user.ShipId;
                     assembly.SendStatusQuery(identity);
@@ -154,7 +154,7 @@ namespace ShipWeb.Controllers
                 return new JsonResult(new { code = 1, msg = "获取数据失败!" + ex.Message });
             }
         }
-        
+
         /// <summary>
         /// 保存船状态
         /// </summary>
@@ -170,10 +170,10 @@ namespace ShipWeb.Controllers
                 }
                 int code = 1;
                 string errMsg = "";
-                if (base.user.IsLandHome&&!ManagerHelp.IsTest)
+                if (base.user.IsLandHome)
                 {
                     string identity = base.user.ShipId;
-                    var components = _context.Component.Where(c => c.Type ==ComponentType.AI).ToList();
+                    var components = _context.Component.Where(c => c.Type == ComponentType.AI).ToList();
                     foreach (var item in components)
                     {
                         ShipWeb.ProtoBuffer.Models.StatusRequest sr = new ShipWeb.ProtoBuffer.Models.StatusRequest()
@@ -181,7 +181,7 @@ namespace ShipWeb.Controllers
                             type = ShipWeb.ProtoBuffer.Models.StatusRequest.Type.SAIL,
                             flag = type
                         };
-                        assembly.SendStatusSet(sr, identity + ":"+item.Id);
+                        assembly.SendStatusSet(sr, identity + ":" + item.Id);
                         sr = new ProtoBuffer.Models.StatusRequest()
                         {
                             type = ProtoBuffer.Models.StatusRequest.Type.NAME,
@@ -206,43 +206,50 @@ namespace ShipWeb.Controllers
                         }
                         _context.Ship.Update(ship);
                         _context.SaveChanges();
-                        if (!ManagerHelp.IsTest)
-                        {
-                           var components= _context.Component.Where(c => c.Type ==ComponentType.AI).ToList();
-                            foreach (var item in components)
-                            {
-                                ShipWeb.ProtoBuffer.Models.StatusRequest sr = new ShipWeb.ProtoBuffer.Models.StatusRequest()
-                                {
-                                    type = ShipWeb.ProtoBuffer.Models.StatusRequest.Type.SAIL,
-                                    flag = type
-                                };
-                                assembly.SendStatusSet(sr,item.Id);
-                                if (ship.Name != name)
-                                {
-                                    sr = new ProtoBuffer.Models.StatusRequest()
-                                    {
-                                        type = ProtoBuffer.Models.StatusRequest.Type.NAME,
-                                        text = name
-                                    };
-                                    assembly.SendStatusSet(sr,item.Id);
-                                }
-
-                            }
-                            code = 0; //GetResult();
-                        }
+                        SendMqMsg(name, type, ship);
+                        code = 0; //GetResult();
                     }
                     #endregion
                 }
                 if (code == 400) errMsg = "网络超时。。。";
                 else if (code != 0) errMsg = "数据保存失败";
-                return new JsonResult(new { code = code,msg=errMsg });
+                return new JsonResult(new { code = code, msg = errMsg });
             }
             catch (Exception ex)
             {
-                _logger.LogError("保存船信息异常Save("+id+","+name+","+type+")" + ex.Message);
+                _logger.LogError("保存船信息异常Save(" + id + "," + name + "," + type + ")" + ex.Message);
                 return new JsonResult(new { code = 0, msg = "数据保存失败" + ex.Message });
             }
         }
+        /// <summary>
+        /// 推送消息
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="type"></param>
+        /// <param name="ship"></param>
+        private void SendMqMsg(string name, int type, Ship ship)
+        {
+            var components = _context.Component.Where(c => c.Type == ComponentType.AI).ToList();
+            foreach (var item in components)
+            {
+                ShipWeb.ProtoBuffer.Models.StatusRequest sr = new ShipWeb.ProtoBuffer.Models.StatusRequest()
+                {
+                    type = ShipWeb.ProtoBuffer.Models.StatusRequest.Type.SAIL,
+                    flag = type
+                };
+                assembly.SendStatusSet(sr, item.Id);
+                if (ship.Name != name)
+                {
+                    sr = new ProtoBuffer.Models.StatusRequest()
+                    {
+                        type = ProtoBuffer.Models.StatusRequest.Type.NAME,
+                        text = name
+                    };
+                    assembly.SendStatusSet(sr, item.Id);
+                }
+            }
+        }
+
         private int GetResult()
         {
             int result = 1;

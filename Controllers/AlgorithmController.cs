@@ -36,17 +36,14 @@ namespace ShipWeb.Controllers
             ViewBag.IsLandHome = base.user.IsLandHome;
             return View();
         }
-        public IActionResult Load() 
+        public IActionResult Load()
         {
-            if (!ManagerHelp.IsTest)
+            if (base.user.IsLandHome)
             {
-                if (base.user.IsLandHome)
-                {
-                    return LandLoad();
-                }
-            }           
+                return LandLoad();
+            }
             string shipId = base.user.ShipId;
-            var algor = _context.Algorithm.Where(c=>c.ShipId==shipId).ToList();
+            var algor = _context.Algorithm.Where(c => c.ShipId == shipId).ToList();
             var camera = _context.Camera.Where(c => c.ShipId == shipId).ToList();
             var data = from a in algor
                        join b in camera on a.Cid equals b.Id
@@ -66,7 +63,7 @@ namespace ShipWeb.Controllers
             {
                 code = 0,
                 data = data,
-                camera=camera
+                camera = camera
             };
             return new JsonResult(result);
         }
@@ -160,9 +157,9 @@ namespace ShipWeb.Controllers
                 {
                     int code = 1;
                     string errMsg = "";
-                    if (base.user.IsLandHome&&!ManagerHelp.IsTest)
+                    if (base.user.IsLandHome)
                     {
-                        string identity = GetIdentity(viewModel.Type,viewModel.Cid);
+                        string identity = GetIdentity(viewModel.Type, viewModel.Cid);
                         if (string.IsNullOrEmpty(identity))
                         {
                             string name = GetViewName((AlgorithmType)viewModel.Type);
@@ -172,99 +169,66 @@ namespace ShipWeb.Controllers
                         string cid = cam.DeviceId + ":" + cam.Id + ":" + cam.Index;
                         ProtoBuffer.Models.AlgorithmInfo algorithm = GetProtoAlgorithm(viewModel, cid);
                         code = SendData(algorithm, (shipId + ":" + identity));
-                        if(code==0)
+                        if (code == 0)
                         {
                             _context.SaveChanges();
                         }
-                        else if (code == 400)errMsg = "网络请求超时。。。";
+                        else if (code == 400) errMsg = "网络请求超时。。。";
                         else errMsg = "算法配置失败";
                     }
                     else
                     {
                         Algorithm algo = new Algorithm();
                         string msg = "";
-                        if (!DataCheck(viewModel,ref algo,ref msg))
+                        if (!DataCheck(viewModel, ref algo, ref msg))
                         {
                             return new JsonResult(new { code = 1, msg = msg });
                         }
-                        if (!ManagerHelp.IsTest)
+                        //获取枚举对应的名称
+                        string identity = GetIdentity(viewModel.Type, viewModel.Cid);
+                        if (string.IsNullOrEmpty(identity))
                         {
-                            //获取枚举对应的名称
-                            string identity = GetIdentity(viewModel.Type,viewModel.Cid);
-                            if (string.IsNullOrEmpty(identity))
-                            {
-                                string name = GetViewName((AlgorithmType)viewModel.Type);
-                                return new JsonResult(new { code = 1, msg = "算法【"+name+"】组件未启动" });
-                            }
-                            algo.GPU = viewModel.GPU;
-                            algo.Type = (AlgorithmType)viewModel.Type;
-                            algo.Similar = viewModel.Similar;
-                            algo.Cid = viewModel.Cid;
-                            algo.DectectFirst = viewModel.DectectFirst;
-                            algo.DectectSecond = viewModel.DectectSecond;
-                            algo.Track = viewModel.Track;
-                            algo.ShipId = base.user.ShipId;
-                            if (!string.IsNullOrEmpty(viewModel.Id))
-                            {
-                                algo.Id = viewModel.Id;
-                                _context.Algorithm.Update(algo);
-                            }
-                            else
-                            {
-                                algo.Id = Guid.NewGuid().ToString();
-                                _context.Algorithm.Add(algo);
-                            }
+                            string name = GetViewName((AlgorithmType)viewModel.Type);
+                            return new JsonResult(new { code = 1, msg = "算法【" + name + "】组件未启动" });
+                        }
+                        algo.GPU = viewModel.GPU;
+                        algo.Type = (AlgorithmType)viewModel.Type;
+                        algo.Similar = viewModel.Similar;
+                        algo.Cid = viewModel.Cid;
+                        algo.DectectFirst = viewModel.DectectFirst;
+                        algo.DectectSecond = viewModel.DectectSecond;
+                        algo.Track = viewModel.Track;
+                        algo.ShipId = base.user.ShipId;
+                        if (!string.IsNullOrEmpty(viewModel.Id))
+                        {
+                            algo.Id = viewModel.Id;
+                            _context.Algorithm.Update(algo);
+                        }
+                        else
+                        {
+                            algo.Id = Guid.NewGuid().ToString();
+                            _context.Algorithm.Add(algo);
+                        }
+                        //缺岗直接进库不用发消息
+                        if (viewModel.Type == (int)AlgorithmType.CAPTURE)
+                        {
+                            _context.SaveChanges();
+                            code = 0;
+                        }
+                        else
+                        {
                             viewModel.Id = algo.Id;
                             var camera = _context.Camera.FirstOrDefault(c => c.Id == viewModel.Cid);
                             string cid = camera.DeviceId + ":" + camera.Id + ":" + camera.Index;
-                            ProtoBuffer.Models.AlgorithmInfo algorithm = GetProtoAlgorithm(viewModel,cid);
+                            ProtoBuffer.Models.AlgorithmInfo algorithm = GetProtoAlgorithm(viewModel, cid);
                             code = SendData(algorithm, identity);
                             if (code == 0)
                             {
                                 _context.SaveChanges();
                                 SendStatus(identity);
-                                #region 发送二次请求 暂时不用
-                                ////根据摄像机获取设备下的通讯ID
-                                //var factory = _context.Device.FirstOrDefault(c => c.Id == (_context.Camera.FirstOrDefault(d => d.Id == viewModel.Cid).DeviceId)).factory;
-                                //compent = _context.Component.FirstOrDefault(c => c.Type == (factory == Device.Factory.HIKVISION ? ComponentType.HKD : ComponentType.DHD));
-                                //if (compent == null)
-                                //{
-                                //    //查询算法组件并入库
-                                //    assembly.SendComponentQuery();
-                                //    return new JsonResult(new { code = 1, msg = "算法里摄像机对应的设备组件未启动" });
-                                //}
-                                //if (SendData(algorithm, compent.Id)) {
-                                //    _context.SaveChanges();
-                                //    code = 0;
-                                //}
-                                #endregion
                             }
-                            else if (code == 2)errMsg = "网络请求超时。。。";
+                            else if (code == 2) errMsg = "网络请求超时。。。";
                             else errMsg = "算法配置失败";
-
-                        }
-                        else
-                        {
-                            algo.GPU = viewModel.GPU;
-                            algo.Type = (AlgorithmType)viewModel.Type;
-                            algo.Similar = viewModel.Similar;
-                            algo.Cid = viewModel.Cid;
-                            algo.DectectFirst = viewModel.DectectFirst;
-                            algo.DectectSecond = viewModel.DectectSecond;
-                            algo.Track = viewModel.Track;
-                            algo.ShipId = base.user.ShipId;
-                            if (string.IsNullOrEmpty(viewModel.Id))
-                            {
-                                algo.Id = Guid.NewGuid().ToString();
-                                _context.Algorithm.Add(algo);
-                            }
-                            else
-                            {
-                                algo.Id = viewModel.Id;
-                                _context.Algorithm.Update(algo);
-                            }
-                            _context.SaveChanges();
-                            code = 0;
                         }
                     }
                     return new JsonResult(new { code = code, msg = errMsg });

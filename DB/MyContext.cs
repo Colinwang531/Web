@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ShipWeb.Models;
 using ShipWeb.Helpers;
+using System.Data.Common;
 
 namespace ShipWeb.DB
 {
@@ -37,11 +38,21 @@ namespace ShipWeb.DB
             modelBuilder.Entity<ReceiveLog>();
             modelBuilder.Entity<SysDictionary>();
         }
-
+        
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            if (!optionsBuilder.IsConfigured)
-                optionsBuilder.UseMySQL(AppSettingHelper.GetConnectionString("dbconn"));
+            try
+            {
+
+                if (!optionsBuilder.IsConfigured)
+                {
+                    optionsBuilder.UseMySQL(AppSettingHelper.GetConnectionString("dbconn"));
+                }
+            }
+            catch (Exception)
+            {
+                return;
+            }
         }
 
         /// <summary>

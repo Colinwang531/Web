@@ -112,11 +112,7 @@ namespace ShipWeb.Controllers
             string Identity = base.user.ShipId;
             assembly.SendCrewQuery(Identity);
             List<ProtoBuffer.Models.CrewInfo> crewInfos = new List<ProtoBuffer.Models.CrewInfo>();
-            if (ManagerHelp.IsTest)
-            {
-                crewInfos = ProtoBDManager.CrewQuery();
-            }
-            else {
+         
                 try
                 {
                     bool flag = true;
@@ -138,8 +134,7 @@ namespace ShipWeb.Controllers
                 {
                 }
                 ManagerHelp.CrewReponse = "";
-            }
-
+           
             crewVMList = new List<CrewViewModel>();
             foreach (var item in crewInfos)
             {
@@ -224,47 +219,25 @@ namespace ShipWeb.Controllers
                 if (base.user.IsLandHome)
                 {
                     #region 陆地端添加/修改船员
+                    string shipIdentity = base.user.ShipId;
+                    string identity = GetIdentity();
+                    if (identity == "")
+                    {
+                        return new JsonResult(new { code = 1, msg = "人脸组件未启动" });
+                    }
                     ProtoBuffer.Models.CrewInfo emp = GetCrewInfo(id, name, job, ids);
-                    if (ManagerHelp.IsTest)
-                    {
-                        if (id>0)
-                        {
-                            ProtoBDManager.CrewUpdate(emp);
-                        }
-                        else
-                        {
-                            ProtoBDManager.CrewAdd(emp);
-                        }
-                        code = 0;
-                    }
-                    else
-                    {
-                        string shipIdentity = base.user.ShipId;
-                        string identity = GetIdentity();
-                        if (identity == "")
-                        {
-                            return new JsonResult(new { code = 1, msg = "人脸组件未启动" });
-                        }
-                        if (id>0)
-                        {
-                            assembly.SendCrewUpdate(emp, shipIdentity + ":" + identity);
-                        }
-                        else
-                        {
-                            assembly.SendCrewAdd(emp, shipIdentity + ":" + identity);
-                        }
-                        code = GetResult();
-                        if (code == 2) errMsg = "船员名称不能重复";
-                        if (code == 400) errMsg = "网络请求超时。。。";
-                        else if (code != 0) errMsg = "船员信息保存失败";
-                    }
+                    if (id > 0)assembly.SendCrewUpdate(emp, shipIdentity + ":" + identity);
+                    else assembly.SendCrewAdd(emp, shipIdentity + ":" + identity);
+                    code = GetResult();
+                    if (code == 2) errMsg = "船员名称不能重复";
+                    if (code == 400) errMsg = "网络请求超时。。。";
+                    else if (code != 0) errMsg = "船员信息保存失败";
                     //清除已经上传了的图片
                     foreach (var item in ids)
                     {
                         picBytes.Remove(item);
                     }
                     return new JsonResult(new { code = code, msg = code == 2 ? "船员名称不能重复" : "数据保存失败" });
-
                     #endregion
                 }
                 else
@@ -274,90 +247,33 @@ namespace ShipWeb.Controllers
                     {
                         return new JsonResult(new { code = 1, msg = errMsg });
                     }
-                    employee.Name = name;
-                    employee.Job = job;
-                    #region 图片处理
-                    employee.employeePictures = new List<CrewPicture>();
-                    List<CrewPictureViewModel> vmPicList = new List<CrewPictureViewModel>();
-                    var crew = crewVMList.FirstOrDefault(c => c.Id == id);
-                    if (crew != null) vmPicList = crew.crewPictureViewModels;
-                    //记录数据库中存在的图片ID
-                    List<string> dbIds = new List<string>();
-                    foreach (var item in ids)
+                    string identity = GetIdentity();
+                    if (identity == "")
                     {
-                        if (picBytes.Where(c => c.Key == item).Any())
-                        {
-                            var pic = picBytes.Where(c => c.Key == item).FirstOrDefault();
-                            CrewPicture ep = new CrewPicture()
-                            {
-                                CrewId = employee.Id,
-                                Id = pic.Key,
-                                Picture = pic.Value,
-                                ShipId = base.user.ShipId
-                            };
-                            employee.employeePictures.Add(ep);
-                        }
-                        else if (vmPicList.Where(c => c.Id == item).Any())
-                        {
-                            dbIds.Add(item);
-                        }
+                        return new JsonResult(new { code = 1, msg = "人脸组件未启动" });
                     }
-                    if (dbIds.Count > 0 || (dbIds.Count == 0 && vmPicList.Count > 0))
+                    //增加或修改
+                    AddOrUpdate(id, name, job, ids,ref employee);
+                    //发送netmq消息
+                    var dbPic = _context.CrewPicture.Where(c => c.CrewId == employee.Id).ToList();
+                    List<string> bytes = new List<string>();
+                    foreach (var item in dbPic)
                     {
-                        var delPicList = _context.CrewPicture.Where(c => c.CrewId == id && !dbIds.Contains(c.Id)).ToList();
-                        if (delPicList.Count > 0)
-                        {
-                            _context.CrewPicture.RemoveRange(delPicList);
-                        }
+                        bytes.Add(Convert.ToBase64String(item.Picture));
                     }
-                    #endregion
-                    if (id>0)
+                    ProtoBuffer.Models.CrewInfo crewInfo = new ProtoBuffer.Models.CrewInfo()
                     {
-                        _context.Crew.Update(employee);
-                    }
-                    else
-                    {
-                        employee.ShipId = base.user.ShipId;
-                        _context.Crew.Add(employee);
-                    }
-                    //清除已经上传了的图片
-                    foreach (var item in ids)
-                    {
-                        picBytes.Remove(item);
-                    }
-                    if (!ManagerHelp.IsTest)
-                    {
-                        string identity = GetIdentity();
-                        if (identity == "")
-                        {
-                            return new JsonResult(new { code = 1, msg = "人脸组件未启动" });
-                        }
-                        _context.SaveChanges();
-                        //发送netmq消息
-                        var dbPic=_context.CrewPicture.Where(c => c.CrewId == employee.Id).ToList();
-                        List<string> bytes =new List<string> ();
-                        foreach (var item in dbPic)
-                        {
-                            bytes.Add(Convert.ToBase64String(item.Picture));
-                        }
-                        ProtoBuffer.Models.CrewInfo crewInfo = new ProtoBuffer.Models.CrewInfo()
-                        {
-                            job = employee.Job,
-                            name = employee.Name,
-                            uid = employee.Id.ToString(),
-                            pictures = bytes
-                        };
-                        if (id>0) { assembly.SendCrewUpdate(crewInfo, identity); }
-                        else { assembly.SendCrewAdd(crewInfo, identity); }
-                        code = GetResult();
-                        if (code == 400) errMsg = "网络请求超时。。。";
-                        else if (code != 0) errMsg = "船员信息保存失败";
-                    }
-                    else
-                    {
-                        _context.SaveChanges();
-                        code = 0;
-                    }
+                        job = employee.Job,
+                        name = employee.Name,
+                        uid = employee.Id.ToString(),
+                        pictures = bytes
+                    };
+                    if (id > 0) { assembly.SendCrewUpdate(crewInfo, identity); }
+                    else { assembly.SendCrewAdd(crewInfo, identity); }
+                    code = GetResult();
+                    if (code == 400) errMsg = "网络请求超时。。。";
+                    else if (code != 0) errMsg = "船员信息保存失败";
+
                 }
                 return new JsonResult(new { code = code, msg = errMsg });
             }
@@ -366,6 +282,67 @@ namespace ShipWeb.Controllers
                 return new JsonResult(new { code = 1, msg = "保存失败!" + ex.Message });
             }
         }
+        /// <summary>
+        /// 添加或修改船员
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="name"></param>
+        /// <param name="job"></param>
+        /// <param name="ids"></param>
+        /// <param name="employee"></param>
+        private void AddOrUpdate(int id, string name, string job, List<string> ids,ref Crew employee)
+        {
+            employee.Name = name;
+            employee.Job = job;
+            #region 图片处理
+            employee.employeePictures = new List<CrewPicture>();
+            List<CrewPictureViewModel> vmPicList = new List<CrewPictureViewModel>();
+            var crew = crewVMList.FirstOrDefault(c => c.Id == id);
+            if (crew != null) vmPicList = crew.crewPictureViewModels;
+            //记录数据库中存在的图片ID
+            List<string> dbIds = new List<string>();
+            foreach (var item in ids)
+            {
+                if (picBytes.Where(c => c.Key == item).Any())
+                {
+                    var pic = picBytes.Where(c => c.Key == item).FirstOrDefault();
+                    CrewPicture ep = new CrewPicture()
+                    {
+                        CrewId = employee.Id,
+                        Id = pic.Key,
+                        Picture = pic.Value,
+                        ShipId = base.user.ShipId
+                    };
+                    employee.employeePictures.Add(ep);
+                }
+                else if (vmPicList.Where(c => c.Id == item).Any())
+                {
+                    dbIds.Add(item);
+                }
+            }
+            if (dbIds.Count > 0 || (dbIds.Count == 0 && vmPicList.Count > 0))
+            {
+                var delPicList = _context.CrewPicture.Where(c => c.CrewId == id && !dbIds.Contains(c.Id)).ToList();
+                if (delPicList.Count > 0)
+                {
+                    _context.CrewPicture.RemoveRange(delPicList);
+                }
+            }
+            #endregion
+            if (id > 0) _context.Crew.Update(employee);
+            else
+            {
+                employee.ShipId = base.user.ShipId;
+                _context.Crew.Add(employee);
+            }
+            //清除已经上传了的图片
+            foreach (var item in ids)
+            {
+                picBytes.Remove(item);
+            }
+            _context.SaveChanges();
+        }
+
         /// <summary>
         /// 数据校验
         /// </summary>
@@ -461,22 +438,18 @@ namespace ShipWeb.Controllers
                 int code = 1;
                 string errMsg = "";
                 //陆地端远程删除船员
-                if (base.user.IsLandHome&&!ManagerHelp.IsTest)
+                if (base.user.IsLandHome)
                 {
-                    if (id == null)
-                    {
-                        return NotFound();
-                    }
                     string shipId = base.user.ShipId;
-                    string identity=GetIdentity();
-                    if (identity=="")
+                    string identity = GetIdentity();
+                    if (identity == "")
                     {
                         return new JsonResult(new { code = 1, msg = "人脸组件未启动" });
                     }
-                    assembly.SendCrewDelete(id,shipId+":"+identity);
+                    assembly.SendCrewDelete(id, shipId + ":" + identity);
                     code = GetResult();
                     if (code == 400) errMsg = "网络请求超时。。。";
-                    else if (code != 0) errMsg = "船员删除失败";                   
+                    else if (code != 0) errMsg = "船员删除失败";
                 }
                 else
                 {
@@ -488,23 +461,15 @@ namespace ShipWeb.Controllers
                         //删除船员图片
                         _context.CrewPicture.RemoveRange(employeePictures);
                     }
-                    if (!ManagerHelp.IsTest)
+                    string identity = GetIdentity();
+                    if (identity == "")
                     {
-                        string identity = GetIdentity();
-                        if (identity == "")
-                        {
-                            return new JsonResult(new { code = 1, msg = "人脸组件未启动" });
-                        }
-                        assembly.SendCrewDelete(id,identity);
-                        //删除船员
-                        _context.Crew.Remove(employee);
-                        _context.SaveChanges();
+                        return new JsonResult(new { code = 1, msg = "人脸组件未启动" });
                     }
-                    else
-                    { //删除船员
-                        _context.Crew.Remove(employee);
-                        _context.SaveChanges();
-                    }
+                    assembly.SendCrewDelete(id, identity);
+                    //删除船员
+                    _context.Crew.Remove(employee);
+                    _context.SaveChanges();
                     code = 0;
                 }
                 return new JsonResult(new { code = code, msg = errMsg });

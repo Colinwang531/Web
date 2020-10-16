@@ -35,8 +35,8 @@ namespace ShipWeb
             using (var context = new MyContext())
             {
                 //船舶端组件注册
-                var comList = context.Component.FirstOrDefault(c=>c.Type==ComponentType.WEB);
-                if (comList!=null)
+                var comList = context.Component.FirstOrDefault(c => c.Type == ComponentType.WEB);
+                if (comList != null)
                 {
                     ManagerHelp.Cid = comList.Id;
                 }
@@ -60,8 +60,20 @@ namespace ShipWeb
                         ManagerHelp.PublisherIP = sysdic.FirstOrDefault(c => c.key == "PublisherIP").value;
                     }
                 }
-                BoatInit();
+                //BoatInit();
                 //LandInit();
+
+                //if (true)
+                //{
+                //    MusicPlay.PlaySleepMusic();
+                //}
+                //else if (true)
+                //{
+
+                //}
+
+
+                // Test();
             }
         }
         /// <summary>
@@ -97,12 +109,39 @@ namespace ShipWeb
             //发送查询请求
             assembly.SendComponentQuery();
             ManagerHelp.atWorks = new List<AtWork>();
+            Task.Factory.StartNew(state =>
+            {
+                while (ManagerHelp.ComponentReponse == "")
+                {
+                    Thread.Sleep(100);
+                }
+                InitStatus();
+                InitDevice();
+                ManagerHelp.ComponentReponse = "";
+                if (ManagerHelp.isInit)
+                {
+                    Task.Factory.StartNew(t =>
+                    {
+                        while (ManagerHelp.DeviceReponse == "")
+                        {
+                            Thread.Sleep(100);
+                        }
+                        //发送算法信息
+                        InitManger.InitAlgorithm();
+                        //发送船员信息
+                        InitManger.InitCrew();
+                        ManagerHelp.isInit = false;
+                        ManagerHelp.DeviceReponse = "";
+                        LoadNotice();
+                    }, TaskCreationOptions.LongRunning);
+                }
+            }, TaskCreationOptions.LongRunning);
             ManagerHelp.isInit = true;
         }
         /// <summary>
         /// 陆地端注册
         /// </summary>
-        public static void LandInit() 
+        public static void LandInit()
         {
             SendDataMsg assembly = new SendDataMsg();
             assembly.SendComponentSign("WEB", ManagerHelp.Cid);
@@ -135,14 +174,14 @@ namespace ShipWeb
         /// <summary>
         /// 初使化设备
         /// </summary>
-        public static void InitDevice() 
+        public static void InitDevice()
         {
             List<Models.Component> list = new List<Models.Component>();
-            using (var con=new MyContext())
+            using (var con = new MyContext())
             {
                 list = con.Component.Where(c => c.Type != ComponentType.WEB).ToList();
             }
-            if (list.Count>0)
+            if (list.Count > 0)
             {
                 //大华通讯ID
                 string DHDIdenity = "";
@@ -156,7 +195,7 @@ namespace ShipWeb
                 {
                     HKDIdentity = list.FirstOrDefault(c => c.Type == ComponentType.HKD).Id;
                 }
-                if (HKDIdentity==""&& DHDIdenity=="")
+                if (HKDIdentity == "" && DHDIdenity == "")
                 {
                     return;
                 }
@@ -176,25 +215,25 @@ namespace ShipWeb
             {
                 ManagerHelp.isInit = false;
             }
-           
+
         }
 
         /// <summary>
         /// 算法请求
         /// </summary>
-        public static void InitAlgorithm() 
+        public static void InitAlgorithm()
         {
             using (var con = new MyContext())
             {
                 var components = con.Component.Where(c => c.Type == ComponentType.AI).ToList();
-                if (components.Count>0)
+                if (components.Count > 0)
                 {
                     SendDataMsg assembly = new SendDataMsg();
                     var algorithmInfos = ProtoBDManager.AlgorithmQuery();
                     foreach (var item in algorithmInfos)
                     {
                         //配置的是缺岗类型则传入设备的通讯ID
-                        if (item.type==AlgorithmInfo.Type.CAPTURE)
+                        if (item.type == AlgorithmInfo.Type.CAPTURE)
                         {
                             var camera = con.Camera.FirstOrDefault(c => c.Id == item.cid);
                             if (camera == null) continue;
@@ -202,7 +241,7 @@ namespace ShipWeb
                             if (device == null) continue;
                             var comtype = ComponentType.HKD;
                             if (device.factory == Models.Device.Factory.DAHUA) comtype = ComponentType.DHD;
-                            var compontent = con.Component.FirstOrDefault(c=>c.Type== comtype);
+                            var compontent = con.Component.FirstOrDefault(c => c.Type == comtype);
                             if (compontent == null) continue;
                             assembly.SendAlgorithmSet(item, compontent.Id);
                         }
@@ -220,7 +259,7 @@ namespace ShipWeb
                             }
 
                         }
-                        
+
                     }
                 }
             }
@@ -229,7 +268,7 @@ namespace ShipWeb
         /// 船员请求
         /// </summary>
         /// <param name="nextIdentity"></param>
-        public static void InitCrew() 
+        public static void InitCrew()
         {
             using (var con = new MyContext())
             {
@@ -273,7 +312,7 @@ namespace ShipWeb
             SendDataMsg assembly = new SendDataMsg();
             assembly.SendComponentExit(ManagerHelp.Cid);
         }
-       
+
         /// <summary>
         /// 获取报警信息
         /// </summary>
@@ -308,8 +347,31 @@ namespace ShipWeb
         /// </summary>
         public static void LoadNotice()
         {
-            SendDataMsg assembly = new SendDataMsg();
-            Task.Factory.StartNew(state => {
+            #region 测试数据
+            //using (var context=new MyContext())
+            //{
+            //    var device = context.Device.FirstOrDefault();
+            //    if (device != null)
+            //    {
+            //        var component = context.Component.FirstOrDefault(c => c.Type == (device.factory == Models.Device.Factory.DAHUA ? ComponentType.DHD : ComponentType.HKD));
+            //        if (component != null)
+            //        {
+            //            SendDataMsg assembly = new SendDataMsg();
+            //            CaptureInfo captureInfo = new CaptureInfo()
+            //            {
+            //                cid = "5bcedc31-7788-4a18-b049-e4129f27c370",
+            //                did = "05a091c5-333e-43ad-8c2b-b18bc1662d1a",
+            //                idx = 35
+            //            };
+            //            assembly.SendCapture(captureInfo, component.Id);
+            //        }
+            //    }
+            //}
+            #endregion
+
+            Task.Factory.StartNew(state =>
+            {
+                SendDataMsg assembly = new SendDataMsg();
                 //获取间隔时间
                 int departureTime = 1;
                 try
@@ -325,10 +387,10 @@ namespace ShipWeb
                     {
                         //获取船的航行状态
                         var ship = context.Ship.FirstOrDefault();
-                        if (ship == null) continue;                       
+                        if (ship == null) continue;
                         DateTime dt = DateTime.Now;
                         //ManagerHelp.atWorks 考勤人数的集合
-                        if (ship.Flag && ManagerHelp.atWorks !=null&& ManagerHelp.atWorks.Count <= 0)
+                        if (ship.Flag && ManagerHelp.atWorks != null && ManagerHelp.atWorks.Count <= 0)
                         {
                             var algo = context.Algorithm.Where(c => c.Type == AlgorithmType.CAPTURE);
                             if (algo.Count() > 0)
@@ -338,7 +400,7 @@ namespace ShipWeb
                                 {
                                     var device = context.Device.FirstOrDefault(c => c.Id == item.DeviceId);
                                     if (device == null) continue;
-                                    var component = context.Component.FirstOrDefault(c => c.Type == (device.factory == Models.Device.Factory.DAHUA ? ComponentType.DHD : ComponentType.HKD));
+                                    var component = context.Component.FirstOrDefault(c => c.Type ==ManagerHelp.GetComponentType((int)device.factory));
                                     if (component == null) continue;
                                     CaptureInfo captureInfo = new CaptureInfo()
                                     {
@@ -356,27 +418,31 @@ namespace ShipWeb
             }, TaskCreationOptions.LongRunning);
         }
 
-        public static void Test() 
+        public static void Test()
         {
-            using (var context=new MyContext())
+            using (var context = new MyContext())
             {
                 PublisherService publisher = new PublisherService();
                 var list = context.AttendancePicture.Take(5).ToList();
-                foreach (var item in list)
+                while (true)
                 {
-                    //考勤类型
-                    int Behavior = 1;
-                    //考勤时间
-                    string SignInTime = DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss");
-                    //考勤人员
-                    string EmployeeName = "张三";
-                    //考勤图片
-                    string PhotosBuffer = Convert.ToBase64String(item.Picture);
-                    string data = Behavior + "," + SignInTime + "," + EmployeeName + "," + PhotosBuffer;
-                    publisher.Send(data);
+                    foreach (var item in list)
+                    {
+                        //考勤类型
+                        int Behavior = 1;
+                        //考勤时间
+                        string SignInTime = DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss");
+                        //考勤人员
+                        string EmployeeName = "张三";
+                        //考勤图片
+                        string PhotosBuffer = Convert.ToBase64String(item.Picture);
+                        string data = Behavior + "," + SignInTime + "," + EmployeeName + "," + PhotosBuffer;
+                        publisher.Send(data);
+                    }
+                    Thread.Sleep(10000);
                 }
             }
-           
+
         }
     }
 }

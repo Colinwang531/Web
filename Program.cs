@@ -23,17 +23,27 @@ namespace ShipWeb
         /// <param name="args"></param>
         public static void Main(string[] args)
         {
-            System.Diagnostics.Debug.WriteLine("test");
-            if (args.Length>=3)
+            while (true)
             {
-                string inputIp = args[1];
-                Console.WriteLine(inputIp);
-                string inputPort = args[3];
-                Console.WriteLine(inputPort);
-                string IP = "tcp://"+inputIp+":"+inputPort;
-                ManagerHelp.IP = IP;
+                try
+                {
+                    System.Diagnostics.Debug.WriteLine("test");
+                    if (args.Length >= 3)
+                    {
+                        string inputIp = args[1];
+                        Console.WriteLine(inputIp);
+                        string inputPort = args[3];
+                        Console.WriteLine(inputPort);
+                        string IP = "tcp://" + inputIp + ":" + inputPort;
+                        ManagerHelp.IP = IP;
+                    }
+                    CreateHostBuilder(args).Build().Run();
+                }
+                catch (Exception)
+                {
+                    System.Threading.Thread.Sleep(1000);
+                }
             }
-            CreateHostBuilder(args).Build().Run();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
