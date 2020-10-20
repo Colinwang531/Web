@@ -1,6 +1,7 @@
 ﻿using NuGet.Frameworks;
 using ShipWeb.Interface;
 using ShipWeb.ProtoBuffer.Models;
+using ShipWeb.Tool;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,14 +17,14 @@ namespace ShipWeb.ProtoBuffer
         /// 组合返回数据
         /// </summary>
         /// <param name="algorithms"></param>
-        public void SendAlgorithmRN(Algorithm.Command command,List<AlgorithmInfo> algorithms=null,int status=0)
+        public void SendAlgorithmRN(Models.Algorithm.Command command, List<AlgorithmInfo> algorithms = null, int status = 0)
         {
             MSG sendMsg = new MSG()
             {
                 type = MSG.Type.ALGORITHM,
                 sequence = 4,
                 timestamp = ProtoBufHelp.TimeSpan(),
-                algorithm = new Algorithm()
+                algorithm = new Models.Algorithm()
                 {
                     command = command,
                     algorithmresponse = new AlgorithmResponse()
@@ -33,44 +34,50 @@ namespace ShipWeb.ProtoBuffer
                     }
                 }
             };
-            dealer.Send(sendMsg,"upstream","response");
+            dealer.Send(sendMsg, ManagerHelp.UpToId, "response");
         }
         /// <summary>
         /// 组合返回数据
         /// </summary>
         /// <param name="algorithms"></param>
-        public void SendDeviceRN(Device.Command command,string did, List<DeviceInfo> devices=null,int status=0)
+        public void SendDeviceRN (Models.Device.Command command, string did, List<ShipWeb.Models.Device> devices = null, int status = 0)
         {
+            List<DeviceInfo> list = new List<DeviceInfo>() ;
+            foreach (var item in devices)
+            {
+                list.Add(GetDeviceInfo(item));
+            }
             MSG sendMsg = new MSG()
             {
                 type = MSG.Type.DEVICE,
                 sequence = 6,
                 timestamp = ProtoBufHelp.TimeSpan(),
-                device = new Device()
+                device = new Models.Device()
                 {
                     command = command,
                     deviceresponse = new DeviceResponse()
                     {
                         did = did,
-                        deviceinfos = devices,
+                        deviceinfos = list,
                         result = status
                     }
                 }
             };
-            dealer.Send(sendMsg, "upstream", "response");
+            dealer.Send(sendMsg, ManagerHelp.UpToId, "response");
         }
+       
         /// <summary>
         /// 组合返回数据
         /// </summary>
         /// <param name="algorithms"></param>
-        public void SendCrewRN(Crew.Command command,List<CrewInfo> crews=null, int status = 0)
+        public void SendCrewRN(Models.Crew.Command command, List<CrewInfo> crews = null, int status = 0)
         {
             MSG sendMsg = new MSG()
             {
                 type = MSG.Type.CREW,
                 sequence = 8,
                 timestamp = ProtoBufHelp.TimeSpan(),
-                crew = new Crew()
+                crew = new Models.Crew()
                 {
                     command = command,
                     crewresponse = new CrewResponse()
@@ -80,13 +87,13 @@ namespace ShipWeb.ProtoBuffer
                     }
                 }
             };
-            dealer.Send(sendMsg,"upstream", "response");
+            dealer.Send(sendMsg, "upstream", "response");
         }
         /// <summary>
         /// 组合返回数据
         /// </summary>
         /// <param name="status"></param>
-        public void SendStatusRN(Status.Command command, ShipWeb.Models.Ship ship,int status=0) 
+        public void SendStatusRN(Status.Command command, ShipWeb.Models.Ship ship, int status = 0)
         {
             MSG msg = new MSG()
             {
@@ -96,9 +103,10 @@ namespace ShipWeb.ProtoBuffer
                 status = new Status()
                 {
                     command = command,
-                    statusresponse = new StatusResponse() {
-                        flag = ship==null?false: ship.Flag,
-                        name = ship==null?"":ship.Name,
+                    statusresponse = new StatusResponse()
+                    {
+                        flag = ship == null ? false : ship.Flag,
+                        name = ship == null ? "" : ship.Name,
                         result = status
                     }
                 }
@@ -110,16 +118,16 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="nextIdentity"></param>
         /// <param name="uid"></param>
-        public void SendCrewQuery(string nextIdentity,int uid=0)
+        public void SendCrewQuery(string nextIdentity, int uid = 0)
         {
             MSG msg = new MSG()
             {
                 type = MSG.Type.CREW,
                 sequence = 7,
                 timestamp = ProtoBufHelp.TimeSpan(),
-                crew = new Crew()
+                crew = new Models.Crew()
                 {
-                    command = Crew.Command.QUERY_REQ,
+                    command = Models.Crew.Command.QUERY_REQ,
                     crewrequest = new CrewRequest()
                     {
                         crewinfo = new CrewInfo()
@@ -129,23 +137,23 @@ namespace ShipWeb.ProtoBuffer
                     }
                 }
             };
-            dealer.Send(msg,nextIdentity);
+            dealer.Send(msg, nextIdentity);
         }
         /// <summary>
         /// 添加船员
         /// </summary>
         /// <param name="nextIdentity"></param>
         /// <param name="crewinfo"></param>
-        public void SendCrewAdd(CrewInfo crewinfo, string nextIdentity="") 
+        public void SendCrewAdd(CrewInfo crewinfo, string nextIdentity = "")
         {
             MSG msg = new MSG()
             {
                 type = MSG.Type.CREW,
                 sequence = 3,
                 timestamp = ProtoBufHelp.TimeSpan(),
-                crew = new Crew()
+                crew = new Models.Crew()
                 {
-                    command = Crew.Command.NEW_REQ,
+                    command = Models.Crew.Command.NEW_REQ,
                     crewrequest = new CrewRequest()
                     {
                         crewinfo = crewinfo
@@ -159,16 +167,16 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="nextIdentity"></param>
         /// <param name="crewInfo"></param>
-        public void SendCrewUpdate(CrewInfo crewInfo,string nextIdentity="") 
+        public void SendCrewUpdate(CrewInfo crewInfo, string nextIdentity = "")
         {
             MSG msg = new MSG()
             {
                 type = MSG.Type.CREW,
                 sequence = 3,
                 timestamp = ProtoBufHelp.TimeSpan(),
-                crew = new Crew()
+                crew = new Models.Crew()
                 {
-                    command = Crew.Command.MODIFY_REQ,
+                    command = Models.Crew.Command.MODIFY_REQ,
                     crewrequest = new CrewRequest()
                     {
                         crewinfo = crewInfo
@@ -182,16 +190,16 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="nextIdentity"></param>
         /// <param name="uid"></param>
-        public void SendCrewDelete(int uid,string nextIdentity="")
+        public void SendCrewDelete(int uid, string nextIdentity = "")
         {
             MSG msg = new MSG()
             {
                 type = MSG.Type.CREW,
                 sequence = 3,
                 timestamp = ProtoBufHelp.TimeSpan(),
-                crew = new Crew()
+                crew = new Models.Crew()
                 {
-                    command = Crew.Command.DELETE_REQ,
+                    command = Models.Crew.Command.DELETE_REQ,
                     crewrequest = new CrewRequest()
                     {
                         crewinfo = new CrewInfo()
@@ -208,42 +216,42 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="name"></param>
         /// <param name="cid"></param>
-        public void SendComponentSign(string name="WEB",string cid="")
+        public void SendComponentSign(string name = "WEB", string cid = null)
         {
             MSG msg = new MSG()
             {
                 type = MSG.Type.COMPONENT,
                 timestamp = ProtoBufHelp.TimeSpan(),
                 sequence = 1,
-                component = new Component()
+                component = new Models.Component()
                 {
-                    command = Component.Command.SIGNIN_REQ,
+                    command = Models.Component.Command.SIGNIN_REQ,
                     componentrequest = new ComponentRequest()
                     {
                         componentinfo = new ComponentInfo()
                         {
                             type = ComponentInfo.Type.WEB,
-                            cname = name
+                            cname = name,
+                            componentid = cid
                         },
                     }
                 }
             };
-            if (!string.IsNullOrEmpty(cid)) msg.component.componentrequest.componentinfo.componentid = cid;
-            dealer.Send(msg);
+            dealer.Send(msg,ManagerHelp.ComponentId);
         }
         /// <summary>
         /// 组件查询
         /// </summary>
-        public void SendComponentQuery(string nextIdentity="")
+        public void SendComponentQuery(string nextIdentity = "")
         {
             MSG msg = new MSG()
             {
                 type = MSG.Type.COMPONENT,
                 timestamp = ProtoBufHelp.TimeSpan(),
                 sequence = 1,
-                component = new Component()
+                component = new Models.Component()
                 {
-                    command = Component.Command.QUERY_REQ
+                    command = Models.Component.Command.QUERY_REQ
                 }
             };
             dealer.Send(msg, nextIdentity);
@@ -260,9 +268,9 @@ namespace ShipWeb.ProtoBuffer
                 type = MSG.Type.COMPONENT,
                 timestamp = ProtoBufHelp.TimeSpan(),
                 sequence = 1,
-                component = new Component()
+                component = new Models.Component()
                 {
-                    command = Component.Command.SIGNOUT_REQ,
+                    command = Models.Component.Command.SIGNOUT_REQ,
                     componentrequest = new ComponentRequest()
                     {
                         componentinfo = new ComponentInfo()
@@ -280,23 +288,23 @@ namespace ShipWeb.ProtoBuffer
         /// 发送算法设置请求
         /// </summary>
         /// <param name="protoModel"></param>
-        public void SendAlgorithmSet(AlgorithmInfo protoModel,string nextIdentity) 
+        public void SendAlgorithmSet(AlgorithmInfo protoModel, string nextIdentity)
         {
             MSG msg = new MSG()
             {
                 type = MSG.Type.ALGORITHM,
                 sequence = 3,
                 timestamp = ProtoBufHelp.TimeSpan(),
-                algorithm = new Algorithm()
+                algorithm = new Models.Algorithm()
                 {
-                    command = Algorithm.Command.CONFIGURE_REQ,
+                    command = Models.Algorithm.Command.CONFIGURE_REQ,
                     algorithmrequest = new AlgorithmRequest()
                     {
                         algorithminfo = protoModel
                     }
                 }
             };
-            dealer.Send(msg,nextIdentity);
+            dealer.Send(msg, nextIdentity);
         }
         /// <summary>
         /// 算法查询
@@ -309,9 +317,9 @@ namespace ShipWeb.ProtoBuffer
                 type = MSG.Type.ALGORITHM,
                 sequence = 5,
                 timestamp = ProtoBufHelp.TimeSpan(),
-                algorithm = new Algorithm()
+                algorithm = new Models.Algorithm()
                 {
-                    command = Algorithm.Command.QUERY_REQ
+                    command = Models.Algorithm.Command.QUERY_REQ
                 }
             };
             dealer.Send(msg, algoIdentity);
@@ -321,14 +329,14 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="captureInfo"></param>
         /// <param name="identity"></param>
-        public void SendCapture(CaptureInfo captureInfo,string identity)
+        public void SendCapture(CaptureInfo captureInfo, string identity)
         {
             MSG msg = new MSG()
             {
                 type = MSG.Type.EVENT,
-                sequence =11,
+                sequence = 11,
                 timestamp = ProtoBufHelp.TimeSpan(),
-                evt=new Event()
+                evt = new Event()
                 {
                     command = Event.Command.CAPTURE_JPEG_REQ,
                     captureinfo = captureInfo
@@ -341,39 +349,75 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="deviceInfo"></param>
         /// <param name="did"></param>
-        public void SendDeveiceAdd(DeviceInfo deviceInfo,string nextIdentity) 
+        public void SendDeveiceAdd(ShipWeb.Models.Device model, string nextIdentity)
         {
+            DeviceInfo deviceInfo = GetDeviceInfo(model);
             MSG msg = new MSG()
             {
                 type = MSG.Type.DEVICE,
                 sequence = 5,
                 timestamp = ProtoBufHelp.TimeSpan(),
-                device = new Device()
+                device = new Models.Device()
                 {
-                    command = Device.Command.NEW_REQ,
+                    command = Models.Device.Command.NEW_REQ,
                     devicerequest = new DeviceRequest()
                     {
                         deviceinfo = deviceInfo
                     }
                 }
             };
-            dealer.Send(msg,nextIdentity);
+            dealer.Send(msg, nextIdentity);
         }
+
+        private static DeviceInfo GetDeviceInfo(ShipWeb.Models.Device model)
+        {
+            var device= new DeviceInfo()
+            {
+                did = model.Id,
+                factory = (DeviceInfo.Factory)model.factory,
+                ip = model.IP,
+                name = model.Name,
+                nickname = model.Nickname,
+                password = model.Password,
+                enable = model.Enable,
+                port = model.Port,
+                type = (DeviceInfo.Type)model.type
+            };
+            if (device.camerainfos!=null&&device.camerainfos.Count>0)
+            {
+                device.camerainfos = new List<CameraInfo>();
+                foreach (var item in device.camerainfos)
+                {
+                    device.camerainfos.Add(new CameraInfo()
+                    {
+                        cid = item.cid,
+                        enable = item.enable,
+                        nickname = item.nickname,
+                        index = item.index,
+                        ip = item.ip
+                    });
+                }
+            }
+          
+            return device;
+        }
+
         /// <summary>
         /// 发送设备修改请求
         /// </summary>
         /// <param name="deviceInfo"></param>
         /// <param name="did"></param>
-        public void SendDeveiceUpdate(DeviceInfo deviceInfo, string nextIdentity, string did = "")
+        public void SendDeveiceUpdate(ShipWeb.Models.Device model, string nextIdentity, string did = "")
         {
+            DeviceInfo deviceInfo = GetDeviceInfo(model);
             MSG msg = new MSG()
             {
                 type = MSG.Type.DEVICE,
                 sequence = 5,
                 timestamp = ProtoBufHelp.TimeSpan(),
-                device = new Device()
+                device = new Models.Device()
                 {
-                    command = Device.Command.MODIFY_REQ,
+                    command = Models.Device.Command.MODIFY_REQ,
                     devicerequest = new DeviceRequest()
                     {
                         deviceinfo = deviceInfo,
@@ -387,23 +431,23 @@ namespace ShipWeb.ProtoBuffer
         /// 发送设备删除请求
         /// </summary>
         /// <param name="did"></param>
-        public void SendDeveiceDelete(string nextIdentity,string did) 
+        public void SendDeveiceDelete(string nextIdentity, string did)
         {
             MSG msg = new MSG()
             {
                 type = MSG.Type.DEVICE,
                 sequence = 5,
                 timestamp = ProtoBufHelp.TimeSpan(),
-                device = new Device()
+                device = new Models.Device()
                 {
-                    command = Device.Command.DELETE_REQ,
+                    command = Models.Device.Command.DELETE_REQ,
                     devicerequest = new DeviceRequest()
                     {
                         did = did
                     }
                 }
             };
-            dealer.Send(msg,nextIdentity);
+            dealer.Send(msg, nextIdentity);
         }
         /// <summary>
         /// 设备查询
@@ -415,9 +459,9 @@ namespace ShipWeb.ProtoBuffer
                 type = MSG.Type.DEVICE,
                 sequence = 5,
                 timestamp = ProtoBufHelp.TimeSpan(),
-                device = new Device()
+                device = new Models.Device()
                 {
-                    command = Device.Command.QUERY_REQ
+                    command = Models.Device.Command.QUERY_REQ
                 }
             };
             if (did != "")
@@ -433,7 +477,7 @@ namespace ShipWeb.ProtoBuffer
         /// 发送船舶状态修改请求
         /// </summary>
         /// <param name="request"></param>
-        public void SendStatusSet(StatusRequest request,string nextIdentity="") 
+        public void SendStatusSet(StatusRequest request, string nextIdentity = "")
         {
             MSG msg = new MSG()
             {
@@ -446,13 +490,13 @@ namespace ShipWeb.ProtoBuffer
                     statusrequest = request
                 }
             };
-            dealer.Send(msg,nextIdentity);
+            dealer.Send(msg, nextIdentity);
         }
         /// <summary>
         /// 查询船员状态信息
         /// </summary>
         /// <param name="nextIdentity"></param>
-        public void SendStatusQuery(string nextIdentity="")
+        public void SendStatusQuery(string nextIdentity = "")
         {
             MSG msg = new MSG()
             {
@@ -470,15 +514,16 @@ namespace ShipWeb.ProtoBuffer
         /// 获取报警消息
         /// </summary>
         /// <param name="nextIdentity"></param>
-        public void SendAlarm(string nextIdentity="", AlarmInfo info=null)
+        public void SendAlarm(string nextIdentity = "", AlarmInfo info = null)
         {
             MSG msg = new MSG()
             {
                 type = MSG.Type.STATUS,
                 sequence = 3,
                 timestamp = ProtoBufHelp.TimeSpan(),
-                alarm=new Alarm() { 
-                   command=Alarm.Command.NOTIFY
+                alarm = new Models.Alarm()
+                {
+                    command = Models.Alarm.Command.NOTIFY
                 }
             };
             if (info != null) msg.alarm.alarminfo = info;

@@ -26,50 +26,36 @@ namespace ShipWeb.ProtoBuffer
         /// 查询所有设备
         /// </summary>
         /// <returns></returns>
-        public static List<DeviceInfo> DeviceQuery(DeviceInfo info, string did = "")
+        public static List<ShipWeb.Models.Device> DeviceQuery(DeviceInfo info, string did = "")
         {
+            List<ShipWeb.Models.Device> list = new List<ShipWeb.Models.Device>();
             using (var _context = new MyContext())
             {
-                List<DeviceInfo> list = new List<DeviceInfo>();
                 //查询设备信息
-                List<ShipWeb.Models.Device> devList = GetDevice(info);               
-                if (!string.IsNullOrEmpty(did))
+                list = GetDevice(info);
+                if (list.Count>0)
                 {
-                    devList = devList.Where(c => c.Id == did).ToList();
-                }
-               
-                var ids = string.Join(',', devList.Select(c => c.Id));
-                //查询设备下的摄像机
-                var cameras = _context.Camera.Where(c =>ids.Contains(c.DeviceId)).ToList();
-                foreach (var item in devList)
-                {
-                    DeviceInfo em = new DeviceInfo()
+                    var ids = string.Join(',', list.Select(c => c.Id));
+                    //查询设备下的摄像机
+                    var cameras = _context.Camera.Where(c => ids.Contains(c.DeviceId)).ToList();
+                    foreach (var item in list)
                     {
-                        did =item.Id,
-                        factory = (DeviceInfo.Factory)item.factory,
-                        ip = item.IP,
-                        name = item.Name,
-                        nickname = item.Nickname,
-                        password = item.Password,
-                        port = item.Port,
-                        type=(DeviceInfo.Type)item.type,
-                        enable=item.Enable,
-                        camerainfos = new List<CameraInfo>()
-                    };
-                    var cams = cameras.Where(c => c.DeviceId == item.Id);
-                    foreach (var it in cams)
-                    {
-                        CameraInfo cam = new CameraInfo()
+                        item.CameraModelList = new List<Camera>();
+                        var cames=cameras.Where(c => c.DeviceId == item.Id);
+                        foreach (var cam in cames)
                         {
-                            cid =it.Id,
-                            enable = it.Enable,
-                            index = it.Index,
-                            ip = it.IP,
-                            nickname = it.NickName                             
-                        };
-                        em.camerainfos.Add(cam);
+                            item.CameraModelList.Add(new Camera()
+                            {
+                                Id = cam.Id,
+                                DeviceId = cam.DeviceId,
+                                Enable = cam.Enable,
+                                Index = cam.Index,
+                                IP = cam.IP,
+                                NickName = cam.NickName,
+                                ShipId = cam.ShipId
+                            });
+                        }
                     }
-                    list.Add(em);
                 }
                 return list;
             }
@@ -113,7 +99,7 @@ namespace ShipWeb.ProtoBuffer
         /// <param name="shipId"></param>
         /// <param name="protoModel"></param>
         /// <returns></returns>
-        public static string DeviceAdd(DeviceInfo protoModel)
+        public static ShipWeb.Models.Device DeviceAdd(DeviceInfo protoModel)
         {
             if (protoModel != null)
             {
@@ -138,24 +124,24 @@ namespace ShipWeb.ProtoBuffer
                     {
                         AddCameras(protoModel.camerainfos, protoModel.did);
                     }
-                    return model.Id;
+                    return model;
                 }
             }
-            return "";
+            return null;
         }
         /// <summary>
         /// 设备修改
         /// </summary>
         /// <param name="protoModel"></param>
         /// <returns></returns>
-        public static int DeviceUpdate(string did, DeviceInfo protoModel) 
+        public static ShipWeb.Models.Device DeviceUpdate(string did, DeviceInfo protoModel) 
         {
             using (var _context = new MyContext())
             {
                 if (!string.IsNullOrEmpty(did) && protoModel != null)
                 {
                     var model = _context.Device.FirstOrDefault(c =>c.Id == did);
-                    if (model == null) return 1;
+                    if (model == null) return null;
                     if (protoModel.name!=null)
                     {
                         model.factory = (ShipWeb.Models.Device.Factory)protoModel.factory;
@@ -170,9 +156,9 @@ namespace ShipWeb.ProtoBuffer
                     } 
                     _context.SaveChanges();
                     AddCameras(protoModel.camerainfos, did);
-                    return 0;
+                    return model;
                 }
-                return 1;
+                return null;
             }
         }
 
@@ -509,6 +495,7 @@ namespace ShipWeb.ProtoBuffer
                                 Type = (ShipWeb.Models.AlgorithmType)protoModel.type
                             };
                             _context.Algorithm.Add(model);
+                            protoModel.aid = model.Id;
                         }
                         _context.SaveChanges();
                         return 0;
@@ -522,21 +509,38 @@ namespace ShipWeb.ProtoBuffer
             return 1;
         }
 
+        /// <summary>
+        /// 新增组件
+        /// </summary>
+        /// <param name="cid"></param>
+        /// <param name="shipId"></param>
+        /// <returns></returns>
         public static int ComponentAdd(string cid,string shipId)
         {
             if (ManagerHelp.Cid != "") return 0;
             using (var context = new MyContext())
             {
-                ShipWeb.Models.Component model = new ShipWeb.Models.Component()
+                var component = context.Component.FirstOrDefault(c => c.Id == ManagerHelp.ComponentId);
+                if (component!=null)
                 {
-                    Id = cid,
-                    Name = "WEB",
-                    Type = ComponentType.WEB,
-                    ShipId = shipId
-                };
+                    component.Cid = cid;
+                    context.Update(component);
+                    context.SaveChanges();
+                }
+                else
+                {
+                    component = new ShipWeb.Models.Component()
+                    {
+                        Cid = cid,
+                        Id = ManagerHelp.ComponentId,
+                        Line = 0,
+                        Name = "WEB",
+                        Type = ComponentType.WEB
+                    };
+                    context.Add(component);
+                    context.SaveChanges();
+                }
                 ManagerHelp.Cid = cid;
-                context.Component.Add(model);
-                context.SaveChanges();
             }
             return 0;
         }
@@ -593,7 +597,16 @@ namespace ShipWeb.ProtoBuffer
             {
                 using (var context=new MyContext())
                 {
-                    var list = context.Component.Where(c => c.Id!=ManagerHelp.Cid&&c.Type!=ComponentType.WEB).ToList();
+                    var list = context.Component.Where(c =>c.Type!=ComponentType.WEB).ToList();
+                    string shipId = "";
+                    if (ManagerHelp.IsShipPort)
+                    {
+                        var ship = context.Ship.FirstOrDefault();
+                        if (ship != null)
+                        {
+                            shipId = ship.Id;
+                        }
+                    }
                     List<string> str = new List<string>();
                     foreach (var item in components)
                     {
@@ -605,9 +618,10 @@ namespace ShipWeb.ProtoBuffer
                             context.Component.Update(component);
                             str.Add(item.componentid);
                         }
+                        //陆地端添加组件
                         else if (item.type== ComponentInfo.Type.XMQ)
                         {
-                            string shipId = Guid.NewGuid().ToString();
+                            shipId = Guid.NewGuid().ToString();
                             Random rn = new Random();
                             rn.Next(1,9999);
                             Ship ship = new Ship()
@@ -626,7 +640,20 @@ namespace ShipWeb.ProtoBuffer
                                 Line = 0,
                                 Name = item.cname,
                                 Type = (ComponentType)item.type,
-                                ShipId=""
+                                ShipId= shipId
+                            };
+                            context.Component.Add(component);
+                        }
+                        else if(ManagerHelp.IsShipPort)
+                        {   
+                            //船舶端添加组件
+                            ShipWeb.Models.Component component = new ShipWeb.Models.Component()
+                            {
+                                Id = item.componentid,
+                                Line = 0,
+                                Name = item.cname,
+                                Type = (ComponentType)item.type,
+                                ShipId = shipId
                             };
                             context.Component.Add(component);
                         }
@@ -722,14 +749,26 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="msg"></param>
         /// <param name="cid"></param>
-        public static void AlarmAdd(AlarmInfo alarmInfo)
+        public static void AlarmAdd(AlarmInfo alarmInfo,string xmq="")
         {
             //添加日志
             ProtoBDManager.AddReceiveLog<ShipWeb.ProtoBuffer.Models.AlarmInfo>("Alarm", alarmInfo);
             using (var context = new MyContext())
             {
-                var ship = context.Ship.FirstOrDefault();
-                string shipId = ship.Id;
+                string shipId = "";
+                if (string.IsNullOrEmpty(xmq))
+                {
+                    var ship = context.Ship.FirstOrDefault();
+                    shipId = ship.Id;
+                }
+                else
+                {
+                    var comp = context.Component.FirstOrDefault(c => c.Id == xmq);
+                    if (comp!=null)
+                    {
+                        shipId = comp.ShipId;
+                    }
+                }
                 if (alarmInfo != null)
                 {
                     var ids = alarmInfo.cid.Split(':');
@@ -785,7 +824,7 @@ namespace ShipWeb.ProtoBuffer
                         context.SaveChanges();
                         SendDataMsg sendData = new SendDataMsg();
                         //向陆地端推送报警信息
-                        sendData.SendAlarm("", alarmInfo);
+                        sendData.SendAlarm("upload", alarmInfo);
                         #endregion
                     }
                 }

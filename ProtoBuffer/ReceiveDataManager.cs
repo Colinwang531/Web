@@ -30,7 +30,7 @@ namespace ShipWeb.ProtoBuffer
         /// 组件处理
         /// </summary>
         /// <param name="response"></param>
-        public void ComponentData(ShipWeb.ProtoBuffer.Models.Component component) 
+        public void ComponentData(ShipWeb.ProtoBuffer.Models.Component component)
         {
             //添加日志
             ProtoBDManager.AddReceiveLog<ShipWeb.ProtoBuffer.Models.Component>("Component", component);
@@ -42,11 +42,13 @@ namespace ShipWeb.ProtoBuffer
                 case Models.Component.Command.SIGNIN_REP:
                     if (component.componentresponse != null && component.componentresponse.result == 0)
                     {
-                        if (ManagerHelp.Cid=="")
+                        if (ManagerHelp.Cid == "")
                         {
                             ProtoBDManager.ComponentAdd(component.componentresponse.cid, shipId);
                         }
                     }
+                    //心跳是否有响应
+                    if(ManagerHelp.SendCount>0)ManagerHelp.SendCount--;
                     break;
                 case Models.Component.Command.SIGNOUT_REQ:
                     break;
@@ -54,21 +56,10 @@ namespace ShipWeb.ProtoBuffer
                     break;
                 case Models.Component.Command.QUERY_REQ:
                     break;
-                case Models.Component.Command.QUERY_REP:                  
-                    //船舶端初使化后的查询
-                    if (ManagerHelp.isInit)
+                case Models.Component.Command.QUERY_REP:
+                    if (component.componentresponse != null && component.componentresponse.result == 0)
                     {
-                        if (component.componentresponse != null && component.componentresponse.result == 0)
-                        {
-                            ProtoBDManager.ComponentAddRange(component.componentresponse.componentinfos);
-                        }
-                    }
-                    else if (ManagerHelp.isLandHert)
-                    {
-                        if (component.componentresponse != null && component.componentresponse.result == 0)
-                        {
-                            ProtoBDManager.ComponentUpdateRange(component.componentresponse.componentinfos);
-                        }
+                        ProtoBDManager.ComponentUpdateRange(component.componentresponse.componentinfos);
                     }
                     ManagerHelp.ComponentReponse = JsonConvert.SerializeObject(component.componentresponse);
                     break;
@@ -89,6 +80,12 @@ namespace ShipWeb.ProtoBuffer
                 case Models.Algorithm.Command.CONFIGURE_REQ:
                     var request = algorithm.algorithmrequest;
                     int result = ProtoBDManager.AlgorithmSet(request.algorithminfo);
+                    if (result==0)
+                    {
+                        //向组件发送算法请求
+                        manager.SendAlgorithmSet(request.algorithminfo, ManagerHelp.UpToId);
+                    }
+                    //向陆地端响应算法请求
                     manager.SendAlgorithmRN(Models.Algorithm.Command.CONFIGURE_REP, null, result);
                     break;
                 case Models.Algorithm.Command.QUERY_REQ:
@@ -136,11 +133,13 @@ namespace ShipWeb.ProtoBuffer
             ProtoBDManager.AddReceiveLog<ShipWeb.ProtoBuffer.Models.Device>("Device", device);
             switch (device.command)
             {
+                //上游陆地端的请求
                 case Models.Device.Command.NEW_REQ:
                     if (device.devicerequest!=null)
                     {
-                        string devId=ProtoBDManager.DeviceAdd(device.devicerequest.deviceinfo);
-                        manager.SendDeviceRN(Models.Device.Command.NEW_REP, devId,null,devId!=""?0:1);
+                        var model=ProtoBDManager.DeviceAdd(device.devicerequest.deviceinfo);
+                        manager.SendDeveiceAdd(model, ManagerHelp.UpToId);
+                        ManagerHelp.UpSend.Add(model.Id);
                     }
                     else
                     {
@@ -161,8 +160,16 @@ namespace ShipWeb.ProtoBuffer
                 case Models.Device.Command.MODIFY_REQ:
                     if (device.devicerequest != null && !string.IsNullOrEmpty(device.devicerequest.did))
                     {
-                        int result=ProtoBDManager.DeviceUpdate(device.devicerequest.did, device.devicerequest.deviceinfo);
-                        manager.SendDeviceRN(Models.Device.Command.MODIFY_REP, device.devicerequest.deviceinfo.did, null,result);
+                        var model=ProtoBDManager.DeviceUpdate(device.devicerequest.did, device.devicerequest.deviceinfo);
+                        if (model!=null)
+                        {
+                            manager.SendDeveiceAdd(model, ManagerHelp.UpToId);
+                            ManagerHelp.UpSend.Add(model.Id);
+                        }
+                        else
+                        {
+                            manager.SendDeviceRN(Models.Device.Command.MODIFY_REP, "", null, 1);
+                        }
                     }
                     else
                     {
@@ -175,13 +182,21 @@ namespace ShipWeb.ProtoBuffer
                     var devices = ProtoBDManager.DeviceQuery(info, did);
                     manager.SendDeviceRN(Models.Device.Command.QUERY_REP, did, devices);
                     break;
-                case Models.Device.Command.NEW_REP:                   
+                case Models.Device.Command.NEW_REP:
+                    did = "";
                     if (device.deviceresponse.result == 0 && device.deviceresponse.deviceinfos != null)
                     {
                         var dev = device.deviceresponse.deviceinfos[0];
                         ProtoBDManager.AddCameras(dev.camerainfos,dev.did);
+                        did= dev.did;
                     }
                     ManagerHelp.DeviceReponse = device.deviceresponse.result.ToString();
+                    if (ManagerHelp.UpSend.Where(c => c == did).Any())
+                    {
+                        //向陆地端响应请求
+                        manager.SendDeviceRN(Models.Device.Command.NEW_REP, did);
+                        ManagerHelp.UpSend.Remove(did);
+                    }
                     break;
                 case Models.Device.Command.DELETE_REP:
                     ManagerHelp.DeviceReponse = device.deviceresponse.result.ToString();
@@ -213,10 +228,14 @@ namespace ShipWeb.ProtoBuffer
             switch (crew.command)
             {
                 case Models.Crew.Command.NEW_REQ:
-                  
                     if (crew.crewrequest != null)
                     {
                         result=ProtoBDManager.CrewAdd(crew.crewrequest.crewinfo);
+                        if (result == 0) 
+                        {
+                            //向组件发送船员请求
+                            manager.SendCrewAdd(crew.crewrequest.crewinfo, ManagerHelp.UpToId);
+                        }
                     }
                     manager.SendCrewRN(Models.Crew.Command.NEW_REP, null, result);
                     break;
@@ -274,6 +293,11 @@ namespace ShipWeb.ProtoBuffer
                     if (status.statusrequest != null)
                     {
                         result = ProtoBDManager.ShipSet(status.statusrequest);
+                        if (result==0)
+                        {
+                            //向组件发送船员请求
+                            manager.SendStatusSet(status.statusrequest, ManagerHelp.UpToId);
+                        }
                     }
                     manager.SendStatusRN(Status.Command.SET_REP, null, result);
                     break;
@@ -282,7 +306,6 @@ namespace ShipWeb.ProtoBuffer
                     manager.SendStatusRN(Status.Command.QUERY_REP, ship);
                     break;
                 case Status.Command.SET_REP://接收设备成功与否
-
                     ManagerHelp.StatusReponse = status.statusresponse.result.ToString();
                     break;
                 case Status.Command.QUERY_REP:
@@ -294,19 +317,6 @@ namespace ShipWeb.ProtoBuffer
                 default:
                     break;
             }
-        }
-        /// <summary>
-        /// 报警消息
-        /// </summary>
-        public void AlarmData()
-        {
-            var alarmInfos=ProtoBDManager.GetAlarmInfo(DateTime.Now, DateTime.Now.AddDays(1));
-            foreach (var item in alarmInfos)
-            {
-                //将船舶的报警信息发给陆地端
-                manager.SendAlarm("", item);
-            };
-           
         }
     }
 }

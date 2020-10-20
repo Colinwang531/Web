@@ -15,6 +15,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace ShipWeb.Tool
 {
@@ -26,9 +27,33 @@ namespace ShipWeb.Tool
         /// </summary>
         public static string Cid = "";
         /// <summary>
+        /// 组件表中的ID
+        /// </summary>
+        public static string ComponentId = "";
+        /// <summary>
+        /// 上级组件FromId
+        /// </summary>
+        public static string UpFromId = "";
+        /// <summary>
+        /// 上级组件ToId
+        /// </summary>
+        public static string UpToId = "";
+        /// <summary>
         /// 发布IP
         /// </summary>
         public static string PublisherIP = "";
+        /// <summary>
+        /// 是否是船舶端
+        /// </summary>
+        public static bool IsShipPort = true;
+        /// <summary>
+        /// 是否向上发送
+        /// </summary>
+        public static List<string> UpSend = new List<string>();
+        /// <summary>
+        /// 发送次数（心跳时使用）
+        /// </summary>
+        public static int SendCount = 0;
         /// <summary>
         /// mq绑定的地址
         /// </summary>

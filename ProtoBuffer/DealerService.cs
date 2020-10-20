@@ -28,7 +28,7 @@ namespace ShipWeb.ProtoBuffer
                 {
                     dealer = new DealerSocket();
                     //dealer.Connect("tcp://192.168.0.21:5556")
-                    dealer.Connect(ManagerHelp.IP); 
+                    dealer.Connect(ManagerHelp.IP);
                     //等待时间10秒
                     //dealer.Options.Linger=new TimeSpan(0,0,10);
                     string commID = Guid.NewGuid().ToString();
@@ -41,7 +41,7 @@ namespace ShipWeb.ProtoBuffer
             }
         }
 
-        public void Send(MSG msg, string nextIdentity = "",string head= "request")
+        public void Send(MSG msg, string toIdentity = "", string head = "request")
         {
             try
             {
@@ -50,12 +50,20 @@ namespace ShipWeb.ProtoBuffer
                     byte[] byt = ProtoBufHelp.Serialize<MSG>(msg);
                     NetMQMessage mqmsg = new NetMQMessage(5);
                     mqmsg.AppendEmptyFrame();
+                    mqmsg.Append("work");
                     mqmsg.Append(head);
-                    string identity = Encoding.UTF8.GetString(dealer.Options.Identity);
-                    //from
-                    mqmsg.Append(ManagerHelp.Cid);
-                    //to
-                    mqmsg.Append(nextIdentity);
+                    //船舶向陆地端发送
+                    if (!(head == "request") && !ManagerHelp.UpFromId.Equals(ManagerHelp.ComponentId))
+                    {
+                        mqmsg.Append(ManagerHelp.ComponentId);//当前组件ID 
+                        mqmsg.Append(ManagerHelp.UpFromId);//上一级组件ID
+                    }
+                    else //船舶向组件请求
+                    {
+                        mqmsg.Append(ManagerHelp.ComponentId);//当前组件ID
+                        //to
+                        mqmsg.Append(toIdentity);//下一级组件ID
+                    }
                     mqmsg.Append(byt);
                     //发送注册请求
                     dealer.SendMultipartMessage(mqmsg);
@@ -67,23 +75,34 @@ namespace ShipWeb.ProtoBuffer
             }
         }
 
-        public void Receive() 
+        public void Receive()
         {
             ReceiveDataManager manager = new ReceiveDataManager();
             while (true)
             {
-                var mQFrames = dealer.ReceiveMultipartMessage(5);
+                var mQFrames = dealer.ReceiveMultipartMessage(6);
+                var temp1 = mQFrames[3].ToString();
+                var temp2 = mQFrames[4].ToString();
+                //对陆地端方向的接受
+                if (!temp2.Equals(ManagerHelp.ComponentId))
+                {
+                    //陆地端传下来的FromId
+                    ManagerHelp.UpFromId = temp1;
+                    //陆地端过来的ToId
+                    ManagerHelp.UpToId = temp2;
+                }
                 byte[] mory = mQFrames.Last.ToByteArray();
                 MSG revmsg = ProtoBufHelp.DeSerialize<MSG>(mory);
                 if (revmsg.type == MSG.Type.ALARM)
                 {
                     if (revmsg.alarm.alarminfo != null)
                     {
-                        ProtoBDManager.AlarmAdd(revmsg.alarm.alarminfo);
-                    }
-                    else
-                    {
-                        manager.AlarmData();
+                        string xmq = "";
+                        if (mQFrames[2].ToString() == "upload")
+                        {
+                            xmq = temp1;
+                        }
+                        ProtoBDManager.AlarmAdd(revmsg.alarm.alarminfo,xmq);
                     }
                 }
                 else if (revmsg.type == MSG.Type.ALGORITHM)

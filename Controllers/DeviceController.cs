@@ -230,7 +230,7 @@ namespace ShipWeb.Controllers
                         {
                             return new JsonResult(new { code = 1, msg = Enum.GetName(typeof(Device.Factory), Convert.ToInt32(model.Factory)) + "组件未启动" });
                         }
-                        ProtoBuffer.Models.DeviceInfo emb = GetProtoDevice(model);
+                        Device emb = GetProtoDevice(model);
                         if (!string.IsNullOrEmpty(model.Id))
                         {
                             assembly.SendDeveiceUpdate(emb, shipId + ":" + identity, model.Id);
@@ -275,14 +275,14 @@ namespace ShipWeb.Controllers
                             _context.Device.Add(device);
                             _context.SaveChanges();
                             model.Id = device.Id;
-                            ProtoBuffer.Models.DeviceInfo emb = GetProtoDevice(model);
+                            Device emb = GetProtoDevice(model);
                             assembly.SendDeveiceAdd(emb, identity);
                         }
                         else
                         {
                             _context.Device.Update(device);
                             _context.SaveChanges();
-                            ProtoBuffer.Models.DeviceInfo emb = GetProtoDevice(model);
+                            Device emb = GetProtoDevice(model);
                             assembly.SendDeveiceUpdate(emb, identity, device.Id);
                         }
                         code = GetResult();
@@ -317,16 +317,16 @@ namespace ShipWeb.Controllers
                         {
                             return new JsonResult(new { code = 1, msg = Enum.GetName(typeof(Device.Factory), Convert.ToInt32(factory)) + "组件未启动" });
                         }
-                        ProtoBuffer.Models.DeviceInfo emb = new ProtoBuffer.Models.DeviceInfo()
+                        Device emb = new Device
                         {
-                            camerainfos = new List<ProtoBuffer.Models.CameraInfo>() {
-                                 new ProtoBuffer.Models.CameraInfo(){
-                                 cid=id,
-                                 enable=enable == "1" ? true : false,
-                                 nickname=nickName
-                                 }
-                               },
-                            did = did
+                            Id = did,
+                            CameraModelList = new List<Camera>() {
+                                new Camera() {
+                                    NickName = nickName,
+                                    Enable = enable == "1" ? true : false,
+                                    Id = id
+                                }
+                            }
                         };
                         assembly.SendDeveiceUpdate(emb, shipId+":"+identity, did);
                         code = GetResult();
@@ -346,25 +346,24 @@ namespace ShipWeb.Controllers
                         {
                             //获取设备的组件ID
                             string identity = GetIdentity(factory);
-                            ProtoBuffer.Models.DeviceInfo emb = new ProtoBuffer.Models.DeviceInfo()
+
+                            Device emb = new Device
                             {
-                                camerainfos = new List<ProtoBuffer.Models.CameraInfo>() {
-                                 new ProtoBuffer.Models.CameraInfo(){
-                                 cid=camera.Id,
-                                 index=camera.Index,
-                                 enable=camera.Enable,
-                                 ip=camera.IP,
-                                 nickname=camera.NickName
-                                 }
-                               },
-                                did = embModel.Id
+                                Id = did,
+                                CameraModelList = new List<Camera>()
+                                {
+                                    new Camera() {
+                                        NickName = nickName,
+                                        Enable = enable == "1" ? true : false,
+                                        Id = id
+                                    }
+                                }
                             };
-                            
-                                _context.Update(camera);
-                                _context.SaveChangesAsync();
-                                assembly.SendDeveiceUpdate(emb, identity, embModel.Id);
-                                code = GetResult();
-                            
+                            _context.Update(camera);
+                            _context.SaveChangesAsync();
+                            assembly.SendDeveiceUpdate(emb, identity, embModel.Id);
+                            code = GetResult();
+
                         };
                     }
                     if (code == 2) msg = "请求超时。。。";
@@ -385,21 +384,18 @@ namespace ShipWeb.Controllers
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        private ProtoBuffer.Models.DeviceInfo GetProtoDevice(DeviceViewModel model) 
+        private ShipWeb.Models.Device GetProtoDevice(DeviceViewModel model) 
         {
-            ProtoBuffer.Models.DeviceInfo emb = new ProtoBuffer.Models.DeviceInfo()
-            {
-                ip = model.IP,
-                name = model.Name,
-                password = model.Password,
-                port = model.Port,
-                nickname = model.Nickname,
-                factory = (ProtoBuffer.Models.DeviceInfo.Factory)model.Factory,
-                type = (ProtoBuffer.Models.DeviceInfo.Type)model.Type,
-                enable = model.Enable,
-                did = model.Id
-            };
-            return emb;
+            Device device = new Device();
+            device.IP = model.IP;
+            device.Name = model.Name;
+            device.Nickname = model.Nickname;
+            device.Password = model.Password;
+            device.Port = model.Port;
+            device.type = (Device.Type)model.Type;
+            device.factory = (Device.Factory)model.Factory;
+            device.Enable = model.Enable;
+            return device;
         }
         /// <summary>
         /// 删除设备
@@ -501,7 +497,7 @@ namespace ShipWeb.Controllers
             else
             {
                 //获取设备的组件ID
-                var component = _context.Component.FirstOrDefault(c => c.Type == type);
+                var component = _context.Component.FirstOrDefault(c => c.Type == type&&c.Line==0);
                 if (component!=null)
                 {
                     return component.Id;

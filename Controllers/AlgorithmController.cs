@@ -416,13 +416,13 @@ namespace ShipWeb.Controllers
                     var device = _context.Device.FirstOrDefault(c => c.Id == (_context.Camera.FirstOrDefault(c => c.Id == cid).DeviceId));
                     if (device == null) return ""; 
                     //从组件表中查出当前摄像机所有设备的通讯ID
-                    var component = _context.Component.FirstOrDefault(c => c.Type == (device.factory == Device.Factory.DAHUA ? ComponentType.DHD : ComponentType.HKD));
+                    var component = _context.Component.FirstOrDefault(c => c.Type == ManagerHelp.GetComponentType(type)&&c.Line==0);
                     if(component!=null) return component.Id;
                 }
                 else
                 {
                     //获取设备的组件ID
-                    var component = _context.Component.FirstOrDefault(c => c.Type == ComponentType.AI && c.Name.ToUpper() == name);
+                    var component = _context.Component.FirstOrDefault(c => c.Type == ComponentType.AI && c.Name.ToUpper() == name&&c.Line==0);
                     if (component != null)return component.Id;
                 }
             }

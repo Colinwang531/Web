@@ -501,7 +501,7 @@ namespace ShipWeb.Controllers
             else
             {
                 //获取设备的组件ID
-                var component = _context.Component.FirstOrDefault(c => c.Type == ComponentType.AI && c.Name == ManagerHelp.FaceName);
+                var component = _context.Component.FirstOrDefault(c => c.Type == ComponentType.AI && c.Name == ManagerHelp.FaceName&&c.Line==0);
                 if (component != null)
                 {
                     return component.Id;
