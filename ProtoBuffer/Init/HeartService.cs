@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ShipWeb
+namespace ShipWeb.ProtoBuffer.Init
 {
     public class HeartService:BackgroundService
     {

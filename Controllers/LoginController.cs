@@ -58,14 +58,19 @@ namespace ShipWeb.Controllers
                 HttpContext.Session.Set("uid", Encoding.UTF8.GetBytes(usersModel.Id));
                 //保存用户可操作的权限 admin 最高权限
                 ManagerHelp.IsShowAlarm = usersModel.Id.ToLower() == "admin" ? true : usersModel.Enablequery;
-                bool flag = false;//判断船是否存在
-                var ship = _context.Ship.FirstOrDefault();
+                bool flag = ManagerHelp.IsShipPort;//判断是否是船舶端
                 string shipName = "";
-                if (ship != null)
+                string shipId = "";
+                if (ManagerHelp.IsShipPort)
                 {
-                    flag = true;
-                    shipName = ship.Name;
+                    var ship = _context.Ship.FirstOrDefault();
+                    if (ship != null)
+                    {
+                        shipName = ship.Name;
+                        shipId = ship.Id;
+                    }
                 }
+                
                 //缓存用户数据
                 UserToken ut = new UserToken()
                 {
@@ -74,7 +79,8 @@ namespace ShipWeb.Controllers
                     EnableConfigure = usersModel.EnableConfigure,
                     Enablequery = usersModel.Enablequery,
                     ShipName=shipName,
-                    ShipId = ship!=null? ship.Id:""
+                    ShipId = shipId,
+                    IsLandHome= ManagerHelp.IsShipPort?false:true
                 };
                 string userStr = JsonConvert.SerializeObject(ut);
                 string browsertoken = HttpContext.Request.Cookies["token"];
@@ -107,7 +113,7 @@ namespace ShipWeb.Controllers
             HttpContext.Response.Cookies.Delete("token");
             HttpContext.Session.Clear();
 
-            InitManger.Exit();
+            //InitManger.Exit();
             return RedirectToAction(nameof(Index));
         }
     }

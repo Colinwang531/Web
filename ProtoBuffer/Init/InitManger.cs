@@ -22,7 +22,7 @@ using System.Diagnostics;
 using ShipWeb.Interface;
 using System.Reflection;
 
-namespace ShipWeb
+namespace ShipWeb.ProtoBuffer.Init
 {
     public class InitManger
     {
@@ -38,7 +38,6 @@ namespace ShipWeb
                 var comList = context.Component.FirstOrDefault(c => c.Type == ComponentType.WEB);
                 if (comList != null)
                 {
-                    ManagerHelp.Cid = comList.Cid;
                     ManagerHelp.ComponentId = comList.Id;
                 }
                 else
@@ -110,6 +109,7 @@ namespace ShipWeb
             {
                 Task.Factory.StartNew(state =>
                 {
+                    int index = 0;
                     while (ManagerHelp.Cid=="")
                     {
                         Thread.Sleep(1000);
@@ -181,7 +181,7 @@ namespace ShipWeb
         /// </summary>
         public static void InitDevice()
         {
-            List<Models.Component> list = new List<Models.Component>();
+            List<ShipWeb.Models.Component> list = new List<ShipWeb.Models.Component>();
             using (var con = new MyContext())
             {
                 list = con.Component.Where(c => c.Type != ComponentType.WEB).ToList();
@@ -209,8 +209,8 @@ namespace ShipWeb
                 foreach (var item in deviceInfos)
                 {
                     string devIdentity = "";
-                    if (item.factory ==Models.Device.Factory.DAHUA) devIdentity = DHDIdenity;
-                    else if (item.factory == Models.Device.Factory.HIKVISION) devIdentity = HKDIdentity;
+                    if (item.factory ==ShipWeb.Models.Device.Factory.DAHUA) devIdentity = DHDIdenity;
+                    else if (item.factory == ShipWeb.Models.Device.Factory.HIKVISION) devIdentity = HKDIdentity;
                     //海康和大华组件尚未启动则不需要发送组件注册消息
                     if (devIdentity == "") continue;
                     assembly.SendDeveiceAdd(item, devIdentity);
@@ -245,7 +245,7 @@ namespace ShipWeb
                             var device = con.Device.FirstOrDefault(c => c.Id == camera.DeviceId);
                             if (device == null) continue;
                             var comtype = ComponentType.HKD;
-                            if (device.factory == Models.Device.Factory.DAHUA) comtype = ComponentType.DHD;
+                            if (device.factory == ShipWeb.Models.Device.Factory.DAHUA) comtype = ComponentType.DHD;
                             var compontent = con.Component.FirstOrDefault(c => c.Type == comtype);
                             if (compontent == null) continue;
                             assembly.SendAlgorithmSet(item, compontent.Id);
@@ -314,6 +314,9 @@ namespace ShipWeb
                         context.SaveChanges();
                     }
                     ManagerHelp.SendCount = 0;
+                    //重新注册
+                    ManagerHelp.Cid = "";
+                    assembly.SendComponentSign("WEB", ManagerHelp.Cid);
                 }
             }
         }

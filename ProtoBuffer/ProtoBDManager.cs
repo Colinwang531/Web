@@ -515,9 +515,8 @@ namespace ShipWeb.ProtoBuffer
         /// <param name="cid"></param>
         /// <param name="shipId"></param>
         /// <returns></returns>
-        public static int ComponentAdd(string cid,string shipId)
+        public static int ComponentAdd(string cid)
         {
-            if (ManagerHelp.Cid != "") return 0;
             using (var context = new MyContext())
             {
                 var component = context.Component.FirstOrDefault(c => c.Id == ManagerHelp.ComponentId);
@@ -529,13 +528,19 @@ namespace ShipWeb.ProtoBuffer
                 }
                 else
                 {
+                    string shipId = "";
+                    if (ManagerHelp.IsShipPort) {
+                        var ship = context.Ship.FirstOrDefault();
+                        shipId = ship != null ? ship.Id : "";
+                    }
                     component = new ShipWeb.Models.Component()
                     {
                         Cid = cid,
                         Id = ManagerHelp.ComponentId,
                         Line = 0,
                         Name = "WEB",
-                        Type = ComponentType.WEB
+                        Type = ComponentType.WEB,
+                        ShipId=shipId
                     };
                     context.Add(component);
                     context.SaveChanges();

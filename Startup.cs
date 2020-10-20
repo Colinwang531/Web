@@ -22,6 +22,7 @@ using DinkToPdf.Contracts;
 using DinkToPdf;
 using ShipWeb.Interface;
 using NetMQ.Sockets;
+using ShipWeb.ProtoBuffer.Init;
 
 namespace ShipWeb
 {
@@ -61,8 +62,6 @@ namespace ShipWeb
             services.AddAntiforgery(o => o.HeaderName = "XSRF-TOKEN");
             //×¢²áÐÄÌø
             services.AddSingleton<IHostedService, HeartService>();
-            //×¢²á±¨¾¯
-            services.AddSingleton<IHostedService, AlarmService>();
             //DinkToPdf×¢Èë
             services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
             services.AddTransient<IPDFService, PDFService>();

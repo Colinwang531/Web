@@ -13,18 +13,9 @@ namespace ShipWeb.ProtoBuffer
 {
     public class ReceiveDataManager
     {
-        private string shipId = "";
         private SendDataMsg manager;
         public ReceiveDataManager() {
             manager = new SendDataMsg();
-            using (var context=new MyContext())
-            {
-                var ship = context.Ship.FirstOrDefault();
-                if (ship!=null)
-                {
-                    shipId = context.Ship.FirstOrDefault().Id;
-                }
-            }
         }
         /// <summary>
         /// 组件处理
@@ -33,7 +24,7 @@ namespace ShipWeb.ProtoBuffer
         public void ComponentData(ShipWeb.ProtoBuffer.Models.Component component)
         {
             //添加日志
-            ProtoBDManager.AddReceiveLog<ShipWeb.ProtoBuffer.Models.Component>("Component", component);
+            ProtoBDManager.AddReceiveLog<ShipWeb.ProtoBuffer.Models.Component>("Component/" + Enum.GetName(typeof(Models.Component.Command), Convert.ToInt32(component.command)), component);
             ManagerHelp.ComponentReponse = "";
             switch (component.command)
             {
@@ -44,7 +35,7 @@ namespace ShipWeb.ProtoBuffer
                     {
                         if (ManagerHelp.Cid == "")
                         {
-                            ProtoBDManager.ComponentAdd(component.componentresponse.cid, shipId);
+                            ProtoBDManager.ComponentAdd(component.componentresponse.cid);
                         }
                     }
                     //心跳是否有响应
@@ -74,7 +65,7 @@ namespace ShipWeb.ProtoBuffer
         public void AlgorithmData(ShipWeb.ProtoBuffer.Models.Algorithm  algorithm)
         { 
             //添加日志
-            ProtoBDManager.AddReceiveLog<ShipWeb.ProtoBuffer.Models.Algorithm>("Algorithm", algorithm);
+            ProtoBDManager.AddReceiveLog<ShipWeb.ProtoBuffer.Models.Algorithm>("Algorithm/"+Enum.GetName(typeof(Models.Component.Command), Convert.ToInt32(algorithm.command)), algorithm);
             switch (algorithm.command)
             {
                 case Models.Algorithm.Command.CONFIGURE_REQ:
@@ -130,7 +121,7 @@ namespace ShipWeb.ProtoBuffer
         public void DeviceData(ShipWeb.ProtoBuffer.Models.Device device)
         {
             //添加日志
-            ProtoBDManager.AddReceiveLog<ShipWeb.ProtoBuffer.Models.Device>("Device", device);
+            ProtoBDManager.AddReceiveLog<ShipWeb.ProtoBuffer.Models.Device>("Device/"+ Enum.GetName(typeof(Models.Component.Command), Convert.ToInt32(device.command)), device);
             switch (device.command)
             {
                 //上游陆地端的请求
