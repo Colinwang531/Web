@@ -69,22 +69,41 @@ namespace ShipWeb.ProtoBuffer
             switch (algorithm.command)
             {
                 case Models.Algorithm.Command.CONFIGURE_REQ:
+                    #region 陆地端发送算法设置请求
                     var request = algorithm.algorithmrequest;
                     int result = ProtoBDManager.AlgorithmSet(request.algorithminfo);
                     if (result==0)
                     {
                         //向组件发送算法请求
                         manager.SendAlgorithmSet(request.algorithminfo, ManagerHelp.UpToId);
+                        ManagerHelp.UpSend.Add("Algorithm");
                     }
-                    //向陆地端响应算法请求
-                    manager.SendAlgorithmRN(Models.Algorithm.Command.CONFIGURE_REP, null, result);
+                    else
+                    {
+                        //向陆地端响应算法请求
+                        manager.SendAlgorithmRN(Models.Algorithm.Command.CONFIGURE_REP, null, result);
+                    }
                     break;
+                    #endregion
                 case Models.Algorithm.Command.QUERY_REQ:
+                    #region 陆地端发送算法查询请求
+                    //查询船舶端数据库获取所有算法数据
                     var algorithms = ProtoBDManager.AlgorithmQuery();
+                    //返回给陆地端
                     manager.SendAlgorithmRN(Models.Algorithm.Command.QUERY_REP, algorithms);
                     break;
+                    #endregion
                 case Models.Algorithm.Command.CONFIGURE_REP:
-                    ManagerHelp.AlgorithmReponse = algorithm.algorithmresponse.result.ToString();
+                    if (ManagerHelp.UpSend.Where(c => c == "Algorithm").Any())
+                    {
+                        //向陆地端响应请求
+                        manager.SendAlgorithmRN(Models.Algorithm.Command.CONFIGURE_REP, null, algorithm.algorithmresponse.result);
+                        ManagerHelp.UpSend.Remove("Algorithm");
+                    }
+                    else
+                    {
+                        ManagerHelp.AlgorithmReponse = algorithm.algorithmresponse.result.ToString();
+                    }
                     break;
                 case Models.Algorithm.Command.QUERY_REP:
                     if (algorithm.algorithmresponse != null && algorithm.algorithmresponse.result == 0 && algorithm.algorithmresponse.configures != null)
@@ -126,20 +145,24 @@ namespace ShipWeb.ProtoBuffer
             {
                 //上游陆地端的请求
                 case Models.Device.Command.NEW_REQ:
+                    #region 陆地端增加设备请求
                     if (device.devicerequest!=null)
                     {
                         var model=ProtoBDManager.DeviceAdd(device.devicerequest.deviceinfo);
                         manager.SendDeveiceAdd(model, ManagerHelp.UpToId);
-                        ManagerHelp.UpSend.Add(model.Id);
+                        ManagerHelp.UpSend.Add(model.Id+"Add");
                     }
                     else
                     {
                         manager.SendDeviceRN(Models.Device.Command.NEW_REP, "", null, 1);
                     }
                     break;
+                #endregion
                 case Models.Device.Command.DELETE_REQ:
+                    #region 陆地端删除设备请求
                     if (device.devicerequest != null && !string.IsNullOrEmpty(device.devicerequest.did))
                     {
+                        //删除船舶端数据
                         var result=ProtoBDManager.DeviceDelete(device.devicerequest.did);
                         manager.SendDeviceRN(Models.Device.Command.DELETE_REP, device.devicerequest.did, null,result);
                     }
@@ -148,14 +171,17 @@ namespace ShipWeb.ProtoBuffer
                         manager.SendDeviceRN(Models.Device.Command.DELETE_REP, "", null, 1);
                     }
                     break;
+                    #endregion
                 case Models.Device.Command.MODIFY_REQ:
+                    #region 陆地端编辑设备请求
                     if (device.devicerequest != null && !string.IsNullOrEmpty(device.devicerequest.did))
                     {
+                        //修改船舶端数据库信息
                         var model=ProtoBDManager.DeviceUpdate(device.devicerequest.did, device.devicerequest.deviceinfo);
                         if (model!=null)
                         {
                             manager.SendDeveiceAdd(model, ManagerHelp.UpToId);
-                            ManagerHelp.UpSend.Add(model.Id);
+                            ManagerHelp.UpSend.Add(model.Id+"Edit");
                         }
                         else
                         {
@@ -167,42 +193,63 @@ namespace ShipWeb.ProtoBuffer
                         manager.SendDeviceRN(Models.Device.Command.MODIFY_REP, "", null, 1);
                     }
                     break;
+                    #endregion
                 case Models.Device.Command.QUERY_REQ:
+                    #region 陆地端查询设备请求
                     var info = device.devicerequest == null ? null : device.devicerequest.deviceinfo;
                     string did = device.devicerequest != null ? device.devicerequest.did : "";
                     var devices = ProtoBDManager.DeviceQuery(info, did);
                     manager.SendDeviceRN(Models.Device.Command.QUERY_REP, did, devices);
                     break;
+                    #endregion
                 case Models.Device.Command.NEW_REP:
+                    #region XMQ响应设备增加
                     did = "";
                     if (device.deviceresponse.result == 0 && device.deviceresponse.deviceinfos != null)
                     {
                         var dev = device.deviceresponse.deviceinfos[0];
-                        ProtoBDManager.AddCameras(dev.camerainfos,dev.did);
-                        did= dev.did;
+                        ProtoBDManager.AddCameras(dev.camerainfos, dev.did);
+                        did = dev.did;
                     }
-                    ManagerHelp.DeviceReponse = device.deviceresponse.result.ToString();
-                    if (ManagerHelp.UpSend.Where(c => c == did).Any())
+                    if (ManagerHelp.UpSend.Where(c => c == did+"Add").Any())
                     {
                         //向陆地端响应请求
                         manager.SendDeviceRN(Models.Device.Command.NEW_REP, did);
-                        ManagerHelp.UpSend.Remove(did);
+                        ManagerHelp.UpSend.Remove(did + "Add");
+                    }
+                    else
+                    {
+                        ManagerHelp.DeviceReponse = device.deviceresponse.result.ToString();
                     }
                     break;
+                   #endregion
                 case Models.Device.Command.DELETE_REP:
                     ManagerHelp.DeviceReponse = device.deviceresponse.result.ToString();
                     break;
                 case Models.Device.Command.MODIFY_REP:
+                    #region XMQ响应设备修改
+                    did = "";
                     if (device.deviceresponse.result == 0 && device.deviceresponse.deviceinfos != null)
                     {
-                        ProtoBDManager.DeviceUpdate(device.deviceresponse.deviceinfos[0].did, device.deviceresponse.deviceinfos[0]);
+                        did = device.deviceresponse.deviceinfos[0].did;
+                        ProtoBDManager.DeviceUpdate(did, device.deviceresponse.deviceinfos[0]);
                     }
-                    ManagerHelp.DeviceReponse = device.deviceresponse.result.ToString();
-                    break;
-                case Models.Device.Command.QUERY_REP:
-                    if (device.deviceresponse!=null&&device.deviceresponse.result==0&&device.deviceresponse.deviceinfos!=null)
+                    if (ManagerHelp.UpSend.Where(c => c == did + "Edit").Any())
                     {
-                        ManagerHelp.DeviceReponse = JsonConvert.SerializeObject(device.deviceresponse.deviceinfos); 
+                        //向陆地端响应请求
+                        manager.SendDeviceRN(Models.Device.Command.MODIFY_REP, did + "Edit");
+                        ManagerHelp.UpSend.Remove(did + "Edit");
+                    }
+                    else
+                    {
+                        ManagerHelp.DeviceReponse = device.deviceresponse.result.ToString();
+                    }
+                    break;
+                   #endregion
+                case Models.Device.Command.QUERY_REP:
+                    if (device.deviceresponse != null && device.deviceresponse.result == 0 && device.deviceresponse.deviceinfos != null)
+                    {
+                        ManagerHelp.DeviceReponse = JsonConvert.SerializeObject(device.deviceresponse.deviceinfos);
                     }
                     break;
                 default:
@@ -219,48 +266,94 @@ namespace ShipWeb.ProtoBuffer
             switch (crew.command)
             {
                 case Models.Crew.Command.NEW_REQ:
-                    if (crew.crewrequest != null)
+                    #region 陆地端添加船员请求
+                    result = ProtoBDManager.CrewAdd(crew.crewrequest.crewinfo);
+                    if (result == 0)
                     {
-                        result=ProtoBDManager.CrewAdd(crew.crewrequest.crewinfo);
-                        if (result == 0) 
-                        {
-                            //向组件发送船员请求
-                            manager.SendCrewAdd(crew.crewrequest.crewinfo, ManagerHelp.UpToId);
-                        }
+                        //向组件发送船员请求
+                        manager.SendCrewAdd(crew.crewrequest.crewinfo, ManagerHelp.UpToId);
+                        ManagerHelp.UpSend.Add("CrewAdd");
                     }
-                    manager.SendCrewRN(Models.Crew.Command.NEW_REP, null, result);
+                    else
+                    {
+                        //向陆地端响应算法请求
+                        manager.SendCrewRN(Models.Crew.Command.NEW_REP, null, result);
+                    }
                     break;
+                    #endregion
                 case Models.Crew.Command.DELETE_REQ:
-                    if (crew.crewrequest != null)
-                    {
-                        int id = Convert.ToInt32(crew.crewrequest.crewinfo.uid);
-                         result=ProtoBDManager.CrewDelete(id);
+                    #region 陆地端删除船员请求
+                    result = ProtoBDManager.CrewDelete(crew.crewrequest.crewinfo.uid);
+                    if (result == 0)
+                    {  //向组件发送船员请求
+                        manager.SendCrewDelete(Convert.ToInt32(crew.crewrequest.crewinfo.uid), ManagerHelp.UpToId);
+                        ManagerHelp.UpSend.Add("CrewDel");
                     }
-                    manager.SendCrewRN(Models.Crew.Command.DELETE_REP, null, result);
+                    else
+                    {
+                        manager.SendCrewRN(Models.Crew.Command.DELETE_REP, null, result);
+                    }
                     break;
+                   #endregion
                 case Models.Crew.Command.MODIFY_REQ:
-                    if (crew.crewrequest != null)
-                    {
-                         result=ProtoBDManager.CrewUpdate(crew.crewrequest.crewinfo);
+                    #region 陆地端修改船员请求
+                    result = ProtoBDManager.CrewUpdate(crew.crewrequest.crewinfo);
+                    if (result == 0)
+                    {  //向组件发送船员请求
+                        manager.SendCrewUpdate(crew.crewrequest.crewinfo, ManagerHelp.UpToId);
+                        ManagerHelp.UpSend.Add("CrewEdit");
                     }
-                    manager.SendCrewRN(Models.Crew.Command.DELETE_REP, null, result);
+                    else
+                    {
+                        manager.SendCrewRN(Models.Crew.Command.MODIFY_REP, null, result);
+                    }
                     break;
+                   #endregion
                 case Models.Crew.Command.QUERY_REQ:
-                    int uid = crew.crewrequest != null && crew.crewrequest.crewinfo != null ?Convert.ToInt32(crew.crewrequest.crewinfo.uid) : 0;
+                    #region 陆地端查询船员请求
+                    int uid = crew.crewrequest != null && crew.crewrequest.crewinfo != null ? Convert.ToInt32(crew.crewrequest.crewinfo.uid) : 0;
                     var crews = ProtoBDManager.CrewQuery(uid);
-                    manager.SendCrewRN(Models.Crew.Command.QUERY_REP,crews);
+                    manager.SendCrewRN(Models.Crew.Command.QUERY_REP, crews);
                     break;
+                   #endregion
                 case Models.Crew.Command.NEW_REP:
-                    ManagerHelp.CrewReponse = crew.crewresponse.result.ToString();
+                    if (ManagerHelp.UpSend.Where(c => c == "CrewAdd").Any())
+                    {
+                        //向陆地端响应请求
+                        manager.SendCrewRN(Models.Crew.Command.NEW_REP, null, result);
+                        ManagerHelp.UpSend.Remove("CrewAdd");
+                    }
+                    else
+                    {
+                        ManagerHelp.CrewReponse = crew.crewresponse.result.ToString();
+                    }
                     break;
                 case Models.Crew.Command.DELETE_REP:
-                    ManagerHelp.CrewReponse = crew.crewresponse.result.ToString();
+                    if (ManagerHelp.UpSend.Where(c => c == "CrewDel").Any())
+                    {
+                        //向陆地端响应请求
+                        manager.SendCrewRN(Models.Crew.Command.DELETE_REP, null, result);
+                        ManagerHelp.UpSend.Remove("CrewDel");
+                    }
+                    else
+                    {
+                        ManagerHelp.CrewReponse = crew.crewresponse.result.ToString();
+                    }
                     break;
                 case Models.Crew.Command.MODIFY_REP:
-                    ManagerHelp.CrewReponse = crew.crewresponse.result.ToString();
+                    if (ManagerHelp.UpSend.Where(c => c == "CrewEdit").Any())
+                    {
+                        //向陆地端响应请求
+                        manager.SendCrewRN(Models.Crew.Command.MODIFY_REP, null, result);
+                        ManagerHelp.UpSend.Remove("CrewEdit");
+                    }
+                    else
+                    {
+                        ManagerHelp.CrewReponse = crew.crewresponse.result.ToString();
+                    }
                     break;
                 case Models.Crew.Command.QUERY_REP:
-                    if (crew.crewresponse!=null&&crew.crewresponse.result==0&&crew.crewresponse.crewinfos!=null)
+                    if (crew.crewresponse != null && crew.crewresponse.result == 0 && crew.crewresponse.crewinfos != null)
                     {
                         ManagerHelp.CrewReponse = JsonConvert.SerializeObject(crew.crewresponse.crewinfos);
                     }
@@ -279,28 +372,40 @@ namespace ShipWeb.ProtoBuffer
             ProtoBDManager.AddReceiveLog<ShipWeb.ProtoBuffer.Models.Status>("Status", status);
             switch (status.command)
             {
-                case Status.Command.SET_REQ://设置船状态
-                    int result = 1;
-                    if (status.statusrequest != null)
+                case Status.Command.SET_REQ://设置船状态 
+                    #region 陆地端修改船状态
+                    int result = ProtoBDManager.ShipSet(status.statusrequest);
+                    if (result == 0)
                     {
-                        result = ProtoBDManager.ShipSet(status.statusrequest);
-                        if (result==0)
-                        {
-                            //向组件发送船员请求
-                            manager.SendStatusSet(status.statusrequest, ManagerHelp.UpToId);
-                        }
+                        //向组件发送船员请求
+                        manager.SendStatusSet(status.statusrequest, ManagerHelp.UpToId);
+                        ManagerHelp.UpSend.Add("StatusSet");
                     }
-                    manager.SendStatusRN(Status.Command.SET_REP, null, result);
+                    else
+                    {
+                        manager.SendStatusRN(Status.Command.SET_REP, null, result);
+                    }
                     break;
+                   #endregion
                 case Status.Command.QUERY_REQ:
+                    #region 陆地端查询船信息
                     var ship = ProtoBDManager.StatusQuery();
                     manager.SendStatusRN(Status.Command.QUERY_REP, ship);
                     break;
+                    #endregion
                 case Status.Command.SET_REP://接收设备成功与否
-                    ManagerHelp.StatusReponse = status.statusresponse.result.ToString();
+                    if (ManagerHelp.UpSend.Where(c=>c== "StatusSet").Any())
+                    {
+                        manager.SendStatusRN(Status.Command.SET_REP, null, status.statusresponse.result);
+                        ManagerHelp.UpSend.Remove("StatusSet");
+                    }
+                    else
+                    {
+                        ManagerHelp.StatusReponse = status.statusresponse.result.ToString();
+                    }
                     break;
                 case Status.Command.QUERY_REP:
-                    if (status.statusresponse!=null)
+                    if (status.statusresponse != null)
                     {
                         ManagerHelp.StatusReponse = JsonConvert.SerializeObject(status.statusresponse);
                     }

@@ -81,8 +81,8 @@ namespace ShipWeb.ProtoBuffer
             while (true)
             {
                 var mQFrames = dealer.ReceiveMultipartMessage(6);
-                var temp1 = mQFrames[3].ToString();
-                var temp2 = mQFrames[4].ToString();
+                var temp1 = mQFrames[3].ConvertToString();
+                var temp2 = mQFrames[4].ConvertToString();
                 //对陆地端方向的接受
                 if (!temp2.Equals(ManagerHelp.ComponentId))
                 {
@@ -93,41 +93,50 @@ namespace ShipWeb.ProtoBuffer
                 }
                 byte[] mory = mQFrames.Last.ToByteArray();
                 MSG revmsg = ProtoBufHelp.DeSerialize<MSG>(mory);
-                if (revmsg.type == MSG.Type.ALARM)
+                try
                 {
-                    if (revmsg.alarm.alarminfo != null)
+                    if (revmsg.type == MSG.Type.ALARM)
                     {
-                        string xmq = "";
-                        if (mQFrames[2].ToString() == "upload")
+                        if (revmsg.alarm.alarminfo != null)
                         {
-                            xmq = temp1;
+                            string xmq = "";
+                            if (mQFrames[2].ToString() == "upload")
+                            {
+                                xmq = temp1;
+                            }
+                            ProtoBDManager.AlarmAdd(revmsg.alarm.alarminfo, xmq);
                         }
-                        ProtoBDManager.AlarmAdd(revmsg.alarm.alarminfo,xmq);
+                    }
+                    else if (revmsg.type == MSG.Type.ALGORITHM)
+                    {
+                        manager.AlgorithmData(revmsg.algorithm);
+                    }
+                    else if (revmsg.type == MSG.Type.CREW)
+                    {
+                        manager.CrewData(revmsg.crew);
+                    }
+                    else if (revmsg.type == MSG.Type.DEVICE)
+                    {
+                        manager.DeviceData(revmsg.device);
+                    }
+                    else if (revmsg.type == MSG.Type.STATUS)
+                    {
+                        manager.StatusData(revmsg.status);
+                    }
+                    else if (revmsg.type == MSG.Type.COMPONENT)
+                    {
+                        manager.ComponentData(revmsg.component);
+                    }
+                    else if (revmsg.type == MSG.Type.EVENT)
+                    {
+                        manager.CaptureData(revmsg.evt);
                     }
                 }
-                else if (revmsg.type == MSG.Type.ALGORITHM)
+                catch (Exception ex)
                 {
-                    manager.AlgorithmData(revmsg.algorithm);
-                }
-                else if (revmsg.type == MSG.Type.CREW)
-                {
-                    manager.CrewData(revmsg.crew);
-                }
-                else if (revmsg.type == MSG.Type.DEVICE)
-                {
-                    manager.DeviceData(revmsg.device);
-                }
-                else if (revmsg.type == MSG.Type.STATUS)
-                {
-                    manager.StatusData(revmsg.status);
-                }
-                else if (revmsg.type == MSG.Type.COMPONENT)
-                {
-                    manager.ComponentData(revmsg.component);
-                }
-                else if (revmsg.type == MSG.Type.EVENT)
-                {
-                    manager.CaptureData(revmsg.evt);
+                    //异常日志入库
+                    ProtoBDManager.AddReceiveLog<MSG>("Exception", revmsg, ex.Message);
+                    continue;
                 }
                 Thread.Sleep(100);
             }

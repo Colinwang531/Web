@@ -369,8 +369,9 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="uid"></param>
         /// <returns></returns>
-        public static int CrewDelete(int uid) 
+        public static int CrewDelete(string id) 
         {
+            int uid = Convert.ToInt32(id);
             using (var _context = new MyContext())
             {
                 if (uid>0)
@@ -683,34 +684,28 @@ namespace ShipWeb.ProtoBuffer
         /// <returns></returns>
         public static int ShipSet(StatusRequest request)
         {
-            try
+            if (request == null) return 1;
+            using (var _context = new MyContext())
             {
-                using (var _context = new MyContext())
+                //修改船状态信息
+                var ship = _context.Ship.FirstOrDefault();
+                if (ship != null)
                 {
-                    //修改船状态信息
-                    var ship = _context.Ship.FirstOrDefault();
-                    if (ship != null)
+                    if (request.text != "" && request.type == StatusRequest.Type.NAME)
                     {
-                        if (request.text != "" && request.type == StatusRequest.Type.NAME)
-                        {
-                            ship.Name = request.text;
-                            _context.Ship.Update(ship);
-                            _context.SaveChanges();
-                        }
-                        else if (request.type == StatusRequest.Type.SAIL)
-                        {
-                            ship.type = (ShipWeb.Models.Ship.Type)request.flag;
-                            ship.Flag = request.flag == 1 ? true : false;
-                            _context.Ship.Update(ship);
-                            _context.SaveChanges();
-                        }
+                        ship.Name = request.text;
+                        _context.Ship.Update(ship);
+                        _context.SaveChanges();
                     }
-                    return 0;
+                    else if (request.type == StatusRequest.Type.SAIL)
+                    {
+                        ship.type = (ShipWeb.Models.Ship.Type)request.flag;
+                        ship.Flag = request.flag == 1 ? true : false;
+                        _context.Ship.Update(ship);
+                        _context.SaveChanges();
+                    }
                 }
-            }
-            catch (Exception ex)
-            {
-                return 1;
+                return 0;
             }
         }
 
@@ -990,7 +985,7 @@ namespace ShipWeb.ProtoBuffer
         /// <typeparam name="T"></typeparam>
         /// <param name="key"></param>
         /// <param name="t"></param>
-        public static void AddReceiveLog<T>(string key, T t) 
+        public static void AddReceiveLog<T>(string key, T t,string ErrMsg="") 
         {
             var values = JsonConvert.SerializeObject(t);
             using (var context=new MyContext())
@@ -1000,6 +995,7 @@ namespace ShipWeb.ProtoBuffer
                     Id = Guid.NewGuid().ToString(),
                     Key = key,
                     Values = values,
+                    Exception = ErrMsg,
                     Time = DateTime.Now
                 };
                 context.ReceiveLog.Add(log);
@@ -1038,5 +1034,6 @@ namespace ShipWeb.ProtoBuffer
 
             }
         }
+       
     }
 }
