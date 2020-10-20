@@ -109,7 +109,6 @@ namespace ShipWeb.ProtoBuffer.Init
             {
                 Task.Factory.StartNew(state =>
                 {
-                    int index = 0;
                     while (ManagerHelp.Cid=="")
                     {
                         Thread.Sleep(1000);
