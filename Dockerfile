@@ -7,7 +7,7 @@ ADD ./simsun.ttc /usr/share/fonts/simsun.ttc
 
 WORKDIR /app
 COPY . .
-RUN mv /etc/apt/sources.list /etc/apt/sources.list.bak && mv sources.list /etc/apt/ && apt-get update -y && apt-get install -y libgdiplus && apt-get clean && ln -s /usr/lib/libgdiplus.so /usr/lib/gdiplus.dll 
+RUN mv /etc/apt/sources.list /etc/apt/sources.list.bak && mv sources.list /etc/apt/ && apt-get update -y && apt-get install -y libgdiplus && apt-get clean && apt-get install sox -y && apt-get install sox libsox-fmt-all && ln -s /usr/lib/libgdiplus.so /usr/lib/gdiplus.dll 
 
 EXPOSE 80
 EXPOSE 443
