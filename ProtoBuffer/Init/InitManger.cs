@@ -62,7 +62,7 @@ namespace ShipWeb.ProtoBuffer.Init
 
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                     MusicPlay.WindowPlaySleepMusic();
-                else if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
                     MusicPlay.LinuxPlaySleepMusic();
             }
         }
@@ -85,7 +85,7 @@ namespace ShipWeb.ProtoBuffer.Init
                 }
                 if (sysdic.Where(c => c.key == "DepartureTime").Any())
                 {
-                    ManagerHelp.DepartureTime = sysdic.FirstOrDefault(c => c.key == "DepartureTime").value;
+                    ManagerHelp.DepartureTime = Convert.ToInt32(sysdic.FirstOrDefault(c => c.key == "DepartureTime").value);
                 }
                 if (sysdic.Where(c => c.key == "PublisherIP").Any())
                 {
@@ -93,7 +93,7 @@ namespace ShipWeb.ProtoBuffer.Init
                 }
                 if (sysdic.Where(c => c.key == "IsShipPort").Any())
                 {
-                    ManagerHelp.IsShipPort =sysdic.FirstOrDefault(c => c.key == "IsShipPort").value=="true"?true:false;
+                    ManagerHelp.IsShipPort = sysdic.FirstOrDefault(c => c.key == "IsShipPort").value == "true" ? true : false;
                 }
             }
         }
@@ -116,7 +116,7 @@ namespace ShipWeb.ProtoBuffer.Init
             {
                 Task.Factory.StartNew(state =>
                 {
-                    while (ManagerHelp.Cid=="")
+                    while (ManagerHelp.Cid == "")
                     {
                         Thread.Sleep(1000);
                     }
@@ -315,7 +315,7 @@ namespace ShipWeb.ProtoBuffer.Init
                         var compontent = context.Component.ToList();
                         foreach (var item in compontent)
                         {
-                            if (item.Type == ComponentType.WEB) 
+                            if (item.Type == ComponentType.WEB)
                             {
                                 item.Cid = "";
                             }
@@ -330,7 +330,7 @@ namespace ShipWeb.ProtoBuffer.Init
                     ManagerHelp.SendCount = 0;
                     //重新注册
                     ManagerHelp.Cid = "";
-                    assembly.SendComponentSign("WEB","");
+                    assembly.SendComponentSign("WEB", "");
                 }
             }
         }
