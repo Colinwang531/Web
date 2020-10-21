@@ -21,6 +21,7 @@ using NetMQ;
 using System.Diagnostics;
 using ShipWeb.Interface;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace ShipWeb.ProtoBuffer.Init
 {
@@ -55,8 +56,11 @@ namespace ShipWeb.ProtoBuffer.Init
                 }
                 //定时获取组件信息
                 QueryComponent();
-                //MusicPlay.PlaySleepMusic();
 
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    MusicPlay.WindowPlaySleepMusic();
+                else if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                    MusicPlay.LinuxPlaySleepMusic();
             }
         }
         /// <summary>
@@ -86,7 +90,7 @@ namespace ShipWeb.ProtoBuffer.Init
                 }
                 if (sysdic.Where(c => c.key == "IsShipPort").Any())
                 {
-                    ManagerHelp.IsShipPort =sysdic.FirstOrDefault(c => c.key == "IsShipPort").value=="true"?true:false;
+                    ManagerHelp.IsShipPort = sysdic.FirstOrDefault(c => c.key == "IsShipPort").value == "true" ? true : false;
                 }
             }
         }
@@ -109,7 +113,7 @@ namespace ShipWeb.ProtoBuffer.Init
             {
                 Task.Factory.StartNew(state =>
                 {
-                    while (ManagerHelp.Cid=="")
+                    while (ManagerHelp.Cid == "")
                     {
                         Thread.Sleep(1000);
                     }
@@ -208,7 +212,7 @@ namespace ShipWeb.ProtoBuffer.Init
                 foreach (var item in deviceInfos)
                 {
                     string devIdentity = "";
-                    if (item.factory ==ShipWeb.Models.Device.Factory.DAHUA) devIdentity = DHDIdenity;
+                    if (item.factory == ShipWeb.Models.Device.Factory.DAHUA) devIdentity = DHDIdenity;
                     else if (item.factory == ShipWeb.Models.Device.Factory.HIKVISION) devIdentity = HKDIdentity;
                     //海康和大华组件尚未启动则不需要发送组件注册消息
                     if (devIdentity == "") continue;
@@ -302,7 +306,7 @@ namespace ShipWeb.ProtoBuffer.Init
                 //连续3次发送心跳后未得到响应将全部组件下线
                 if (ManagerHelp.SendCount == 3)
                 {
-                    using (var context=new MyContext())
+                    using (var context = new MyContext())
                     {
                         var compontent = context.Component.Where(c => c.Type != ComponentType.WEB).ToList();
                         foreach (var item in compontent)

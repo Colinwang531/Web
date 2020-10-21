@@ -34,7 +34,7 @@
         }
     </style>
 </head>
-<body class="layui-layout-body" >
+<body class="layui-layout-body">
     <div class="layui-layout layui-layout-admin">
         <div class="layui-header" style="background-color:#171F46;height:80px">
             <div style="margin-left:40px;padding-top:22px">
@@ -42,13 +42,13 @@
                 <div style="float:right;margin-right:20px">
                     @if (ViewBag.IsLandHome)
                     {
-                    <a href="/Home/LandHome"><img style="width:24px;height:24px;" src="~/images/ship/close.png" /></a>
+                        <a href="/Home/LandHome"><img style="width:24px;height:24px;" src="~/images/ship/close.png" /></a>
                     }
                     else
                     {
-                    <div style="margin-top: 10px;">
-                        <a href="/Login/SignOut" style="color:white;margin-right:50px">退出</a>
-                    </div>
+                        <div style="margin-top: 10px;">
+                            <a href="/Login/SignOut" style="color:white;margin-right:50px">退出</a>
+                        </div>
                     }
                 </div>
             </div>
@@ -109,12 +109,12 @@
                             }
                         </li>
                     }
-                        <li id="attendance">
-                            <a href="#">
-                                <img src="~/images/ship/attendance.png" />考勤
-                            </a>
-                        </li>
-                  
+                    <li id="attendance">
+                        <a href="#">
+                            <img src="~/images/ship/attendance.png" />考勤
+                        </a>
+                    </li>
+
                     <li id="video">
                         <a href="#">
                             <img src="~/images/ship/video.png" />视频监控
@@ -125,7 +125,7 @@
             </div>
         </div>
 
-        <div class="layui-body"style="background-color:#FFFFFF;top: 80px;bottom: 0;">
+        <div class="layui-body" style="background-color:#FFFFFF;top: 80px;bottom: 0;">
             <iframe id="frm" src="@ViewBag.src" style="width:98%;height:97%;background-color:white" frameborder="0" border="0" marginwidth="0" marginheight="0">
                 <!-- 内容主体区域 -->
                 @RenderBody()
@@ -191,29 +191,60 @@
         function ClearStyle() {
             $("#device a").removeAttr("style");
             $("#device a img").attr("src", "/images/ship/device.png");
-              
+
             $("#algorithm a").removeAttr("style");
             $("#algorithm a img").attr("src", "/images/ship/algorithm.png");
-              
+
             $("#crew a").removeAttr("style");
             $("#crew a img").attr("src", "/images/ship/crew.png");
-               
+
             $("#ship a").removeAttr("style");
             $("#ship a img").attr("src", "/images/ship/shipstatus.png");
-               
+
             $("#alarm a").removeAttr("style");
             $("#alarm a img").attr("src", "/images/ship/alarm.png");
-              
+
             $("#attendance a").removeAttr("style");
             $("#attendance a img").attr("src", "/images/ship/attendance.png");
-               
+
             $("#video a").removeAttr("style");
             $("#video a img").attr("src", "/images/ship/video.png");
 
             $("#compon a").removeAttr("style");
             $("#compon a img").attr("src", "/images/ship/component.png");
-        }      
+        }
     </script>
 </body>
 </html>
+<script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
+<script type="text/javascript">
+    $(function () {
+        let hubUrl = "http://localhost:5000/chatHub";
+        //创建连接对象connection
+        const connection = new signalR.HubConnectionBuilder()
+            .withUrl(hubUrl)
+            .withAutomaticReconnect() //断线自动重连
+            .configureLogging(signalR.LogLevel.Information)
+            .build();
 
+        connection.start().then(function () {
+            console.log("连接成功");
+            connection.invoke("UserOnline", "111154").catch(function (err) {
+                return console.log(err.toString());
+            });
+        }).catch(function (ex) {
+            console.log("连接失败" + ex);
+            //SignalR JavaScript 客户端不会自动重新连接，必须编写代码将手动重新连接你的客户端
+            setTimeout(() => start(), 5000);
+        });
+
+        //自动重连成功后的处理
+        connection.onreconnected(connectionId => {
+            console.log(connectionId);
+        });
+
+        connection.on("ReceiveAlarmVoice", function (arg1, arg2) {
+            console.log(arg1 + JSON.stringify(arg2));
+        });
+    })
+</script>

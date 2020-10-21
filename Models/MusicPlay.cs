@@ -10,10 +10,18 @@ namespace ShipWeb.Models
     {
         [DllImport("winmm.dll")]
         public static extern uint mciSendString(string lpstrCommand, string lpstrReturnString, uint uReturnLength, uint hWndCallback);
-        public static void PlaySleepMusic() 
+        public static void WindowPlaySleepMusic() 
         {
-            string filePath = AppContext.BaseDirectory + "/music/bonvoyageSleep.mp3";
+            string filePath = AppContext.BaseDirectory + "music/bonvoyageSleep.mp3";
             mciSendString("play" + " " + filePath, null, 0, 0);
         }
+
+        public static void LinuxPlaySleepMusic()
+        {
+           //SOX
+
+
+        }
+
     }
 }
