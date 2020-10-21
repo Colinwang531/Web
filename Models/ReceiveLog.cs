@@ -23,6 +23,10 @@ namespace ShipWeb.Models
         /// </summary>
         public string Values { get; set; }
         /// <summary>
+        /// 异常内容
+        /// </summary>
+        public string Exception { get; set; }
+        /// <summary>
         /// 接收时间
         /// </summary>
         public DateTime Time { get; set; }

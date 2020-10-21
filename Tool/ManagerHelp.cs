@@ -49,7 +49,7 @@ namespace ShipWeb.Tool
         /// <summary>
         /// 是否向上发送
         /// </summary>
-        public static List<string> UpSend = new List<string>();
+        public static List<string> UpSend =null;
         /// <summary>
         /// 发送次数（心跳时使用）
         /// </summary>
@@ -65,7 +65,7 @@ namespace ShipWeb.Tool
         /// <summary>
         /// 缺岗执行时间单位分名钟
         /// </summary>
-        public static string DepartureTime = "";
+        public static int DepartureTime = 5;
         /// <summary>
         /// 是否显示返回陆地端菜单
         /// </summary>
@@ -87,6 +87,9 @@ namespace ShipWeb.Tool
         /// 人脸算法组件名称
         /// </summary>
         public static string FaceName = "FaceRecognize";
+        /// <summary>
+        /// 存放考勤
+        /// </summary>
         public static List<AtWork> atWorks = null;
         /// <summary>
         /// 是否初使化

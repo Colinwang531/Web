@@ -53,7 +53,6 @@ namespace ShipWeb.Controllers
             }
             else
             {
-
                 //保存登陆的用户ID
                 HttpContext.Session.Set("uid", Encoding.UTF8.GetBytes(usersModel.Id));
                 //保存用户可操作的权限 admin 最高权限
@@ -68,6 +67,21 @@ namespace ShipWeb.Controllers
                     {
                         shipName = ship.Name;
                         shipId = ship.Id;
+                    }
+                    else
+                    {
+                        ship = new Ship()
+                        {
+                            Coordinate = "",
+                            CrewNum = 0,
+                            Flag = false,
+                            Id = Guid.NewGuid().ToString(),
+                            Name = "Boat",
+                            type = Ship.Type.AUTO
+                        };
+                        shipId = ship.Id;
+                        _context.Ship.Add(ship);
+                        _context.SaveChanges();
                     }
                 }
                 

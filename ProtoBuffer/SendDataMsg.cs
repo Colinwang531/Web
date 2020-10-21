@@ -87,7 +87,7 @@ namespace ShipWeb.ProtoBuffer
                     }
                 }
             };
-            dealer.Send(sendMsg, "upstream", "response");
+            dealer.Send(sendMsg, ManagerHelp.UpToId, "response");
         }
         /// <summary>
         /// 组合返回数据
@@ -111,7 +111,7 @@ namespace ShipWeb.ProtoBuffer
                     }
                 }
             };
-            dealer.Send(msg, "upstream", "response");
+            dealer.Send(msg, ManagerHelp.UpToId, "response");
         }
         /// <summary>
         /// 查询船员
@@ -237,7 +237,7 @@ namespace ShipWeb.ProtoBuffer
                     }
                 }
             };
-            dealer.Send(msg,ManagerHelp.ComponentId);
+            dealer.Send(msg,"");
         }
         /// <summary>
         /// 组件查询

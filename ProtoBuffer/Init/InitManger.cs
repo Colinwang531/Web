@@ -21,7 +21,6 @@ using NetMQ;
 using System.Diagnostics;
 using ShipWeb.Interface;
 using System.Reflection;
-using System.Runtime.InteropServices;
 
 namespace ShipWeb.ProtoBuffer.Init
 {
@@ -36,10 +35,13 @@ namespace ShipWeb.ProtoBuffer.Init
             using (var context = new MyContext())
             {
                 //船舶端组件注册
-                var comList = context.Component.FirstOrDefault(c => c.Type == ComponentType.WEB);
-                if (comList != null)
+                var component = context.Component.FirstOrDefault(c => c.Type == ComponentType.WEB);
+                if (component != null)
                 {
-                    ManagerHelp.ComponentId = comList.Id;
+                    ManagerHelp.ComponentId = component.Id;
+                    component.Cid = "";
+                    context.Update(component);
+                    context.SaveChanges();
                 }
                 else
                 {
@@ -56,11 +58,8 @@ namespace ShipWeb.ProtoBuffer.Init
                 }
                 //定时获取组件信息
                 QueryComponent();
+                //MusicPlay.PlaySleepMusic();
 
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                    MusicPlay.WindowPlaySleepMusic();
-                else if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                    MusicPlay.LinuxPlaySleepMusic();
             }
         }
         /// <summary>
@@ -72,25 +71,31 @@ namespace ShipWeb.ProtoBuffer.Init
             var sysdic = context.SysDictionary.ToList();
             if (sysdic.Count() > 0)
             {
-                if (sysdic.Where(c => c.key == "NetMqID").Any())
+                try
                 {
-                    ManagerHelp.IP = sysdic.FirstOrDefault(c => c.key == "NetMqID").value;
+                    if (sysdic.Where(c => c.key == "NetMqID").Any())
+                    {
+                        ManagerHelp.IP = sysdic.FirstOrDefault(c => c.key == "NetMqID").value;
+                    }
+                    if (sysdic.Where(c => c.key == "ExportCompany").Any())
+                    {
+                        ManagerHelp.ExportCompany = sysdic.FirstOrDefault(c => c.key == "ExportCompany").value;
+                    }
+                    if (sysdic.Where(c => c.key == "DepartureTime").Any())
+                    {
+                        ManagerHelp.DepartureTime = Convert.ToInt32(sysdic.FirstOrDefault(c => c.key == "DepartureTime").value.Trim());
+                    }
+                    if (sysdic.Where(c => c.key == "PublisherIP").Any())
+                    {
+                        ManagerHelp.PublisherIP = sysdic.FirstOrDefault(c => c.key == "PublisherIP").value;
+                    }
+                    if (sysdic.Where(c => c.key == "IsShipPort").Any())
+                    {
+                        ManagerHelp.IsShipPort = sysdic.FirstOrDefault(c => c.key == "IsShipPort").value.Trim() == "true" ? true : false;
+                    }
                 }
-                if (sysdic.Where(c => c.key == "ExportCompany").Any())
+                catch (Exception ex)
                 {
-                    ManagerHelp.ExportCompany = sysdic.FirstOrDefault(c => c.key == "ExportCompany").value;
-                }
-                if (sysdic.Where(c => c.key == "DepartureTime").Any())
-                {
-                    ManagerHelp.DepartureTime = sysdic.FirstOrDefault(c => c.key == "DepartureTime").value;
-                }
-                if (sysdic.Where(c => c.key == "PublisherIP").Any())
-                {
-                    ManagerHelp.PublisherIP = sysdic.FirstOrDefault(c => c.key == "PublisherIP").value;
-                }
-                if (sysdic.Where(c => c.key == "IsShipPort").Any())
-                {
-                    ManagerHelp.IsShipPort = sysdic.FirstOrDefault(c => c.key == "IsShipPort").value == "true" ? true : false;
                 }
             }
         }
@@ -108,52 +113,46 @@ namespace ShipWeb.ProtoBuffer.Init
         {
             SendDataMsg assembly = new SendDataMsg();
             //发送组件注册请求
-            assembly.SendComponentSign("WEB", ManagerHelp.Cid);
-            if (ManagerHelp.Cid == "")
-            {
-                Task.Factory.StartNew(state =>
-                {
-                    while (ManagerHelp.Cid == "")
-                    {
-                        Thread.Sleep(1000);
-                    }
-                    //发送查询请求
-                    assembly.SendComponentQuery(ManagerHelp.Cid);
-                }, TaskCreationOptions.LongRunning);
-            }
-            else
-            {
-                //select
-                assembly.SendComponentQuery(ManagerHelp.Cid);
-            }
+            assembly.SendComponentSign("WEB", "");
             Task.Factory.StartNew(state =>
             {
-                while (ManagerHelp.ComponentReponse == "")
+                while (ManagerHelp.Cid == "")
                 {
                     Thread.Sleep(1000);
                 }
-                InitStatus();
-                InitDevice();
-                ManagerHelp.ComponentReponse = "";
-                if (ManagerHelp.isInit)
+                //发送查询请求
+                assembly.SendComponentQuery(ManagerHelp.Cid); 
+                Task.Factory.StartNew(state =>
                 {
-                    Task.Factory.StartNew(t =>
+                    while (ManagerHelp.ComponentReponse == "")
                     {
-                        while (ManagerHelp.DeviceReponse == "")
+                        Thread.Sleep(1000);
+                    }
+                    InitStatus();
+                    InitDevice();
+                    ManagerHelp.ComponentReponse = "";
+                    if (ManagerHelp.isInit)
+                    {
+                        Task.Factory.StartNew(t =>
                         {
-                            Thread.Sleep(100);
-                        }
-                        //发送算法信息
-                        InitManger.InitAlgorithm();
-                        //发送船员信息
-                        InitManger.InitCrew();
-                        ManagerHelp.isInit = false;
-                        ManagerHelp.DeviceReponse = "";
-                    }, TaskCreationOptions.LongRunning);
-                }
+                            while (ManagerHelp.DeviceReponse == "")
+                            {
+                                Thread.Sleep(1000);
+                            }
+                            //发送算法信息
+                            InitManger.InitAlgorithm();
+                            //发送船员信息
+                            InitManger.InitCrew();
+                            ManagerHelp.isInit = false;
+                            ManagerHelp.DeviceReponse = "";
+                        }, TaskCreationOptions.LongRunning);
+                    }
+                }, TaskCreationOptions.LongRunning);
             }, TaskCreationOptions.LongRunning);
+           
             ManagerHelp.isInit = true;
             ManagerHelp.atWorks = new List<AtWork>();
+            ManagerHelp.UpSend = new List<string>();
         }
         /// <summary>
         /// 初使化船状态
@@ -212,7 +211,7 @@ namespace ShipWeb.ProtoBuffer.Init
                 foreach (var item in deviceInfos)
                 {
                     string devIdentity = "";
-                    if (item.factory == ShipWeb.Models.Device.Factory.DAHUA) devIdentity = DHDIdenity;
+                    if (item.factory ==ShipWeb.Models.Device.Factory.DAHUA) devIdentity = DHDIdenity;
                     else if (item.factory == ShipWeb.Models.Device.Factory.HIKVISION) devIdentity = HKDIdentity;
                     //海康和大华组件尚未启动则不需要发送组件注册消息
                     if (devIdentity == "") continue;
@@ -306,12 +305,19 @@ namespace ShipWeb.ProtoBuffer.Init
                 //连续3次发送心跳后未得到响应将全部组件下线
                 if (ManagerHelp.SendCount == 3)
                 {
-                    using (var context = new MyContext())
+                    using (var context=new MyContext())
                     {
-                        var compontent = context.Component.Where(c => c.Type != ComponentType.WEB).ToList();
+                        var compontent = context.Component.ToList();
                         foreach (var item in compontent)
                         {
-                            item.Line = 1;
+                            if (item.Type == ComponentType.WEB) 
+                            {
+                                item.Cid = "";
+                            }
+                            else
+                            {
+                                item.Line = 1;
+                            }
                         }
                         context.UpdateRange(compontent);
                         context.SaveChanges();
@@ -319,7 +325,7 @@ namespace ShipWeb.ProtoBuffer.Init
                     ManagerHelp.SendCount = 0;
                     //重新注册
                     ManagerHelp.Cid = "";
-                    assembly.SendComponentSign("WEB", ManagerHelp.Cid);
+                    assembly.SendComponentSign("WEB","");
                 }
             }
         }
@@ -340,14 +346,7 @@ namespace ShipWeb.ProtoBuffer.Init
             {
                 SendDataMsg assembly = new SendDataMsg();
                 //获取间隔时间
-                int departureTime = 1;
-                try
-                {
-                    Convert.ToInt32(ManagerHelp.DepartureTime);
-                }
-                catch (Exception)
-                {
-                }
+                int departureTime = ManagerHelp.DepartureTime;
                 while (true)
                 {
                     using (var context = new MyContext())
@@ -399,16 +398,6 @@ namespace ShipWeb.ProtoBuffer.Init
                     Thread.Sleep(30 * 1000);
                 }
             }, TaskCreationOptions.LongRunning);
-        }
-        /// <summary>
-        /// 组件下线
-        /// </summary>
-        public static void CompontentOffline()
-        {
-            using (var context = new MyContext())
-            {
-
-            }
         }
     }
 }
