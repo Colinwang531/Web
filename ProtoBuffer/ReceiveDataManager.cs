@@ -1,17 +1,17 @@
 ﻿using Microsoft.AspNetCore.Mvc.Filters;
 using Newtonsoft.Json;
 using Renci.SshNet.Security;
-using ShipWeb.DB;
-using ShipWeb.Models;
-using ShipWeb.ProtoBuffer.Models;
-using ShipWeb.Tool;
+using SmartWeb.DB;
+using SmartWeb.Models;
+using SmartWeb.ProtoBuffer.Models;
+using SmartWeb.Tool;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Metadata.Ecma335;
 using System.Threading.Tasks;
 
-namespace ShipWeb.ProtoBuffer
+namespace SmartWeb.ProtoBuffer
 {
     public class ReceiveDataManager
     {
@@ -23,10 +23,10 @@ namespace ShipWeb.ProtoBuffer
         /// 组件处理
         /// </summary>
         /// <param name="response"></param>
-        public void ComponentData(ShipWeb.ProtoBuffer.Models.Component component)
+        public void ComponentData(SmartWeb.ProtoBuffer.Models.Component component)
         {
             //添加日志
-            ProtoBDManager.AddReceiveLog<ShipWeb.ProtoBuffer.Models.Component>("Component/" + Enum.GetName(typeof(Models.Component.Command), Convert.ToInt32(component.command)), component);
+            ProtoBDManager.AddReceiveLog<SmartWeb.ProtoBuffer.Models.Component>("Component/" + Enum.GetName(typeof(Models.Component.Command), Convert.ToInt32(component.command)), component);
             ManagerHelp.ComponentReponse = "";
             switch (component.command)
             {
@@ -71,10 +71,10 @@ namespace ShipWeb.ProtoBuffer
         /// 算法处理
         /// </summary>
         /// <param name="algorithm"></param>
-        public void AlgorithmData(ShipWeb.ProtoBuffer.Models.Algorithm  algorithm)
+        public void AlgorithmData(SmartWeb.ProtoBuffer.Models.Algorithm  algorithm)
         { 
             //添加日志
-            ProtoBDManager.AddReceiveLog<ShipWeb.ProtoBuffer.Models.Algorithm>("Algorithm/"+Enum.GetName(typeof(Models.Component.Command), Convert.ToInt32(algorithm.command)), algorithm);
+            ProtoBDManager.AddReceiveLog<SmartWeb.ProtoBuffer.Models.Algorithm>("Algorithm/"+Enum.GetName(typeof(Models.Component.Command), Convert.ToInt32(algorithm.command)), algorithm);
             switch (algorithm.command)
             {
                 case Models.Algorithm.Command.CONFIGURE_REQ:
@@ -162,10 +162,10 @@ namespace ShipWeb.ProtoBuffer
         /// 设备处理
         /// </summary>
         /// <param name="device"></param>
-        public void DeviceData(ShipWeb.ProtoBuffer.Models.Device device)
+        public void DeviceData(SmartWeb.ProtoBuffer.Models.Device device)
         {
             //添加日志
-            ProtoBDManager.AddReceiveLog<ShipWeb.ProtoBuffer.Models.Device>("Device/"+ Enum.GetName(typeof(Models.Component.Command), Convert.ToInt32(device.command)), device);
+            ProtoBDManager.AddReceiveLog<SmartWeb.ProtoBuffer.Models.Device>("Device/"+ Enum.GetName(typeof(Models.Component.Command), Convert.ToInt32(device.command)), device);
             switch (device.command)
             {
                 //上游陆地端的请求
@@ -302,7 +302,7 @@ namespace ShipWeb.ProtoBuffer
         /// 船员处理
         /// </summary>
         /// <param name="crew"></param>
-        public void CrewData(ShipWeb.ProtoBuffer.Models.Crew crew)
+        public void CrewData(SmartWeb.ProtoBuffer.Models.Crew crew)
         {
             int result = 1;//响应状态
             switch (crew.command)
@@ -408,10 +408,10 @@ namespace ShipWeb.ProtoBuffer
         /// 船舶状态
         /// </summary>
         /// <param name="status"></param>
-        public void StatusData(ShipWeb.ProtoBuffer.Models.Status status) 
+        public void StatusData(SmartWeb.ProtoBuffer.Models.Status status) 
         {
             //添加日志
-            ProtoBDManager.AddReceiveLog<ShipWeb.ProtoBuffer.Models.Status>("Status", status);
+            ProtoBDManager.AddReceiveLog<SmartWeb.ProtoBuffer.Models.Status>("Status", status);
             switch (status.command)
             {
                 case Status.Command.SET_REQ://设置船状态 

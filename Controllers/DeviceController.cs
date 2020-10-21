@@ -13,13 +13,13 @@ using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Asn1.Cms;
 using Org.BouncyCastle.Crypto.Tls;
-using ShipWeb.DB;
-using ShipWeb.Interface;
-using ShipWeb.Models;
-using ShipWeb.ProtoBuffer;
-using ShipWeb.Tool;
+using SmartWeb.DB;
+using SmartWeb.Interface;
+using SmartWeb.Models;
+using SmartWeb.ProtoBuffer;
+using SmartWeb.Tool;
 
-namespace ShipWeb.Controllers
+namespace SmartWeb.Controllers
 {
     public class DeviceController : BaseController
     {
@@ -395,7 +395,7 @@ namespace ShipWeb.Controllers
         /// </summary>
         /// <param name="model"></param>
         /// <returns></returns>
-        private ShipWeb.Models.Device GetProtoDevice(DeviceViewModel model) 
+        private SmartWeb.Models.Device GetProtoDevice(DeviceViewModel model) 
         {
             Device device = new Device();
             device.IP = model.IP;

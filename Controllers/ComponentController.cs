@@ -7,13 +7,13 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Crypto.Tls;
-using ShipWeb.DB;
-using ShipWeb.Models;
-using ShipWeb.ProtoBuffer;
-using ShipWeb.ProtoBuffer.Models;
-using ShipWeb.Tool;
+using SmartWeb.DB;
+using SmartWeb.Models;
+using SmartWeb.ProtoBuffer;
+using SmartWeb.ProtoBuffer.Models;
+using SmartWeb.Tool;
 
-namespace ShipWeb.Controllers
+namespace SmartWeb.Controllers
 {
     public class ComponentController :BaseController
     {
@@ -115,7 +115,7 @@ namespace ShipWeb.Controllers
                 //foreach (var item in componentInfos)
                 //{
                 //    if (item.type == ComponentInfo.Type.WEB) continue;
-                //    ShipWeb.Models.Component model = new ShipWeb.Models.Component()
+                //    SmartWeb.Models.Component model = new SmartWeb.Models.Component()
                 //    {
                 //        Id = item.componentid,
                 //        Name = item.cname,

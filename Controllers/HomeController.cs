@@ -10,12 +10,12 @@ using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
-using ShipWeb.DB;
-using ShipWeb.Models;
-using ShipWeb.ProtoBuffer;
-using ShipWeb.Tool;
+using SmartWeb.DB;
+using SmartWeb.Models;
+using SmartWeb.ProtoBuffer;
+using SmartWeb.Tool;
 
-namespace ShipWeb.Controllers
+namespace SmartWeb.Controllers
 {
     public class HomeController : BaseController
     {

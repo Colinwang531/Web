@@ -1,9 +1,9 @@
 ﻿using NetMQ;
 using NetMQ.Sockets;
-using ShipWeb.Helpers;
-using ShipWeb.ProtoBuffer;
-using ShipWeb.ProtoBuffer.Models;
-using ShipWeb.Tool;
+using SmartWeb.Helpers;
+using SmartWeb.ProtoBuffer;
+using SmartWeb.ProtoBuffer.Models;
+using SmartWeb.Tool;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +12,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ShipWeb.ProtoBuffer
+namespace SmartWeb.ProtoBuffer
 {
     public class DealerService
     {

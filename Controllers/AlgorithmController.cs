@@ -7,14 +7,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Asn1.Cms;
-using ShipWeb.DB;
-using ShipWeb.Interface;
-using ShipWeb.Models;
-using ShipWeb.ProtoBuffer;
-using ShipWeb.Tool;
+using SmartWeb.DB;
+using SmartWeb.Interface;
+using SmartWeb.Models;
+using SmartWeb.ProtoBuffer;
+using SmartWeb.Tool;
 using Microsoft.AspNetCore.Http;
 
-namespace ShipWeb.Controllers
+namespace SmartWeb.Controllers
 {
     public class AlgorithmController : BaseController
     {

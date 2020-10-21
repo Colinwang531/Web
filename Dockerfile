@@ -14,15 +14,15 @@ EXPOSE 443
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1-buster AS build
 
 WORKDIR /src
-COPY ["Smartweb.csproj", ""]
+COPY ["SmartWeb.csproj", ""]
 COPY . .
 WORKDIR "/src/."
-RUN dotnet build "Smartweb.csproj" -c Release -o /app/build
+RUN dotnet build "SmartWeb.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "Smartweb.csproj" -c Release -o /app/publish
+RUN dotnet publish "SmartWeb.csproj" -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "Smartweb.dll"]
+ENTRYPOINT ["dotnet", "SmartWeb.dll"]

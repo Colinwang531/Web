@@ -8,11 +8,11 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.CodeStyle;
 using Microsoft.CodeAnalysis.FlowAnalysis;
 using Newtonsoft.Json;
-using ShipWeb.DB;
-using ShipWeb.Models;
-using ShipWeb.Tool;
+using SmartWeb.DB;
+using SmartWeb.Models;
+using SmartWeb.Tool;
 
-namespace ShipWeb.Controllers
+namespace SmartWeb.Controllers
 {
     public class AttendanceController : BaseController
     {

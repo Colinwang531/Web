@@ -1,6 +1,6 @@
 using System;
 
-namespace ShipWeb.Models
+namespace SmartWeb.Models
 {
     public class ErrorViewModel
     {

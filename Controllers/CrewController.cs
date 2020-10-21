@@ -19,12 +19,12 @@ using NetMQ;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Crypto.Tls;
 using ProtoBuf;
-using ShipWeb.DB;
-using ShipWeb.Models;
-using ShipWeb.ProtoBuffer;
-using ShipWeb.Tool;
+using SmartWeb.DB;
+using SmartWeb.Models;
+using SmartWeb.ProtoBuffer;
+using SmartWeb.Tool;
 
-namespace ShipWeb.Controllers
+namespace SmartWeb.Controllers
 {
     public class CrewController : BaseController
     {
@@ -386,7 +386,7 @@ namespace ShipWeb.Controllers
         /// <param name="job"></param>
         /// <param name="ids"></param>
         /// <returns></returns>
-        private ShipWeb.ProtoBuffer.Models.CrewInfo GetCrewInfo(int id,string name,string job, List<string> ids) 
+        private SmartWeb.ProtoBuffer.Models.CrewInfo GetCrewInfo(int id,string name,string job, List<string> ids) 
         {
             ProtoBuffer.Models.CrewInfo emp = new ProtoBuffer.Models.CrewInfo()
             {

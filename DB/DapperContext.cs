@@ -1,12 +1,12 @@
 ﻿
 using Dapper;
 using MySql.Data.MySqlClient;
-using ShipWeb.Helpers;
+using SmartWeb.Helpers;
 using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
 
-namespace ShipWeb.DB
+namespace SmartWeb.DB
 {
     public static class DapperContext
     {

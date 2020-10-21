@@ -1,12 +1,12 @@
 ﻿using Microsoft.Extensions.Hosting;
-using ShipWeb.Tool;
+using SmartWeb.Tool;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ShipWeb.ProtoBuffer.Init
+namespace SmartWeb.ProtoBuffer.Init
 {
     public class HeartService:BackgroundService
     {

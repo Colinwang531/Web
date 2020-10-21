@@ -9,15 +9,15 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NetMQ.Sockets;
 using ProtoBuf;
-using ShipWeb.ProtoBuffer;
-using ShipWeb.Tool;
+using SmartWeb.ProtoBuffer;
+using SmartWeb.Tool;
 
-namespace ShipWeb
+namespace SmartWeb
 {
     public class Program
     {
         /// <summary>
-        /// 命令行传入的入数据入口 格式 ShipWeb.exe -a 192.168.0.17 -p 3002
+        /// 命令行传入的入数据入口 格式 SmartWeb.exe -a 192.168.0.17 -p 3002
         /// -a：指的是向MQ消息注册的地址 -p：指的是注册消息的端口号
         /// </summary>
         /// <param name="args"></param>

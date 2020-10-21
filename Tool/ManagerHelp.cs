@@ -1,7 +1,7 @@
 ﻿
 using Newtonsoft.Json;
-using ShipWeb.Helpers;
-using ShipWeb.Models;
+using SmartWeb.Helpers;
+using SmartWeb.Models;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -16,9 +16,9 @@ using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using ShipWeb.DB;
+using SmartWeb.DB;
 
-namespace ShipWeb.Tool
+namespace SmartWeb.Tool
 {
     public class ManagerHelp
     {
