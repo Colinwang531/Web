@@ -21,6 +21,7 @@ using NetMQ;
 using System.Diagnostics;
 using ShipWeb.Interface;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace ShipWeb.ProtoBuffer.Init
 {
@@ -58,8 +59,11 @@ namespace ShipWeb.ProtoBuffer.Init
                 }
                 //定时获取组件信息
                 QueryComponent();
-                //MusicPlay.PlaySleepMusic();
 
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    MusicPlay.WindowPlaySleepMusic();
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                    MusicPlay.LinuxPlaySleepMusic();
             }
         }
         /// <summary>
@@ -71,31 +75,25 @@ namespace ShipWeb.ProtoBuffer.Init
             var sysdic = context.SysDictionary.ToList();
             if (sysdic.Count() > 0)
             {
-                try
+                if (sysdic.Where(c => c.key == "NetMqID").Any())
                 {
-                    if (sysdic.Where(c => c.key == "NetMqID").Any())
-                    {
-                        ManagerHelp.IP = sysdic.FirstOrDefault(c => c.key == "NetMqID").value;
-                    }
-                    if (sysdic.Where(c => c.key == "ExportCompany").Any())
-                    {
-                        ManagerHelp.ExportCompany = sysdic.FirstOrDefault(c => c.key == "ExportCompany").value;
-                    }
-                    if (sysdic.Where(c => c.key == "DepartureTime").Any())
-                    {
-                        ManagerHelp.DepartureTime = Convert.ToInt32(sysdic.FirstOrDefault(c => c.key == "DepartureTime").value.Trim());
-                    }
-                    if (sysdic.Where(c => c.key == "PublisherIP").Any())
-                    {
-                        ManagerHelp.PublisherIP = sysdic.FirstOrDefault(c => c.key == "PublisherIP").value;
-                    }
-                    if (sysdic.Where(c => c.key == "IsShipPort").Any())
-                    {
-                        ManagerHelp.IsShipPort = sysdic.FirstOrDefault(c => c.key == "IsShipPort").value.Trim() == "true" ? true : false;
-                    }
+                    ManagerHelp.IP = sysdic.FirstOrDefault(c => c.key == "NetMqID").value;
                 }
-                catch (Exception ex)
+                if (sysdic.Where(c => c.key == "ExportCompany").Any())
                 {
+                    ManagerHelp.ExportCompany = sysdic.FirstOrDefault(c => c.key == "ExportCompany").value;
+                }
+                if (sysdic.Where(c => c.key == "DepartureTime").Any())
+                {
+                    ManagerHelp.DepartureTime = Convert.ToInt32(sysdic.FirstOrDefault(c => c.key == "DepartureTime").value);
+                }
+                if (sysdic.Where(c => c.key == "PublisherIP").Any())
+                {
+                    ManagerHelp.PublisherIP = sysdic.FirstOrDefault(c => c.key == "PublisherIP").value;
+                }
+                if (sysdic.Where(c => c.key == "IsShipPort").Any())
+                {
+                    ManagerHelp.IsShipPort = sysdic.FirstOrDefault(c => c.key == "IsShipPort").value == "true" ? true : false;
                 }
             }
         }
@@ -116,15 +114,9 @@ namespace ShipWeb.ProtoBuffer.Init
             assembly.SendComponentSign("WEB", "");
             Task.Factory.StartNew(state =>
             {
-                while (ManagerHelp.Cid == "" && ManagerHelp.ComponentReponse=="")
+                while (ManagerHelp.Cid == "")
                 {
                     Thread.Sleep(1000);
-                }
-                if (ManagerHelp.ComponentReponse!="0"&& ManagerHelp.ComponentReponse!="")
-                {
-                    ManagerHelp.ComponentReponse = "";
-                    ManagerHelp.ComponentId = Guid.NewGuid().ToString();
-                    InitData();
                 }
                 //发送查询请求
                 assembly.SendComponentQuery(ManagerHelp.Cid); 
@@ -220,7 +212,7 @@ namespace ShipWeb.ProtoBuffer.Init
                 foreach (var item in deviceInfos)
                 {
                     string devIdentity = "";
-                    if (item.factory ==ShipWeb.Models.Device.Factory.DAHUA) devIdentity = DHDIdenity;
+                    if (item.factory == ShipWeb.Models.Device.Factory.DAHUA) devIdentity = DHDIdenity;
                     else if (item.factory == ShipWeb.Models.Device.Factory.HIKVISION) devIdentity = HKDIdentity;
                     //海康和大华组件尚未启动则不需要发送组件注册消息
                     if (devIdentity == "") continue;
@@ -314,12 +306,12 @@ namespace ShipWeb.ProtoBuffer.Init
                 //连续3次发送心跳后未得到响应将全部组件下线
                 if (ManagerHelp.SendCount == 3)
                 {
-                    using (var context=new MyContext())
+                    using (var context = new MyContext())
                     {
                         var compontent = context.Component.ToList();
                         foreach (var item in compontent)
                         {
-                            if (item.Type == ComponentType.WEB) 
+                            if (item.Type == ComponentType.WEB)
                             {
                                 item.Cid = "";
                             }
@@ -334,7 +326,7 @@ namespace ShipWeb.ProtoBuffer.Init
                     ManagerHelp.SendCount = 0;
                     //重新注册
                     ManagerHelp.Cid = "";
-                    assembly.SendComponentSign("WEB","");
+                    assembly.SendComponentSign("WEB", "");
                 }
             }
         }
