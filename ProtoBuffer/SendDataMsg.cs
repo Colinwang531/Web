@@ -232,7 +232,8 @@ namespace ShipWeb.ProtoBuffer
                         {
                             type = ComponentInfo.Type.WEB,
                             cname = name,
-                            componentid = cid
+                            componentid = ManagerHelp.ComponentId,
+                            commid=cid
                         },
                     }
                 }
@@ -513,8 +514,8 @@ namespace ShipWeb.ProtoBuffer
         /// <summary>
         /// 获取报警消息
         /// </summary>
-        /// <param name="nextIdentity"></param>
-        public void SendAlarm(string nextIdentity = "", AlarmInfo info = null)
+        /// <param name="head"></param>
+        public void SendAlarm(string head = "upload", AlarmInfo info = null)
         {
             MSG msg = new MSG()
             {
@@ -527,7 +528,7 @@ namespace ShipWeb.ProtoBuffer
                 }
             };
             if (info != null) msg.alarm.alarminfo = info;
-            dealer.Send(msg, nextIdentity);
+            dealer.Send(msg,"", head);
         }
     }
 }

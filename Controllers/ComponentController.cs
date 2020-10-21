@@ -59,7 +59,7 @@ namespace ShipWeb.Controllers
                         SaveData(response.componentinfos);
                         foreach (var item in response.componentinfos)
                         {
-                            if (item.type == ProtoBuffer.Models.ComponentInfo.Type.WEB) continue;
+                            if (item.componentid==ManagerHelp.ComponentId) continue;
                             ComponentViewModel model = new ComponentViewModel()
                             {
                                 Id = item.componentid,
@@ -95,7 +95,6 @@ namespace ShipWeb.Controllers
                 List<ComponentToken> tokens = new List<ComponentToken>();
                 foreach (var item in componentInfos) 
                 {
-                    if (item.type == ProtoBuffer.Models.ComponentInfo.Type.WEB) continue;
                     ComponentToken token = new ComponentToken()
                     {
                         Id = item.componentid,
@@ -111,20 +110,20 @@ namespace ShipWeb.Controllers
             else
             {
                 //船舶端将数据写入数据库
-                var components = _context.Component.Where(c => c.Type != ComponentType.WEB).ToList();
-                _context.RemoveRange(components);
-                foreach (var item in componentInfos)
-                {
-                    if (item.type == ComponentInfo.Type.WEB) continue;
-                    ShipWeb.Models.Component model = new ShipWeb.Models.Component()
-                    {
-                        Id = item.componentid,
-                        Name = item.cname,
-                        Type = (ComponentType)item.type
-                    };
-                    _context.Component.Add(model);
-                }
-                _context.SaveChanges();
+                //var components = _context.Component.Where(c => c.Type != ComponentType.WEB).ToList();
+                //_context.RemoveRange(components);
+                //foreach (var item in componentInfos)
+                //{
+                //    if (item.type == ComponentInfo.Type.WEB) continue;
+                //    ShipWeb.Models.Component model = new ShipWeb.Models.Component()
+                //    {
+                //        Id = item.componentid,
+                //        Name = item.cname,
+                //        Type = (ComponentType)item.type
+                //    };
+                //    _context.Component.Add(model);
+                //}
+                //_context.SaveChanges();
             }
         }
     }

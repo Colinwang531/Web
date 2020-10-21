@@ -160,7 +160,7 @@ namespace ShipWeb.Controllers
                     if (base.user.IsLandHome)
                     {
                         string identity = GetIdentity(viewModel.Type, viewModel.Cid);
-                        if (string.IsNullOrEmpty(identity))
+                        if (string.IsNullOrEmpty(identity)&& viewModel.Type != (int)AlgorithmType.CAPTURE)
                         {
                             string name = GetViewName((AlgorithmType)viewModel.Type);
                             return new JsonResult(new { code = 1, msg = "算法【" + name + "】组件未启动" });
@@ -186,7 +186,7 @@ namespace ShipWeb.Controllers
                         }
                         //获取枚举对应的名称
                         string identity = GetIdentity(viewModel.Type, viewModel.Cid);
-                        if (string.IsNullOrEmpty(identity))
+                        if (string.IsNullOrEmpty(identity)&& viewModel.Type != (int)AlgorithmType.CAPTURE)
                         {
                             string name = GetViewName((AlgorithmType)viewModel.Type);
                             return new JsonResult(new { code = 1, msg = "算法【" + name + "】组件未启动" });

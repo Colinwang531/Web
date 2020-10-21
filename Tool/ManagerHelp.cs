@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using ShipWeb.DB;
 
 namespace ShipWeb.Tool
 {
@@ -305,6 +306,29 @@ namespace ShipWeb.Tool
         {
             if (factory == (int)Device.Factory.HIKVISION) return ComponentType.HKD;
             return ComponentType.DHD;
+        }
+        /// <summary>
+        /// 获取船舶端的组件ID
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static string GetIdentity(int type, string name = "")
+        {
+            if (name == "ATTENDANCE_IN" || name == "ATTENDANCE_OUT")
+            {
+                name = ManagerHelp.FaceName.ToUpper();
+            }
+            using (var context = new MyContext())
+            {
+                //获取设备的组件ID
+                var component = context.Component.FirstOrDefault(c => (int)c.Type == type && c.Line == 0 && (name == "" ? 1 == 1 : c.Name.ToUpper() == name));
+                if (component != null)
+                {
+                    return component.Id;
+                }
+            }
+            return "";
         }
     }
 }

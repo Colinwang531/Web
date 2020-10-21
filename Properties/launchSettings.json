@@ -35,7 +35,7 @@
         "ASPNETCORE_HOSTINGSTARTUPASSEMBLIES": "Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation"
       },
       "remoteDebugEnabled": false,
-      "applicationUrl": "http://localhost:5000"
+      "applicationUrl": "http://localhost:8000;http://localhost:8001"
     }
   }
 }

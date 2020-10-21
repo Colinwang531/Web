@@ -122,24 +122,24 @@ namespace ShipWeb.Controllers
                     };
                     list.Add(model);
                 }
-                var comLine = compents.Where(c => c.Line == 0);
-                bool flag = true;
-                new TaskFactory().StartNew(() => {
-                    foreach (var item in comLine)
-                    {
-                        while (ManagerHelp.StatusReponse == "" && flag)
-                        {
-                            if (ManagerHelp.StatusReponse!="")
-                            {
-                                var response = JsonConvert.DeserializeObject<StatusResponse>(ManagerHelp.StatusReponse);
-                                if (response != null) {
-                                    list.FirstOrDefault(c => c.Id == item.Id).Line = response.flag;
-                                }
-                            }
-                            Thread.Sleep(100);
-                        }
-                    }
-                }).Wait(3000);                
+                //var comLine = compents.Where(c => c.Line == 0);
+                //bool flag = true;
+                //new TaskFactory().StartNew(() => {
+                //    foreach (var item in comLine)
+                //    {
+                //        while (ManagerHelp.StatusReponse == "" && flag)
+                //        {
+                //            if (ManagerHelp.StatusReponse!="")
+                //            {
+                //                var response = JsonConvert.DeserializeObject<StatusResponse>(ManagerHelp.StatusReponse);
+                //                if (response != null) {
+                //                    list.FirstOrDefault(c => c.Id == item.Id).Line = response.flag;
+                //                }
+                //            }
+                //            Thread.Sleep(100);
+                //        }
+                //    }
+                //}).Wait(3000);                
                 var result = new
                 {
                     code = 0,

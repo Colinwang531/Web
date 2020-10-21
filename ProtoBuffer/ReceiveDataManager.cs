@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.AspNetCore.Mvc.Filters;
+using Newtonsoft.Json;
 using Renci.SshNet.Security;
 using ShipWeb.DB;
 using ShipWeb.Models;
@@ -7,6 +8,7 @@ using ShipWeb.Tool;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata.Ecma335;
 using System.Threading.Tasks;
 
 namespace ShipWeb.ProtoBuffer
@@ -38,8 +40,9 @@ namespace ShipWeb.ProtoBuffer
                             ProtoBDManager.ComponentAdd(component.componentresponse.cid);
                         }
                     }
+                    if (component.componentresponse.result != 0) ManagerHelp.ComponentReponse = component.componentresponse.result.ToString();
                     //心跳是否有响应
-                    if(ManagerHelp.SendCount>0)ManagerHelp.SendCount--;
+                    if (ManagerHelp.SendCount>0)ManagerHelp.SendCount--;
                     break;
                 case Models.Component.Command.SIGNOUT_REQ:
                     break;
@@ -48,11 +51,17 @@ namespace ShipWeb.ProtoBuffer
                 case Models.Component.Command.QUERY_REQ:
                     break;
                 case Models.Component.Command.QUERY_REP:
+                    List<ComponentInfo> infos = new List<ComponentInfo>();
                     if (component.componentresponse != null && component.componentresponse.result == 0)
                     {
                         ProtoBDManager.ComponentUpdateRange(component.componentresponse.componentinfos);
+                        infos = component.componentresponse.componentinfos;
                     }
-                    ManagerHelp.ComponentReponse = JsonConvert.SerializeObject(component.componentresponse);
+                    //陆地端查询组件时返回已在线船舶（XMQ陆地端的船舶）
+                    if (!infos.Where(c=>c.type==ComponentInfo.Type.XMQ).Any())
+                    {
+                        ManagerHelp.ComponentReponse = JsonConvert.SerializeObject(component.componentresponse);
+                    } 
                     break;
                 default:
                     break;
@@ -74,13 +83,29 @@ namespace ShipWeb.ProtoBuffer
                     int result = ProtoBDManager.AlgorithmSet(request.algorithminfo);
                     if (result==0)
                     {
-                        //向组件发送算法请求
-                        manager.SendAlgorithmSet(request.algorithminfo, ManagerHelp.UpToId);
-                        ManagerHelp.UpSend.Add("Algorithm");
+                        if (request.algorithminfo.type != AlgorithmInfo.Type.CAPTURE) 
+                        {
+                            string name = Enum.GetName(typeof(AlgorithmType), request.algorithminfo.type);
+                            string identity = ManagerHelp.GetIdentity((int)ComponentType.AI, name);
+                            if (identity != "")
+                            {
+                                //向组件发送算法请求
+                                manager.SendAlgorithmSet(request.algorithminfo, identity);
+                                ManagerHelp.UpSend.Add("Algorithm");
+                            }
+                            else
+                            {
+                                manager.SendAlgorithmRN(Models.Algorithm.Command.CONFIGURE_REP, null, 1);
+                            }
+                        }
+                        else
+                        {
+                            //向陆地端响应算法请求
+                            manager.SendAlgorithmRN(Models.Algorithm.Command.CONFIGURE_REP, null, result);
+                        }
                     }
                     else
-                    {
-                        //向陆地端响应算法请求
+                    { //向陆地端响应算法请求
                         manager.SendAlgorithmRN(Models.Algorithm.Command.CONFIGURE_REP, null, result);
                     }
                     break;
@@ -149,8 +174,15 @@ namespace ShipWeb.ProtoBuffer
                     if (device.devicerequest!=null)
                     {
                         var model=ProtoBDManager.DeviceAdd(device.devicerequest.deviceinfo);
-                        manager.SendDeveiceAdd(model, ManagerHelp.UpToId);
-                        ManagerHelp.UpSend.Add(model.Id+"Add");
+                        if (model!=null)
+                        {//获取设置的组件ID
+                            int type = (int)ManagerHelp.GetComponentType((int)model.factory);
+                            string identity = ManagerHelp.GetIdentity(type);
+                            if (identity != "") {
+                                manager.SendDeveiceAdd(model, ManagerHelp.UpToId);
+                                ManagerHelp.UpSend.Add(model.Id + "Add");
+                            }
+                        }
                     }
                     else
                     {
@@ -180,8 +212,18 @@ namespace ShipWeb.ProtoBuffer
                         var model=ProtoBDManager.DeviceUpdate(device.devicerequest.did, device.devicerequest.deviceinfo);
                         if (model!=null)
                         {
-                            manager.SendDeveiceAdd(model, ManagerHelp.UpToId);
-                            ManagerHelp.UpSend.Add(model.Id+"Edit");
+                            //获取设置的组件ID
+                            int type = (int)ManagerHelp.GetComponentType((int)model.factory);
+                            string identity =ManagerHelp.GetIdentity(type);
+                            if (identity!="")
+                            {
+                                manager.SendDeveiceAdd(model, identity);
+                                ManagerHelp.UpSend.Add(model.Id + "Edit");
+                            }
+                            else
+                            {
+                                manager.SendDeviceRN(Models.Device.Command.MODIFY_REP, "", null, 1);
+                            }                           
                         }
                         else
                         {
@@ -414,5 +456,6 @@ namespace ShipWeb.ProtoBuffer
                     break;
             }
         }
+
     }
 }

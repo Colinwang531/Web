@@ -151,8 +151,19 @@ namespace ShipWeb.Controllers
         {
             List<Device> list = new List<Device>();
             string identity = base.user.ShipId;
+            string webIdentity=GetIdentity((int)ComponentType.WEB);
+            var result = new
+            {
+                code = 0,
+                data = list,
+                isSet = !string.IsNullOrEmpty(base.user.ShipId) ? base.user.EnableConfigure : false
+            };
+            if (webIdentity=="")
+            {
+                return new JsonResult(result);
+            }
             //发送查询设备请求
-            assembly.SendDeveiceQuery(identity);
+            assembly.SendDeveiceQuery(identity+":"+ webIdentity);
             bool flag = true;
             new TaskFactory().StartNew(() =>
             {
@@ -200,12 +211,12 @@ namespace ShipWeb.Controllers
                     list.Add(model);
                 }
             }
-            var result = new
-            {
-                code = 0,
-                data = list,
-                isSet = !string.IsNullOrEmpty(base.user.ShipId) ? base.user.EnableConfigure : false
-            };
+            //var result = new
+            //{
+            //    code = 0,
+            //    data = list,
+            //    isSet = !string.IsNullOrEmpty(base.user.ShipId) ? base.user.EnableConfigure : false
+            //};
             return new JsonResult(result);
         }
 
@@ -482,26 +493,22 @@ namespace ShipWeb.Controllers
         /// <returns></returns>
         private string GetIdentity(int factory)
         {
-            var type = ManagerHelp.GetComponentType((int)factory);
             if (base.user.IsLandHome)
             {
                 string tokenstr = HttpContext.Session.GetString("comtoken");
                 if (string.IsNullOrEmpty(tokenstr)) return "";
                 List<ComponentToken> tokens = JsonConvert.DeserializeObject<List<ComponentToken>>(tokenstr);
-                var component = tokens.FirstOrDefault(c => c.Type == type);
-                if (component!=null)
-                {
-                    return component.CommId;
-                }
-            }
-            else
-            {
-                //获取设备的组件ID
-                var component = _context.Component.FirstOrDefault(c => c.Type == type&&c.Line==0);
+                var component = tokens.FirstOrDefault(c => c.Type ==ComponentType.WEB);
                 if (component!=null)
                 {
                     return component.Id;
                 }
+            }
+            else
+            {
+                var type = ManagerHelp.GetComponentType((int)factory);
+                string identity=ManagerHelp.GetIdentity((int)type);
+                return identity;
             }
             return "";
         }

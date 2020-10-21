@@ -603,6 +603,7 @@ namespace ShipWeb.ProtoBuffer
             {
                 using (var context=new MyContext())
                 {
+                    //获取除自己本身外的其他组件
                     var list = context.Component.Where(c =>c.Type!=ComponentType.WEB).ToList();
                     string shipId = "";
                     if (ManagerHelp.IsShipPort)
@@ -613,20 +614,29 @@ namespace ShipWeb.ProtoBuffer
                             shipId = ship.Id;
                         }
                     }
+                    //保存已在数据库在存在的组件ID
                     List<string> str = new List<string>();
+                    List<ShipWeb.Models.Component> comList = new List<ShipWeb.Models.Component>();
                     foreach (var item in components)
                     {
-                        if (item.componentid == ManagerHelp.Cid) continue;
+                        if (item.type == ComponentInfo.Type.WEB) continue;
+                        //判断当前组件是否在数据库中存在且处于离线状态，则将该组件上线
                         if (list.Where(c=>c.Id==item.componentid).Any())
                         {
-                            var component=list.FirstOrDefault(c => c.Id == item.componentid);
-                            component.Line = 0;
-                            context.Component.Update(component);
+                            #region 修改组件为在线状态
+                            //当前组件是否是离线状态
+                            var component=list.FirstOrDefault(c => c.Id == item.componentid&&c.Line==1);
+                            if (component!=null) {
+                                component.Line = 0;//修改为在线
+                                context.Update(component);
+                                context.SaveChanges();
+                            }
                             str.Add(item.componentid);
+                            #endregion
                         }
-                        //陆地端添加组件
                         else if (item.type== ComponentInfo.Type.XMQ)
                         {
+                            #region 陆地端添加组件
                             shipId = Guid.NewGuid().ToString();
                             Random rn = new Random();
                             rn.Next(1,9999);
@@ -636,7 +646,7 @@ namespace ShipWeb.ProtoBuffer
                                 CrewNum = 0,
                                 Flag = false,
                                 Id = shipId,
-                                Name = string.IsNullOrEmpty(item.cname) ? "船"+rn : item.cname,
+                                Name = string.IsNullOrEmpty(item.cname) ? "Boat"+rn : item.cname,
                                 type = Ship.Type.AUTO
                             };
                             context.Ship.Add(ship);
@@ -648,11 +658,12 @@ namespace ShipWeb.ProtoBuffer
                                 Type = (ComponentType)item.type,
                                 ShipId= shipId
                             };
-                            context.Component.Add(component);
+                            comList.Add(component);
+                            #endregion
                         }
-                        else if(ManagerHelp.IsShipPort)
-                        {   
-                            //船舶端添加组件
+                        else if(ManagerHelp.IsShipPort)//船舶端添加组件
+                        {
+                            #region 船舶端添加组件
                             ShipWeb.Models.Component component = new ShipWeb.Models.Component()
                             {
                                 Id = item.componentid,
@@ -661,19 +672,27 @@ namespace ShipWeb.ProtoBuffer
                                 Type = (ComponentType)item.type,
                                 ShipId = shipId
                             };
-                            context.Component.Add(component);
+                            comList.Add(component);
+                            #endregion
                         }
                     }
                     if (list.Count!=str.Count)
                     {
+                        //组件下线
                         var delcom= list.Where(c => !str.Contains(c.Id)).ToList();
                         foreach (var item in delcom)
                         {
                             item.Line = 1;
                             context.Update(item);
+                            context.SaveChanges();
                         }
                     }
-                    context.SaveChanges();
+                    //批量保存
+                    if (comList.Count > 0 )
+                    {
+                        context.Component.AddRange(comList);
+                        context.SaveChanges();
+                    } 
                 }
             }
         }
@@ -987,8 +1006,8 @@ namespace ShipWeb.ProtoBuffer
         /// <param name="t"></param>
         public static void AddReceiveLog<T>(string key, T t,string ErrMsg="") 
         {
-            var values = JsonConvert.SerializeObject(t);
-            using (var context=new MyContext())
+            var values = t == null ? "" : JsonConvert.SerializeObject(t);
+            using (var context = new MyContext())
             {
                 ReceiveLog log = new ReceiveLog()
                 {
