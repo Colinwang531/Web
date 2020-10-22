@@ -49,21 +49,21 @@ namespace SmartWeb.ProtoBuffer.Init
                     ManagerHelp.ComponentId = Guid.NewGuid().ToString();
                 }
                 //获取数据库默认值
-                LoadDBValue(context);
-                //组件注册
-                InitData();
-                //船舶端需要发送缺岗通知
-                if (ManagerHelp.IsShipPort)
-                {
-                    LoadNotice();
-                }
-                //定时获取组件信息
-                QueryComponent();
+                //LoadDBValue(context);
+                ////组件注册
+                //InitData();
+                ////船舶端需要发送缺岗通知
+                //if (ManagerHelp.IsShipPort)
+                //{
+                //    LoadNotice();
+                //}
+                ////定时获取组件信息
+                //QueryComponent();
 
-                //if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                //    MusicPlay.WindowPlaySleepMusic();
-                //else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                //    MusicPlay.LinuxPlaySleepMusic();
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                    MusicPlay.WindowPlaySleepMusic();
+                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                    MusicPlay.LinuxPlaySleepMusic();
             }
         }
         /// <summary>

@@ -109,38 +109,37 @@ namespace SmartWeb.Controllers
         /// <returns></returns>
         private IActionResult LandLoad()
         {
-            string Identity = base.user.ShipId;
-            assembly.SendCrewQuery(Identity);
+            //XMQ的组件ID
+            string XMQComId = base.user.ShipId;
+            assembly.SendCrewQuery(XMQComId);
             List<ProtoBuffer.Models.CrewInfo> crewInfos = new List<ProtoBuffer.Models.CrewInfo>();
-         
-                try
+            try
+            {
+                bool flag = true;
+                new TaskFactory().StartNew(() =>
                 {
-                    bool flag = true;
-                    new TaskFactory().StartNew(() =>
+                    while (flag)
                     {
-                        while (flag)
+                        if (ManagerHelp.CrewReponse != "")
                         {
-                            if (ManagerHelp.CrewReponse != "")
-                            {
-                                crewInfos = JsonConvert.DeserializeObject<List<ProtoBuffer.Models.CrewInfo>>(ManagerHelp.CrewReponse);
-                                flag = false;
-                            }
-                            Thread.Sleep(500);
+                            crewInfos = JsonConvert.DeserializeObject<List<ProtoBuffer.Models.CrewInfo>>(ManagerHelp.CrewReponse);
+                            flag = false;
                         }
-                    }).Wait(timeout);
-                    flag = false;
-                }
-                catch (Exception)
-                {
-                }
-                ManagerHelp.CrewReponse = "";
-           
+                        Thread.Sleep(500);
+                    }
+                }).Wait(timeout);
+                flag = false;
+            }
+            catch (Exception)
+            {
+            }
+            ManagerHelp.CrewReponse = "";
             crewVMList = new List<CrewViewModel>();
             foreach (var item in crewInfos)
             {
                 CrewViewModel model = new CrewViewModel()
                 {
-                    Id =Convert.ToInt32(item.uid),
+                    Id = Convert.ToInt32(item.uid),
                     Job = item.job,
                     Name = item.name,
                     crewPictureViewModels = new List<CrewPictureViewModel>()
@@ -150,18 +149,18 @@ namespace SmartWeb.Controllers
                     CrewPictureViewModel vm = new CrewPictureViewModel()
                     {
                         Id = Guid.NewGuid().ToString(),
-                        Picture =pic
+                        Picture = pic
                     };
                     model.crewPictureViewModels.Add(vm);
                 }
                 crewVMList.Add(model);
-            }           
+            }
             var result = new
             {
                 code = 0,
                 data = crewVMList,
-                count= crewInfos.Count(),
-                isSet = !string.IsNullOrEmpty(Identity) ? base.user.EnableConfigure : false
+                count = crewInfos.Count(),
+                isSet = !string.IsNullOrEmpty(XMQComId) ? base.user.EnableConfigure : false
             };
             return new JsonResult(result);
         }
@@ -219,15 +218,22 @@ namespace SmartWeb.Controllers
                 if (base.user.IsLandHome)
                 {
                     #region 陆地端添加/修改船员
-                    string shipIdentity = base.user.ShipId;
-                    string identity = GetIdentity();
+                    //xmq的组件ID
+                    string XMQComId = base.user.ShipId;
+                    string tokenstr = HttpContext.Session.GetString("comtoken");
+                    string identity = ManagerHelp.GetLandToId(tokenstr);
                     if (identity == "")
+                    {
+                        return new JsonResult(new { code = 1, msg = "当前船舶已失联，请重新连接" });
+                    }
+                    string algoComId = ManagerHelp.GetLandToId(tokenstr, ComponentType.AI, ManagerHelp.FaceName);
+                    if (string.IsNullOrEmpty(algoComId))
                     {
                         return new JsonResult(new { code = 1, msg = "人脸组件未启动" });
                     }
                     ProtoBuffer.Models.CrewInfo emp = GetCrewInfo(id, name, job, ids);
-                    if (id > 0)assembly.SendCrewUpdate(emp, shipIdentity + ":" + identity);
-                    else assembly.SendCrewAdd(emp, shipIdentity + ":" + identity);
+                    if (id > 0)assembly.SendCrewUpdate(emp, XMQComId + ":" + identity);
+                    else assembly.SendCrewAdd(emp, XMQComId + ":" + identity);
                     code = GetResult();
                     if (code == 2) errMsg = "船员名称不能重复";
                     if (code == 400) errMsg = "网络请求超时。。。";
@@ -247,7 +253,7 @@ namespace SmartWeb.Controllers
                     {
                         return new JsonResult(new { code = 1, msg = errMsg });
                     }
-                    string identity = GetIdentity();
+                    string identity = ManagerHelp.GetShipToId(ComponentType.AI,ManagerHelp.FaceName);
                     if (identity == "")
                     {
                         return new JsonResult(new { code = 1, msg = "人脸组件未启动" });
@@ -440,13 +446,14 @@ namespace SmartWeb.Controllers
                 //陆地端远程删除船员
                 if (base.user.IsLandHome)
                 {
-                    string shipId = base.user.ShipId;
-                    string identity = GetIdentity();
+                    string XMQComId = base.user.ShipId;
+                    string tokenstr = HttpContext.Session.GetString("comtoken");
+                    string identity = ManagerHelp.GetLandToId(tokenstr);
                     if (identity == "")
                     {
                         return new JsonResult(new { code = 1, msg = "人脸组件未启动" });
                     }
-                    assembly.SendCrewDelete(id, shipId + ":" + identity);
+                    assembly.SendCrewDelete(id, XMQComId + ":" + identity);
                     code = GetResult();
                     if (code == 400) errMsg = "网络请求超时。。。";
                     else if (code != 0) errMsg = "船员删除失败";
@@ -461,7 +468,7 @@ namespace SmartWeb.Controllers
                         //删除船员图片
                         _context.CrewPicture.RemoveRange(employeePictures);
                     }
-                    string identity = GetIdentity();
+                    string identity = ManagerHelp.GetShipToId(ComponentType.AI,ManagerHelp.FaceName);
                     if (identity == "")
                     {
                         return new JsonResult(new { code = 1, msg = "人脸组件未启动" });
@@ -479,36 +486,6 @@ namespace SmartWeb.Controllers
                 return new JsonResult(new { code = 1, msg = "删除失败!" + ex.Message });
             }
         }
-
-        /// <summary>
-        /// 获取船员的通讯ID
-        /// </summary>
-        /// <param name="factory"></param>
-        /// <returns></returns>
-        private string GetIdentity()
-        {
-            if (base.user.IsLandHome)
-            {
-                string tokenstr = HttpContext.Session.GetString("comtoken");
-                if (string.IsNullOrEmpty(tokenstr)) return "";
-                List<ComponentToken> tokens = JsonConvert.DeserializeObject<List<ComponentToken>>(tokenstr);
-                var component = tokens.FirstOrDefault(c => c.Type == ComponentType.AI&&c.Name==ManagerHelp.FaceName);
-                if (component != null)
-                {
-                    return component.CommId;
-                }
-            }
-            else
-            {
-                //获取设备的组件ID
-                var component = _context.Component.FirstOrDefault(c => c.Type == ComponentType.AI && c.Name == ManagerHelp.FaceName&&c.Line==0);
-                if (component != null)
-                {
-                    return component.Id;
-                }
-            }
-            return "";
-        }
         /// <summary>
         /// 获取返回状态
         /// </summary>
@@ -516,21 +493,29 @@ namespace SmartWeb.Controllers
         private int GetResult()
         {
             int result = 1;
-            bool flag = true;
-            new TaskFactory().StartNew(() => {
-                while (flag&&ManagerHelp.CrewReponse=="")
+            try
+            {
+                bool flag = true;
+                new TaskFactory().StartNew(() =>
                 {
-                    Thread.Sleep(100);
+                    while (flag && ManagerHelp.CrewResult == "")
+                    {
+                        Thread.Sleep(100);
+                    }
+                }).Wait(timeout);
+                flag = false;
+                if (ManagerHelp.CrewResult != "")
+                {
+                    result = Convert.ToInt32(ManagerHelp.CrewResult);
+                    ManagerHelp.CrewResult = "";
                 }
-            }).Wait(timeout);
-            flag = false;
-            if (ManagerHelp.CrewReponse!="")
-            {
-                result = Convert.ToInt32(ManagerHelp.CrewReponse);
+                else
+                {
+                    result = 400;
+                }
             }
-            else
+            catch (Exception ex)
             {
-                result = 400;
             }
             return result;
         }

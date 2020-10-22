@@ -147,7 +147,7 @@ namespace SmartWeb.Controllers
         {
             try
             {
-                string shipId = base.user.ShipId;
+                string shipId = base.user.ShipId;//为陆地端时保存的是XMQ的组件ID
                 if (shipId == "")
                 {
                     return new JsonResult(new { code = 1, msg = "船不存在，无法添加数据" });
@@ -157,10 +157,18 @@ namespace SmartWeb.Controllers
                 {
                     int code = 1;
                     string errMsg = "";
+                    string AIName = Enum.GetName(typeof(AlgorithmType), viewModel.Type);
                     if (base.user.IsLandHome)
                     {
-                        string identity = GetIdentity(viewModel.Type, viewModel.Cid);
-                        if (string.IsNullOrEmpty(identity)&& viewModel.Type != (int)AlgorithmType.CAPTURE)
+                        //获取XMQ上WEB的组件ID
+                        string tokenstr = HttpContext.Session.GetString("comtoken");
+                        string identity =ManagerHelp.GetLandToId(tokenstr);
+                        if (string.IsNullOrEmpty(identity))
+                        {
+                            return new JsonResult(new { code = 1, msg = "当前船舶已失联，请重新连接" });
+                        }
+                        string algoComId= ManagerHelp.GetLandToId(tokenstr,ComponentType.AI, AIName);
+                        if (string.IsNullOrEmpty(algoComId) && viewModel.Type != (int)AlgorithmType.CAPTURE)
                         {
                             string name = GetViewName((AlgorithmType)viewModel.Type);
                             return new JsonResult(new { code = 1, msg = "算法【" + name + "】组件未启动" });
@@ -169,23 +177,18 @@ namespace SmartWeb.Controllers
                         string cid = cam.DeviceId + ":" + cam.Id + ":" + cam.Index;
                         ProtoBuffer.Models.AlgorithmInfo algorithm = GetProtoAlgorithm(viewModel, cid);
                         code = SendData(algorithm, (shipId + ":" + identity));
-                        if (code == 0)
-                        {
-                            _context.SaveChanges();
-                        }
-                        else if (code == 400) errMsg = "网络请求超时。。。";
-                        else errMsg = "算法配置失败";
+                        if (code == 400) errMsg = "网络请求超时。。。";
+                        else if(code!=0)errMsg = "算法配置失败";
                     }
                     else
                     {
                         Algorithm algo = new Algorithm();
-                        string msg = "";
-                        if (!DataCheck(viewModel, ref algo, ref msg))
+                        if (!DataCheck(viewModel, ref algo, ref errMsg))
                         {
-                            return new JsonResult(new { code = 1, msg = msg });
+                            return new JsonResult(new { code = 1, msg = errMsg });
                         }
                         //获取枚举对应的名称
-                        string identity = GetIdentity(viewModel.Type, viewModel.Cid);
+                        string identity = ManagerHelp.GetShipToId((ComponentType)viewModel.Type, AIName); 
                         if (string.IsNullOrEmpty(identity)&& viewModel.Type != (int)AlgorithmType.CAPTURE)
                         {
                             string name = GetViewName((AlgorithmType)viewModel.Type);
@@ -244,23 +247,30 @@ namespace SmartWeb.Controllers
         private int SendData(ProtoBuffer.Models.AlgorithmInfo algorithm, string nextIdentity)
         {
             int result = 1;
-            assembly.SendAlgorithmSet(algorithm, nextIdentity);
-            bool flag = true;
-            new TaskFactory().StartNew(() =>
+            try
             {
-                while (flag && ManagerHelp.AlgorithmReponse == "")
+                assembly.SendAlgorithmSet(algorithm, nextIdentity);
+                bool flag = true;
+                new TaskFactory().StartNew(() =>
                 {
-                    Thread.Sleep(100);
+                    while (flag && ManagerHelp.AlgorithmResult == "")
+                    {
+                        Thread.Sleep(1000);
+                    }
+                }).Wait(timeout);
+                flag = false;
+                if (ManagerHelp.AlgorithmResult != "")
+                {
+                    result = Convert.ToInt32(ManagerHelp.AlgorithmResult);
+                    ManagerHelp.AlgorithmResult = "";
                 }
-            }).Wait(timeout);
-            flag = false;
-            if (ManagerHelp.AlgorithmReponse != "")
-            {
-                return Convert.ToInt32(ManagerHelp.AlgorithmReponse);
+                else
+                {
+                    result = 400;//网络超时
+                }
             }
-            else
+            catch (Exception ex)
             {
-                result = 400;//网络超时
             }
             return result;
         }
@@ -367,66 +377,6 @@ namespace SmartWeb.Controllers
                 return new JsonResult(new { code = 0 });
             }
             return new JsonResult(new { code = 1, msg = "未接收到要删除的数据"});
-        }
-
-        /// <summary>
-        /// 获取所添加算法的通讯ID
-        /// </summary>
-        /// <param name="factory"></param>
-        /// <returns></returns>
-        private string GetIdentity(int type,string cid)
-        {
-            string name = Enum.GetName(typeof(AlgorithmType), type);
-            if (name== "ATTENDANCE_IN"||name== "ATTENDANCE_OUT")
-            {
-                name = ManagerHelp.FaceName.ToUpper();
-            }
-            if (base.user.IsLandHome)
-            {
-                string tokenstr = HttpContext.Session.GetString("comtoken");
-                if (string.IsNullOrEmpty(tokenstr)) return "";
-                List<ComponentToken> tokens = JsonConvert.DeserializeObject<List<ComponentToken>>(tokenstr);
-                if (type == (int)AlgorithmType.CAPTURE)
-                {
-                    //查询当前摄机是否存在
-                    var camera=cameras.FirstOrDefault(c => c.Id == cid);
-                    if (camera == null) return "";
-                    //获取摄像机所对应的设备
-                    var device=boatDevices.FirstOrDefault(c => c.did == camera.DeviceId);
-                    if (device == null) return "";
-                    var comtype = ComponentType.DHD;
-                    if(device.factory == ProtoBuffer.Models.DeviceInfo.Factory.HIKVISION ) comtype= ComponentType.HKD;                 
-                    //获取当前设备所对应的组件信息 
-                    var component = tokens.FirstOrDefault(c => c.Type == comtype);
-                    if (component != null) return component.CommId;//取出组件ID
-                }
-                else
-                {
-                    var component = tokens.FirstOrDefault(c => c.Type == ComponentType.AI && c.Name.ToUpper() == name);
-                    if (component != null) return component.CommId;
-                }
-               
-            }
-            else
-            {
-                //算法配置的是缺岗时通讯ID传入的是设备的通讯ID
-                if (type==(int)AlgorithmType.CAPTURE)
-                {
-                    //获取当前摄像机所对应的设备ID
-                    var device = _context.Device.FirstOrDefault(c => c.Id == (_context.Camera.FirstOrDefault(c => c.Id == cid).DeviceId));
-                    if (device == null) return ""; 
-                    //从组件表中查出当前摄像机所有设备的通讯ID
-                    var component = _context.Component.FirstOrDefault(c => c.Type == ManagerHelp.GetComponentType(type)&&c.Line==0);
-                    if(component!=null) return component.Id;
-                }
-                else
-                {
-                    //获取设备的组件ID
-                    var component = _context.Component.FirstOrDefault(c => c.Type == ComponentType.AI && c.Name.ToUpper() == name&&c.Line==0);
-                    if (component != null)return component.Id;
-                }
-            }
-            return "";
         }
         private string GetViewName(AlgorithmType type)
         {

@@ -452,7 +452,7 @@ namespace SmartWeb.ProtoBuffer
                 return list;
             }
         }
-
+       
         /// <summary>
         /// 陆地端请求修改算法配置
         /// </summary>
@@ -462,17 +462,17 @@ namespace SmartWeb.ProtoBuffer
         {
             if (protoModel != null)
             {
-                using (var _context = new MyContext())
+                using (var context = new MyContext())
                 {
                     try
                     {
                         if (protoModel.aid != "")
                         {
-                            var algo = _context.Algorithm.FirstOrDefault(c => c.Id == protoModel.aid);
+                            var algo = context.Algorithm.FirstOrDefault(c => c.Id == protoModel.aid);
                             if (algo == null) return 1;
                             if (protoModel.type == AlgorithmInfo.Type.ATTENDANCE_IN || protoModel.type == AlgorithmInfo.Type.ATTENDANCE_OUT)
                             {
-                                var data = _context.Algorithm.FirstOrDefault(c => c.Cid == protoModel.cid && (c.Type == AlgorithmType.ATTENDANCE_IN || c.Type == AlgorithmType.ATTENDANCE_OUT));
+                                var data = context.Algorithm.FirstOrDefault(c => c.Cid == protoModel.cid && (c.Type == AlgorithmType.ATTENDANCE_IN || c.Type == AlgorithmType.ATTENDANCE_OUT));
                                 if (data != null && data.Id != algo.Id)
                                 {
                                     return 2;
@@ -485,19 +485,29 @@ namespace SmartWeb.ProtoBuffer
                             algo.Similar = protoModel.similar;
                             algo.Type = (SmartWeb.Models.AlgorithmType)protoModel.type;
                             algo.Cid = protoModel.cid;
-                            _context.Algorithm.Update(algo);
+                            context.Algorithm.Update(algo);
                         }
                         else
                         {
+                            //判断是否重复提交
+                            var algorithm=context.Algorithm.FirstOrDefault(c=>c.Cid==protoModel.cid&&
+                                c.DectectFirst==protoModel.dectectfirst&&
+                                c.GPU == protoModel.gpu&&
+                                c.Similar == protoModel.similar&&
+                                c.Track == protoModel.track&&
+                                c.DectectSecond == protoModel.dectectsecond&&
+                                c.DectectFirst == protoModel.dectectfirst&&
+                                c.Type == (SmartWeb.Models.AlgorithmType)protoModel.type);
+                            if (algorithm != null) return 0;
                             if (protoModel.type == AlgorithmInfo.Type.ATTENDANCE_IN || protoModel.type == AlgorithmInfo.Type.ATTENDANCE_OUT)
                             {
-                                var data = _context.Algorithm.FirstOrDefault(c => c.Cid == protoModel.cid && (c.Type == AlgorithmType.ATTENDANCE_IN || c.Type == AlgorithmType.ATTENDANCE_OUT));
+                                var data = context.Algorithm.FirstOrDefault(c => c.Cid == protoModel.cid && (c.Type == AlgorithmType.ATTENDANCE_IN || c.Type == AlgorithmType.ATTENDANCE_OUT));
                                 if (data != null)
                                 {
                                     return 2;
                                 }
                             }
-                            var shipId = _context.Ship.FirstOrDefault().Id;
+                            var shipId = context.Ship.FirstOrDefault().Id;
                             SmartWeb.Models.Algorithm model = new SmartWeb.Models.Algorithm()
                             {
                                 Cid = protoModel.cid,
@@ -510,10 +520,10 @@ namespace SmartWeb.ProtoBuffer
                                 DectectFirst = protoModel.dectectfirst,
                                 Type = (SmartWeb.Models.AlgorithmType)protoModel.type
                             };
-                            _context.Algorithm.Add(model);
+                            context.Algorithm.Add(model);
                             protoModel.aid = model.Id;
                         }
-                        _context.SaveChanges();
+                        context.SaveChanges();
                         return 0;
                     }
                     catch (Exception ex)
@@ -702,6 +712,20 @@ namespace SmartWeb.ProtoBuffer
                     } 
                 }
             }
+        }
+
+        /// <summary>
+        /// 获取所有AI组件
+        /// </summary>
+        /// <returns></returns>
+        public static List<SmartWeb.Models.Component> GetComponentByAI() 
+        {
+            List<SmartWeb.Models.Component> components = new List<SmartWeb.Models.Component>();
+            using (var context=new MyContext())
+            {
+                components = context.Component.Where(c => c.Type == ComponentType.AI&&c.Line==0).ToList();
+            }
+            return components;
         }
         /// <summary>
         /// 陆地端设备船信息

@@ -24,7 +24,7 @@ namespace SmartWeb.Controllers
     public class DeviceController : BaseController
     {
         private readonly MyContext _context;
-        private int timeout = 5000;//等待时间
+        private int timeout = 8000;//等待时间
         private ILogger<DeviceController> _logger;
         private SendDataMsg assembly = new SendDataMsg();
         public DeviceController(MyContext context, ILogger<DeviceController> logger)
@@ -105,14 +105,15 @@ namespace SmartWeb.Controllers
             ViewBag.IsSet = base.user.EnableConfigure;
             return View();
         }
-        public IActionResult Load() 
+        public IActionResult Load()
         {
-                if (base.user.IsLandHome)
-                {
-                    return LandLoad();
-                }     
+            if (base.user.IsLandHome)
+            {
+                return LandLoad();
+            }
+            //船舶的ID
             string shipId = base.user.ShipId;
-            var data = _context.Device.Where(c => c.ShipId == shipId).ToList(); 
+            var data = _context.Device.Where(c => c.ShipId == shipId).ToList();
             var ids = string.Join(',', data.Select(c => c.Id));
             //查询设备下的摄像机
             var cameras = _context.Camera.Where(c => c.ShipId == shipId && ids.Contains(c.DeviceId)).ToList();
@@ -125,7 +126,7 @@ namespace SmartWeb.Controllers
                     Camera cam = new Camera()
                     {
                         DeviceId = item.Id,
-                        Index=it.Index,
+                        Index = it.Index,
                         Id = it.Id,
                         Enable = it.Enable,
                         IP = it.IP,
@@ -150,8 +151,11 @@ namespace SmartWeb.Controllers
         private IActionResult LandLoad()
         {
             List<Device> list = new List<Device>();
-            string identity = base.user.ShipId;
-            string webIdentity=GetIdentity((int)ComponentType.WEB);
+            //XMQ的组件ID
+            string XMQComId = base.user.ShipId;
+            string tokenstr = HttpContext.Session.GetString("comtoken");
+            //获取XMQ组件里的WEB组件ID
+            string webIdentity=ManagerHelp.GetLandToId(tokenstr);
             var result = new
             {
                 code = 0,
@@ -163,7 +167,7 @@ namespace SmartWeb.Controllers
                 return new JsonResult(result);
             }
             //发送查询设备请求
-            assembly.SendDeveiceQuery(identity+":"+ webIdentity);
+            assembly.SendDeveiceQuery(XMQComId + ":"+ webIdentity);
             bool flag = true;
             new TaskFactory().StartNew(() =>
             {
@@ -236,25 +240,35 @@ namespace SmartWeb.Controllers
                 //陆地端远程添加设备
                 if (base.user.IsLandHome)
                 {
-                        string identity = GetIdentity(model.Factory);
-                        if (identity == null)
-                        {
-                            return new JsonResult(new { code = 1, msg = Enum.GetName(typeof(Device.Factory), Convert.ToInt32(model.Factory)) + "组件未启动" });
-                        }
-                        Device emb = GetProtoDevice(model);
-                        if (!string.IsNullOrEmpty(model.Id))
-                        {
-                            assembly.SendDeveiceUpdate(emb, shipId + ":" + identity, model.Id);
-                        }
-                        else
-                        {
-                            assembly.SendDeveiceAdd(emb, shipId + ":" + identity);
-                        }
-                        code = GetResult();
-                    
+                    string tokenstr = HttpContext.Session.GetString("comtoken");
+                    string identity = ManagerHelp.GetLandToId(tokenstr);
+                    if (string.IsNullOrEmpty(identity))
+                    {
+                        return new JsonResult(new { code = 1, msg = "当前船舶已失联，请重新连接" });
+                    }
+                    string devComId = ManagerHelp.GetLandToId(tokenstr, ManagerHelp.GetComponentType(model.Factory));
+                    if (string.IsNullOrEmpty(devComId))
+                    {
+                        return new JsonResult(new { code = 1, msg = Enum.GetName(typeof(Device.Factory), Convert.ToInt32(model.Factory)) + "组件未启动" });
+                    }
+                    Device emb = GetProtoDevice(model);
+                    if (!string.IsNullOrEmpty(model.Id))
+                    {
+                        assembly.SendDeveiceUpdate(emb, shipId + ":" + identity, model.Id);
+                    }
+                    else
+                    {
+                        assembly.SendDeveiceAdd(emb, shipId + ":" + identity);
+                    }
+                    code = GetResult();
                 }
                 else
                 {
+                    string identity = ManagerHelp.GetShipToId(ManagerHelp.GetComponentType(model.Factory));
+                    if (identity == "")
+                    {
+                        return new JsonResult(new { code = 1, msg = Enum.GetName(typeof(Device.Factory), model.Factory) + "组件未启动" });
+                    }
                     Device device = new Device();
                     if (!string.IsNullOrEmpty(model.Id))
                     {
@@ -272,34 +286,26 @@ namespace SmartWeb.Controllers
                     device.type = (Device.Type)model.Type;
                     device.factory = (Device.Factory)model.Factory;
                     device.Enable = model.Enable;
-                 
-                        string identity = GetIdentity(model.Factory);
-                        if (identity == "")
-                        {
-                            return new JsonResult(new { code = 1, msg = Enum.GetName(typeof(Device.Factory), Convert.ToInt32(device.factory)) + "组件未启动" });
-                        }
-                        SendDataMsg assembly = new SendDataMsg();
-                        if (string.IsNullOrEmpty(model.Id))
-                        {
-                            device.Id = Guid.NewGuid().ToString();
-                            device.ShipId = base.user.ShipId;
-                            _context.Device.Add(device);
-                            _context.SaveChanges();
-                            model.Id = device.Id;
-                            Device emb = GetProtoDevice(model);
-                            assembly.SendDeveiceAdd(emb, identity);
-                        }
-                        else
-                        {
-                            _context.Device.Update(device);
-                            _context.SaveChanges();
-                            Device emb = GetProtoDevice(model);
-                            assembly.SendDeveiceUpdate(emb, identity, device.Id);
-                        }
-                        code = GetResult();
-                    
+                    SendDataMsg assembly = new SendDataMsg();
+                    if (string.IsNullOrEmpty(model.Id))
+                    {
+                        device.Id = Guid.NewGuid().ToString();
+                        device.ShipId = shipId;
+                        _context.Device.Add(device);
+                        _context.SaveChanges();
+                        model.Id = device.Id;
+                        Device emb = GetProtoDevice(model);
+                        assembly.SendDeveiceAdd(emb, identity);
+                    }
+                    else
+                    {
+                        _context.Device.Update(device);
+                        _context.SaveChanges();
+                        Device emb = GetProtoDevice(model);
+                        assembly.SendDeveiceUpdate(emb, identity, device.Id);
+                    }
+                    code = GetResult();
                 }
-
                 if (code == 400) msg = "请求超时。。。";
                 else if (code != 0) msg = "请输入正确的设备参数";
                 return new JsonResult(new { code = code, msg = msg });
@@ -310,7 +316,6 @@ namespace SmartWeb.Controllers
                 return new JsonResult(new { code = 1, msg = "数据保存失败!" + ex.Message });
             }
         }
-
         public IActionResult CamSave(string id, string did, int factory, string nickName, string enable)
         {
             if (ModelState.IsValid)
@@ -322,8 +327,9 @@ namespace SmartWeb.Controllers
                     //陆地端远程修改摄像机信息
                     if (base.user.IsLandHome)
                     {
-                        string shipId = base.user.ShipId;
-                        string identity = GetIdentity(factory);
+                        string XMQComId = base.user.ShipId;
+                        string tokenstr = HttpContext.Session.GetString("comtoken");
+                        string identity =ManagerHelp.GetLandToId(tokenstr);
                         if (identity=="")
                         {
                             return new JsonResult(new { code = 1, msg = Enum.GetName(typeof(Device.Factory), Convert.ToInt32(factory)) + "组件未启动" });
@@ -339,25 +345,27 @@ namespace SmartWeb.Controllers
                                 }
                             }
                         };
-                        assembly.SendDeveiceUpdate(emb, shipId+":"+identity, did);
+                        assembly.SendDeveiceUpdate(emb, XMQComId+":"+identity, did);
                         code = GetResult();
                     }
                     else
                     {
-
                         Camera camera = _context.Camera.FirstOrDefault(c => c.Id == id);
                         if (camera == null)
                         {
                             return new JsonResult(new { code = 1, msg = "数据不存在" });
+                        }  
+                        //获取设备的组件ID
+                        string identity =ManagerHelp.GetShipToId(ManagerHelp.GetComponentType(factory)); 
+                        if (identity == "")
+                        {
+                            return new JsonResult(new { code = 1, msg = Enum.GetName(typeof(Device.Factory), Convert.ToInt32(factory)) + "组件未启动" });
                         }
                         camera.NickName = nickName;
                         camera.Enable = enable == "1" ? true : false;
                         var embModel = _context.Device.FirstOrDefault(e => e.Id == camera.DeviceId);
                         if (embModel != null)
                         {
-                            //获取设备的组件ID
-                            string identity = GetIdentity(factory);
-
                             Device emb = new Device
                             {
                                 Id = did,
@@ -374,7 +382,6 @@ namespace SmartWeb.Controllers
                             _context.SaveChangesAsync();
                             assembly.SendDeveiceUpdate(emb, identity, embModel.Id);
                             code = GetResult();
-
                         };
                     }
                     if (code == 2) msg = "请求超时。。。";
@@ -427,14 +434,15 @@ namespace SmartWeb.Controllers
                 if (base.user.IsLandHome)
                 {
                     string shipId = base.user.ShipId;
+                    string tokenstr = HttpContext.Session.GetString("comtoken");
                     //获取设备的组件ID
-                    string identity = GetIdentity(factory);
+                    string identity = ManagerHelp.GetLandToId(tokenstr);
                     if (identity == "")
                     {
                         return new JsonResult(new { code = 1, msg = Enum.GetName(typeof(Device.Factory), Convert.ToInt32(factory)) + "组件未启动" });
                     }
-                   assembly.SendDeveiceDelete(shipId + ":"+identity, id);
-                   code = GetResult();             
+                    assembly.SendDeveiceDelete(shipId + ":" + identity, id);
+                    code = GetResult();
                 }
                 else
                 {
@@ -457,23 +465,21 @@ namespace SmartWeb.Controllers
                         _context.Camera.RemoveRange(cameras);
                     }
                     //删除设备表
-                    _context.Device.Remove(device);   
-                        //获取设备的组件ID
-                        string identity = GetIdentity(factory);
-                        if (identity == "")
-                        {
-                            return new JsonResult(new { code = 1, msg = Enum.GetName(typeof(Device.Factory), Convert.ToInt32(factory)) + "组件未启动" });
-                        }
-                        SendDataMsg assembly = new SendDataMsg();
-                        assembly.SendDeveiceDelete(identity, device.Id);
-                        if (GetResult()==0)
-                        {
-                            _context.SaveChanges();
-                            code = 0;
-                        }
-                   
+                    _context.Device.Remove(device);
+                    //获取设备的组件ID
+                    string identity = ManagerHelp.GetShipToId(ManagerHelp.GetComponentType(factory));
+                    if (identity == "")
+                    {
+                        return new JsonResult(new { code = 1, msg = Enum.GetName(typeof(Device.Factory), Convert.ToInt32(factory)) + "组件未启动" });
+                    }
+                    SendDataMsg assembly = new SendDataMsg();
+                    assembly.SendDeveiceDelete(identity, device.Id);
+                    if (GetResult() == 0)
+                    {
+                        _context.SaveChanges();
+                        code = 0;
+                    }
                 }
-
                 if (code == 2) msg = "请求超时。。。";
                 else if (code != 0) msg = "请配置正确的设备参数";
                 return new JsonResult(new { code = code, msg = msg });
@@ -487,56 +493,36 @@ namespace SmartWeb.Controllers
         }
 
         /// <summary>
-        /// 获取所添加设备的通讯ID
-        /// </summary>
-        /// <param name="factory"></param>
-        /// <returns></returns>
-        private string GetIdentity(int factory)
-        {
-            if (base.user.IsLandHome)
-            {
-                string tokenstr = HttpContext.Session.GetString("comtoken");
-                if (string.IsNullOrEmpty(tokenstr)) return "";
-                List<ComponentToken> tokens = JsonConvert.DeserializeObject<List<ComponentToken>>(tokenstr);
-                var component = tokens.FirstOrDefault(c => c.Type ==ComponentType.WEB);
-                if (component!=null)
-                {
-                    return component.Id;
-                }
-            }
-            else
-            {
-                var type = ManagerHelp.GetComponentType((int)factory);
-                string identity=ManagerHelp.GetIdentity((int)type);
-                return identity;
-            }
-            return "";
-        }
-
-        /// <summary>
         /// 取返回结果
         /// </summary>
         /// <returns></returns>
         private int GetResult()
         {
             int result = 1;
-            bool flag = true;
-            new TaskFactory().StartNew(() => {
-                while (ManagerHelp.DeviceReponse==""&&flag)
+            try
+            {
+                bool flag = true;
+                new TaskFactory().StartNew(() =>
                 {
-                    Thread.Sleep(100);
+                    while (ManagerHelp.DeviceResult == "" && flag)
+                    {
+                        Thread.Sleep(1000);
+                    }
+                }).Wait(timeout);
+                flag = false;
+                if (!string.IsNullOrEmpty(ManagerHelp.DeviceResult))
+                {
+                    result = Convert.ToInt32(ManagerHelp.DeviceResult);
+                    ManagerHelp.DeviceResult = "";
                 }
-            }).Wait(timeout);
-            flag = false;
-            if (!string.IsNullOrEmpty(ManagerHelp.DeviceReponse))
-            {
-                result = Convert.ToInt32(ManagerHelp.DeviceReponse);
+                else
+                {
+                    result = 400;//请求超时
+                }
             }
-            else
+            catch (Exception ex)
             {
-                result = 400;//请求超时
             }
-            ManagerHelp.DeviceReponse = "";
             return result;
         }
     }

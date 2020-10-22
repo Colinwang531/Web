@@ -107,24 +107,6 @@ namespace SmartWeb.Controllers
                 string com = JsonConvert.SerializeObject(tokens);
                 HttpContext.Session.SetString("comtoken", com);
             }
-            else
-            {
-                //船舶端将数据写入数据库
-                //var components = _context.Component.Where(c => c.Type != ComponentType.WEB).ToList();
-                //_context.RemoveRange(components);
-                //foreach (var item in componentInfos)
-                //{
-                //    if (item.type == ComponentInfo.Type.WEB) continue;
-                //    SmartWeb.Models.Component model = new SmartWeb.Models.Component()
-                //    {
-                //        Id = item.componentid,
-                //        Name = item.cname,
-                //        Type = (ComponentType)item.type
-                //    };
-                //    _context.Component.Add(model);
-                //}
-                //_context.SaveChanges();
-            }
         }
     }
 }

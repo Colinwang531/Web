@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -65,13 +66,13 @@ namespace SmartWeb.Controllers
                 Ship ship = new Ship();                 
                 if (base.user.IsLandHome)
                 {
-                    string identity = base.user.ShipId;
-                    assembly.SendStatusQuery(identity);
+                    string XMQComId = base.user.ShipId;
+                    assembly.SendStatusQuery(XMQComId);
                     bool flag = true;
                     new TaskFactory().StartNew(() => {
                         while (ManagerHelp.StatusReponse == "" && flag)
                         {
-                            Thread.Sleep(100);
+                            Thread.Sleep(1000);
                         }
                     }).Wait(3000);
                     flag = false;
@@ -121,25 +122,7 @@ namespace SmartWeb.Controllers
                         Line = item.Line == 0 ? true : false//默认离线
                     };
                     list.Add(model);
-                }
-                //var comLine = compents.Where(c => c.Line == 0);
-                //bool flag = true;
-                //new TaskFactory().StartNew(() => {
-                //    foreach (var item in comLine)
-                //    {
-                //        while (ManagerHelp.StatusReponse == "" && flag)
-                //        {
-                //            if (ManagerHelp.StatusReponse!="")
-                //            {
-                //                var response = JsonConvert.DeserializeObject<StatusResponse>(ManagerHelp.StatusReponse);
-                //                if (response != null) {
-                //                    list.FirstOrDefault(c => c.Id == item.Id).Line = response.flag;
-                //                }
-                //            }
-                //            Thread.Sleep(100);
-                //        }
-                //    }
-                //}).Wait(3000);                
+                }  
                 var result = new
                 {
                     code = 0,
@@ -172,24 +155,26 @@ namespace SmartWeb.Controllers
                 string errMsg = "";
                 if (base.user.IsLandHome)
                 {
-                    string identity = base.user.ShipId;
-                    var components = _context.Component.Where(c => c.Type == ComponentType.AI).ToList();
-                    foreach (var item in components)
+                    string XMQComId= base.user.ShipId;
+                    string tokenstr = HttpContext.Session.GetString("comtoken");
+                    string identity = ManagerHelp.GetLandToId(tokenstr);
+                    if (string.IsNullOrEmpty(identity))
                     {
-                        SmartWeb.ProtoBuffer.Models.StatusRequest sr = new SmartWeb.ProtoBuffer.Models.StatusRequest()
-                        {
-                            type = SmartWeb.ProtoBuffer.Models.StatusRequest.Type.SAIL,
-                            flag = type
-                        };
-                        assembly.SendStatusSet(sr, identity + ":" + item.Id);
-                        sr = new ProtoBuffer.Models.StatusRequest()
-                        {
-                            type = ProtoBuffer.Models.StatusRequest.Type.NAME,
-                            text = name
-                        };
-                        assembly.SendStatusSet(sr, identity + ":" + item.Id);
+                        return new JsonResult(new { code = 1, msg = "当前船舶已失联，请重新连接" });
                     }
-                    code = 0;//GetResult();
+                    SmartWeb.ProtoBuffer.Models.StatusRequest sr = new SmartWeb.ProtoBuffer.Models.StatusRequest()
+                    {
+                        type = SmartWeb.ProtoBuffer.Models.StatusRequest.Type.SAIL,
+                        flag = type
+                    };
+                    assembly.SendStatusSet(sr, XMQComId + ":" + identity);
+                    sr = new ProtoBuffer.Models.StatusRequest()
+                    {
+                        type = ProtoBuffer.Models.StatusRequest.Type.NAME,
+                        text = name
+                    };
+                    assembly.SendStatusSet(sr, XMQComId + ":" + identity);
+                    code = GetResult();
                 }
                 else
                 {
@@ -207,7 +192,7 @@ namespace SmartWeb.Controllers
                         _context.Ship.Update(ship);
                         _context.SaveChanges();
                         SendMqMsg(name, type, ship);
-                        code = 0; //GetResult();
+                        code = 0; 
                     }
                     #endregion
                 }
@@ -249,25 +234,36 @@ namespace SmartWeb.Controllers
                 }
             }
         }
-
+        /// <summary>
+        /// 获取响状态
+        /// </summary>
+        /// <returns></returns>
         private int GetResult()
         {
             int result = 1;
-            bool flag = true;
-            new TaskFactory().StartNew(() => {
-                while (flag&&ManagerHelp.StatusReponse=="")
-                {
-                    Thread.Sleep(100);
-                }
-            }).Wait(timeout);
-            flag = false;
-            if (ManagerHelp.StatusReponse != "")
+            try
             {
-                result = Convert.ToInt32(ManagerHelp.StatusReponse);
-                ManagerHelp.StatusReponse = "";
+                bool flag = true;
+                new TaskFactory().StartNew(() =>
+                {
+                    while (flag && ManagerHelp.StatusResult == "")
+                    {
+                        Thread.Sleep(1000);
+                    }
+                }).Wait(timeout);
+                flag = false;
+                if (ManagerHelp.StatusResult != "")
+                {
+                    result = Convert.ToInt32(ManagerHelp.StatusResult);
+                    ManagerHelp.StatusResult = "";
+                }
+                else
+                {
+                    result = 400;//请求超时
+                }
             }
-            else {
-                result = 400;//请求超时
+            catch (Exception ex)
+            {
             }
             return result;
         }

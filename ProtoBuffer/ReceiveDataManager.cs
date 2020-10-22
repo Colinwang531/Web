@@ -86,7 +86,7 @@ namespace SmartWeb.ProtoBuffer
                         if (request.algorithminfo.type != AlgorithmInfo.Type.CAPTURE) 
                         {
                             string name = Enum.GetName(typeof(AlgorithmType), request.algorithminfo.type);
-                            string identity = ManagerHelp.GetIdentity((int)ComponentType.AI, name);
+                            string identity = ManagerHelp.GetShipToId(ComponentType.AI, name);
                             if (identity != "")
                             {
                                 //向组件发送算法请求
@@ -127,7 +127,7 @@ namespace SmartWeb.ProtoBuffer
                     }
                     else
                     {
-                        ManagerHelp.AlgorithmReponse = algorithm.algorithmresponse.result.ToString();
+                        ManagerHelp.AlgorithmResult = algorithm.algorithmresponse.result.ToString();
                     }
                     break;
                 case Models.Algorithm.Command.QUERY_REP:
@@ -175,12 +175,17 @@ namespace SmartWeb.ProtoBuffer
                     {
                         var model=ProtoBDManager.DeviceAdd(device.devicerequest.deviceinfo);
                         if (model!=null)
-                        {//获取设置的组件ID
-                            int type = (int)ManagerHelp.GetComponentType((int)model.factory);
-                            string identity = ManagerHelp.GetIdentity(type);
-                            if (identity != "") {
-                                manager.SendDeveiceAdd(model, ManagerHelp.UpToId);
+                        {
+                            //获取设置的组件ID
+                            string identity = ManagerHelp.GetShipToId(ManagerHelp.GetComponentType((int)model.factory));
+                            if (identity != "") 
+                            {
+                                manager.SendDeveiceAdd(model, identity);
                                 ManagerHelp.UpSend.Add(model.Id + "Add");
+                            }
+                            else
+                            {
+                                manager.SendDeviceRN(Models.Device.Command.MODIFY_REP, "", null, 1);
                             }
                         }
                     }
@@ -213,8 +218,7 @@ namespace SmartWeb.ProtoBuffer
                         if (model!=null)
                         {
                             //获取设置的组件ID
-                            int type = (int)ManagerHelp.GetComponentType((int)model.factory);
-                            string identity =ManagerHelp.GetIdentity(type);
+                            string identity =ManagerHelp.GetShipToId(ManagerHelp.GetComponentType((int)model.factory));
                             if (identity!="")
                             {
                                 manager.SendDeveiceAdd(model, identity);
@@ -261,12 +265,12 @@ namespace SmartWeb.ProtoBuffer
                     }
                     else
                     {
-                        ManagerHelp.DeviceReponse = device.deviceresponse.result.ToString();
+                        ManagerHelp.DeviceResult = device.deviceresponse.result.ToString();
                     }
                     break;
                    #endregion
                 case Models.Device.Command.DELETE_REP:
-                    ManagerHelp.DeviceReponse = device.deviceresponse.result.ToString();
+                    ManagerHelp.DeviceResult = device.deviceresponse.result.ToString();
                     break;
                 case Models.Device.Command.MODIFY_REP:
                     #region XMQ响应设备修改
@@ -284,7 +288,7 @@ namespace SmartWeb.ProtoBuffer
                     }
                     else
                     {
-                        ManagerHelp.DeviceReponse = device.deviceresponse.result.ToString();
+                        ManagerHelp.DeviceResult = device.deviceresponse.result.ToString();
                     }
                     break;
                    #endregion
@@ -312,8 +316,9 @@ namespace SmartWeb.ProtoBuffer
                     result = ProtoBDManager.CrewAdd(crew.crewrequest.crewinfo);
                     if (result == 0)
                     {
+                        string identity = ManagerHelp.GetShipToId(ComponentType.AI, ManagerHelp.FaceName);
                         //向组件发送船员请求
-                        manager.SendCrewAdd(crew.crewrequest.crewinfo, ManagerHelp.UpToId);
+                        manager.SendCrewAdd(crew.crewrequest.crewinfo, identity);
                         ManagerHelp.UpSend.Add("CrewAdd");
                     }
                     else
@@ -327,8 +332,10 @@ namespace SmartWeb.ProtoBuffer
                     #region 陆地端删除船员请求
                     result = ProtoBDManager.CrewDelete(crew.crewrequest.crewinfo.uid);
                     if (result == 0)
-                    {  //向组件发送船员请求
-                        manager.SendCrewDelete(Convert.ToInt32(crew.crewrequest.crewinfo.uid), ManagerHelp.UpToId);
+                    {
+                        string identity = ManagerHelp.GetShipToId(ComponentType.AI, ManagerHelp.FaceName);
+                        //向组件发送船员请求
+                        manager.SendCrewDelete(Convert.ToInt32(crew.crewrequest.crewinfo.uid), identity);
                         ManagerHelp.UpSend.Add("CrewDel");
                     }
                     else
@@ -341,8 +348,10 @@ namespace SmartWeb.ProtoBuffer
                     #region 陆地端修改船员请求
                     result = ProtoBDManager.CrewUpdate(crew.crewrequest.crewinfo);
                     if (result == 0)
-                    {  //向组件发送船员请求
-                        manager.SendCrewUpdate(crew.crewrequest.crewinfo, ManagerHelp.UpToId);
+                    {
+                        string identity = ManagerHelp.GetShipToId(ComponentType.AI, ManagerHelp.FaceName);
+                        //向组件发送船员请求
+                        manager.SendCrewUpdate(crew.crewrequest.crewinfo, identity);
                         ManagerHelp.UpSend.Add("CrewEdit");
                     }
                     else
@@ -367,7 +376,7 @@ namespace SmartWeb.ProtoBuffer
                     }
                     else
                     {
-                        ManagerHelp.CrewReponse = crew.crewresponse.result.ToString();
+                        ManagerHelp.CrewResult = crew.crewresponse.result.ToString();
                     }
                     break;
                 case Models.Crew.Command.DELETE_REP:
@@ -379,7 +388,7 @@ namespace SmartWeb.ProtoBuffer
                     }
                     else
                     {
-                        ManagerHelp.CrewReponse = crew.crewresponse.result.ToString();
+                        ManagerHelp.CrewResult = crew.crewresponse.result.ToString();
                     }
                     break;
                 case Models.Crew.Command.MODIFY_REP:
@@ -391,7 +400,7 @@ namespace SmartWeb.ProtoBuffer
                     }
                     else
                     {
-                        ManagerHelp.CrewReponse = crew.crewresponse.result.ToString();
+                        ManagerHelp.CrewResult = crew.crewresponse.result.ToString();
                     }
                     break;
                 case Models.Crew.Command.QUERY_REP:
@@ -419,8 +428,12 @@ namespace SmartWeb.ProtoBuffer
                     int result = ProtoBDManager.ShipSet(status.statusrequest);
                     if (result == 0)
                     {
-                        //向组件发送船员请求
-                        manager.SendStatusSet(status.statusrequest, ManagerHelp.UpToId);
+                        var components=ProtoBDManager.GetComponentByAI();
+                        foreach (var item in components)
+                        {
+                            //向XMQ组件里的所有算法发送船信息
+                            manager.SendStatusSet(status.statusrequest, item.Id);
+                        }                       
                         ManagerHelp.UpSend.Add("StatusSet");
                     }
                     else
@@ -443,7 +456,7 @@ namespace SmartWeb.ProtoBuffer
                     }
                     else
                     {
-                        ManagerHelp.StatusReponse = status.statusresponse.result.ToString();
+                        ManagerHelp.StatusResult = status.statusresponse.result.ToString();
                     }
                     break;
                 case Status.Command.QUERY_REP:

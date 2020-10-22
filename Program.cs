@@ -23,10 +23,10 @@ namespace SmartWeb
         /// <param name="args"></param>
         public static void Main(string[] args)
         {
-            //while (true)
-            //{
-                //try
-                //{
+            while (true)
+            {
+                try
+                {
                     System.Diagnostics.Debug.WriteLine("test");
                     if (args.Length >= 3)
                     {
@@ -38,12 +38,12 @@ namespace SmartWeb
                         ManagerHelp.IP = IP;
                     }
                     CreateHostBuilder(args).Build().Run();
-                //}
-                //catch (Exception ex)
-                //{
-                //    System.Threading.Thread.Sleep(1000);
-                //}
-            //}
+                }
+                catch (Exception ex)
+                {
+                    System.Threading.Thread.Sleep(1000);
+                }
+            }
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>

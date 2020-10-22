@@ -80,10 +80,14 @@ namespace SmartWeb.Tool
         /// 存放proto返回的消息
         /// </summary>
         public static string CrewReponse = "";
+        public static string CrewResult = "";
         public static string DeviceReponse = "";
+        public static string DeviceResult = "";
         public static string ComponentReponse = "";
         public static string AlgorithmReponse = "";
+        public static string AlgorithmResult = "";
         public static string StatusReponse = "";
+        public static string StatusResult = "";
         /// <summary>
         /// 人脸算法组件名称
         /// </summary>
@@ -308,12 +312,12 @@ namespace SmartWeb.Tool
             return ComponentType.DHD;
         }
         /// <summary>
-        /// 获取船舶端的组件ID
+        /// 获取船舶端的转发的组件ID
         /// </summary>
         /// <param name="type"></param>
         /// <param name="name"></param>
         /// <returns></returns>
-        public static string GetIdentity(int type, string name = "")
+        public static string GetShipToId(ComponentType type, string name = "")
         {
             if (name == "ATTENDANCE_IN" || name == "ATTENDANCE_OUT")
             {
@@ -322,11 +326,29 @@ namespace SmartWeb.Tool
             using (var context = new MyContext())
             {
                 //获取设备的组件ID
-                var component = context.Component.FirstOrDefault(c => (int)c.Type == type && c.Line == 0 && (name == "" ? 1 == 1 : c.Name.ToUpper() == name));
+                var component = context.Component.FirstOrDefault(c => c.Type == type && c.Line == 0 && (name == "" ? 1 == 1 : c.Name.ToUpper() == name));
                 if (component != null)
                 {
                     return component.Id;
                 }
+            }
+            return "";
+        }
+        /// <summary>
+        /// 获取陆地端转发的组件ID
+        /// </summary>
+        /// <param name="tokenstr"></param>
+        /// <returns></returns>
+        public static string GetLandToId(string tokenstr,ComponentType type=ComponentType.WEB,string name="") 
+        {
+            if (tokenstr != "") {
+                List<ComponentToken> tokens = JsonConvert.DeserializeObject<List<ComponentToken>>(tokenstr);
+                if (name == "ATTENDANCE_IN" || name == "ATTENDANCE_OUT")
+                {
+                    name = ManagerHelp.FaceName.ToUpper();
+                }
+                var component = tokens.FirstOrDefault(c => c.Type == type&&(name == "" ? 1 == 1 : c.Name.ToUpper() == name));
+                if (component != null) return component.CommId;
             }
             return "";
         }

@@ -41,7 +41,7 @@ namespace SmartWeb.ProtoBuffer
             }
         }
 
-        public void Send(MSG msg, string toIdentity = "", string head = "request")
+        public void Send(MSG msg, string toId = "", string head = "request")
         {
             try
             {
@@ -52,18 +52,8 @@ namespace SmartWeb.ProtoBuffer
                     mqmsg.AppendEmptyFrame();
                     mqmsg.Append("worker");
                     mqmsg.Append(head);
-                    ////船舶向陆地端发送
-                    //if ((head == "response") && !ManagerHelp.UpFromId.Equals(ManagerHelp.ComponentId))
-                    //{
-                    //    mqmsg.Append(ManagerHelp.ComponentId);//当前组件ID 
-                    //    mqmsg.Append(ManagerHelp.UpFromId);//上一级组件ID
-                    //}
-                    //else //船舶向组件请求
-                    //{
-                        mqmsg.Append(ManagerHelp.ComponentId);//当前组件ID
-                        //to
-                        mqmsg.Append(toIdentity);//下一级组件ID
-                    //}
+                    mqmsg.Append(ManagerHelp.ComponentId);//当前组件ID
+                    mqmsg.Append(toId);//下一级组件ID或上一级的组件ID
                     mqmsg.Append(byt);
                     //发送注册请求
                     dealer.SendMultipartMessage(mqmsg);
@@ -81,15 +71,15 @@ namespace SmartWeb.ProtoBuffer
             while (true)
             {
                 var mQFrames = dealer.ReceiveMultipartMessage(6);
-                var temp1 = mQFrames[3].ConvertToString();
-                var temp2 = mQFrames[4].ConvertToString();
+                var fromId = mQFrames[3].ConvertToString();
+                var toId = mQFrames[4].ConvertToString();
                 //对陆地端方向的接受
-                if (temp2.Equals(ManagerHelp.ComponentId))
+                if (toId.Equals(ManagerHelp.ComponentId))
                 {
                     //陆地端传下来的FromId
-                    ManagerHelp.UpFromId = temp2;
+                    ManagerHelp.UpFromId = toId;
                     //陆地端过来的ToId
-                    ManagerHelp.UpToId = temp1;
+                    ManagerHelp.UpToId = fromId;
                 }
                 byte[] mory = mQFrames.Last.ToByteArray();
                 MSG revmsg = ProtoBufHelp.DeSerialize<MSG>(mory);
@@ -102,7 +92,7 @@ namespace SmartWeb.ProtoBuffer
                             string xmq = "";
                             if (mQFrames[2].ToString() == "upload")
                             {
-                                xmq = temp1;
+                                xmq = fromId;
                             }
                             var ss = new ProtoBDManager();
                             ss.AlarmAdd(revmsg.alarm.alarminfo, xmq);
