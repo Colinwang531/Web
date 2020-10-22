@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Configuration.Json;
 using System.IO;
 
-namespace ShipWeb.Helpers
+namespace SmartWeb.Helpers
 {
     public static class AppSettingHelper
     {

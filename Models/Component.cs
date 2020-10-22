@@ -4,7 +4,7 @@ using System.Linq;
 using System.Security;
 using System.Threading.Tasks;
 
-namespace ShipWeb.Models
+namespace SmartWeb.Models
 {
     /// <summary>
     /// 组件表用于存放组件的注册信息

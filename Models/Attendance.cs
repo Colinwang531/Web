@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ShipWeb.Models
+namespace SmartWeb.Models
 {
     /// <summary>
     /// 船员签到表，签入 签出

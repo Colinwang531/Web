@@ -9,7 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
-using ShipWeb.DB;
+using SmartWeb.DB;
 using Microsoft.Extensions.Options;
 using MySql.Data.MySqlClient;
 using Microsoft.Extensions.Logging;
@@ -17,15 +17,15 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.FileProviders;
 using System.IO;
 using Microsoft.AspNetCore.Mvc;
-using ShipWeb.Helpers;
+using SmartWeb.Helpers;
 using DinkToPdf.Contracts;
 using DinkToPdf;
-using ShipWeb.Interface;
+using SmartWeb.Interface;
 using NetMQ.Sockets;
-using ShipWeb.ProtoBuffer.Init;
+using SmartWeb.ProtoBuffer.Init;
 using Smartweb.Hubs;
 
-namespace ShipWeb
+namespace SmartWeb
 {
     public class Startup
     {

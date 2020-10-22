@@ -3,7 +3,7 @@ using System.IO;
 using DinkToPdf;
 using DinkToPdf.Contracts;
 
-namespace ShipWeb.Interface
+namespace SmartWeb.Interface
 {
     /// <summary>
     /// 与pdf相关

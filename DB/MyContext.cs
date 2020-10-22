@@ -4,11 +4,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using ShipWeb.Models;
-using ShipWeb.Helpers;
+using SmartWeb.Models;
+using SmartWeb.Helpers;
 using System.Data.Common;
 
-namespace ShipWeb.DB
+namespace SmartWeb.DB
 {
     public class MyContext : DbContext
     {

@@ -7,14 +7,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Asn1.Cms;
-using ShipWeb.DB;
-using ShipWeb.Interface;
-using ShipWeb.Models;
-using ShipWeb.ProtoBuffer;
-using ShipWeb.Tool;
+using SmartWeb.DB;
+using SmartWeb.Interface;
+using SmartWeb.Models;
+using SmartWeb.ProtoBuffer;
+using SmartWeb.Tool;
 using Microsoft.AspNetCore.Http;
 
-namespace ShipWeb.Controllers
+namespace SmartWeb.Controllers
 {
     public class AlgorithmController : BaseController
     {
@@ -160,7 +160,7 @@ namespace ShipWeb.Controllers
                     if (base.user.IsLandHome)
                     {
                         string identity = GetIdentity(viewModel.Type, viewModel.Cid);
-                        if (string.IsNullOrEmpty(identity))
+                        if (string.IsNullOrEmpty(identity)&& viewModel.Type != (int)AlgorithmType.CAPTURE)
                         {
                             string name = GetViewName((AlgorithmType)viewModel.Type);
                             return new JsonResult(new { code = 1, msg = "算法【" + name + "】组件未启动" });
@@ -186,7 +186,7 @@ namespace ShipWeb.Controllers
                         }
                         //获取枚举对应的名称
                         string identity = GetIdentity(viewModel.Type, viewModel.Cid);
-                        if (string.IsNullOrEmpty(identity))
+                        if (string.IsNullOrEmpty(identity)&& viewModel.Type != (int)AlgorithmType.CAPTURE)
                         {
                             string name = GetViewName((AlgorithmType)viewModel.Type);
                             return new JsonResult(new { code = 1, msg = "算法【" + name + "】组件未启动" });

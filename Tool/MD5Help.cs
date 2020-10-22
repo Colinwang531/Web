@@ -5,7 +5,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ShipWeb.Tool
+namespace SmartWeb.Tool
 {
     public class MD5Help
     {

@@ -5,7 +5,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Text;
 
-namespace ShipWeb.ProtoBuffer
+namespace SmartWeb.ProtoBuffer
 {
     public class ProtoBufHelp
     {

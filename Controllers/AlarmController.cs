@@ -11,19 +11,19 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore.Storage;
 using Newtonsoft.Json;
-using ShipWeb.DB;
-using ShipWeb.Models;
-using ShipWeb.Tool;
+using SmartWeb.DB;
+using SmartWeb.Models;
+using SmartWeb.Tool;
 using System.Text;
 using System.Net.WebSockets;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using System.Diagnostics;
 using DinkToPdf;
 using DinkToPdf.Contracts;
-using ShipWeb.Interface;
+using SmartWeb.Interface;
 using Newtonsoft.Json.Schema;
 
-namespace ShipWeb.Controllers
+namespace SmartWeb.Controllers
 {
     public class AlarmController : BaseController
     {

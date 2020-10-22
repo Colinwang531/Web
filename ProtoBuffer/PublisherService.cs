@@ -1,12 +1,12 @@
 ﻿using NetMQ;
-using ShipWeb.Tool;
+using SmartWeb.Tool;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ShipWeb.ProtoBuffer
+namespace SmartWeb.ProtoBuffer
 {
     public class PublisherService
     {

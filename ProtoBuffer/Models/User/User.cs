@@ -5,7 +5,7 @@ using System.Linq;
 using System.ServiceModel.Channels;
 using System.Threading.Tasks;
 
-namespace ShipWeb.ProtoBuffer.Models
+namespace SmartWeb.ProtoBuffer.Models
 {
     /// <summary>
     /// 用户类

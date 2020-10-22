@@ -1,13 +1,13 @@
 ﻿using NuGet.Frameworks;
-using ShipWeb.Interface;
-using ShipWeb.ProtoBuffer.Models;
-using ShipWeb.Tool;
+using SmartWeb.Interface;
+using SmartWeb.ProtoBuffer.Models;
+using SmartWeb.Tool;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ShipWeb.ProtoBuffer
+namespace SmartWeb.ProtoBuffer
 {
     public class SendDataMsg
     {
@@ -40,7 +40,7 @@ namespace ShipWeb.ProtoBuffer
         /// 组合返回数据
         /// </summary>
         /// <param name="algorithms"></param>
-        public void SendDeviceRN (Models.Device.Command command, string did, List<ShipWeb.Models.Device> devices = null, int status = 0)
+        public void SendDeviceRN (Models.Device.Command command, string did, List<SmartWeb.Models.Device> devices = null, int status = 0)
         {
             List<DeviceInfo> list = new List<DeviceInfo>() ;
             foreach (var item in devices)
@@ -93,7 +93,7 @@ namespace ShipWeb.ProtoBuffer
         /// 组合返回数据
         /// </summary>
         /// <param name="status"></param>
-        public void SendStatusRN(Status.Command command, ShipWeb.Models.Ship ship, int status = 0)
+        public void SendStatusRN(Status.Command command, SmartWeb.Models.Ship ship, int status = 0)
         {
             MSG msg = new MSG()
             {
@@ -232,7 +232,8 @@ namespace ShipWeb.ProtoBuffer
                         {
                             type = ComponentInfo.Type.WEB,
                             cname = name,
-                            componentid = cid
+                            componentid = ManagerHelp.ComponentId,
+                            commid=cid
                         },
                     }
                 }
@@ -349,7 +350,7 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="deviceInfo"></param>
         /// <param name="did"></param>
-        public void SendDeveiceAdd(ShipWeb.Models.Device model, string nextIdentity)
+        public void SendDeveiceAdd(SmartWeb.Models.Device model, string nextIdentity)
         {
             DeviceInfo deviceInfo = GetDeviceInfo(model);
             MSG msg = new MSG()
@@ -369,7 +370,7 @@ namespace ShipWeb.ProtoBuffer
             dealer.Send(msg, nextIdentity);
         }
 
-        private static DeviceInfo GetDeviceInfo(ShipWeb.Models.Device model)
+        private static DeviceInfo GetDeviceInfo(SmartWeb.Models.Device model)
         {
             var device= new DeviceInfo()
             {
@@ -407,7 +408,7 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="deviceInfo"></param>
         /// <param name="did"></param>
-        public void SendDeveiceUpdate(ShipWeb.Models.Device model, string nextIdentity, string did = "")
+        public void SendDeveiceUpdate(SmartWeb.Models.Device model, string nextIdentity, string did = "")
         {
             DeviceInfo deviceInfo = GetDeviceInfo(model);
             MSG msg = new MSG()
@@ -513,8 +514,8 @@ namespace ShipWeb.ProtoBuffer
         /// <summary>
         /// 获取报警消息
         /// </summary>
-        /// <param name="nextIdentity"></param>
-        public void SendAlarm(string nextIdentity = "", AlarmInfo info = null)
+        /// <param name="head"></param>
+        public void SendAlarm(string head = "upload", AlarmInfo info = null)
         {
             MSG msg = new MSG()
             {
@@ -527,7 +528,7 @@ namespace ShipWeb.ProtoBuffer
                 }
             };
             if (info != null) msg.alarm.alarminfo = info;
-            dealer.Send(msg, nextIdentity);
+            dealer.Send(msg,"", head);
         }
     }
 }

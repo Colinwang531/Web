@@ -5,10 +5,10 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using ShipWeb.DB;
-using ShipWeb.Models;
+using SmartWeb.DB;
+using SmartWeb.Models;
 
-namespace ShipWeb.Controllers
+namespace SmartWeb.Controllers
 {
     public class FleetController : Controller
     {

@@ -5,25 +5,25 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using ShipWeb.DB;
-using ShipWeb.Models;
-using ShipWeb.Tool;
+using SmartWeb.DB;
+using SmartWeb.Models;
+using SmartWeb.Tool;
 using System.Text;
 using System.IO;
-using ShipWeb.ProtoBuffer;
-using ShipWeb.ProtoBuffer.Models;
+using SmartWeb.ProtoBuffer;
+using SmartWeb.ProtoBuffer.Models;
 using NuGet.Frameworks;
 using System.Security;
 using NetMQ.Sockets;
-using ShipWeb.Helpers;
+using SmartWeb.Helpers;
 using System.Threading;
 using NetMQ;
 using System.Diagnostics;
-using ShipWeb.Interface;
+using SmartWeb.Interface;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace ShipWeb.ProtoBuffer.Init
+namespace SmartWeb.ProtoBuffer.Init
 {
     public class InitManger
     {
@@ -60,10 +60,10 @@ namespace ShipWeb.ProtoBuffer.Init
                 //定时获取组件信息
                 QueryComponent();
 
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                    MusicPlay.WindowPlaySleepMusic();
-                else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                    MusicPlay.LinuxPlaySleepMusic();
+                //if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                //    MusicPlay.WindowPlaySleepMusic();
+                //else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                //    MusicPlay.LinuxPlaySleepMusic();
             }
         }
         /// <summary>
@@ -111,50 +111,43 @@ namespace ShipWeb.ProtoBuffer.Init
         {
             SendDataMsg assembly = new SendDataMsg();
             //发送组件注册请求
-            assembly.SendComponentSign("WEB", ManagerHelp.Cid);
-            if (ManagerHelp.Cid == "")
-            {
-                Task.Factory.StartNew(state =>
-                {
-                    while (ManagerHelp.Cid == "")
-                    {
-                        Thread.Sleep(1000);
-                    }
-                    //发送查询请求
-                    assembly.SendComponentQuery(ManagerHelp.Cid);
-                }, TaskCreationOptions.LongRunning);
-            }
-            else
-            {
-                //select
-                assembly.SendComponentQuery(ManagerHelp.Cid);
-            }
+            assembly.SendComponentSign("WEB", "");
             Task.Factory.StartNew(state =>
             {
-                while (ManagerHelp.ComponentReponse == "")
+                while (ManagerHelp.Cid == "")
                 {
                     Thread.Sleep(1000);
                 }
-                InitStatus();
-                InitDevice();
-                ManagerHelp.ComponentReponse = "";
-                if (ManagerHelp.isInit)
+                //发送查询请求
+                assembly.SendComponentQuery(ManagerHelp.Cid); 
+                Task.Factory.StartNew(state =>
                 {
-                    Task.Factory.StartNew(t =>
+                    while (ManagerHelp.ComponentReponse == "")
                     {
-                        while (ManagerHelp.DeviceReponse == "")
+                        Thread.Sleep(1000);
+                    }
+                    InitStatus();
+                    InitDevice();
+                    ManagerHelp.ComponentReponse = "";
+                    if (ManagerHelp.isInit)
+                    {
+                        Task.Factory.StartNew(t =>
                         {
-                            Thread.Sleep(100);
-                        }
-                        //发送算法信息
-                        InitManger.InitAlgorithm();
-                        //发送船员信息
-                        InitManger.InitCrew();
-                        ManagerHelp.isInit = false;
-                        ManagerHelp.DeviceReponse = "";
-                    }, TaskCreationOptions.LongRunning);
-                }
+                            while (ManagerHelp.DeviceReponse == "")
+                            {
+                                Thread.Sleep(1000);
+                            }
+                            //发送算法信息
+                            InitManger.InitAlgorithm();
+                            //发送船员信息
+                            InitManger.InitCrew();
+                            ManagerHelp.isInit = false;
+                            ManagerHelp.DeviceReponse = "";
+                        }, TaskCreationOptions.LongRunning);
+                    }
+                }, TaskCreationOptions.LongRunning);
             }, TaskCreationOptions.LongRunning);
+           
             ManagerHelp.isInit = true;
             ManagerHelp.atWorks = new List<AtWork>();
             ManagerHelp.UpSend = new List<string>();
@@ -167,18 +160,21 @@ namespace ShipWeb.ProtoBuffer.Init
             using (var con = new MyContext())
             {
                 var components = con.Component.Where(c => c.Type == ComponentType.AI).ToList();
-                if (components != null)
+                if (components.Count>0)
                 {
-                    SendDataMsg assembly = new SendDataMsg();
                     var ship = con.Ship.FirstOrDefault();
-                    StatusRequest request = new StatusRequest()
+                    if (ship!=null)
                     {
-                        flag = (int)ship.type,
-                        type = StatusRequest.Type.SAIL
-                    };
-                    foreach (var item in components)
-                    {
-                        assembly.SendStatusSet(request, item.Id);
+                        SendDataMsg assembly = new SendDataMsg();
+                        StatusRequest request = new StatusRequest()
+                        {
+                            flag = (int)ship.type,
+                            type = StatusRequest.Type.SAIL
+                        };
+                        foreach (var item in components)
+                        {
+                            assembly.SendStatusSet(request, item.Id);
+                        }
                     }
                 }
             }
@@ -188,7 +184,7 @@ namespace ShipWeb.ProtoBuffer.Init
         /// </summary>
         public static void InitDevice()
         {
-            List<ShipWeb.Models.Component> list = new List<ShipWeb.Models.Component>();
+            List<SmartWeb.Models.Component> list = new List<SmartWeb.Models.Component>();
             using (var con = new MyContext())
             {
                 list = con.Component.Where(c => c.Type != ComponentType.WEB).ToList();
@@ -216,8 +212,8 @@ namespace ShipWeb.ProtoBuffer.Init
                 foreach (var item in deviceInfos)
                 {
                     string devIdentity = "";
-                    if (item.factory == ShipWeb.Models.Device.Factory.DAHUA) devIdentity = DHDIdenity;
-                    else if (item.factory == ShipWeb.Models.Device.Factory.HIKVISION) devIdentity = HKDIdentity;
+                    if (item.factory == SmartWeb.Models.Device.Factory.DAHUA) devIdentity = DHDIdenity;
+                    else if (item.factory == SmartWeb.Models.Device.Factory.HIKVISION) devIdentity = HKDIdentity;
                     //海康和大华组件尚未启动则不需要发送组件注册消息
                     if (devIdentity == "") continue;
                     assembly.SendDeveiceAdd(item, devIdentity);
@@ -252,7 +248,7 @@ namespace ShipWeb.ProtoBuffer.Init
                             var device = con.Device.FirstOrDefault(c => c.Id == camera.DeviceId);
                             if (device == null) continue;
                             var comtype = ComponentType.HKD;
-                            if (device.factory == ShipWeb.Models.Device.Factory.DAHUA) comtype = ComponentType.DHD;
+                            if (device.factory == SmartWeb.Models.Device.Factory.DAHUA) comtype = ComponentType.DHD;
                             var compontent = con.Component.FirstOrDefault(c => c.Type == comtype);
                             if (compontent == null) continue;
                             assembly.SendAlgorithmSet(item, compontent.Id);
@@ -398,7 +394,7 @@ namespace ShipWeb.ProtoBuffer.Init
                 SendDataMsg assembly = new SendDataMsg();
                 while (true)
                 {
-                    assembly.SendComponentQuery(ManagerHelp.Cid);
+                    if(ManagerHelp.Cid!=null)assembly.SendComponentQuery("");
                     //每30秒查询组件
                     Thread.Sleep(30 * 1000);
                 }

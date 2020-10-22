@@ -11,13 +11,13 @@ using Newtonsoft.Json;
 using NuGet.Frameworks;
 using Org.BouncyCastle.Asn1.Cms;
 using ProtoBuf;
-using ShipWeb.DB;
-using ShipWeb.Models;
-using ShipWeb.ProtoBuffer;
-using ShipWeb.ProtoBuffer.Models;
-using ShipWeb.Tool;
+using SmartWeb.DB;
+using SmartWeb.Models;
+using SmartWeb.ProtoBuffer;
+using SmartWeb.ProtoBuffer.Models;
+using SmartWeb.Tool;
 
-namespace ShipWeb.Controllers
+namespace SmartWeb.Controllers
 {
     public class ShipController : BaseController
     {
@@ -122,24 +122,24 @@ namespace ShipWeb.Controllers
                     };
                     list.Add(model);
                 }
-                var comLine = compents.Where(c => c.Line == 0);
-                bool flag = true;
-                new TaskFactory().StartNew(() => {
-                    foreach (var item in comLine)
-                    {
-                        while (ManagerHelp.StatusReponse == "" && flag)
-                        {
-                            if (ManagerHelp.StatusReponse!="")
-                            {
-                                var response = JsonConvert.DeserializeObject<StatusResponse>(ManagerHelp.StatusReponse);
-                                if (response != null) {
-                                    list.FirstOrDefault(c => c.Id == item.Id).Line = response.flag;
-                                }
-                            }
-                            Thread.Sleep(100);
-                        }
-                    }
-                }).Wait(3000);                
+                //var comLine = compents.Where(c => c.Line == 0);
+                //bool flag = true;
+                //new TaskFactory().StartNew(() => {
+                //    foreach (var item in comLine)
+                //    {
+                //        while (ManagerHelp.StatusReponse == "" && flag)
+                //        {
+                //            if (ManagerHelp.StatusReponse!="")
+                //            {
+                //                var response = JsonConvert.DeserializeObject<StatusResponse>(ManagerHelp.StatusReponse);
+                //                if (response != null) {
+                //                    list.FirstOrDefault(c => c.Id == item.Id).Line = response.flag;
+                //                }
+                //            }
+                //            Thread.Sleep(100);
+                //        }
+                //    }
+                //}).Wait(3000);                
                 var result = new
                 {
                     code = 0,
@@ -176,9 +176,9 @@ namespace ShipWeb.Controllers
                     var components = _context.Component.Where(c => c.Type == ComponentType.AI).ToList();
                     foreach (var item in components)
                     {
-                        ShipWeb.ProtoBuffer.Models.StatusRequest sr = new ShipWeb.ProtoBuffer.Models.StatusRequest()
+                        SmartWeb.ProtoBuffer.Models.StatusRequest sr = new SmartWeb.ProtoBuffer.Models.StatusRequest()
                         {
-                            type = ShipWeb.ProtoBuffer.Models.StatusRequest.Type.SAIL,
+                            type = SmartWeb.ProtoBuffer.Models.StatusRequest.Type.SAIL,
                             flag = type
                         };
                         assembly.SendStatusSet(sr, identity + ":" + item.Id);
@@ -232,9 +232,9 @@ namespace ShipWeb.Controllers
             var components = _context.Component.Where(c => c.Type == ComponentType.AI).ToList();
             foreach (var item in components)
             {
-                ShipWeb.ProtoBuffer.Models.StatusRequest sr = new ShipWeb.ProtoBuffer.Models.StatusRequest()
+                SmartWeb.ProtoBuffer.Models.StatusRequest sr = new SmartWeb.ProtoBuffer.Models.StatusRequest()
                 {
-                    type = ShipWeb.ProtoBuffer.Models.StatusRequest.Type.SAIL,
+                    type = SmartWeb.ProtoBuffer.Models.StatusRequest.Type.SAIL,
                     flag = type
                 };
                 assembly.SendStatusSet(sr, item.Id);

@@ -85,11 +85,11 @@
                 if (tb[i].line) {
                     html += ' <div style="border-radius: 60px;width:8px;height:8px;background-color:#19BE6B;margin-right:15px;float:left;margin-top: 8px;"></div>';
                     html += ' <label style="font-size:16px;color:#101010">在线</label>';
-                    if (tb[i].flag) {
-                        html += '        <div style="float:right;width:50px">航行</div>';
-                    } else {
-                        html += '        <div style="float:right;width:50px">停港</div>';
-                    }
+                    //if (tb[i].flag) {
+                    //    html += '        <div style="float:right;width:50px">航行</div>';
+                    //} else {
+                    //    html += '        <div style="float:right;width:50px">停港</div>';
+                    //}
                 } else {
                     html += ' <div style="border-radius: 60px;width:8px;height:8px;background-color:#8C8C8C;margin-right:15px;float:left;margin-top: 8px;"></div>';
                     html += ' <label style="font-size:16px;color:#101010">离线</label>';
@@ -237,7 +237,7 @@
             </div>
         }
     </div>
-    @*<div class="layui-footer">底部信息 @($"{ShipWeb.Tool.DateTimeExtentions.ToCstTime(DateTime.Now).ToString("yyyy-MM-dd HH:mm:ss")}") , 您好 King Yu 禹创智能科技</div>*@
+    @*<div class="layui-footer">底部信息 @($"{SmartWeb.Tool.DateTimeExtentions.ToCstTime(DateTime.Now).ToString("yyyy-MM-dd HH:mm:ss")}") , 您好 King Yu 禹创智能科技</div>*@
 </div>
 
 <div style="display: none;" id="saveDiv">

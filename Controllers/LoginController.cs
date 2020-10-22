@@ -3,19 +3,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using ShipWeb.DB;
-using ShipWeb.Models;
+using SmartWeb.DB;
+using SmartWeb.Models;
 using Microsoft.AspNetCore.Http;
 using ProtoBuf;
-using ShipWeb.Tool;
-using ShipWeb.ProtoBuffer;
-using ShipWeb.ProtoBuffer.Models;
+using SmartWeb.Tool;
+using SmartWeb.ProtoBuffer;
+using SmartWeb.ProtoBuffer.Models;
 using System.Text;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Newtonsoft.Json;
 
-namespace ShipWeb.Controllers
+namespace SmartWeb.Controllers
 {
     public class LoginController : Controller
     {

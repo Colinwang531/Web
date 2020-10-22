@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection.Metadata;
 using System.Threading.Tasks;
 
-namespace ShipWeb.Models
+namespace SmartWeb.Models
 {
     /// <summary>
     /// 船员图片表

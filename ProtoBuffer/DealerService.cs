@@ -1,9 +1,9 @@
 ﻿using NetMQ;
 using NetMQ.Sockets;
-using ShipWeb.Helpers;
-using ShipWeb.ProtoBuffer;
-using ShipWeb.ProtoBuffer.Models;
-using ShipWeb.Tool;
+using SmartWeb.Helpers;
+using SmartWeb.ProtoBuffer;
+using SmartWeb.ProtoBuffer.Models;
+using SmartWeb.Tool;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +12,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ShipWeb.ProtoBuffer
+namespace SmartWeb.ProtoBuffer
 {
     public class DealerService
     {
@@ -50,20 +50,20 @@ namespace ShipWeb.ProtoBuffer
                     byte[] byt = ProtoBufHelp.Serialize<MSG>(msg);
                     NetMQMessage mqmsg = new NetMQMessage(5);
                     mqmsg.AppendEmptyFrame();
-                    mqmsg.Append("work");
+                    mqmsg.Append("worker");
                     mqmsg.Append(head);
-                    //船舶向陆地端发送
-                    if (!(head == "request") && !ManagerHelp.UpFromId.Equals(ManagerHelp.ComponentId))
-                    {
-                        mqmsg.Append(ManagerHelp.ComponentId);//当前组件ID 
-                        mqmsg.Append(ManagerHelp.UpFromId);//上一级组件ID
-                    }
-                    else //船舶向组件请求
-                    {
+                    ////船舶向陆地端发送
+                    //if ((head == "response") && !ManagerHelp.UpFromId.Equals(ManagerHelp.ComponentId))
+                    //{
+                    //    mqmsg.Append(ManagerHelp.ComponentId);//当前组件ID 
+                    //    mqmsg.Append(ManagerHelp.UpFromId);//上一级组件ID
+                    //}
+                    //else //船舶向组件请求
+                    //{
                         mqmsg.Append(ManagerHelp.ComponentId);//当前组件ID
                         //to
                         mqmsg.Append(toIdentity);//下一级组件ID
-                    }
+                    //}
                     mqmsg.Append(byt);
                     //发送注册请求
                     dealer.SendMultipartMessage(mqmsg);
@@ -84,12 +84,12 @@ namespace ShipWeb.ProtoBuffer
                 var temp1 = mQFrames[3].ConvertToString();
                 var temp2 = mQFrames[4].ConvertToString();
                 //对陆地端方向的接受
-                if (!temp2.Equals(ManagerHelp.ComponentId))
+                if (temp2.Equals(ManagerHelp.ComponentId))
                 {
                     //陆地端传下来的FromId
-                    ManagerHelp.UpFromId = temp1;
+                    ManagerHelp.UpFromId = temp2;
                     //陆地端过来的ToId
-                    ManagerHelp.UpToId = temp2;
+                    ManagerHelp.UpToId = temp1;
                 }
                 byte[] mory = mQFrames.Last.ToByteArray();
                 MSG revmsg = ProtoBufHelp.DeSerialize<MSG>(mory);

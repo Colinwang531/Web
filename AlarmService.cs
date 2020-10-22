@@ -1,12 +1,12 @@
 ﻿using Microsoft.Extensions.Hosting;
-using ShipWeb.ProtoBuffer;
+using SmartWeb.ProtoBuffer;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ShipWeb
+namespace SmartWeb
 {
     public class AlarmService: BackgroundService
     {

@@ -7,9 +7,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Newtonsoft.Json;
-using ShipWeb.Models;
+using SmartWeb.Models;
 
-namespace ShipWeb.Controllers
+namespace SmartWeb.Controllers
 {
     public class BaseController : Controller
     {

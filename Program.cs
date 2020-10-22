@@ -9,24 +9,24 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NetMQ.Sockets;
 using ProtoBuf;
-using ShipWeb.ProtoBuffer;
-using ShipWeb.Tool;
+using SmartWeb.ProtoBuffer;
+using SmartWeb.Tool;
 
-namespace ShipWeb
+namespace SmartWeb
 {
     public class Program
     {
         /// <summary>
-        /// 命令行传入的入数据入口 格式 ShipWeb.exe -a 192.168.0.17 -p 3002
+        /// 命令行传入的入数据入口 格式 SmartWeb.exe -a 192.168.0.17 -p 3002
         /// -a：指的是向MQ消息注册的地址 -p：指的是注册消息的端口号
         /// </summary>
         /// <param name="args"></param>
         public static void Main(string[] args)
         {
-            while (true)
-            {
-                try
-                {
+            //while (true)
+            //{
+                //try
+                //{
                     System.Diagnostics.Debug.WriteLine("test");
                     if (args.Length >= 3)
                     {
@@ -38,12 +38,12 @@ namespace ShipWeb
                         ManagerHelp.IP = IP;
                     }
                     CreateHostBuilder(args).Build().Run();
-                }
-                catch (Exception)
-                {
-                    System.Threading.Thread.Sleep(1000);
-                }
-            }
+                //}
+                //catch (Exception ex)
+                //{
+                //    System.Threading.Thread.Sleep(1000);
+                //}
+            //}
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>

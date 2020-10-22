@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace ShipWeb.Models
+namespace SmartWeb.Models
 {
     /// <summary>
     /// 报警消息点位表(既触发报警的图形位)
