@@ -104,7 +104,8 @@ namespace ShipWeb.ProtoBuffer
                             {
                                 xmq = temp1;
                             }
-                            ProtoBDManager.AlarmAdd(revmsg.alarm.alarminfo, xmq);
+                            var ss = new ProtoBDManager();
+                            ss.AlarmAdd(revmsg.alarm.alarminfo, xmq);
                         }
                     }
                     else if (revmsg.type == MSG.Type.ALGORITHM)

@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.AspNetCore.SignalR;
+using Newtonsoft.Json;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Crypto.Tls;
 using Org.BouncyCastle.Ocsp;
@@ -6,6 +7,8 @@ using ShipWeb.DB;
 using ShipWeb.Models;
 using ShipWeb.ProtoBuffer.Models;
 using ShipWeb.Tool;
+using Smartweb.Helpers;
+using Smartweb.Hubs;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -22,6 +25,18 @@ namespace ShipWeb.ProtoBuffer
 {
     public class ProtoBDManager
     {
+        private readonly MemoryCacheHelper cache = new MemoryCacheHelper();
+        private readonly IHubContext<AlarmVoiceHub> hubContext;
+
+        public ProtoBDManager()
+        {
+        }
+        public ProtoBDManager(IHubContext<AlarmVoiceHub> _hubContext)
+        {
+            this.hubContext = _hubContext;
+        }
+
+
         /// <summary>
         /// 查询所有设备
         /// </summary>
@@ -33,7 +48,7 @@ namespace ShipWeb.ProtoBuffer
             {
                 //查询设备信息
                 list = GetDevice(info);
-                if (list.Count>0)
+                if (list.Count > 0)
                 {
                     var ids = string.Join(',', list.Select(c => c.Id));
                     //查询设备下的摄像机
@@ -41,7 +56,7 @@ namespace ShipWeb.ProtoBuffer
                     foreach (var item in list)
                     {
                         item.CameraModelList = new List<Camera>();
-                        var cames=cameras.Where(c => c.DeviceId == item.Id);
+                        var cames = cameras.Where(c => c.DeviceId == item.Id);
                         foreach (var cam in cames)
                         {
                             item.CameraModelList.Add(new Camera()
@@ -60,14 +75,14 @@ namespace ShipWeb.ProtoBuffer
                 return list;
             }
         }
-        private static List<ShipWeb.Models.Device> GetDevice(DeviceInfo info) 
+        private static List<ShipWeb.Models.Device> GetDevice(DeviceInfo info)
         {
-            using (var context=new MyContext())
+            using (var context = new MyContext())
             {
-                var device = context.Device.Where(c=>1==1);
+                var device = context.Device.Where(c => 1 == 1);
                 if (info != null)
                 {
-                    device=device.Where(c => c.Enable == info.enable);
+                    device = device.Where(c => c.Enable == info.enable);
                     if (!string.IsNullOrEmpty(info.name))
                     {
                         device = device.Where(c => c.Name.Contains(info.name));
@@ -78,20 +93,20 @@ namespace ShipWeb.ProtoBuffer
                     }
                     if (!string.IsNullOrEmpty(info.ip))
                     {
-                        device = device.Where(c => c.IP==info.ip);
+                        device = device.Where(c => c.IP == info.ip);
                     }
                     if (!string.IsNullOrEmpty(info.did))
                     {
                         device = device.Where(c => c.Id == info.did);
                     }
-                    if (info.port>0)
+                    if (info.port > 0)
                     {
-                        device = device.Where(c => c.Port==info.port);
+                        device = device.Where(c => c.Port == info.port);
                     }
                 }
                 return device.ToList();
             }
-            
+
         }
         /// <summary>
         /// 添加设备
@@ -115,12 +130,12 @@ namespace ShipWeb.ProtoBuffer
                     model.Port = protoModel.port;
                     model.type = (ShipWeb.Models.Device.Type)protoModel.type;
                     model.Enable = protoModel.enable;
-                    model.Id =Guid.NewGuid().ToString();
+                    model.Id = Guid.NewGuid().ToString();
                     model.ShipId = shipId; ;
                     if (protoModel == null) _context.Device.Add(model);
-                    else  _context.Device.Update(model);
+                    else _context.Device.Update(model);
                     _context.SaveChanges();
-                    if (protoModel.camerainfos!=null&& protoModel.camerainfos.Count>0)
+                    if (protoModel.camerainfos != null && protoModel.camerainfos.Count > 0)
                     {
                         AddCameras(protoModel.camerainfos, protoModel.did);
                     }
@@ -134,15 +149,15 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="protoModel"></param>
         /// <returns></returns>
-        public static ShipWeb.Models.Device DeviceUpdate(string did, DeviceInfo protoModel) 
+        public static ShipWeb.Models.Device DeviceUpdate(string did, DeviceInfo protoModel)
         {
             using (var _context = new MyContext())
             {
                 if (!string.IsNullOrEmpty(did) && protoModel != null)
                 {
-                    var model = _context.Device.FirstOrDefault(c =>c.Id == did);
+                    var model = _context.Device.FirstOrDefault(c => c.Id == did);
                     if (model == null) return null;
-                    if (protoModel.name!=null)
+                    if (protoModel.name != null)
                     {
                         model.factory = (ShipWeb.Models.Device.Factory)protoModel.factory;
                         model.IP = protoModel.ip;
@@ -153,7 +168,7 @@ namespace ShipWeb.ProtoBuffer
                         model.type = (ShipWeb.Models.Device.Type)protoModel.type;
                         model.Enable = protoModel.enable;
                         _context.Device.Update(model);
-                    } 
+                    }
                     _context.SaveChanges();
                     AddCameras(protoModel.camerainfos, did);
                     return model;
@@ -168,20 +183,20 @@ namespace ShipWeb.ProtoBuffer
         /// <param name="cameraInfos"></param>
         /// <param name="did"></param>
         /// <returns></returns>
-        public static int AddCameras(List<CameraInfo> cameraInfos,string did) 
+        public static int AddCameras(List<CameraInfo> cameraInfos, string did)
         {
-            if (cameraInfos!=null)
+            if (cameraInfos != null)
             {
                 using (var _context = new MyContext())
                 {
                     var dbCameras = _context.Camera.Where(c => c.DeviceId == did).ToList();
-                    if (cameraInfos.Count!=dbCameras.Count)
+                    if (cameraInfos.Count != dbCameras.Count)
                     {
                         List<Camera> cameras = new List<Camera>();
                         string shipId = _context.Ship.FirstOrDefault().Id;
                         foreach (var item in cameraInfos)
                         {
-                            if (!dbCameras.Where(c=>c.Index==item.index).Any())
+                            if (!dbCameras.Where(c => c.Index == item.index).Any())
                             {
                                 ShipWeb.Models.Camera cam = new ShipWeb.Models.Camera()
                                 {
@@ -208,20 +223,20 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="did"></param>
         /// <returns></returns>
-        public static int DeviceDelete(string did) 
+        public static int DeviceDelete(string did)
         {
             using (var _context = new MyContext())
             {
                 if (!string.IsNullOrEmpty(did))
                 {
-                    var embedded = _context.Device.FirstOrDefault(c =>c.Id == did);
+                    var embedded = _context.Device.FirstOrDefault(c => c.Id == did);
                     if (embedded != null)
                     {
                         var cameras = _context.Camera.Where(c => c.DeviceId == embedded.Id).ToList();
                         if (cameras.Count > 0)
                         {
                             string cids = string.Join(',', cameras.Select(c => c.Id));
-                            var camconf = _context.Algorithm.Where(c =>cids.Contains(c.Cid)).ToList();
+                            var camconf = _context.Algorithm.Where(c => cids.Contains(c.Cid)).ToList();
                             if (camconf.Count > 0)
                             {
                                 _context.Algorithm.RemoveRange(camconf);
@@ -242,13 +257,13 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="uid"></param>
         /// <returns></returns>
-        public static List<CrewInfo> CrewQuery(int uid=0)
+        public static List<CrewInfo> CrewQuery(int uid = 0)
         {
             using (var _context = new MyContext())
             {
                 List<CrewInfo> list = new List<CrewInfo>();
                 //获取船员信息
-                var dbempl = _context.Crew.Where(c =>(uid>0 ? c.Id == uid : 1 == 1)).ToList();
+                var dbempl = _context.Crew.Where(c => (uid > 0 ? c.Id == uid : 1 == 1)).ToList();
                 //获取船员图片
                 var pics = _context.CrewPicture.ToList();
                 foreach (var item in dbempl)
@@ -257,8 +272,8 @@ namespace ShipWeb.ProtoBuffer
                     {
                         job = item.Job,
                         name = item.Name,
-                        uid =item.Id.ToString(),
-                        pictures =new List<string> ()
+                        uid = item.Id.ToString(),
+                        pictures = new List<string>()
                     };
                     var picList = pics.Where(c => c.CrewId == item.Id);
                     foreach (var itpic in picList)
@@ -290,7 +305,7 @@ namespace ShipWeb.ProtoBuffer
                     }
                     int uid = Convert.ToInt32(protoModel.uid);
                     dbemp = _context.Crew.FirstOrDefault(c => c.Id == uid);
-                    if (dbemp==null)
+                    if (dbemp == null)
                     {
                         ShipWeb.Models.Crew employee = new ShipWeb.Models.Crew()
                         {
@@ -301,7 +316,7 @@ namespace ShipWeb.ProtoBuffer
                         };
                         _context.Crew.Add(employee);
                         _context.SaveChanges();
-                    }                   
+                    }
                     AddCrewPicture(protoModel.pictures, shipId, uid);
                     return 0;
                 }
@@ -310,15 +325,15 @@ namespace ShipWeb.ProtoBuffer
         }
         private static void AddCrewPicture(List<string> list, string shipId, int crewId)
         {
-            if (list!=null&& list.Count>0)
+            if (list != null && list.Count > 0)
             {
-                using (var context=new MyContext())
+                using (var context = new MyContext())
                 {
                     var pices = context.CrewPicture.Where(c => c.CrewId == crewId).ToList();
                     if (pices.Count > 0) context.RemoveRange(pices);
                     foreach (var item in list)
                     {
-                        CrewPicture model= new ShipWeb.Models.CrewPicture()
+                        CrewPicture model = new ShipWeb.Models.CrewPicture()
                         {
                             CrewId = crewId,
                             Id = Guid.NewGuid().ToString(),
@@ -337,23 +352,23 @@ namespace ShipWeb.ProtoBuffer
         /// <param name="uid"></param>
         /// <param name="protoModel"></param>
         /// <returns>0：成功 1:失败 2:数据重复</returns>
-        public static int CrewUpdate( CrewInfo protoModel)
+        public static int CrewUpdate(CrewInfo protoModel)
         {
             using (var _context = new MyContext())
             {
                 if (protoModel != null)
                 {
                     int uid = Convert.ToInt32(protoModel.uid);
-                    var model = _context.Crew.FirstOrDefault(c =>c.Id == uid);
+                    var model = _context.Crew.FirstOrDefault(c => c.Id == uid);
                     if (model != null)
                     {
                         var dbmodel = _context.Crew.FirstOrDefault(c => c.Name == protoModel.name);
-                        if (dbmodel!=null&&model.Name!=protoModel.name)
+                        if (dbmodel != null && model.Name != protoModel.name)
                         {
                             return 2;
                         }
                         model.Job = protoModel.job;
-                        model.Name = protoModel.name;                        
+                        model.Name = protoModel.name;
                         _context.Crew.Update(model);
                         _context.SaveChanges();
                         AddCrewPicture(protoModel.pictures, model.ShipId, uid);
@@ -369,14 +384,14 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="uid"></param>
         /// <returns></returns>
-        public static int CrewDelete(string id) 
+        public static int CrewDelete(string id)
         {
             int uid = Convert.ToInt32(id);
             using (var _context = new MyContext())
             {
-                if (uid>0)
+                if (uid > 0)
                 {
-                    var model = _context.Crew.FirstOrDefault(c =>c.Id == uid);
+                    var model = _context.Crew.FirstOrDefault(c => c.Id == uid);
                     if (model != null)
                     {
                         var pics = _context.CrewPicture.Where(c => c.CrewId == model.Id);
@@ -398,7 +413,7 @@ namespace ShipWeb.ProtoBuffer
         /// 查询摄像机的配置（算法配置）
         /// </summary>
         /// <returns></returns>
-        public static List<AlgorithmInfo> AlgorithmQuery() 
+        public static List<AlgorithmInfo> AlgorithmQuery()
         {
             using (var _context = new MyContext())
             {
@@ -424,7 +439,7 @@ namespace ShipWeb.ProtoBuffer
                     AlgorithmInfo cf = new AlgorithmInfo()
                     {
                         aid = item.Id + "," + item.NickName,
-                        cid=item.DeviceId+":"+item.Cid+":"+item.Index,
+                        cid = item.DeviceId + ":" + item.Cid + ":" + item.Index,
                         type = (AlgorithmInfo.Type)item.Type,
                         gpu = item.GPU,
                         similar = item.Similar,
@@ -521,7 +536,7 @@ namespace ShipWeb.ProtoBuffer
             using (var context = new MyContext())
             {
                 var component = context.Component.FirstOrDefault(c => c.Id == ManagerHelp.ComponentId);
-                if (component!=null)
+                if (component != null)
                 {
                     component.Cid = cid;
                     context.Update(component);
@@ -530,7 +545,8 @@ namespace ShipWeb.ProtoBuffer
                 else
                 {
                     string shipId = "";
-                    if (ManagerHelp.IsShipPort) {
+                    if (ManagerHelp.IsShipPort)
+                    {
                         var ship = context.Ship.FirstOrDefault();
                         shipId = ship != null ? ship.Id : "";
                     }
@@ -541,7 +557,7 @@ namespace ShipWeb.ProtoBuffer
                         Line = 0,
                         Name = "WEB",
                         Type = ComponentType.WEB,
-                        ShipId=shipId
+                        ShipId = shipId
                     };
                     context.Add(component);
                     context.SaveChanges();
@@ -597,13 +613,13 @@ namespace ShipWeb.ProtoBuffer
         /// 陆地端修改组件信息
         /// </summary>
         /// <param name="components"></param>
-        public static void ComponentUpdateRange(List<ComponentInfo> components) 
+        public static void ComponentUpdateRange(List<ComponentInfo> components)
         {
-            if (components!=null)
+            if (components != null)
             {
-                using (var context=new MyContext())
+                using (var context = new MyContext())
                 {
-                    var list = context.Component.Where(c =>c.Type!=ComponentType.WEB).ToList();
+                    var list = context.Component.Where(c => c.Type != ComponentType.WEB).ToList();
                     string shipId = "";
                     if (ManagerHelp.IsShipPort)
                     {
@@ -617,26 +633,26 @@ namespace ShipWeb.ProtoBuffer
                     foreach (var item in components)
                     {
                         if (item.componentid == ManagerHelp.Cid) continue;
-                        if (list.Where(c=>c.Id==item.componentid).Any())
+                        if (list.Where(c => c.Id == item.componentid).Any())
                         {
-                            var component=list.FirstOrDefault(c => c.Id == item.componentid);
+                            var component = list.FirstOrDefault(c => c.Id == item.componentid);
                             component.Line = 0;
                             context.Component.Update(component);
                             str.Add(item.componentid);
                         }
                         //陆地端添加组件
-                        else if (item.type== ComponentInfo.Type.XMQ)
+                        else if (item.type == ComponentInfo.Type.XMQ)
                         {
                             shipId = Guid.NewGuid().ToString();
                             Random rn = new Random();
-                            rn.Next(1,9999);
+                            rn.Next(1, 9999);
                             Ship ship = new Ship()
                             {
                                 Coordinate = "",
                                 CrewNum = 0,
                                 Flag = false,
                                 Id = shipId,
-                                Name = string.IsNullOrEmpty(item.cname) ? "船"+rn : item.cname,
+                                Name = string.IsNullOrEmpty(item.cname) ? "船" + rn : item.cname,
                                 type = Ship.Type.AUTO
                             };
                             context.Ship.Add(ship);
@@ -646,12 +662,12 @@ namespace ShipWeb.ProtoBuffer
                                 Line = 0,
                                 Name = item.cname,
                                 Type = (ComponentType)item.type,
-                                ShipId= shipId
+                                ShipId = shipId
                             };
                             context.Component.Add(component);
                         }
-                        else if(ManagerHelp.IsShipPort)
-                        {   
+                        else if (ManagerHelp.IsShipPort)
+                        {
                             //船舶端添加组件
                             ShipWeb.Models.Component component = new ShipWeb.Models.Component()
                             {
@@ -664,9 +680,9 @@ namespace ShipWeb.ProtoBuffer
                             context.Component.Add(component);
                         }
                     }
-                    if (list.Count!=str.Count)
+                    if (list.Count != str.Count)
                     {
-                        var delcom= list.Where(c => !str.Contains(c.Id)).ToList();
+                        var delcom = list.Where(c => !str.Contains(c.Id)).ToList();
                         foreach (var item in delcom)
                         {
                             item.Line = 1;
@@ -709,7 +725,7 @@ namespace ShipWeb.ProtoBuffer
             }
         }
 
-        public static int ShipSet(bool status) 
+        public static int ShipSet(bool status)
         {
             try
             {
@@ -736,12 +752,12 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="shipId"></param>
         /// <returns></returns>
-        public static Ship StatusQuery() 
+        public static Ship StatusQuery()
         {
-            using (var context=new MyContext())
+            using (var context = new MyContext())
             {
                 var ship = context.Ship.FirstOrDefault();
-                return ship; 
+                return ship;
             }
         }
         /// <summary>
@@ -749,7 +765,7 @@ namespace ShipWeb.ProtoBuffer
         /// </summary>
         /// <param name="msg"></param>
         /// <param name="cid"></param>
-        public static void AlarmAdd(AlarmInfo alarmInfo,string xmq="")
+        public void AlarmAdd(AlarmInfo alarmInfo, string xmq = "")
         {
             //添加日志
             ProtoBDManager.AddReceiveLog<ShipWeb.ProtoBuffer.Models.AlarmInfo>("Alarm", alarmInfo);
@@ -764,7 +780,7 @@ namespace ShipWeb.ProtoBuffer
                 else
                 {
                     var comp = context.Component.FirstOrDefault(c => c.Id == xmq);
-                    if (comp!=null)
+                    if (comp != null)
                     {
                         shipId = comp.ShipId;
                     }
@@ -826,6 +842,10 @@ namespace ShipWeb.ProtoBuffer
                         //向陆地端推送报警信息
                         sendData.SendAlarm("upload", alarmInfo);
                         #endregion
+                        //change
+                        string cidkey = cache.Get("shipOnlineKey")?.ToString();
+                        if (!string.IsNullOrEmpty(cidkey))
+                            hubContext.Clients.Client(cidkey).SendAsync("ReceiveAlarmVoice", 200, new { code = 1, type = "bonvoyageSleep", });
                     }
                 }
             }
@@ -944,19 +964,19 @@ namespace ShipWeb.ProtoBuffer
         /// <param name="dtStart"></param>
         /// <param name="endTime"></param>
         /// <returns>protobuf报警消息</returns>
-        public static List<AlarmInfo> GetAlarmInfo(DateTime dtStart, DateTime dtEnd) 
+        public static List<AlarmInfo> GetAlarmInfo(DateTime dtStart, DateTime dtEnd)
         {
             List<AlarmInfo> list = new List<AlarmInfo>();
-            using (var context=new MyContext())
+            using (var context = new MyContext())
             {
                 var alarms = context.Alarm.Where(c => c.Time >= dtStart && c.Time <= dtEnd).ToList();
                 var ids = string.Join(',', alarms.Select(c => c.Id));
                 var postions = context.AlarmPosition.Where(c => ids.Contains(c.AlarmId)).ToList();
                 foreach (var item in alarms)
                 {
-                    AlarmInfo info=new AlarmInfo()
+                    AlarmInfo info = new AlarmInfo()
                     {
-                        cid =item.ShipId+","+item.Cid,
+                        cid = item.ShipId + "," + item.Cid,
                         time = item.Time.ToString("yyyy-MM-dd HH24:mm:ss"),
                         type = (AlarmInfo.Type)item.Type,
                         alarmposition = new List<Models.AlarmPosition>(),
@@ -967,10 +987,10 @@ namespace ShipWeb.ProtoBuffer
                     {
                         info.alarmposition.Add(new Models.AlarmPosition()
                         {
-                             w=poitem.W,
-                             h=poitem.H,
-                             x=poitem.X,
-                             y=poitem.Y
+                            w = poitem.W,
+                            h = poitem.H,
+                            x = poitem.X,
+                            y = poitem.Y
                         });
                     }
                     list.Add(info);
@@ -985,10 +1005,10 @@ namespace ShipWeb.ProtoBuffer
         /// <typeparam name="T"></typeparam>
         /// <param name="key"></param>
         /// <param name="t"></param>
-        public static void AddReceiveLog<T>(string key, T t,string ErrMsg="") 
+        public static void AddReceiveLog<T>(string key, T t, string ErrMsg = "")
         {
             var values = JsonConvert.SerializeObject(t);
-            using (var context=new MyContext())
+            using (var context = new MyContext())
             {
                 ReceiveLog log = new ReceiveLog()
                 {
@@ -1029,11 +1049,11 @@ namespace ShipWeb.ProtoBuffer
                     }
                 }
             }
-            catch (Exception )
+            catch (Exception)
             {
 
             }
         }
-       
+
     }
 }

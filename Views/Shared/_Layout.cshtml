@@ -228,8 +228,12 @@
             .build();
 
         connection.start().then(function () {
-            console.log("连接成功");
-            connection.invoke("UserOnline", "111154").catch(function (err) {
+            //存cid
+            connection.invoke("UserOnline").catch(function (err) {
+                return console.log(err.toString());
+            });
+            //测试播放
+            connection.invoke("TestAlarmV").catch(function (err) {
                 return console.log(err.toString());
             });
         }).catch(function (ex) {
@@ -245,6 +249,10 @@
 
         connection.on("ReceiveAlarmVoice", function (arg1, arg2) {
             console.log(arg1 + JSON.stringify(arg2));
+            if (arg1 === 200) {
+                var audio = new Audio("../alarmvoice/bonvoyageSleep.mp3");
+                audio.play();
+            }
         });
     })
 </script>

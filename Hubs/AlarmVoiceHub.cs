@@ -43,13 +43,12 @@ namespace Smartweb.Hubs
         /// <summary>
         /// 用户上线【缓存userid+cid】
         /// </summary>
-        /// <param name="pi_id">当前连接的用户id</param>
         /// <returns></returns>
-        public async Task<bool> UserOnline(string pi_id)
+        public async Task<bool> UserOnline()
         {
-            #region 缓存cId+userId
+            #region 缓存ConnectionId
             var cid = Context.ConnectionId;
-            cache.Set(pi_id, cid);
+            cache.Set("shipOnlineKey", cid);
             await Clients.Client(cid).SendAsync("ReceiveAlarmVoice", -2, new { title = "系统消息", content = "上线成功" });
             #endregion
 
@@ -68,5 +67,14 @@ namespace Smartweb.Hubs
             return true;
         }
         #endregion
+
+        public async Task<bool> TestAlarmV()
+        {
+            var cid = Context.ConnectionId;
+            if (!string.IsNullOrEmpty(cid))
+                await Clients.Client(cid).SendAsync("ReceiveAlarmVoice", 200, new { code = 1, type = "bonvoyageSleep" });
+            return true;
+        }
+
     }
 }

@@ -23,7 +23,8 @@ namespace ShipWeb.Models
             //执行shell
             string filePath = AppContext.BaseDirectory + "wwwroot/shell/alarm_voice.sh";
             //创建一个ProcessStartInfo对象 使用系统shell 指定命令和参数 设置标准输出
-            var psi = new ProcessStartInfo(filePath) { RedirectStandardOutput = true };
+            //var psi = new ProcessStartInfo(filePath) { RedirectStandardOutput = true };
+            var psi = new ProcessStartInfo("dotnet", "--info") { RedirectStandardOutput = true };
             //启动
             var proc = Process.Start(psi);
             if (proc == null)
