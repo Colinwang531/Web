@@ -7,9 +7,12 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using ProtoBuf;
+using Smartweb.Helpers;
+using Smartweb.Hubs;
 using SmartWeb.DB;
 using SmartWeb.Helpers;
 using SmartWeb.Models;
@@ -23,13 +26,21 @@ namespace SmartWeb.Controllers
     {
         private readonly MyContext _context;
 
-        public VideoController(MyContext context)
+        private readonly MemoryCacheHelper cache = new MemoryCacheHelper();
+        private readonly IHubContext<AlarmVoiceHub> hubContext;
+
+        public VideoController(MyContext context, IHubContext<AlarmVoiceHub> _hubContext)
         {
             _context = context;
+            hubContext = _hubContext;
         }
 
         public ActionResult Index()
         {
+            string cidkey = cache.Get("shipOnlineKey")?.ToString();
+            if (!string.IsNullOrEmpty(cidkey))
+                hubContext.Clients.Client(cidkey).SendAsync("ReceiveAlarmVoice", 200, new { code = 1, type = "bonvoyageSleep", });
+
             var temp = DapperContext.Query<Models.Device>($"SELECT * FROM Device").FirstOrDefault();
             if (temp != null)
             {

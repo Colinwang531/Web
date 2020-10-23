@@ -5,8 +5,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Crypto.Tls;
+using Smartweb.Hubs;
 using SmartWeb.DB;
 using SmartWeb.Models;
 using SmartWeb.ProtoBuffer;
@@ -19,8 +21,10 @@ namespace SmartWeb.Controllers
     {
         MyContext _context;
         int timeout = 3000;
-        public ComponentController(MyContext context) {
+        private readonly IHubContext<AlarmVoiceHub> hubContext;
+        public ComponentController(MyContext context, IHubContext<AlarmVoiceHub> _hubContext) {
             _context = context;
+            hubContext = _hubContext;
         }
         public IActionResult Index()
         {
@@ -35,7 +39,7 @@ namespace SmartWeb.Controllers
                 identity = base.user.ShipId;
             }
             List<Models.Component> components = new List<Models.Component>();
-            SendDataMsg assembly = new SendDataMsg();
+            SendDataMsg assembly = new SendDataMsg(hubContext);
             assembly.SendComponentQuery(identity);
             ProtoBuffer.Models.ComponentResponse response = new ProtoBuffer.Models.ComponentResponse();
             //Task.WhenAny();

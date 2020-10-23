@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Hosting;
+using Smartweb.Hubs;
 using SmartWeb.Tool;
 using System;
 using System.Collections.Generic;
@@ -10,15 +12,22 @@ namespace SmartWeb.ProtoBuffer.Init
 {
     public class HeartService:BackgroundService
     {
+        InitManger manger = null;
+        private readonly IHubContext<AlarmVoiceHub> hubContext;
+        public HeartService(IHubContext<AlarmVoiceHub> _hubContext) {
+
+            this.hubContext = _hubContext;
+            manger = new InitManger(hubContext);
+        }
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            InitManger.Init();
+            manger.Init();
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
                 {
                     //心跳
-                    InitManger.HeartBeat();
+                    manger.HeartBeat();
                 }
                 catch (Exception ex)
                 {

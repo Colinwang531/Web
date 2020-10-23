@@ -27,15 +27,12 @@ namespace SmartWeb.ProtoBuffer
     {
         private readonly MemoryCacheHelper cache = new MemoryCacheHelper();
         private readonly IHubContext<AlarmVoiceHub> hubContext;
-
-        public ProtoBDManager()
-        {
-        }
+        SendDataMsg sendData = null;
         public ProtoBDManager(IHubContext<AlarmVoiceHub> _hubContext)
         {
             this.hubContext = _hubContext;
+            sendData = new SendDataMsg(hubContext);
         }
-
 
         /// <summary>
         /// 查询所有设备
@@ -75,7 +72,7 @@ namespace SmartWeb.ProtoBuffer
                 return list;
             }
         }
-        private static List<SmartWeb.Models.Device> GetDevice(DeviceInfo info) 
+        private static List<SmartWeb.Models.Device> GetDevice(DeviceInfo info)
         {
             using (var context = new MyContext())
             {
@@ -149,7 +146,7 @@ namespace SmartWeb.ProtoBuffer
         /// </summary>
         /// <param name="protoModel"></param>
         /// <returns></returns>
-        public static SmartWeb.Models.Device DeviceUpdate(string did, DeviceInfo protoModel) 
+        public static SmartWeb.Models.Device DeviceUpdate(string did, DeviceInfo protoModel)
         {
             using (var _context = new MyContext())
             {
@@ -333,7 +330,7 @@ namespace SmartWeb.ProtoBuffer
                     if (pices.Count > 0) context.RemoveRange(pices);
                     foreach (var item in list)
                     {
-                        CrewPicture model= new SmartWeb.Models.CrewPicture()
+                        CrewPicture model = new SmartWeb.Models.CrewPicture()
                         {
                             CrewId = crewId,
                             Id = Guid.NewGuid().ToString(),
@@ -452,7 +449,7 @@ namespace SmartWeb.ProtoBuffer
                 return list;
             }
         }
-       
+
         /// <summary>
         /// 陆地端请求修改算法配置
         /// </summary>
@@ -490,14 +487,14 @@ namespace SmartWeb.ProtoBuffer
                         else
                         {
                             //判断是否重复提交
-                            var algorithm=context.Algorithm.FirstOrDefault(c=>c.Cid==protoModel.cid&&
-                                c.DectectFirst==protoModel.dectectfirst&&
-                                c.GPU == protoModel.gpu&&
-                                c.Similar == protoModel.similar&&
-                                c.Track == protoModel.track&&
-                                c.DectectSecond == protoModel.dectectsecond&&
-                                c.DectectFirst == protoModel.dectectfirst&&
-                                c.Type == (SmartWeb.Models.AlgorithmType)protoModel.type);
+                            var algorithm = context.Algorithm.FirstOrDefault(c => c.Cid == protoModel.cid &&
+                                  c.DectectFirst == protoModel.dectectfirst &&
+                                  c.GPU == protoModel.gpu &&
+                                  c.Similar == protoModel.similar &&
+                                  c.Track == protoModel.track &&
+                                  c.DectectSecond == protoModel.dectectsecond &&
+                                  c.DectectFirst == protoModel.dectectfirst &&
+                                  c.Type == (SmartWeb.Models.AlgorithmType)protoModel.type);
                             if (algorithm != null) return 0;
                             if (protoModel.type == AlgorithmInfo.Type.ATTENDANCE_IN || protoModel.type == AlgorithmInfo.Type.ATTENDANCE_OUT)
                             {
@@ -629,7 +626,7 @@ namespace SmartWeb.ProtoBuffer
             {
                 using (var context = new MyContext())
                 {
-                    var list = context.Component.Where(c =>c.Type!=ComponentType.WEB).ToList();
+                    var list = context.Component.Where(c => c.Type != ComponentType.WEB).ToList();
                     string shipId = "";
                     if (ManagerHelp.IsShipPort)
                     {
@@ -644,16 +641,17 @@ namespace SmartWeb.ProtoBuffer
                     List<SmartWeb.Models.Component> comList = new List<SmartWeb.Models.Component>();
                     foreach (var item in components)
                     {
-                        if (item.componentid == ManagerHelp.Cid) continue;
-                        if (list.Where(c=>c.Id==item.componentid).Any())
+                        if (item.componentid == ManagerHelp.ComponentId) continue;
+                        if (list.Where(c => c.Cid == item.componentid).Any())
                         {
-                            var component=list.FirstOrDefault(c => c.Id == item.componentid);
+                            var component = list.FirstOrDefault(c => c.Cid == item.componentid);
                             component.Line = 0;
                             context.Component.Update(component);
+                            context.SaveChanges();
                             str.Add(item.componentid);
                         }
                         //陆地端添加组件
-                        else if (item.type== ComponentInfo.Type.XMQ)
+                        else if (item.type == ComponentInfo.Type.XMQ)
                         {
                             #region 陆地端添加组件
                             shipId = Guid.NewGuid().ToString();
@@ -665,13 +663,14 @@ namespace SmartWeb.ProtoBuffer
                                 CrewNum = 0,
                                 Flag = false,
                                 Id = shipId,
-                                Name = string.IsNullOrEmpty(item.cname) ? "船"+rn : item.cname,
+                                Name = string.IsNullOrEmpty(item.cname) ? "船" + rn : item.cname,
                                 type = Ship.Type.AUTO
                             };
                             context.Ship.Add(ship);
                             SmartWeb.Models.Component component = new SmartWeb.Models.Component()
                             {
-                                Id = item.componentid,
+                                Id = Guid.NewGuid().ToString(),
+                                Cid=item.componentid,
                                 Line = 0,
                                 Name = item.cname,
                                 Type = (ComponentType)item.type,
@@ -680,12 +679,13 @@ namespace SmartWeb.ProtoBuffer
                             comList.Add(component);
                             #endregion
                         }
-                        else if(ManagerHelp.IsShipPort)
+                        else if (ManagerHelp.IsShipPort)
                         {
                             //船舶端添加组件
                             SmartWeb.Models.Component component = new SmartWeb.Models.Component()
                             {
-                                Id = item.componentid,
+                                Id = Guid.NewGuid().ToString(),
+                                Cid=item.componentid,
                                 Line = 0,
                                 Name = item.cname,
                                 Type = (ComponentType)item.type,
@@ -696,7 +696,7 @@ namespace SmartWeb.ProtoBuffer
                     }
                     if (list.Count != str.Count)
                     {
-                        var delcom= list.Where(c => !str.Contains(c.Id)).ToList();
+                        var delcom = list.Where(c => !str.Contains(c.Cid)).ToList();
                         foreach (var item in delcom)
                         {
                             item.Line = 1;
@@ -705,28 +705,15 @@ namespace SmartWeb.ProtoBuffer
                         }
                     }
                     //批量保存
-                    if (comList.Count > 0 )
+                    if (comList.Count > 0)
                     {
                         context.Component.AddRange(comList);
                         context.SaveChanges();
-                    } 
+                    }
                 }
             }
         }
 
-        /// <summary>
-        /// 获取所有AI组件
-        /// </summary>
-        /// <returns></returns>
-        public static List<SmartWeb.Models.Component> GetComponentByAI() 
-        {
-            List<SmartWeb.Models.Component> components = new List<SmartWeb.Models.Component>();
-            using (var context=new MyContext())
-            {
-                components = context.Component.Where(c => c.Type == ComponentType.AI&&c.Line==0).ToList();
-            }
-            return components;
-        }
         /// <summary>
         /// 陆地端设备船信息
         /// </summary>
@@ -801,36 +788,46 @@ namespace SmartWeb.ProtoBuffer
         /// <param name="cid"></param>
         public void AlarmAdd(AlarmInfo alarmInfo, string xmq = "")
         {
+
             //添加日志
             ProtoBDManager.AddReceiveLog<SmartWeb.ProtoBuffer.Models.AlarmInfo>("Alarm", alarmInfo);
             using (var context = new MyContext())
             {
-                string shipId = "";
-                if (string.IsNullOrEmpty(xmq))
-                {
-                    var ship = context.Ship.FirstOrDefault();
-                    shipId = ship.Id;
-                }
-                else
-                {
-                    var comp = context.Component.FirstOrDefault(c => c.Id == xmq);
-                    if (comp != null)
-                    {
-                        shipId = comp.ShipId;
-                    }
-                }
+               
                 if (alarmInfo != null)
                 {
+                    string shipId = "";
+                    string cid = "";
+                    string cname = "";//摄像机名称
                     var ids = alarmInfo.cid.Split(':');
-                    string cid = alarmInfo.cid;
-                    if (ids.Length == 2)
+                    if (string.IsNullOrEmpty(xmq))
                     {
-                        var cam = context.Camera.FirstOrDefault(c => c.DeviceId == ids[0] && c.Index == Convert.ToInt32(ids[1]));
-                        if (cam != null)
+                        var ship = context.Ship.FirstOrDefault();
+                        shipId = ship.Id;
+                        cid = alarmInfo.cid;
+                        if (ids.Length == 2)
                         {
-                            cid = cam.Id;
-                        };
+                            var cam = context.Camera.FirstOrDefault(c => c.DeviceId == ids[0] && c.Index == Convert.ToInt32(ids[1]));
+                            if (cam != null)
+                            {
+                                cid = cam.Id;
+                                cname = cam.NickName;
+                            };
+                        }
                     }
+                    else
+                    {
+                        var comp = context.Component.FirstOrDefault(c => c.Id == xmq);
+                        if (comp != null)
+                        {
+                            shipId = comp.ShipId;
+                        }
+                        if (ids.Length==2)
+                        {
+                            cid = ids[0];
+                            cname = ids[1];
+                        }
+                    }                   
                     string str = Encoding.ASCII.GetString(alarmInfo.picture);
                     byte[] picture = ManagerHelp.ConvertBase64(str);
                     if (alarmInfo.type == AlarmInfo.Type.ATTENDANCE_IN || alarmInfo.type == AlarmInfo.Type.ATTENDANCE_OUT)
@@ -848,6 +845,7 @@ namespace SmartWeb.ProtoBuffer
                             Time = Convert.ToDateTime(alarmInfo.time),
                             ShipId = shipId,
                             Cid = cid,
+                            Cname = cname,
                             Type = (SmartWeb.Models.Alarm.AlarmType)alarmInfo.type
                             //Uid = alarmInfo.uid
                         };
@@ -872,14 +870,19 @@ namespace SmartWeb.ProtoBuffer
                         }
                         context.Alarm.Add(model);
                         context.SaveChanges();
-                        SendDataMsg sendData = new SendDataMsg();
-                        //向陆地端推送报警信息
-                        sendData.SendAlarm("upload", alarmInfo);
+                        if (xmq=="")
+                        {
+                            alarmInfo.cid = cid+":"+cname;
+                            //向陆地端推送报警信息
+                            sendData.SendAlarm("upload", alarmInfo);
+                        }
+                        else if(alarmInfo.type== AlarmInfo.Type.SLEEP&& ManagerHelp.IsShipPort)
+                        {
+                            string cidkey = cache.Get("shipOnlineKey")?.ToString();
+                            if (!string.IsNullOrEmpty(cidkey))
+                                hubContext.Clients.Client(cidkey).SendAsync("ReceiveAlarmVoice", 200, new { code = 1, type = "bonvoyageSleep", });
+                        }
                         #endregion
-                        //change
-                        string cidkey = cache.Get("shipOnlineKey")?.ToString();
-                        if (!string.IsNullOrEmpty(cidkey))
-                            hubContext.Clients.Client(cidkey).SendAsync("ReceiveAlarmVoice", 200, new { code = 1, type = "bonvoyageSleep", });
                     }
                 }
             }
@@ -1041,19 +1044,26 @@ namespace SmartWeb.ProtoBuffer
         /// <param name="t"></param>
         public static void AddReceiveLog<T>(string key, T t, string ErrMsg = "")
         {
-            var values = JsonConvert.SerializeObject(t);
-            using (var context=new MyContext())
+            try
             {
-                ReceiveLog log = new ReceiveLog()
+                var values = JsonConvert.SerializeObject(t);
+                using (var context = new MyContext())
                 {
-                    Id = Guid.NewGuid().ToString(),
-                    Key = key,
-                    Values = values,
-                    Exception = ErrMsg,
-                    Time = DateTime.Now
-                };
-                context.ReceiveLog.Add(log);
-                context.SaveChanges();
+                    ReceiveLog log = new ReceiveLog()
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        Key = key,
+                        Values = values,
+                        Exception = ErrMsg,
+                        Time = DateTime.Now
+                    };
+                    context.ReceiveLog.Add(log);
+                    context.SaveChanges();
+                }
+            }
+            catch (Exception ex)
+            {
+
             }
         }
         /// <summary>
@@ -1089,5 +1099,31 @@ namespace SmartWeb.ProtoBuffer
             }
         }
 
+        /// <summary>
+        /// 获取所有AI组件
+        /// </summary>
+        /// <returns></returns>
+        public static List<SmartWeb.Models.Component> GetComponentByAI()
+        {
+            List<SmartWeb.Models.Component> components = new List<SmartWeb.Models.Component>();
+            using (var context = new MyContext())
+            {
+                components = context.Component.Where(c => c.Type == ComponentType.AI && c.Line == 0).ToList();
+            }
+            return components;
+        }
+        /// <summary>
+        /// 获取组件信息
+        /// </summary>
+        /// <param name="componentId"></param>
+        /// <returns></returns>
+        public static SmartWeb.Models.Component GetComponentById(string componentId)
+        {
+            using (var context = new MyContext())
+            {
+                SmartWeb.Models.Component component = context.Component.FirstOrDefault(c => c.Id == componentId);
+                return component;
+            }
+        }
     }
 }

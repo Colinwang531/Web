@@ -219,7 +219,9 @@
 <script src="~/lib/microsoft/signalr/dist/browser/signalr.js"></script>
 <script type="text/javascript">
     $(function () {
-        let hubUrl = "http://localhost:5000/chatHub";
+        //let hubUrl = "http://localhost:5000/chatHub";
+        let hubUrl = "https://localhost:32796/chatHub";
+        
         //创建连接对象connection
         const connection = new signalR.HubConnectionBuilder()
             .withUrl(hubUrl)

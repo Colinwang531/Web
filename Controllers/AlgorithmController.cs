@@ -13,6 +13,8 @@ using SmartWeb.Models;
 using SmartWeb.ProtoBuffer;
 using SmartWeb.Tool;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
+using Smartweb.Hubs;
 
 namespace SmartWeb.Controllers
 {
@@ -20,13 +22,16 @@ namespace SmartWeb.Controllers
     {
         private MyContext _context;
         private int timeout = 5000;//超时时间
-        SendDataMsg assembly = new SendDataMsg();
+        SendDataMsg assembly = null;
+        private readonly IHubContext<AlarmVoiceHub> hubContext;
         private ILogger<AlgorithmController> _logger;
         //缓存船舶端的设备信息
         private static List<ProtoBuffer.Models.DeviceInfo> boatDevices = new List<ProtoBuffer.Models.DeviceInfo>();
         private static  List<Camera> cameras;
-        public AlgorithmController(MyContext context, ILogger<AlgorithmController> logger) 
+        public AlgorithmController(MyContext context, ILogger<AlgorithmController> logger, IHubContext<AlarmVoiceHub> _hubContext) 
         {
+            hubContext = _hubContext;
+            assembly = new SendDataMsg(hubContext);
             _context = context;
             _logger = logger;
         }
@@ -69,16 +74,23 @@ namespace SmartWeb.Controllers
         }
         public IActionResult LandLoad()
         {
-            string identtity = base.user.ShipId;          
+            string identtity = base.user.ShipId;
+            string browsertoken = HttpContext.Session.GetString("comtoken");
+            string webId = ManagerHelp.GetLandToId(browsertoken);
+            List<AlgorithmViewModel> algorithms = new List<AlgorithmViewModel>();
             List<ProtoBuffer.Models.AlgorithmInfo> protoDate = new List<ProtoBuffer.Models.AlgorithmInfo>();
-            assembly.SendAlgorithmQuery(identtity);
-            assembly.SendDeveiceQuery(identtity);
+            if (string.IsNullOrEmpty(webId))
+            {
+                return new JsonResult(new { code = 0, data = algorithms });
+            }
+            assembly.SendAlgorithmQuery(identtity + ":" + webId);
+            assembly.SendDeveiceQuery(identtity + ":" + webId);
             bool flag = true;
             new TaskFactory().StartNew(() =>
             {
                 while (flag)
                 {
-                    if (ManagerHelp.AlgorithmReponse!=""&& ManagerHelp.DeviceReponse!="")
+                    if (ManagerHelp.AlgorithmReponse != "" && ManagerHelp.DeviceReponse != "")
                     {
                         flag = false;
                     }
@@ -92,7 +104,7 @@ namespace SmartWeb.Controllers
                 {
                     protoDate = JsonConvert.DeserializeObject<List<ProtoBuffer.Models.AlgorithmInfo>>(ManagerHelp.AlgorithmReponse);
                 }
-                if (ManagerHelp.DeviceReponse!="")
+                if (ManagerHelp.DeviceReponse != "")
                 {
                     boatDevices = JsonConvert.DeserializeObject<List<ProtoBuffer.Models.DeviceInfo>>(ManagerHelp.DeviceReponse);
                 }
@@ -103,19 +115,20 @@ namespace SmartWeb.Controllers
             {
             }
             cameras = new List<Camera>();
-            var data = from a in protoDate
-                       select new
-                       {
-                           id = a.aid.Split(',')[0],
-                           cid = a.cid,
-                           Type = a.type,
-                           GPU = a.gpu,
-                           Similar = a.similar,
-                           NickName = a.aid.Split(',')[1],
-                           DectectFirst = a.dectectfirst,
-                           DectectSecond = a.dectectsecond,
-                           Track = a.track
-                       };       
+            foreach (var item in protoDate)
+            {
+                algorithms.Add(new AlgorithmViewModel()
+                {
+                    Cid = item.cid,
+                    DectectFirst = item.dectectfirst,
+                    DectectSecond = item.dectectsecond,
+                    GPU = item.gpu,
+                    Id = item.aid,
+                    Similar = item.similar,
+                    Track = item.track,
+                    Type = (int)item.type
+                });
+            }
             foreach (var item in boatDevices)
             {
                 var camList = item.camerainfos;
@@ -133,7 +146,7 @@ namespace SmartWeb.Controllers
             var result = new
             {
                 code = 0,
-                data = data,
+                data = algorithms,
                 camera = cameras
             };
             return new JsonResult(result);
@@ -188,7 +201,7 @@ namespace SmartWeb.Controllers
                             return new JsonResult(new { code = 1, msg = errMsg });
                         }
                         //获取枚举对应的名称
-                        string identity = ManagerHelp.GetShipToId((ComponentType)viewModel.Type, AIName); 
+                        string identity = ManagerHelp.GetShipToId(ComponentType.AI, AIName); 
                         if (string.IsNullOrEmpty(identity)&& viewModel.Type != (int)AlgorithmType.CAPTURE)
                         {
                             string name = GetViewName((AlgorithmType)viewModel.Type);

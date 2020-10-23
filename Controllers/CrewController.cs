@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Hosting;
@@ -19,6 +20,7 @@ using NetMQ;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Crypto.Tls;
 using ProtoBuf;
+using Smartweb.Hubs;
 using SmartWeb.DB;
 using SmartWeb.Models;
 using SmartWeb.ProtoBuffer;
@@ -30,12 +32,15 @@ namespace SmartWeb.Controllers
     {
         private readonly MyContext _context;      
         public static Dictionary<string, byte[]> picBytes;
-        private SendDataMsg assembly = new SendDataMsg();
+        private readonly IHubContext<AlarmVoiceHub> hubContext;
+        private SendDataMsg assembly = null;
         private static List<CrewViewModel> crewVMList;
         int timeout = 5000;
-        public CrewController(MyContext context)
+        public CrewController(MyContext context, IHubContext<AlarmVoiceHub> _hubContext)
         {
             _context = context;
+            hubContext = _hubContext;
+            assembly = new SendDataMsg(hubContext);
         }
 
         // GET: Employees

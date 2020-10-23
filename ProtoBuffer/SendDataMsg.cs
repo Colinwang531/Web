@@ -1,4 +1,6 @@
-﻿using NuGet.Frameworks;
+﻿using Microsoft.AspNetCore.SignalR;
+using NuGet.Frameworks;
+using Smartweb.Hubs;
 using SmartWeb.Interface;
 using SmartWeb.ProtoBuffer.Models;
 using SmartWeb.Tool;
@@ -11,7 +13,15 @@ namespace SmartWeb.ProtoBuffer
 {
     public class SendDataMsg
     {
-        DealerService dealer = new DealerService();
+        private readonly IHubContext<AlarmVoiceHub> hubContext;
+        DealerService dealer = null;
+        public SendDataMsg(IHubContext<AlarmVoiceHub> _hubContext)
+        {
+            hubContext = _hubContext;
+            dealer = new DealerService(hubContext);
+        }
+
+
 
         /// <summary>
         /// 组合返回数据
@@ -40,9 +50,9 @@ namespace SmartWeb.ProtoBuffer
         /// 组合返回数据
         /// </summary>
         /// <param name="algorithms"></param>
-        public void SendDeviceRN (Models.Device.Command command, string did, List<SmartWeb.Models.Device> devices = null, int status = 0)
+        public void SendDeviceRN(Models.Device.Command command, string did, List<SmartWeb.Models.Device> devices = null, int status = 0)
         {
-            List<DeviceInfo> list = new List<DeviceInfo>() ;
+            List<DeviceInfo> list = new List<DeviceInfo>();
             foreach (var item in devices)
             {
                 list.Add(GetDeviceInfo(item));
@@ -65,7 +75,7 @@ namespace SmartWeb.ProtoBuffer
             };
             dealer.Send(sendMsg, ManagerHelp.UpToId, "response");
         }
-       
+
         /// <summary>
         /// 组合返回数据
         /// </summary>
@@ -233,12 +243,12 @@ namespace SmartWeb.ProtoBuffer
                             type = ComponentInfo.Type.WEB,
                             cname = name,
                             componentid = ManagerHelp.ComponentId,
-                            commid=cid
+                            commid = cid
                         },
                     }
                 }
             };
-            dealer.Send(msg,"");
+            dealer.Send(msg, "");
         }
         /// <summary>
         /// 组件查询
@@ -372,7 +382,7 @@ namespace SmartWeb.ProtoBuffer
 
         private static DeviceInfo GetDeviceInfo(SmartWeb.Models.Device model)
         {
-            var device= new DeviceInfo()
+            var device = new DeviceInfo()
             {
                 did = model.Id,
                 factory = (DeviceInfo.Factory)model.factory,
@@ -384,7 +394,7 @@ namespace SmartWeb.ProtoBuffer
                 port = model.Port,
                 type = (DeviceInfo.Type)model.type
             };
-            if (device.camerainfos!=null&&device.camerainfos.Count>0)
+            if (device.camerainfos != null && device.camerainfos.Count > 0)
             {
                 device.camerainfos = new List<CameraInfo>();
                 foreach (var item in device.camerainfos)
@@ -399,7 +409,7 @@ namespace SmartWeb.ProtoBuffer
                     });
                 }
             }
-          
+
             return device;
         }
 
@@ -519,16 +529,16 @@ namespace SmartWeb.ProtoBuffer
         {
             MSG msg = new MSG()
             {
-                type = MSG.Type.STATUS,
-                sequence = 3,
+                type = MSG.Type.ALARM,
+                sequence = 11,
                 timestamp = ProtoBufHelp.TimeSpan(),
                 alarm = new Models.Alarm()
                 {
-                    command = Models.Alarm.Command.NOTIFY
+                    command = Models.Alarm.Command.NOTIFY,
+                    alarminfo=info
                 }
             };
-            if (info != null) msg.alarm.alarminfo = info;
-            dealer.Send(msg,"", head);
+            dealer.Send(msg, "", head);
         }
     }
 }

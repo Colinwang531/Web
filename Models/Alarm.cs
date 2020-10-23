@@ -58,6 +58,10 @@ namespace SmartWeb.Models
         /// </summary>
         public string Cid { get; set; }
         /// <summary>
+        /// 摄像名称
+        /// </summary>
+        public string Cname { get; set; }
+        /// <summary>
         /// 报警时间
         /// </summary>
         public DateTime Time { get; set; }

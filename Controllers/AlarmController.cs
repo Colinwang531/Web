@@ -149,7 +149,6 @@ namespace SmartWeb.Controllers
         /// <returns></returns>
         public IActionResult SearchAlarm(string searchModel, int pageIndex, int pageSize)
         {
-
             var model = JsonConvert.DeserializeObject<SearchAlarmViewModel>(searchModel);
             if (!base.user.IsLandHome)
             {
@@ -197,20 +196,20 @@ namespace SmartWeb.Controllers
                 DateTime dtEnd = DateTime.Parse(model.EndTime);
                 alarmData = alarmData.Where(c => c.Time <= dtEnd);
             }
+            else if (!string.IsNullOrEmpty(model.Name)) 
+            {
+                alarmData = alarmData.Where(c => c.Cname.Contains(model.Name));
+            }
             var alarm = alarmData.OrderByDescending(c=>c.CreatDate).ToList();
-            var cids = string.Join(',', alarm.Select(c => c.Cid));
-            //查询摄像机信息
-            var camera = _context.Camera.Where(c => (string.IsNullOrEmpty(model.Name) ? 1 == 1 : c.NickName.Contains(model.Name)) && cids.Contains(c.Id)).ToList();
             //组合数据
             var data = from a in alarm
-                       join b in camera on a.Cid equals b.Id
                        join d in ship on a.ShipId equals d.Id
                        select new
                        {
                            a.Time,
                            a.Id,
                            d.Name,
-                           b.NickName,
+                           NickName=a.Cname,
                            a.Type,
                            a.Picture
                        };

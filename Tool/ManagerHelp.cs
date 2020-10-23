@@ -329,7 +329,7 @@ namespace SmartWeb.Tool
                 var component = context.Component.FirstOrDefault(c => c.Type == type && c.Line == 0 && (name == "" ? 1 == 1 : c.Name.ToUpper() == name));
                 if (component != null)
                 {
-                    return component.Id;
+                    return component.Cid;
                 }
             }
             return "";
@@ -341,14 +341,14 @@ namespace SmartWeb.Tool
         /// <returns></returns>
         public static string GetLandToId(string tokenstr,ComponentType type=ComponentType.WEB,string name="") 
         {
-            if (tokenstr != "") {
+            if (!string.IsNullOrEmpty(tokenstr)) {
                 List<ComponentToken> tokens = JsonConvert.DeserializeObject<List<ComponentToken>>(tokenstr);
                 if (name == "ATTENDANCE_IN" || name == "ATTENDANCE_OUT")
                 {
                     name = ManagerHelp.FaceName.ToUpper();
                 }
                 var component = tokens.FirstOrDefault(c => c.Type == type&&(name == "" ? 1 == 1 : c.Name.ToUpper() == name));
-                if (component != null) return component.CommId;
+                if (component != null) return component.Id;
             }
             return "";
         }

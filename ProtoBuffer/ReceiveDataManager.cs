@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
 using Renci.SshNet.Security;
+using Smartweb.Hubs;
 using SmartWeb.DB;
 using SmartWeb.Models;
 using SmartWeb.ProtoBuffer.Models;
@@ -15,9 +17,11 @@ namespace SmartWeb.ProtoBuffer
 {
     public class ReceiveDataManager
     {
-        private SendDataMsg manager;
-        public ReceiveDataManager() {
-            manager = new SendDataMsg();
+        private SendDataMsg manager=null;
+        private readonly IHubContext<AlarmVoiceHub> hubContext;
+        public ReceiveDataManager(IHubContext<AlarmVoiceHub> _hubContext) {
+            this.hubContext = _hubContext;
+            manager = new SendDataMsg(hubContext);
         }
         /// <summary>
         /// 组件处理

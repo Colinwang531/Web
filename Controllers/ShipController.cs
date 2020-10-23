@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.Web.CodeGeneration.Contracts.ProjectModel;
@@ -12,6 +13,7 @@ using Newtonsoft.Json;
 using NuGet.Frameworks;
 using Org.BouncyCastle.Asn1.Cms;
 using ProtoBuf;
+using Smartweb.Hubs;
 using SmartWeb.DB;
 using SmartWeb.Models;
 using SmartWeb.ProtoBuffer;
@@ -25,11 +27,16 @@ namespace SmartWeb.Controllers
         private readonly MyContext _context;
         private int timeout = 5000;//超时退出时间单位秒
         private ILogger<ShipController> _logger;
-        private SendDataMsg assembly = new SendDataMsg();
-        public ShipController(MyContext context, ILogger<ShipController>logger)
+        private SendDataMsg assembly = null;
+
+        private readonly IHubContext<AlarmVoiceHub> hubContext;
+
+        public ShipController(MyContext context, ILogger<ShipController> logger, IHubContext<AlarmVoiceHub> _hubContext)
         {
             _context = context;
             _logger = logger;
+            this.hubContext = _hubContext;
+            assembly = new SendDataMsg(hubContext);
         }
         public IActionResult Edit(bool isShow = false)
         {
@@ -63,13 +70,15 @@ namespace SmartWeb.Controllers
         {
             try
             {
-                Ship ship = new Ship();                 
+                Ship ship = new Ship();
                 if (base.user.IsLandHome)
                 {
-                    string XMQComId = base.user.ShipId;
+                    string browsertoken = HttpContext.Session.GetString("comtoken");
+                    string XMQComId = base.user.ShipId + ":" + ManagerHelp.GetLandToId(browsertoken);
                     assembly.SendStatusQuery(XMQComId);
                     bool flag = true;
-                    new TaskFactory().StartNew(() => {
+                    new TaskFactory().StartNew(() =>
+                    {
                         while (ManagerHelp.StatusReponse == "" && flag)
                         {
                             Thread.Sleep(1000);
@@ -79,7 +88,7 @@ namespace SmartWeb.Controllers
                     if (ManagerHelp.StatusReponse != "")
                     {
                         var response = JsonConvert.DeserializeObject<StatusResponse>(ManagerHelp.StatusReponse);
-                        if (response!=null)
+                        if (response != null)
                         {
                             ship.Flag = response.flag;
                             ship.Name = response.name;
@@ -94,7 +103,7 @@ namespace SmartWeb.Controllers
                 {
                     code = 0,
                     data = ship,
-                    isSet =base.user.EnableConfigure
+                    isSet = base.user.EnableConfigure
                 };
                 return new JsonResult(result);
             }
@@ -112,22 +121,74 @@ namespace SmartWeb.Controllers
             try
             {
                 List<ShipViewModel> list = new List<ShipViewModel>();
-                var compents = _context.Component.Where(c => c.Type ==ComponentType.XMQ && c.Id!=null).ToList();
-                foreach (var item in compents)
+                //var compents = _context.Component.Where(c => c.Type == ComponentType.XMQ).ToList();
+                var compents = from a in _context.Component
+                            join b in _context.Ship on a.ShipId equals b.Id into c
+                            from d in c.DefaultIfEmpty()
+                            where a.Type == ComponentType.XMQ
+                            select new
+                            {
+                                a.Cid,
+                                a.ShipId,
+                                a.Line,
+                                d.Name,
+                                d.Flag
+                            };
+                          
+                foreach (var item in compents)  
                 {
                     ShipViewModel model = new ShipViewModel()
                     {
-                        Id = item.Id,
+                        Id = item.Cid,
                         Name = item.Name,
+                        flag=item.Flag,
                         Line = item.Line == 0 ? true : false//默认离线
                     };
                     list.Add(model);
-                }  
+                }
+                var comLine = compents.Where(c => c.Line == 0);
+                new TaskFactory().StartNew(() =>
+                {
+                    foreach (var item in comLine)
+                    {
+                        //根据当前XMQ的ID
+                        assembly.SendComponentQuery(item.Cid);
+                        Task.Factory.StartNew(state => {
+                            while (ManagerHelp.ComponentReponse=="")
+                            {
+                                Thread.Sleep(1000);
+                            }
+                            var webcom= JsonConvert.DeserializeObject<ProtoBuffer.Models.ComponentResponse>(ManagerHelp.ComponentReponse);
+                            string webId = "";
+                            if (webcom != null && webcom.componentinfos.Count > 0)
+                            {
+                                var web = webcom.componentinfos.FirstOrDefault(c => c.type == ComponentInfo.Type.WEB);
+                                if (web != null) webId = web.componentid;
+                            }
+                            if (webId != "") 
+                            {
+                                assembly.SendStatusQuery(item.Cid + ":" + webId);
+                                Task.Factory.StartNew(ss => {
+                                    while (ManagerHelp.StatusReponse=="")
+                                    {
+                                        Thread.Sleep(1000);
+                                    }
+                                    var response = JsonConvert.DeserializeObject<StatusResponse>(ManagerHelp.StatusReponse);
+                                    if (response != null)
+                                    {
+                                        list.FirstOrDefault(c => c.Id == item.Cid).flag = response.flag;
+                                        LandSave(response, item.ShipId);
+                                    }
+                                }, TaskCreationOptions.LongRunning);
+                            }
+                        }, TaskCreationOptions.LongRunning);
+                    }
+                }).Wait(3000);
                 var result = new
                 {
                     code = 0,
                     data = list,
-                    isSet =base.user.EnableConfigure
+                    isSet = base.user.EnableConfigure
                 };
                 return new JsonResult(result);
             }
@@ -137,7 +198,23 @@ namespace SmartWeb.Controllers
                 return new JsonResult(new { code = 1, msg = "获取数据失败!" + ex.Message });
             }
         }
-
+        /// <summary>
+        /// 更新从船舶端过来的信息
+        /// </summary>
+        /// <param name="response"></param>
+        /// <param name="shipId"></param>
+        private void LandSave(StatusResponse response, string shipId)
+        {
+            //此次查询的是陆地端的船状态表
+            var ship = _context.Ship.FirstOrDefault(c => c.Id == shipId);
+            if (ship != null)
+            {
+                if(!string.IsNullOrEmpty(response.name))ship.Name = response.name;
+                ship.Flag = response.flag;
+                _context.Ship.Update(ship);
+                _context.SaveChanges();
+            }
+        }
         /// <summary>
         /// 保存船状态
         /// </summary>
@@ -155,7 +232,7 @@ namespace SmartWeb.Controllers
                 string errMsg = "";
                 if (base.user.IsLandHome)
                 {
-                    string XMQComId= base.user.ShipId;
+                    string XMQComId = base.user.ShipId;
                     string tokenstr = HttpContext.Session.GetString("comtoken");
                     string identity = ManagerHelp.GetLandToId(tokenstr);
                     if (string.IsNullOrEmpty(identity))
@@ -192,7 +269,7 @@ namespace SmartWeb.Controllers
                         _context.Ship.Update(ship);
                         _context.SaveChanges();
                         SendMqMsg(name, type, ship);
-                        code = 0; 
+                        code = 0;
                     }
                     #endregion
                 }

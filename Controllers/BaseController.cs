@@ -6,13 +6,22 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
+using Smartweb.Hubs;
 using SmartWeb.Models;
 
 namespace SmartWeb.Controllers
 {
     public class BaseController : Controller
     {
+        //public readonly IHubContext<AlarmVoiceHub> hubContextsss;
+        //public BaseController(IHubContext<AlarmVoiceHub> _hubContext)
+        //{
+        //    this.hubContextsss = _hubContext;
+
+        //}
+
         public UserToken user;
 
         /// <summary>  
