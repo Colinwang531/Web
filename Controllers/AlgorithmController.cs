@@ -115,11 +115,33 @@ namespace SmartWeb.Controllers
             {
             }
             cameras = new List<Camera>();
+            foreach (var item in boatDevices)
+            {
+                if (item.camerainfos != null)
+                {
+                    foreach (var cam in item.camerainfos)
+                    {
+                        Camera model = new Camera()
+                        {
+                            Id = cam.cid,
+                            NickName = cam.nickname,
+                            DeviceId = item.did
+                        };
+                        cameras.Add(model);
+                    }
+                }
+            }
             foreach (var item in protoDate)
             {
+                string cid = item.cid.Split(':')[1];
+                string nickName = "";
+                if (cameras.Where(c => c.Id == cid).Any()) {
+                    nickName = cameras.FirstOrDefault(c => c.Id == cid).NickName;
+                }
                 algorithms.Add(new AlgorithmViewModel()
                 {
-                    Cid = item.cid,
+                    Cid = cid,
+                    NickName=nickName,
                     DectectFirst = item.dectectfirst,
                     DectectSecond = item.dectectsecond,
                     GPU = item.gpu,
@@ -129,20 +151,7 @@ namespace SmartWeb.Controllers
                     Type = (int)item.type
                 });
             }
-            foreach (var item in boatDevices)
-            {
-                var camList = item.camerainfos;
-                foreach (var cam in camList)
-                {
-                    Camera model = new Camera()
-                    {
-                        Id = cam.cid,
-                        NickName = cam.nickname,
-                        DeviceId=item.did
-                    };
-                    cameras.Add(model);
-                }
-            }
+            
             var result = new
             {
                 code = 0,

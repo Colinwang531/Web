@@ -84,6 +84,14 @@ namespace SmartWeb.ProtoBuffer
                 case Models.Algorithm.Command.CONFIGURE_REQ:
                     #region 陆地端发送算法设置请求
                     var request = algorithm.algorithmrequest;
+                    if (request == null)
+                    {
+                        manager.SendAlgorithmRN(Models.Algorithm.Command.CONFIGURE_REP, null, 1);
+                        break; 
+                    }
+                    string devcid = request.algorithminfo.cid;
+                    var cid = devcid.Split(":")[1];
+                    request.algorithminfo.cid = cid;
                     int result = ProtoBDManager.AlgorithmSet(request.algorithminfo);
                     if (result==0)
                     {
@@ -93,6 +101,7 @@ namespace SmartWeb.ProtoBuffer
                             string identity = ManagerHelp.GetShipToId(ComponentType.AI, name);
                             if (identity != "")
                             {
+                                request.algorithminfo.cid = devcid;
                                 //向组件发送算法请求
                                 manager.SendAlgorithmSet(request.algorithminfo, identity);
                                 ManagerHelp.UpSend.Add("Algorithm");
@@ -317,50 +326,63 @@ namespace SmartWeb.ProtoBuffer
             {
                 case Models.Crew.Command.NEW_REQ:
                     #region 陆地端添加船员请求
-                    result = ProtoBDManager.CrewAdd(crew.crewrequest.crewinfo);
-                    if (result == 0)
-                    {
-                        string identity = ManagerHelp.GetShipToId(ComponentType.AI, ManagerHelp.FaceName);
-                        //向组件发送船员请求
-                        manager.SendCrewAdd(crew.crewrequest.crewinfo, identity);
-                        ManagerHelp.UpSend.Add("CrewAdd");
-                    }
+                    if (crew.crewrequest == null) manager.SendCrewRN(Models.Crew.Command.NEW_REP, null, 1);
                     else
                     {
-                        //向陆地端响应算法请求
-                        manager.SendCrewRN(Models.Crew.Command.NEW_REP, null, result);
+                        var crewInfo = crew.crewrequest.crewinfo;
+                        result = ProtoBDManager.CrewAdd(ref crewInfo);
+                        if (result == 0)
+                        {
+                            string identity = ManagerHelp.GetShipToId(ComponentType.AI, ManagerHelp.FaceName);
+                            //向组件发送船员请求
+                            manager.SendCrewAdd(crewInfo, identity);
+                            ManagerHelp.UpSend.Add("CrewAdd");
+                        }
+                        else
+                        {
+                            //向陆地端响应算法请求
+                            manager.SendCrewRN(Models.Crew.Command.NEW_REP, null, result);
+                        }
                     }
                     break;
                     #endregion
                 case Models.Crew.Command.DELETE_REQ:
                     #region 陆地端删除船员请求
-                    result = ProtoBDManager.CrewDelete(crew.crewrequest.crewinfo.uid);
-                    if (result == 0)
-                    {
-                        string identity = ManagerHelp.GetShipToId(ComponentType.AI, ManagerHelp.FaceName);
-                        //向组件发送船员请求
-                        manager.SendCrewDelete(Convert.ToInt32(crew.crewrequest.crewinfo.uid), identity);
-                        ManagerHelp.UpSend.Add("CrewDel");
-                    }
+                    if (crew.crewrequest == null) manager.SendCrewRN(Models.Crew.Command.DELETE_REP, null, 1);
                     else
                     {
-                        manager.SendCrewRN(Models.Crew.Command.DELETE_REP, null, result);
+                        result = ProtoBDManager.CrewDelete(crew.crewrequest.crewinfo.uid);
+                        if (result == 0)
+                        {
+                            string identity = ManagerHelp.GetShipToId(ComponentType.AI, ManagerHelp.FaceName);
+                            //向组件发送船员请求
+                            manager.SendCrewDelete(Convert.ToInt32(crew.crewrequest.crewinfo.uid), identity);
+                            ManagerHelp.UpSend.Add("CrewDel");
+                        }
+                        else
+                        {
+                            manager.SendCrewRN(Models.Crew.Command.DELETE_REP, null, result);
+                        }
                     }
                     break;
                    #endregion
                 case Models.Crew.Command.MODIFY_REQ:
                     #region 陆地端修改船员请求
-                    result = ProtoBDManager.CrewUpdate(crew.crewrequest.crewinfo);
-                    if (result == 0)
-                    {
-                        string identity = ManagerHelp.GetShipToId(ComponentType.AI, ManagerHelp.FaceName);
-                        //向组件发送船员请求
-                        manager.SendCrewUpdate(crew.crewrequest.crewinfo, identity);
-                        ManagerHelp.UpSend.Add("CrewEdit");
-                    }
+                    if (crew.crewrequest == null) manager.SendCrewRN(Models.Crew.Command.MODIFY_REP, null, 1);
                     else
                     {
-                        manager.SendCrewRN(Models.Crew.Command.MODIFY_REP, null, result);
+                        result = ProtoBDManager.CrewUpdate(crew.crewrequest.crewinfo);
+                        if (result == 0)
+                        {
+                            string identity = ManagerHelp.GetShipToId(ComponentType.AI, ManagerHelp.FaceName);
+                            //向组件发送船员请求
+                            manager.SendCrewUpdate(crew.crewrequest.crewinfo, identity);
+                            ManagerHelp.UpSend.Add("CrewEdit");
+                        }
+                        else
+                        {
+                            manager.SendCrewRN(Models.Crew.Command.MODIFY_REP, null, result);
+                        }
                     }
                     break;
                    #endregion

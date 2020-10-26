@@ -12,7 +12,9 @@ namespace SmartWeb.ProtoBuffer.Models
 		public enum Command
 		{
 			CAPTURE_JPEG_REQ = 1,
-			CAPTURE_JPEG_REP = 2
+			CAPTURE_JPEG_REP = 2,
+			SYNC_CLOCK = 3,
+			SYNC_AIS = 4
 		}
 		[ProtoMember(1)]
 		/// <summary>
@@ -24,5 +26,15 @@ namespace SmartWeb.ProtoBuffer.Models
 		/// </summary>
 		[ProtoMember(2)]
 		public CaptureInfo captureinfo { get; set; }
+		/// <summary>
+		/// 母钟
+		/// </summary>
+		[ProtoMember(3)]
+		public Clock clock { get; set; }
+		/// <summary>
+		/// 航海定位系统
+		/// </summary>
+		[ProtoMember(4)]
+		public Ais ais { get; set; }
     }
 }

@@ -92,53 +92,57 @@ namespace SmartWeb.ProtoBuffer
                 try
                 {
                     if (revmsg == null) continue;
-                    if (revmsg.type == MSG.Type.ALGORITHM || revmsg.type == MSG.Type.DEVICE || revmsg.type == MSG.Type.STATUS || revmsg.type == MSG.Type.CREW) 
+                    Task.Factory.StartNew(st=>
                     {
-                        var component=ProtoBDManager.GetComponentById(fromId);
-                        if (component == null) {
-                            //陆地端传下来的FromId
-                            ManagerHelp.UpFromId = toId;
-                            //记录从陆地端传过来的ID，船舶端发送时做为上级ID传值
-                            ManagerHelp.UpToId = fromId;
-                        }
-                    }
-                    if (revmsg.type == MSG.Type.ALARM)
-                    {
-                        if (revmsg.alarm.alarminfo != null)
+                        if (revmsg.type == MSG.Type.ALGORITHM || revmsg.type == MSG.Type.DEVICE || revmsg.type == MSG.Type.STATUS || revmsg.type == MSG.Type.CREW)
                         {
-                            string xmq = "";
-                            if (mQFrames[2].ToString() == "upload")
+                            var component = ProtoBDManager.GetComponentById(fromId);
+                            if (component == null)
                             {
-                                xmq = fromId;
+                                //陆地端传下来的FromId
+                                ManagerHelp.UpFromId = toId;
+                                //记录从陆地端传过来的ID，船舶端发送时做为上级ID传值
+                                ManagerHelp.UpToId = fromId;
                             }
-                            var ss = new ProtoBDManager(hubContext);
-                            ss.AlarmAdd(revmsg.alarm.alarminfo, xmq);
                         }
-                    }
-                    else if (revmsg.type == MSG.Type.ALGORITHM)
-                    {
-                        manager.AlgorithmData(revmsg.algorithm);
-                    }
-                    else if (revmsg.type == MSG.Type.CREW)
-                    {
-                        manager.CrewData(revmsg.crew);
-                    }
-                    else if (revmsg.type == MSG.Type.DEVICE)
-                    {
-                        manager.DeviceData(revmsg.device);
-                    }
-                    else if (revmsg.type == MSG.Type.STATUS)
-                    {
-                        manager.StatusData(revmsg.status);
-                    }
-                    else if (revmsg.type == MSG.Type.COMPONENT)
-                    {
-                        manager.ComponentData(revmsg.component);
-                    }
-                    else if (revmsg.type == MSG.Type.EVENT)
-                    {
-                        manager.CaptureData(revmsg.evt);
-                    }
+                        if (revmsg.type == MSG.Type.ALARM)
+                        {
+                            if (revmsg.alarm.alarminfo != null)
+                            {
+                                string xmq = "";
+                                if (mQFrames[2].ToString() == "upload")
+                                {
+                                    xmq = fromId;
+                                }
+                                var ss = new ProtoBDManager(hubContext);
+                                ss.AlarmAdd(revmsg.alarm.alarminfo, xmq);
+                            }
+                        }
+                        else if (revmsg.type == MSG.Type.ALGORITHM)
+                        {
+                            manager.AlgorithmData(revmsg.algorithm);
+                        }
+                        else if (revmsg.type == MSG.Type.CREW)
+                        {
+                            manager.CrewData(revmsg.crew);
+                        }
+                        else if (revmsg.type == MSG.Type.DEVICE)
+                        {
+                            manager.DeviceData(revmsg.device);
+                        }
+                        else if (revmsg.type == MSG.Type.STATUS)
+                        {
+                            manager.StatusData(revmsg.status);
+                        }
+                        else if (revmsg.type == MSG.Type.COMPONENT)
+                        {
+                            manager.ComponentData(revmsg.component);
+                        }
+                        else if (revmsg.type == MSG.Type.EVENT)
+                        {
+                            manager.CaptureData(revmsg.evt);
+                        }
+                    }, TaskCreationOptions.LongRunning);
                 }
                 catch (Exception ex)
                 {

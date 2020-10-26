@@ -21,6 +21,10 @@ namespace SmartWeb.Models
         /// </summary>
         public string Cid { get; set; }
         /// <summary>
+        /// 摄像机名称
+        /// </summary>
+        public string NickName { get; set; }
+        /// <summary>
         /// GPU(0,1)
         /// </summary>
         public int GPU { get; set; }

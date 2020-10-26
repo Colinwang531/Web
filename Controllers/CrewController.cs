@@ -116,7 +116,10 @@ namespace SmartWeb.Controllers
         {
             //XMQ的组件ID
             string XMQComId = base.user.ShipId;
-            assembly.SendCrewQuery(XMQComId);
+            string tokenstr = HttpContext.Session.GetString("comtoken");
+            //获取XMQ组件里的WEB组件ID
+            string webIdentity = ManagerHelp.GetLandToId(tokenstr);
+            assembly.SendCrewQuery(XMQComId+":"+ webIdentity);
             List<ProtoBuffer.Models.CrewInfo> crewInfos = new List<ProtoBuffer.Models.CrewInfo>();
             try
             {
@@ -149,6 +152,8 @@ namespace SmartWeb.Controllers
                     Name = item.name,
                     crewPictureViewModels = new List<CrewPictureViewModel>()
                 };
+                if (item.pictures != null)
+                {
                 foreach (var pic in item.pictures)
                 {
                     CrewPictureViewModel vm = new CrewPictureViewModel()
@@ -157,6 +162,7 @@ namespace SmartWeb.Controllers
                         Picture = pic
                     };
                     model.crewPictureViewModels.Add(vm);
+                    }
                 }
                 crewVMList.Add(model);
             }

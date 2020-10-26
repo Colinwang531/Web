@@ -205,14 +205,17 @@ namespace SmartWeb.Controllers
         /// <param name="shipId"></param>
         private void LandSave(StatusResponse response, string shipId)
         {
-            //此次查询的是陆地端的船状态表
-            var ship = _context.Ship.FirstOrDefault(c => c.Id == shipId);
-            if (ship != null)
+            using (var context=new MyContext())
             {
-                if(!string.IsNullOrEmpty(response.name))ship.Name = response.name;
-                ship.Flag = response.flag;
-                _context.Ship.Update(ship);
-                _context.SaveChanges();
+                //此次查询的是陆地端的船状态表
+                var ship = context.Ship.FirstOrDefault(c => c.Id == shipId);
+                if (ship != null)
+                {
+                    if (!string.IsNullOrEmpty(response.name)) ship.Name = response.name;
+                    ship.Flag = response.flag;
+                    context.Ship.Update(ship);
+                    context.SaveChanges();
+                }
             }
         }
         /// <summary>

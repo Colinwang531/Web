@@ -38,7 +38,15 @@ namespace SmartWeb.ProtoBuffer.Models
 			/// <summary>
 			/// 流媒体组件
 			/// </summary>
-			MED = 7
+			MED = 7,
+			/// <summary>
+			/// 母钟
+			/// </summary>
+			CLK = 8,
+			/// <summary>
+			/// 航海定位系统
+			/// </summary>
+			AIS = 9
 		}
 		/// <summary>
 		/// 注册类型

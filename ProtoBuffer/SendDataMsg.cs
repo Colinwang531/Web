@@ -394,22 +394,21 @@ namespace SmartWeb.ProtoBuffer
                 port = model.Port,
                 type = (DeviceInfo.Type)model.type
             };
-            if (device.camerainfos != null && device.camerainfos.Count > 0)
+            if (model.CameraModelList != null && model.CameraModelList.Count > 0)
             {
                 device.camerainfos = new List<CameraInfo>();
-                foreach (var item in device.camerainfos)
+                foreach (var item in model.CameraModelList)
                 {
                     device.camerainfos.Add(new CameraInfo()
                     {
-                        cid = item.cid,
-                        enable = item.enable,
-                        nickname = item.nickname,
-                        index = item.index,
-                        ip = item.ip
+                        cid = item.Id,
+                        enable = item.Enable,
+                        nickname = item.NickName,
+                        index = item.Index,
+                        ip = item.IP
                     });
                 }
             }
-
             return device;
         }
 

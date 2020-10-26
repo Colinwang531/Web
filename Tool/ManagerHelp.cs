@@ -326,7 +326,7 @@ namespace SmartWeb.Tool
             using (var context = new MyContext())
             {
                 //获取设备的组件ID
-                var component = context.Component.FirstOrDefault(c => c.Type == type && c.Line == 0 && (name == "" ? 1 == 1 : c.Name.ToUpper() == name));
+                var component = context.Component.FirstOrDefault(c => c.Type == type && c.Line == 0 && (name == "" ? 1 == 1 : c.Name.ToUpper() == name.ToUpper()));
                 if (component != null)
                 {
                     return component.Cid;
@@ -347,7 +347,7 @@ namespace SmartWeb.Tool
                 {
                     name = ManagerHelp.FaceName.ToUpper();
                 }
-                var component = tokens.FirstOrDefault(c => c.Type == type&&(name == "" ? 1 == 1 : c.Name.ToUpper() == name));
+                var component = tokens.FirstOrDefault(c => c.Type == type&&(name == "" ? 1 == 1 : c.Name.ToUpper() == name.ToUpper()));
                 if (component != null) return component.Id;
             }
             return "";
