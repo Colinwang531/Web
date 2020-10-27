@@ -328,7 +328,7 @@ namespace SmartWeb.Controllers
                 return new JsonResult(new { code = 1, msg = "数据保存失败!" + ex.Message });
             }
         }
-        public IActionResult CamSave(string id, string did, int factory, string nickName, string enable)
+        public IActionResult CamSave(string id, string did, int factory, string nickName, string enable, int index = 0)
         {
             if (ModelState.IsValid)
             {
@@ -344,6 +344,12 @@ namespace SmartWeb.Controllers
                         string identity = ManagerHelp.GetLandToId(tokenstr);
                         if (identity == "")
                         {
+                            return new JsonResult(new { code = 1, msg = "当前船舶已失联，请重新连接" });
+                        }
+                        //获取设备的组件ID
+                        string hkidentity = ManagerHelp.GetLandToId(tokenstr, ManagerHelp.GetComponentType(factory));
+                        if (hkidentity == "")
+                        {
                             return new JsonResult(new { code = 1, msg = Enum.GetName(typeof(Device.Factory), Convert.ToInt32(factory)) + "组件未启动" });
                         }
                         Device emb = new Device
@@ -353,6 +359,7 @@ namespace SmartWeb.Controllers
                                 new Camera() {
                                     NickName = nickName,
                                     Enable = enable == "1" ? true : false,
+                                    Index=index,
                                     Id = id
                                 }
                             }

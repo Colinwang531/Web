@@ -118,23 +118,28 @@ namespace SmartWeb.ProtoBuffer
                 using (var _context = new MyContext())
                 {
                     string shipId = _context.Ship.FirstOrDefault().Id;
-                    SmartWeb.Models.Device model = new SmartWeb.Models.Device();
-                    model.factory = (SmartWeb.Models.Device.Factory)protoModel.factory;
-                    model.IP = protoModel.ip;
-                    model.Name = protoModel.name;
-                    model.Nickname = protoModel.nickname;
-                    model.Password = protoModel.password;
-                    model.Port = protoModel.port;
-                    model.type = (SmartWeb.Models.Device.Type)protoModel.type;
-                    model.Enable = protoModel.enable;
-                    model.Id = Guid.NewGuid().ToString();
-                    model.ShipId = shipId; ;
-                    if (protoModel == null) _context.Device.Add(model);
-                    else _context.Device.Update(model);
-                    _context.SaveChanges();
-                    if (protoModel.camerainfos != null && protoModel.camerainfos.Count > 0)
+                    var factory = (SmartWeb.Models.Device.Factory)protoModel.factory;
+                    var type = (SmartWeb.Models.Device.Type)protoModel.type;
+                    SmartWeb.Models.Device model =_context.Device.FirstOrDefault(c => c.factory == factory && c.type== type && c.IP==protoModel.ip);
+                    if (model == null)
                     {
-                        AddCameras(protoModel.camerainfos, protoModel.did);
+                        model = new SmartWeb.Models.Device();
+                        model.factory = factory;
+                        model.IP = protoModel.ip;
+                        model.Name = protoModel.name;
+                        model.Nickname = protoModel.nickname;
+                        model.Password = protoModel.password;
+                        model.Port = protoModel.port;
+                        model.type = type;
+                        model.Enable = protoModel.enable;
+                        model.Id = Guid.NewGuid().ToString();
+                        model.ShipId = shipId;
+                        _context.Device.Add(model);
+                        _context.SaveChanges();
+                        if (protoModel.camerainfos != null && protoModel.camerainfos.Count > 0)
+                        {
+                            AddCameras(protoModel.camerainfos, protoModel.did);
+                        }
                     }
                     return model;
                 }
@@ -207,9 +212,18 @@ namespace SmartWeb.ProtoBuffer
                                 };
                                 cameras.Add(cam);
                             }
+                            else
+                            {
+                                var cam = dbCameras.FirstOrDefault(c => c.Index == item.index);
+                                cam.Enable = item.enable;
+                                cam.NickName = item.nickname;
+                                _context.Camera.Update(cam);
+
+                            }
                         }
                         _context.Camera.AddRange(cameras);
                         _context.SaveChanges();
+                        return 0;
                     }
                 }
             }
@@ -465,6 +479,7 @@ namespace SmartWeb.ProtoBuffer
                 {
                     try
                     {
+                        var type = (SmartWeb.Models.AlgorithmType)protoModel.type;
                         if (protoModel.aid != "")
                         {
                             var algo = context.Algorithm.FirstOrDefault(c => c.Id == protoModel.aid);
@@ -490,13 +505,8 @@ namespace SmartWeb.ProtoBuffer
                         {
                             //判断是否重复提交
                             var algorithm = context.Algorithm.FirstOrDefault(c => c.Cid == protoModel.cid &&
-                                  c.DectectFirst == protoModel.dectectfirst &&
                                   c.GPU == protoModel.gpu &&
-                                  c.Similar == protoModel.similar &&
-                                  c.Track == protoModel.track &&
-                                  c.DectectSecond == protoModel.dectectsecond &&
-                                  c.DectectFirst == protoModel.dectectfirst &&
-                                  c.Type == (SmartWeb.Models.AlgorithmType)protoModel.type);
+                                  c.Type == type);
                             if (algorithm != null) return 0;
                             if (protoModel.type == AlgorithmInfo.Type.ATTENDANCE_IN || protoModel.type == AlgorithmInfo.Type.ATTENDANCE_OUT)
                             {
@@ -517,7 +527,7 @@ namespace SmartWeb.ProtoBuffer
                                 Track = protoModel.track,
                                 DectectSecond = protoModel.dectectsecond,
                                 DectectFirst = protoModel.dectectfirst,
-                                Type = (SmartWeb.Models.AlgorithmType)protoModel.type
+                                Type = type
                             };
                             context.Algorithm.Add(model);
                             protoModel.aid = model.Id;
@@ -806,7 +816,7 @@ namespace SmartWeb.ProtoBuffer
                 {
                     // 报警信息入库                       
                     AddAlarm(alarmInfo, shipId, cid, cname);
-                    if (xmq == "")
+                    if (ManagerHelp.IsShipPort)
                     {
                         alarmInfo.cid = cid + ":" + cname;
                         //向陆地端推送报警信息
@@ -876,12 +886,12 @@ namespace SmartWeb.ProtoBuffer
         /// <param name="shipId">船ID</param>
         /// <param name="cid">摄像机ID</param>
         /// <param name="cname">摄像机名称</param>
-        private static void GetData( string xmq, ref AlarmInfo alarmInfo, ref string shipId, ref string cid, ref string cname)
+        private static void GetData(string xmq, ref AlarmInfo alarmInfo, ref string shipId, ref string cid, ref string cname)
         {
             var ids = alarmInfo.cid.Split(':');
             using (var context = new MyContext())
             {
-                if (string.IsNullOrEmpty(xmq))
+                if (ManagerHelp.IsShipPort)
                 {
                     var ship = context.Ship.FirstOrDefault();
                     shipId = ship.Id;
@@ -1164,7 +1174,7 @@ namespace SmartWeb.ProtoBuffer
         {
             using (var context = new MyContext())
             {
-                SmartWeb.Models.Component component = context.Component.FirstOrDefault(c => c.Id == componentId);
+                SmartWeb.Models.Component component = context.Component.FirstOrDefault(c => c.Cid == componentId);
                 return component;
             }
         }

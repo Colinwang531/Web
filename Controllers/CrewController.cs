@@ -285,8 +285,9 @@ namespace SmartWeb.Controllers
                         uid = employee.Id.ToString(),
                         pictures = bytes
                     };
-                    if (id > 0) { assembly.SendCrewUpdate(crewInfo, identity); }
-                    else { assembly.SendCrewAdd(crewInfo, identity); }
+                    //if (id > 0) { assembly.SendCrewUpdate(crewInfo, identity); }
+                    //else { assembly.SendCrewAdd(crewInfo, identity); }
+                    assembly.SendCrewAdd(crewInfo, identity);
                     code = GetResult();
                     if (code == 400) errMsg = "网络请求超时。。。";
                     else if (code != 0) errMsg = "船员信息保存失败";

@@ -53,10 +53,13 @@ namespace SmartWeb.ProtoBuffer
         public void SendDeviceRN(Models.Device.Command command, string did, List<SmartWeb.Models.Device> devices = null, int status = 0)
         {
             List<DeviceInfo> list = new List<DeviceInfo>();
-            foreach (var item in devices)
+            if (devices != null) 
             {
-                list.Add(GetDeviceInfo(item));
-            }
+                foreach (var item in devices)
+                {
+                    list.Add(GetDeviceInfo(item));
+                }
+            }            
             MSG sendMsg = new MSG()
             {
                 type = MSG.Type.DEVICE,

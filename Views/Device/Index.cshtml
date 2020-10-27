@@ -172,7 +172,7 @@
                         form.val("dataCamFrm", {
                             "id": camdata.cells[1].firstChild.innerHTML,
                             "did": camdata.cells[2].firstChild.innerHTML,
-                            "factory": camdata.cells[3].firstChild.innerHTML,
+                            "index": camdata.cells[3].firstChild.innerHTML,
                             "enable": camdata.cells[4].firstChild.innerHTML == "开启" ? true : false,
                             "nickName": camdata.cells[5].firstChild.innerHTML
                         });
@@ -282,12 +282,14 @@
         function setFormValue(obj, camdata) {
             form.on("submit(doCamSubmit)", function (camFrm) {
                 $('#btnSubmit').attr('disabled', 'disabled').addClass(DISABLED);
+                var factory = GetFactoryById(camFrm.field.did);
                 var data = {
                     id: camFrm.field.id,
                     did: camFrm.field.did,
-                    factory: parseInt(camFrm.field.factory),
+                    factory: factory,
                     nickName: camFrm.field.nickName,
-                    enable: camFrm.field.enable
+                    enable: camFrm.field.enable,
+                    index: camFrm.field.index == "" ? 0 : parseInt(camFrm.field.index)
                 }
                 $.ajax({
                     url: "/Device/CamSave",
@@ -355,6 +357,15 @@
                 }
             }
             return true;
+        }
+        function GetFactoryById(id) {
+            var data = table.cache["deviceTable"];
+            for (var i = 0; i < data.length; i++) {
+                if (data[i].id == id) {
+                    return data[i].factory;
+                }
+            }
+            return 0;
         }
         function setDisabled(flag) {
             if (flag) {
@@ -480,7 +491,7 @@
     <form class="layui-form" action="" id="dataCamFrm" lay-filter="dataCamFrm">
         <input name="id" id="hidId" type="hidden" class="layui-input" />
         <input type="hidden" name="did" value="" class="layui-input" />
-        <input type="hidden" name="factory" value="" class="layui-input" />
+        <input type="hidden" name="index" value="" class="layui-input" />
         <div class="layui-form-item">
             <label class="layui-form-label" style="width:100px">摄像机状态：</label>
             <div class="layui-input-inline">

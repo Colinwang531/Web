@@ -91,14 +91,14 @@ namespace SmartWeb.Controllers
         }
         private List<AttendanceViewModel> GetData(DateTime dt , int pageIndex, int pageSize,out int total) 
         {      
-            total = _context.Crew.Count();
-            var crews = _context.Crew.ToList();
             var startTime =DateTime.Parse(dt.ToString("yyyy-MM-dd 00:00:00"));
             var endTime = DateTime.Parse(dt.ToString("yyyy-MM-dd 23:59:59")); 
             var attdata = _context.Attendance.Where(c => c.Time >= startTime && c.Time <= endTime).ToList();
             var ids = string.Join(',', attdata.Select(c => c.Id));
             var pices = _context.AttendancePicture.Where(c => ids.Contains(c.AttendanceId)).ToList();
-            List<AttendanceViewModel> list = new List<AttendanceViewModel>(); 
+            List<AttendanceViewModel> list = new List<AttendanceViewModel>();
+            total = attdata.Count;
+            var crews = _context.Crew.Where(c=>attdata.Select(a=>a.CrewId).Contains(c.Id)).ToList();
             foreach (var item in crews)
             {
                 AttendanceViewModel model = new AttendanceViewModel()
@@ -123,7 +123,6 @@ namespace SmartWeb.Controllers
                         }
                         model.attendances.Add(ad);
                     }
-
                 }
                 list.Add(model);
             }

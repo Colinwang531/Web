@@ -59,6 +59,7 @@
                 success: function (res) {
                     if (res.code == 0) {
                         if (res.data != null) {
+                            $(window.parent.document).find("#lblTitle").html(res.data.name);
                             form.val("dataFrm", {
                                 "id": res.data.id,
                                 "name": res.data.name,
