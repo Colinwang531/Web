@@ -91,7 +91,11 @@ namespace SmartWeb.Controllers
                         if (response != null)
                         {
                             ship.Flag = response.flag;
-                            ship.Name = response.name;
+                            ship.Name = response.name.Split('|')[0];
+                            if (response.name.Split('|').Length > 1)
+                            {
+                                ship.type = (Ship.Type)Convert.ToInt32(response.name.Split('|')[1]);
+                            }
                         }
                     }
                 }
@@ -211,8 +215,10 @@ namespace SmartWeb.Controllers
                 var ship = context.Ship.FirstOrDefault(c => c.Id == shipId);
                 if (ship != null)
                 {
-                    if (!string.IsNullOrEmpty(response.name)) ship.Name = response.name;
+                    var date = response.name.Split('|');
+                    if (!string.IsNullOrEmpty(date[0])) ship.Name = date[0];
                     ship.Flag = response.flag;
+                    ship.type =(Ship.Type)Convert.ToInt32(date[1]);
                     context.Ship.Update(ship);
                     context.SaveChanges();
                 }
@@ -235,26 +241,38 @@ namespace SmartWeb.Controllers
                 string errMsg = "";
                 if (base.user.IsLandHome)
                 {
-                    string XMQComId = base.user.ShipId;
+                    string cid = base.user.ShipId;
                     string tokenstr = HttpContext.Session.GetString("comtoken");
                     string identity = ManagerHelp.GetLandToId(tokenstr);
                     if (string.IsNullOrEmpty(identity))
                     {
                         return new JsonResult(new { code = 1, msg = "当前船舶已失联，请重新连接" });
                     }
-                    SmartWeb.ProtoBuffer.Models.StatusRequest sr = new SmartWeb.ProtoBuffer.Models.StatusRequest()
+                    Ship ship = new Ship()
                     {
-                        type = SmartWeb.ProtoBuffer.Models.StatusRequest.Type.SAIL,
-                        flag = type
+                        type = (Ship.Type)type,
+                        Name = name,
+                        Flag = type == 1 ? true : false
                     };
-                    assembly.SendStatusSet(sr, XMQComId + ":" + identity);
-                    sr = new ProtoBuffer.Models.StatusRequest()
-                    {
-                        type = ProtoBuffer.Models.StatusRequest.Type.NAME,
-                        text = name
-                    };
-                    assembly.SendStatusSet(sr, XMQComId + ":" + identity);
+                    string toId = cid + ":"+ identity;
+                    assembly.SendStatusSet(ship,StatusRequest.Type.SAIL, toId);
+                    assembly.SendStatusSet(ship,StatusRequest.Type.NAME,toId);                  
                     code = GetResult();
+                    if (code == 0) {
+                        var component=_context.Component.FirstOrDefault(c => c.Cid == cid);
+                        if (component != null) {
+                            var landship = _context.Ship.FirstOrDefault(c => c.Id == component.ShipId);
+                            if (landship!=null)
+                            {
+                                landship.Name = ship.Name;
+                                landship.type = ship.type;
+                                //航行类型为：自动时，默认状态为停港
+                                landship.Flag =ship.Flag;
+                                _context.Ship.Update(landship);
+                                _context.SaveChanges();
+                            }
+                        }
+                    }
                 }
                 else
                 {
@@ -271,7 +289,7 @@ namespace SmartWeb.Controllers
                         }
                         _context.Ship.Update(ship);
                         _context.SaveChanges();
-                        SendMqMsg(name, type, ship);
+                        SendMqMsg(ship);
                         code = 0;
                     }
                     #endregion
@@ -292,26 +310,12 @@ namespace SmartWeb.Controllers
         /// <param name="name"></param>
         /// <param name="type"></param>
         /// <param name="ship"></param>
-        private void SendMqMsg(string name, int type, Ship ship)
+        private void SendMqMsg(Ship ship)
         {
             var components = _context.Component.Where(c => c.Type == ComponentType.AI).ToList();
             foreach (var item in components)
             {
-                SmartWeb.ProtoBuffer.Models.StatusRequest sr = new SmartWeb.ProtoBuffer.Models.StatusRequest()
-                {
-                    type = SmartWeb.ProtoBuffer.Models.StatusRequest.Type.SAIL,
-                    flag = type
-                };
-                assembly.SendStatusSet(sr, item.Id);
-                if (ship.Name != name)
-                {
-                    sr = new ProtoBuffer.Models.StatusRequest()
-                    {
-                        type = ProtoBuffer.Models.StatusRequest.Type.NAME,
-                        text = name
-                    };
-                    assembly.SendStatusSet(sr, item.Id);
-                }
+                assembly.SendStatusSet(ship, StatusRequest.Type.SAIL, item.Id);
             }
         }
         /// <summary>
@@ -347,5 +351,6 @@ namespace SmartWeb.Controllers
             }
             return result;
         }
+       
     }
 }

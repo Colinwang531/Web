@@ -35,7 +35,7 @@ namespace SmartWeb.Models
         /// </summary>
         public string Name { get; set; }
         /// <summary>
-        /// 航行类型
+        /// 航行类型0:自动 1:手动航行 2:手动停港
         /// </summary>
         public Type type { get; set; }
         /// <summary>

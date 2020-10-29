@@ -49,6 +49,15 @@
             });
             return false;
         });
+        //自定义验证规则
+        form.verify({
+            name: function (value) {
+                var re = /[~#^$%&!*^()<>:;'",，|{}【】 	]/gi;
+                if (re.test(value)) {
+                    return "船名不能包含特殊字符";
+                }
+            }
+        });
         function load() {
             $.ajax({
                 url: "/Ship/Load",
@@ -76,7 +85,7 @@
                     }
                 }
             });
-        }       
+        }
     });
 </script>
 <div style="margin:30px">
@@ -87,7 +96,7 @@
             <div class="layui-inline">
                 <label class="layui-form-label">船舶名称：</label>
                 <div class="layui-input-inline">
-                    <input type="text" id="txtName" name="name" required maxlength="20" style="width:360px;height:40px" lay-verify="required" autocomplete="off" class="layui-input">
+                    <input type="text" id="txtName" name="name" required maxlength="20" style="width:360px;height:40px" lay-verify="required|name" autocomplete="off" class="layui-input">
                 </div>
             </div>
         </div>
@@ -98,7 +107,7 @@
                         <select id="slStatus" name="type" class="layui-input" style="height:40px" lay-filter="type">
                             <option value="0">AUTO(自动)</option>
                             <option value="1">SAIL(手动航行)</option>
-                            <option value="2">PORT(手动停港)</option>
+                            <option value="2">BERTH(手动停港)</option>
                         </select>
                   
                 </div>

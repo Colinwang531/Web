@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using NuGet.Frameworks;
+using Org.BouncyCastle.Ocsp;
 using Smartweb.Hubs;
 using SmartWeb.Interface;
+using SmartWeb.Models;
 using SmartWeb.ProtoBuffer.Models;
 using SmartWeb.Tool;
 using System;
@@ -119,7 +121,7 @@ namespace SmartWeb.ProtoBuffer
                     statusresponse = new StatusResponse()
                     {
                         flag = ship == null ? false : ship.Flag,
-                        name = ship == null ? "" : ship.Name,
+                        name = ship == null ? "" : ship.Name+"|"+(int)ship.type,
                         result = status
                     }
                 }
@@ -489,9 +491,21 @@ namespace SmartWeb.ProtoBuffer
         /// <summary>
         /// 发送船舶状态修改请求
         /// </summary>
+        /// <param name="ship">船舶信息</param>
+        /// <param name="type">StatusRequest.Type.SAIL</param>
         /// <param name="request"></param>
-        public void SendStatusSet(StatusRequest request, string nextIdentity = "")
+        public void SendStatusSet(Ship ship, StatusRequest.Type type, string nextIdentity = "")
         {
+            if (ship == null) return;
+            StatusRequest request = new StatusRequest();
+            request.type = type;
+            if (type == StatusRequest.Type.NAME) {
+                request.text = ship.Name;
+            }
+            else if (type==StatusRequest.Type.SAIL)
+            {
+                request.flag = (int)ship.type;
+            }
             MSG msg = new MSG()
             {
                 type = MSG.Type.STATUS,

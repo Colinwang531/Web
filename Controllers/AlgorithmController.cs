@@ -125,7 +125,8 @@ namespace SmartWeb.Controllers
                         {
                             Id = cam.cid,
                             NickName = cam.nickname,
-                            DeviceId = item.did
+                            DeviceId = item.did,
+                            Index=cam.index
                         };
                         cameras.Add(model);
                     }
@@ -133,7 +134,7 @@ namespace SmartWeb.Controllers
             }
             foreach (var item in protoDate)
             {
-                string cid = item.cid.Split(':')[1];
+                string cid = item.cid;
                 string nickName = "";
                 if (cameras.Where(c => c.Id == cid).Any()) {
                     nickName = cameras.FirstOrDefault(c => c.Id == cid).NickName;
@@ -182,13 +183,14 @@ namespace SmartWeb.Controllers
                     string AIName = Enum.GetName(typeof(AlgorithmType), viewModel.Type);
                     if (base.user.IsLandHome)
                     {
-                        //获取XMQ上WEB的组件ID
+                        //获取当前船舶的组件ID（webId）
                         string tokenstr = HttpContext.Session.GetString("comtoken");
                         string identity =ManagerHelp.GetLandToId(tokenstr);
                         if (string.IsNullOrEmpty(identity))
                         {
                             return new JsonResult(new { code = 1, msg = "当前船舶已失联，请重新连接" });
                         }
+                        //获取当前组件下的某个算法
                         string algoComId= ManagerHelp.GetLandToId(tokenstr,ComponentType.AI, AIName);
                         if (string.IsNullOrEmpty(algoComId) && viewModel.Type != (int)AlgorithmType.CAPTURE)
                         {
@@ -196,7 +198,9 @@ namespace SmartWeb.Controllers
                             return new JsonResult(new { code = 1, msg = "算法【" + name + "】组件未启动" });
                         }
                         var cam = cameras.FirstOrDefault(c => c.Id == viewModel.Cid);
+                        //算法里的摄像机ID=设备ID:摄像机ID:摄像机通道
                         string cid = cam.DeviceId + ":" + cam.Id + ":" + cam.Index;
+                        //向船舶端发送算法配置请求
                         ProtoBuffer.Models.AlgorithmInfo algorithm = GetProtoAlgorithm(viewModel, cid);
                         code = SendData(algorithm, (shipId + ":" + identity));
                         if (code == 400) errMsg = "网络请求超时。。。";
@@ -209,7 +213,7 @@ namespace SmartWeb.Controllers
                         {
                             return new JsonResult(new { code = 1, msg = errMsg });
                         }
-                        //获取枚举对应的名称
+                        //获取船舶某个算法的组件ID
                         string identity = ManagerHelp.GetShipToId(ComponentType.AI, AIName); 
                         if (string.IsNullOrEmpty(identity)&& viewModel.Type != (int)AlgorithmType.CAPTURE)
                         {
@@ -244,16 +248,18 @@ namespace SmartWeb.Controllers
                         {
                             viewModel.Id = algo.Id;
                             var camera = _context.Camera.FirstOrDefault(c => c.Id == viewModel.Cid);
-                            string cid = camera.DeviceId + ":" + camera.Id + ":" + camera.Index;
-                            ProtoBuffer.Models.AlgorithmInfo algorithm = GetProtoAlgorithm(viewModel, cid);
-                            code = SendData(algorithm, identity);
-                            if (code == 0)
+                            if (camera != null)
                             {
-                                _context.SaveChanges();
-                                SendStatus(identity);
+                                string cid = camera.DeviceId + ":" + camera.Id + ":" + camera.Index;
+                                ProtoBuffer.Models.AlgorithmInfo algorithm = GetProtoAlgorithm(viewModel, cid);
+                                code = SendData(algorithm, identity);
+                                if (code == 0)
+                                {
+                                    _context.SaveChanges();
+                                }
+                                else if (code == 2) errMsg = "网络请求超时。。。";
+                                else errMsg = "算法配置失败";
                             }
-                            else if (code == 2) errMsg = "网络请求超时。。。";
-                            else errMsg = "算法配置失败";
                         }
                     }
                     return new JsonResult(new { code = code, msg = errMsg });
@@ -266,12 +272,12 @@ namespace SmartWeb.Controllers
                 return new JsonResult(new { code = 1, msg = "数据保存失败!" + ex.Message });
             }
         }
-        private int SendData(ProtoBuffer.Models.AlgorithmInfo algorithm, string nextIdentity)
+        private int SendData(ProtoBuffer.Models.AlgorithmInfo algorithmInfo, string nextIdentity)
         {
             int result = 1;
             try
             {
-                assembly.SendAlgorithmSet(algorithm, nextIdentity);
+                assembly.SendAlgorithmSet(algorithmInfo, nextIdentity);
                 bool flag = true;
                 new TaskFactory().StartNew(() =>
                 {
@@ -427,16 +433,6 @@ namespace SmartWeb.Controllers
                     break;
             }
             return name;
-        }
-        private void SendStatus(string identity) 
-        {
-            var ship = _context.Ship.FirstOrDefault();
-            ProtoBuffer.Models.StatusRequest request = new ProtoBuffer.Models.StatusRequest()
-            {
-                flag = (int)ship.type,
-                type = ProtoBuffer.Models.StatusRequest.Type.SAIL
-            };
-            assembly.SendStatusSet(request, identity);
         }
     }
 }

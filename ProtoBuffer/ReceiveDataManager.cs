@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
+using Org.BouncyCastle.Asn1.Ocsp;
 using Renci.SshNet.Security;
 using Smartweb.Hubs;
 using SmartWeb.DB;
@@ -39,10 +40,10 @@ namespace SmartWeb.ProtoBuffer
                 case Models.Component.Command.SIGNIN_REP:
                     if (component.componentresponse != null && component.componentresponse.result == 0)
                     {
-                        if (ManagerHelp.Cid == "")
-                        {
+                        //if (ManagerHelp.Cid == "")
+                        //{
                             ProtoBDManager.ComponentAdd(component.componentresponse.cid);
-                        }
+                        //}
                     }
                     if (component.componentresponse.result != 0) ManagerHelp.ComponentReponse = component.componentresponse.result.ToString();
                     //心跳是否有响应
@@ -74,8 +75,9 @@ namespace SmartWeb.ProtoBuffer
         /// <summary>
         /// 算法处理
         /// </summary>
+        /// <param name="fromId">算法来源</param>
         /// <param name="algorithm"></param>
-        public void AlgorithmData(SmartWeb.ProtoBuffer.Models.Algorithm  algorithm)
+        public void AlgorithmData(SmartWeb.ProtoBuffer.Models.Algorithm  algorithm,string fromId)
         { 
             //添加日志
             ProtoBDManager.AddReceiveLog<SmartWeb.ProtoBuffer.Models.Algorithm>("Algorithm/"+Enum.GetName(typeof(Models.Component.Command), Convert.ToInt32(algorithm.command)), algorithm);
@@ -89,8 +91,8 @@ namespace SmartWeb.ProtoBuffer
                         manager.SendAlgorithmRN(Models.Algorithm.Command.CONFIGURE_REP, null, 1);
                         break; 
                     }
-                    string devcid = request.algorithminfo.cid;
-                    var cid = devcid.Split(":")[1];
+                    var devcid = request.algorithminfo.cid.Split(":");//cid=did:cid:index(设备ID:摄像机ID:摄像机通道)
+                    var cid = devcid[1];
                     request.algorithminfo.cid = cid;
                     int result = ProtoBDManager.AlgorithmSet(request.algorithminfo);
                     if (result==0)
@@ -101,8 +103,8 @@ namespace SmartWeb.ProtoBuffer
                             string identity = ManagerHelp.GetShipToId(ComponentType.AI, name);
                             if (identity != "")
                             {
-                                request.algorithminfo.cid = devcid;
-                                //向组件发送算法请求
+                                //向算法组件注册时只需要传入设备ID和摄像机通道
+                                request.algorithminfo.cid = devcid[0]+":"+devcid[1]+":"+devcid[2];
                                 manager.SendAlgorithmSet(request.algorithminfo, identity);
                                 ManagerHelp.UpSend.Add("Algorithm");
                             }
@@ -126,7 +128,7 @@ namespace SmartWeb.ProtoBuffer
                 case Models.Algorithm.Command.QUERY_REQ:
                     #region 陆地端发送算法查询请求
                     //查询船舶端数据库获取所有算法数据
-                    var algorithms = ProtoBDManager.AlgorithmQuery();
+                    var algorithms = ProtoBDManager.AlgorithmQuery(true);
                     //返回给陆地端
                     manager.SendAlgorithmRN(Models.Algorithm.Command.QUERY_REP, algorithms);
                     break;
@@ -136,11 +138,17 @@ namespace SmartWeb.ProtoBuffer
                     {
                         //向陆地端响应请求
                         manager.SendAlgorithmRN(Models.Algorithm.Command.CONFIGURE_REP, null, algorithm.algorithmresponse.result);
-                        ManagerHelp.UpSend.Remove("Algorithm");
+                        ManagerHelp.UpSend.Remove("Algorithm");                       
                     }
                     else
                     {
                         ManagerHelp.AlgorithmResult = algorithm.algorithmresponse.result.ToString();
+                    }
+                    //算法配置成功后把船状态推送给当前算法
+                    if (algorithm.algorithmresponse.result == 0)
+                    {
+                        var ship = ProtoBDManager.StatusQuery();
+                        manager.SendStatusSet(ship, StatusRequest.Type.SAIL,fromId);
                     }
                     break;
                 case Models.Algorithm.Command.QUERY_REP:
@@ -287,10 +295,10 @@ namespace SmartWeb.ProtoBuffer
                     break;
                 case Models.Device.Command.MODIFY_REP:
                     #region XMQ响应设备修改
-                    did = "";
+                    did = device.deviceresponse.did;
                     if (device.deviceresponse.result == 0 && device.deviceresponse.deviceinfos != null)
                     {
-                        did = device.deviceresponse.deviceinfos[0].did;
+                        ProtoBDManager.DeviceUpdate(did, device.deviceresponse.deviceinfos[0]);
                     }
                     if (ManagerHelp.UpSend.Where(c => c == did + "Edit").Any())
                     {
@@ -299,8 +307,7 @@ namespace SmartWeb.ProtoBuffer
                         ManagerHelp.UpSend.Remove(did + "Edit");
                     }
                     else
-                    {
-                        ProtoBDManager.DeviceUpdate(did, device.deviceresponse.deviceinfos[0]);
+                    {                      
                         ManagerHelp.DeviceResult = device.deviceresponse.result.ToString();
                     }
                     break;
@@ -386,7 +393,8 @@ namespace SmartWeb.ProtoBuffer
                             if (identity != "")
                             {
                                 //向组件发送船员请求
-                                manager.SendCrewUpdate(crew.crewrequest.crewinfo, identity);
+                                //manager.SendCrewUpdate(crew.crewrequest.crewinfo, identity);
+                                manager.SendCrewAdd(crew.crewrequest.crewinfo, identity);
                                 ManagerHelp.UpSend.Add("CrewEdit");
                             }
                             else {
@@ -465,14 +473,15 @@ namespace SmartWeb.ProtoBuffer
             {
                 case Status.Command.SET_REQ://设置船状态 
                     #region 陆地端修改船状态
-                    int result = ProtoBDManager.ShipSet(status.statusrequest);
+                    var ship = new Ship();
+                    int result = ProtoBDManager.ShipSet(status.statusrequest,ref ship);
                     if (result == 0)
                     {
                         var components=ProtoBDManager.GetComponentByAI();
                         foreach (var item in components)
                         {
                             //向XMQ组件里的所有算法发送船信息
-                            manager.SendStatusSet(status.statusrequest, item.Id);
+                            manager.SendStatusSet(ship, StatusRequest.Type.SAIL,item.Cid);
                         }                       
                     }
                     manager.SendStatusRN(Status.Command.SET_REP, null, result);
@@ -480,7 +489,7 @@ namespace SmartWeb.ProtoBuffer
                    #endregion
                 case Status.Command.QUERY_REQ:
                     #region 陆地端查询船信息
-                    var ship = ProtoBDManager.StatusQuery();
+                    ship = ProtoBDManager.StatusQuery();
                     manager.SendStatusRN(Status.Command.QUERY_REP, ship);
                     break;
                     #endregion

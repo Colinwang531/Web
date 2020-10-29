@@ -425,8 +425,9 @@ namespace SmartWeb.ProtoBuffer
         /// <summary>
         /// 查询摄像机的配置（算法配置）
         /// </summary>
+        /// <param name="reland">是否返回给陆地</param>
         /// <returns></returns>
-        public static List<AlgorithmInfo> AlgorithmQuery()
+        public static List<AlgorithmInfo> AlgorithmQuery(bool reland=false)
         {
             using (var _context = new MyContext())
             {
@@ -449,10 +450,14 @@ namespace SmartWeb.ProtoBuffer
                              };
                 foreach (var item in config)
                 {
+                    string dbcid = item.Cid;
+                    if (!reland) {
+                        dbcid = item.DeviceId +":"+item.Cid+":"+ item.Index;
+                    }
                     AlgorithmInfo cf = new AlgorithmInfo()
                     {
                         aid = item.Id,
-                        cid = item.DeviceId + ":" + item.Cid + ":" + item.Index,
+                        cid = dbcid,
                         type = (AlgorithmInfo.Type)item.Type,
                         gpu = item.GPU,
                         similar = item.Similar,
@@ -557,9 +562,11 @@ namespace SmartWeb.ProtoBuffer
                 var component = context.Component.FirstOrDefault(c => c.Id == ManagerHelp.ComponentId);
                 if (component != null)
                 {
-                    component.Cid = cid;
-                    context.Update(component);
-                    context.SaveChanges();
+                    if (string.IsNullOrEmpty(component.Cid)) {
+                        component.Cid = cid;
+                        context.Update(component);
+                        context.SaveChanges();
+                    }
                 }
                 else
                 {
@@ -657,11 +664,15 @@ namespace SmartWeb.ProtoBuffer
                         if (item.type == ComponentInfo.Type.WEB) continue;
                         if (list.Where(c => c.Cid == item.componentid).Any())
                         {
+                            #region 组件上线
                             var component = list.FirstOrDefault(c => c.Cid == item.componentid);
-                            component.Line = 0;
-                            context.Component.Update(component);
-                            context.SaveChanges();
+                            if (component.Line == 1) {
+                                component.Line = 0;
+                                context.Component.Update(component);
+                                context.SaveChanges();
+                            }
                             str.Add(item.componentid);
+                            #endregion
                         }
                         //陆地端添加组件
                         else if (item.type == ComponentInfo.Type.XMQ)
@@ -694,7 +705,7 @@ namespace SmartWeb.ProtoBuffer
                         }
                         else if (ManagerHelp.IsShipPort)
                         {
-                            //船舶端添加组件
+                            #region 船舶端添加组件
                             SmartWeb.Models.Component component = new SmartWeb.Models.Component()
                             {
                                 Id = Guid.NewGuid().ToString(),
@@ -705,17 +716,13 @@ namespace SmartWeb.ProtoBuffer
                                 ShipId = shipId
                             };
                             comList.Add(component);
+                            #endregion
                         }
                     }
                     if (list.Count != str.Count)
                     {
-                        var delcom = list.Where(c => !str.Contains(c.Cid)).ToList();
-                        foreach (var item in delcom)
-                        {
-                            item.Line = 1;
-                            context.Update(item);
-                            context.SaveChanges();
-                        }
+                        //组件下线
+                        ComponentOnline(components,list, str);
                     }
                     //批量保存
                     if (comList.Count > 0)
@@ -726,19 +733,54 @@ namespace SmartWeb.ProtoBuffer
                 }
             }
         }
+        /// <summary>
+        /// 组件下线
+        /// </summary>
+        /// <param name="components"></param>
+        /// <param name="list"></param>
+        /// <param name="str"></param>
+        private static void ComponentOnline(List<ComponentInfo> components, List<SmartWeb.Models.Component> list, List<string> str)
+        {
+            using (var context=new MyContext())
+            {
+                if (ManagerHelp.IsShipPort)
+                {
+                    var delcom = list.Where(c => !str.Contains(c.Cid)).ToList();
+                    foreach (var item in delcom)
+                    {
+                        item.Line = 1;
+                        context.Update(item);
+                        context.SaveChanges();
+                    }
+                }
+                else
+                {
+                    if (components.Where(c => c.type == ComponentInfo.Type.XMQ).Any())
+                    {
+                        var delcom = list.Where(c => !str.Contains(c.Cid)).ToList();
+                        foreach (var item in delcom)
+                        {
+                            item.Line = 1;
+                            context.Update(item);
+                            context.SaveChanges();
+                        }
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// 陆地端设备船信息
         /// </summary>
         /// <param name="request"></param>
         /// <returns></returns>
-        public static int ShipSet(StatusRequest request)
+        public static int ShipSet(StatusRequest request,ref Ship ship)
         {
             if (request == null) return 1;
             using (var _context = new MyContext())
             {
                 //修改船状态信息
-                var ship = _context.Ship.FirstOrDefault();
+                ship = _context.Ship.FirstOrDefault();
                 if (ship != null)
                 {
                     if (request.text != "" && request.type == StatusRequest.Type.NAME)
@@ -807,6 +849,7 @@ namespace SmartWeb.ProtoBuffer
                 string cid = "";
                 string cname = "";//摄像机名称
                 GetData(xmq, ref alarmInfo, ref shipId, ref cid, ref cname);
+                if (cid == ""|| shipId=="") return;
                 if (alarmInfo.type == AlarmInfo.Type.ATTENDANCE_IN || alarmInfo.type == AlarmInfo.Type.ATTENDANCE_OUT)
                 {
                     //考勤信息入库
@@ -895,7 +938,6 @@ namespace SmartWeb.ProtoBuffer
                 {
                     var ship = context.Ship.FirstOrDefault();
                     shipId = ship.Id;
-                    cid = alarmInfo.cid;
                     if (ids.Length == 2)
                     {
                         var cam = context.Camera.FirstOrDefault(c => c.DeviceId == ids[0] && c.Index == Convert.ToInt32(ids[1]));
@@ -905,10 +947,13 @@ namespace SmartWeb.ProtoBuffer
                             cname = cam.NickName;
                         };
                     }
+                    string str = Encoding.ASCII.GetString(alarmInfo.picture);
+                    byte[] picture = ManagerHelp.ConvertBase64(str);
+                    alarmInfo.picture = picture;
                 }
                 else
                 {
-                    var comp = context.Component.FirstOrDefault(c => c.Id == xmq);
+                    var comp = context.Component.FirstOrDefault(c => c.Cid == xmq);
                     if (comp != null)
                     {
                         shipId = comp.ShipId;
@@ -918,10 +963,10 @@ namespace SmartWeb.ProtoBuffer
                         cid = ids[0];
                         cname = ids[1];
                     }
+                    alarmInfo.picture = alarmInfo.picture;
                 }
             }
-            string str = Encoding.ASCII.GetString(alarmInfo.picture);
-            byte[] picture = ManagerHelp.ConvertBase64(str);
+            
             //时间处理
             var times = alarmInfo.time.Split(",");
             if (times.Length > 1)
@@ -931,7 +976,6 @@ namespace SmartWeb.ProtoBuffer
                 DateTime dtime = dt.AddHours(timezone);
                 alarmInfo.time = dtime.ToString("yyyy-MM-dd HH:mm:ss");
             }
-            alarmInfo.picture = picture;
         }
 
         /// <summary>

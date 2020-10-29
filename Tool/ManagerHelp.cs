@@ -32,10 +32,6 @@ namespace SmartWeb.Tool
         /// </summary>
         public static string ComponentId = "";
         /// <summary>
-        /// 上级组件FromId
-        /// </summary>
-        public static string UpFromId = "";
-        /// <summary>
         /// 上级组件ToId
         /// </summary>
         public static string UpToId = "";

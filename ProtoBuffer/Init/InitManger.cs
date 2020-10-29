@@ -102,10 +102,10 @@ namespace SmartWeb.ProtoBuffer.Init
                     {
                         ManagerHelp.PublisherIP = sysdic.FirstOrDefault(c => c.key == "PublisherIP").value;
                     }
-                    if (sysdic.Where(c => c.key == "IsShipPort").Any())
-                    {
-                        ManagerHelp.IsShipPort = sysdic.FirstOrDefault(c => c.key == "IsShipPort").value == "true" ? true : false;
-                    }
+                    //if (sysdic.Where(c => c.key == "IsShipPort").Any())
+                    //{
+                    //    ManagerHelp.IsShipPort = sysdic.FirstOrDefault(c => c.key == "IsShipPort").value == "true" ? true : false;
+                    //}
                 }
             }
         }
@@ -175,14 +175,9 @@ namespace SmartWeb.ProtoBuffer.Init
                     var ship = con.Ship.FirstOrDefault();
                     if (ship != null)
                     {
-                        StatusRequest request = new StatusRequest()
-                        {
-                            flag = (int)ship.type,
-                            type = StatusRequest.Type.SAIL
-                        };
                         foreach (var item in components)
                         {
-                            assembly.SendStatusSet(request, item.Cid);
+                            assembly.SendStatusSet(ship, StatusRequest.Type.SAIL, item.Cid);
                         }
                     }
                 }
@@ -277,8 +272,8 @@ namespace SmartWeb.ProtoBuffer.Init
         /// </summary>
         public void HeartBeat()
         {
-            if (!string.IsNullOrEmpty(ManagerHelp.Cid))
-            {
+            //if (!string.IsNullOrEmpty(ManagerHelp.Cid))
+            //{
                 //船舶端发送注册请求
                 assembly.SendComponentSign("WEB", ManagerHelp.Cid);
                 ManagerHelp.SendCount++;
@@ -307,7 +302,7 @@ namespace SmartWeb.ProtoBuffer.Init
                     ManagerHelp.Cid = "";
                     assembly.SendComponentSign("WEB", "");
                 }
-            }
+            //}
         }
         /// <summary>
         /// 组件退出

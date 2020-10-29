@@ -77,40 +77,30 @@ namespace SmartWeb.ProtoBuffer
             while (true)
             {
                 var mQFrames = dealer.ReceiveMultipartMessage(6);
-                var fromId = mQFrames[3].ConvertToString();
-                var toId = mQFrames[4].ConvertToString();
-                ////对陆地端方向的接受
-                //if (toId.Equals(ManagerHelp.ComponentId))
-                //{
-                //    //陆地端传下来的FromId
-                //    ManagerHelp.UpFromId = toId;
-                //    //陆地端过来的ToId
-                //    ManagerHelp.UpToId = fromId;
-                //}
                 byte[] mory = mQFrames.Last.ToByteArray();
                 MSG revmsg = ProtoBufHelp.DeSerialize<MSG>(mory);
                 try
-                {
+                {  //消息来源
+                    var fromId = mQFrames[3].ConvertToString();
+                    var toId = mQFrames[4].ConvertToString();
                     if (revmsg == null) continue;
-                    Task.Factory.StartNew(st=>
+                    if (revmsg.type == MSG.Type.ALGORITHM || revmsg.type == MSG.Type.DEVICE || revmsg.type == MSG.Type.STATUS || revmsg.type == MSG.Type.CREW)
                     {
-                        if (revmsg.type == MSG.Type.ALGORITHM || revmsg.type == MSG.Type.DEVICE || revmsg.type == MSG.Type.STATUS || revmsg.type == MSG.Type.CREW)
+                        var component = ProtoBDManager.GetComponentById(fromId);
+                        if (component == null)
                         {
-                            var component = ProtoBDManager.GetComponentById(fromId);
-                            if (component == null)
-                            {
-                                //陆地端传下来的FromId
-                                ManagerHelp.UpFromId = toId;
-                                //记录从陆地端传过来的ID，船舶端发送时做为上级ID传值
-                                ManagerHelp.UpToId = fromId;
-                            }
+                            //记录从陆地端传过来的ID，船舶端发送时做为上级ID传值
+                            ManagerHelp.UpToId = fromId;
                         }
-                        if (revmsg.type == MSG.Type.ALARM)
+                    }
+                    //Task.Factory.StartNew(st =>
+                    //{
+                    if (revmsg.type == MSG.Type.ALARM)
                         {
                             if (revmsg.alarm.alarminfo != null)
                             {
                                 string xmq = "";
-                                if (mQFrames[2].ToString() == "upload")
+                                if (mQFrames[2].ConvertToString() == "upload")
                                 {
                                     xmq = fromId;
                                 }
@@ -120,7 +110,7 @@ namespace SmartWeb.ProtoBuffer
                         }
                         else if (revmsg.type == MSG.Type.ALGORITHM)
                         {
-                            manager.AlgorithmData(revmsg.algorithm);
+                            manager.AlgorithmData(revmsg.algorithm, fromId);
                         }
                         else if (revmsg.type == MSG.Type.CREW)
                         {
@@ -142,7 +132,7 @@ namespace SmartWeb.ProtoBuffer
                         {
                             manager.CaptureData(revmsg.evt);
                         }
-                    }, TaskCreationOptions.LongRunning);
+                    //}, TaskCreationOptions.LongRunning);
                 }
                 catch (Exception ex)
                 {

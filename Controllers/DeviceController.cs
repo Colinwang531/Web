@@ -355,6 +355,7 @@ namespace SmartWeb.Controllers
                         Device emb = new Device
                         {
                             Id = did,
+                            Enable=false,
                             CameraModelList = new List<Camera>() {
                                 new Camera() {
                                     NickName = nickName,
