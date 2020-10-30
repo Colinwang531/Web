@@ -243,6 +243,7 @@ namespace SmartWeb.Controllers
                         {
                             _context.SaveChanges();
                             code = 0;
+                            ManagerHelp.LiveTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                         }
                         else
                         {

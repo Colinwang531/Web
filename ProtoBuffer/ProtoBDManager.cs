@@ -987,7 +987,7 @@ namespace SmartWeb.ProtoBuffer
         /// <param name="identity"></param>
         /// <param name="cid"></param>
         /// <param name="picture"></param>
-        private static void AddAttendance(AlarmInfo alarmInfo,string shipId, string cid)
+        private static void AddAttendance(AlarmInfo alarmInfo, string shipId, string cid)
         {
             if (alarmInfo.uid != "")
             {
@@ -996,9 +996,6 @@ namespace SmartWeb.ProtoBuffer
                 //得到船员ID
                 int uid = (short)(array[0]);
                 string identity = Guid.NewGuid().ToString();
-                DateTime dt = Convert.ToDateTime(alarmInfo.time);
-                DateTime dtStart = DateTime.Parse(dt.ToString("yyyy-MM-dd 00:00:00"));
-                DateTime dtEnd = DateTime.Parse(dt.ToString("yyyy-MM-dd 23:59:59"));
                 SmartWeb.Models.Crew crew = new SmartWeb.Models.Crew();
                 using (var context = new MyContext())
                 {
@@ -1007,53 +1004,21 @@ namespace SmartWeb.ProtoBuffer
                     crew = context.Crew.FirstOrDefault(c => c.Id == uid);
                     if (crew == null) return;
                     //重复打卡只取最后一次
-                    var attes = context.Attendance.FirstOrDefault(c => c.CameraId == alarmInfo.cid && c.CrewId == uid && (c.Time > dtStart && c.Time <= dtEnd));
-                    if (attes != null)
+                    var attes = context.Attendance.Where(c => c.CameraId == cid && c.CrewId == uid).ToList();
+                    if (attes.Count()>0)
                     {
-                        attes.Time = DateTime.Parse(alarmInfo.time);
-                        var pic = context.AttendancePicture.Where(c => c.AttendanceId == attes.Id).ToList();
-                        if (pic.Count > 0)
+                        DateTime dtNow = DateTime.Now;
+                        var atte = attes.LastOrDefault();
+                        //5分钟内重复打卡不记入数据库
+                        if ((atte.Time - dtNow).Minutes >= 5)
                         {
-                            context.AttendancePicture.RemoveRange(pic);
+                            AttendanceAdd(alarmInfo, shipId, cid, uid);
                         }
-                        if (alarmInfo.picture.Length > 0)
-                        {
-                            AttendancePicture ap = new AttendancePicture()
-                            {
-                                AttendanceId = attes.Id,
-                                Id = Guid.NewGuid().ToString(),
-                                Picture = alarmInfo.picture,
-                                ShipId = shipId
-                            };
-                            context.AttendancePicture.Add(ap);
-                        }
-                        context.Attendance.Update(attes);
                     }
                     else
                     {
-                        SmartWeb.Models.Attendance attendance = new Attendance()
-                        {
-                            Behavior = alarmInfo.type == ProtoBuffer.Models.AlarmInfo.Type.ATTENDANCE_IN ? 0 : 1,
-                            Id = identity,
-                            CameraId = cid,
-                            ShipId = shipId,
-                            Time = Convert.ToDateTime(alarmInfo.time),
-                            CrewId = uid,
-                            attendancePictures = new List<AttendancePicture>()
-                                    {
-                                        new AttendancePicture ()
-                                        {
-                                             AttendanceId=identity,
-                                             Id=Guid.NewGuid().ToString(),
-                                             Picture=alarmInfo.picture,
-                                             ShipId=shipId
-                                        }
-                                    }
-                        };
-                        context.Attendance.Add(attendance);
-                        context.SaveChanges();
+                        AttendanceAdd(alarmInfo, shipId, cid, uid);
                     }
-                    
                     #endregion
                 }
                 #region 将考勤数据存入内存中
@@ -1064,12 +1029,17 @@ namespace SmartWeb.ProtoBuffer
                         Uid = uid,
                         Line = 1
                     });
+                    if (ManagerHelp.atWorks.Count > 0)
+                    {
+                        ManagerHelp.LiveTime ="";
+                    }
                 }
                 else if (alarmInfo.type == AlarmInfo.Type.ATTENDANCE_OUT && ManagerHelp.atWorks.Where(c => c.Uid == uid).Any())
                 {
                     var atwork = ManagerHelp.atWorks.FirstOrDefault(c => c.Uid == uid);
                     ManagerHelp.atWorks.Remove(atwork);
                 }
+                if (ManagerHelp.atWorks.Count == 0)ManagerHelp.LiveTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                 #endregion
 
                 #region 发送考勤给IPad
@@ -1089,6 +1059,35 @@ namespace SmartWeb.ProtoBuffer
                 }
 
                 #endregion
+            }
+        }
+
+        private static void AttendanceAdd(AlarmInfo alarmInfo, string shipId, string cid, int uid)
+        {
+            string identity = Guid.NewGuid().ToString();
+            using (var context = new MyContext())
+            {
+                SmartWeb.Models.Attendance attendance = new Attendance()
+                {
+                    Behavior = alarmInfo.type == ProtoBuffer.Models.AlarmInfo.Type.ATTENDANCE_IN ? 0 : 1,
+                    Id = identity,
+                    CameraId = cid,
+                    ShipId = shipId,
+                    Time = Convert.ToDateTime(alarmInfo.time),
+                    CrewId = uid,
+                    attendancePictures = new List<AttendancePicture>()
+                                    {
+                                        new AttendancePicture ()
+                                        {
+                                             AttendanceId=identity,
+                                             Id=Guid.NewGuid().ToString(),
+                                             Picture=alarmInfo.picture,
+                                             ShipId=shipId
+                                        }
+                                    }
+                };
+                context.Attendance.Add(attendance);
+                context.SaveChanges();
             }
         }
 

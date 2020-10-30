@@ -23,7 +23,7 @@
     }
     .card {
         text-align: left;
-        width: 420px;
+        /*width: 420px;*/
         height: 320px;
         border: 1px solid rgba(221, 221, 221, 1);
         float: left;
@@ -45,10 +45,13 @@
         Load();
         var index = layer.loading; //添加laoding,0-2两种方式
         laydate.render({
-            elem: '#dtTime',
-            type: 'date',
-            value: new Date()
-        });      
+            elem: '#dtStartTime',
+            type: 'date'
+        });
+        laydate.render({
+            elem: '#dtEndTime',
+            type: 'date'
+        });  
         form.on("submit(query)", function (obj) {
             Search();
             return false;
@@ -76,31 +79,15 @@
         var html = "";
         for (var i = 0; i < dt.length; i++) {
             html += '<div class="layui-card card">';
-            html += '    <div style="margin-left:20px;margin-top:20px">';
-            html += '        <label style="font-weight:bold;font-size:18px">船员：' + dt[i].name + '</label><br />';
-            html += '    </div>';
-            var attd = dt[i].attendances;
-            var ru = null;//考勤入
-            var chu = null;//考勤出
-            for (var j = 0; j < attd.length; j++) {
-                if (attd[j].behavior == "入") {
-                    ru = attd[j];
-                } else if(attd[j].behavior == "出"){
-                    chu = attd[j];
-                }
-            }
+            html += '    <div style="margin-left:20px;margin-top:10px">';
+            html += '        <label style="font-weight:bold;font-size:18px">船员：' + dt[i].name + '</label><br/>';
+            html += '        <label style="font-weight:bold;font-size:18px">job：' + dt[i].job + '</label><br />';
+            html += '    </div>';           
             var src = "/images/attendance.png";
             var text = "";
-            if (ru != null) {
-                src = "data:image/jpeg;base64," + ru.picture;
-                var text = "入&nbsp;&nbsp;" + ru.time;
-            }
-            html += FaceImg(src, text);
-            text = "";
-            src = "/images/attendance.png";
-            if (chu != null) {
-                src = "data:image/jpeg;base64," + chu.picture;
-                text = "出&nbsp;&nbsp;" + chu.time;
+            if (dt[i].picture!="") {
+                src = "data:image/jpeg;base64," + dt[i].picture;
+                var text = dt[i].behavior + "&nbsp;&nbsp;" + dt[i].time;
             }
             html += FaceImg(src, text);
             html += '</div>';
@@ -124,9 +111,16 @@
         })
     }
     function Search() {
+        var data = {
+            name: $("#txtName").val(),
+            job: $("#txtJob").val(),
+            behavior: $("#slType").val(),
+            startTime: $("#dtStartTime").val(),
+            endTime: $("#dtEndTime").val()
+        }
         $.ajax({
             url: "/Attendance/QueryPage",
-            data: { dtTime: $("#dtTime").val(), pageIndex: page, pageSize: limit },
+            data: { searchModel: JSON.stringify(data), pageIndex: page, pageSize: limit },
             type: "get",
             dataType: "json",
             contentType: "application/json;chartset=utf-8",
@@ -142,8 +136,8 @@
     }
     function FaceImg(src, text) {
         var html = "";
-        html += '<div style="margin-top:20px;width:180px;height:28px;margin-left:20px;float:left">';
-        html += '    <img src="' + src + '" /><br />';
+        html += '<div style="margin-top:8px;width:180px;height:28px;margin-left:20px;margin-right:20px;float:left">';
+        html += '    <img src="' + src + '" ondblclick="showBigImage(this)" /><br />';
         if (text != "") {
             html += '<div style="background-color:#F2F2F2;margin-top:16px;width:180px;padding-top:5px;height:28px">'
             html += '<div style="border-radius: 60px;width:6px;height:6px;background-color:#19BE6B;margin-right:5px;margin-left:10px;float:left;margin-top: 8px;"></div>';
@@ -151,10 +145,10 @@
             html+='</div>'
 
         } else {
-            html += '<div style="background-color:#F2F2F2;margin-top:16px;width:180px;padding-top:5px;height:28px">'
-            html += '<div style="border-radius: 60px;width:6px;height:6px;background-color:#FE9702;margin-right:5px;margin-left:10px;float:left;margin-top: 8px;"></div>';
-            html += '<label  style="font-size:10px;">缺卡</label>';
-            html += '</div>'
+            //html += '<div style="background-color:#F2F2F2;margin-top:16px;width:180px;padding-top:5px;height:28px">'
+            //html += '<div style="border-radius: 60px;width:6px;height:6px;background-color:#FE9702;margin-right:5px;margin-left:10px;float:left;margin-top: 8px;"></div>';
+            //html += '<label  style="font-size:10px;">缺卡</label>';
+            //html += '</div>'
         }
         html += '</div>';
         return html;
@@ -185,9 +179,29 @@
     </div>
     <form class="layui-form" action="" id="dataFrm" lay-filter="dataFrm" style="margin-top:30px">
         <div class="layui-form-item">
-            <label class="layui-form-label">打卡时间</label>
+            <label class="layui-form-label">船员名称</label>
             <div class="layui-input-inline" style="width:144px">
-                <input name="startTime" class="layui-input" id="dtTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off" width="144" readonly>
+                <input class="layui-input" id="txtName"  type="text" autocomplete="off" width="144" >
+            </div>
+            <label class="layui-form-label">工作内容</label>
+            <div class="layui-input-inline" style="width:144px">
+                <input class="layui-input" id="txtJob" type="text" autocomplete="off" width="144" >
+            </div>
+            <label class="layui-form-label">考勤类型</label>
+            <div class="layui-input-inline">
+                <select id="slType" style="width: 208px ">
+                    <option value="">所有类型</option>
+                    <option value="0">入</option>
+                    <option value="1">出</option>
+                </select>
+            </div>
+            <label class="layui-form-label">报警时间起</label>
+            <div class="layui-input-inline">
+                <input name="startTime" class="layui-input" id="dtStartTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off" style="width: 208px " readonly>
+            </div>
+            <label class="layui-form-label">报警时间止</label>
+            <div class="layui-input-inline">
+                <input name="endTime" class="layui-input" id="dtEndTime" placeholder="yyyy-MM-dd" type="text" autocomplete="off" style="width: 208px " readonly>
             </div>
             <button class="layui-btn" type="submit" lay-submit="" lay-filter="query" style="width:98px;height:40px">搜索</button>
         </div>

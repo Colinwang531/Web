@@ -35,7 +35,8 @@ namespace SmartWeb
             var configuration = builder.Build();
             var ip = configuration["ipaddr"];
             var port = configuration["port"];
-           // ManagerHelp.IP = "tcp://" +ip + ":" + port;
+            ManagerHelp.IP = "tcp://" +ip + ":" + port;
+            ManagerHelp.PublisherIP = "tcp://" + ip + ":5556"; 
             //7708ÎªÂ½µØ¶Ë
             if (port == "7708") {
                 ManagerHelp.IsShipPort = false;

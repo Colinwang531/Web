@@ -92,6 +92,7 @@ namespace SmartWeb.Tool
         /// 存放考勤
         /// </summary>
         public static List<AtWork> atWorks = null;
+        public static string LiveTime="";
         /// <summary>
         /// 是否初使化
         /// </summary>

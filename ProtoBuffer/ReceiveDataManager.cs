@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Asn1.Ocsp;
+using Org.BouncyCastle.Ocsp;
 using Renci.SshNet.Security;
 using Smartweb.Hubs;
 using SmartWeb.DB;
@@ -97,6 +98,8 @@ namespace SmartWeb.ProtoBuffer
                     int result = ProtoBDManager.AlgorithmSet(request.algorithminfo);
                     if (result==0)
                     {
+                        if(request.algorithminfo.type==AlgorithmInfo.Type.CAPTURE)
+                            ManagerHelp.LiveTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                         if (request.algorithminfo.type != AlgorithmInfo.Type.CAPTURE) 
                         {
                             string name = Enum.GetName(typeof(AlgorithmType), request.algorithminfo.type);

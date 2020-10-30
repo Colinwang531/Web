@@ -86,10 +86,6 @@ namespace SmartWeb.ProtoBuffer.Init
                 var sysdic = context.SysDictionary.ToList();
                 if (sysdic.Count() > 0)
                 {
-                    if (sysdic.Where(c => c.key == "NetMqID").Any())
-                    {
-                        ManagerHelp.IP = sysdic.FirstOrDefault(c => c.key == "NetMqID").value;
-                    }
                     if (sysdic.Where(c => c.key == "ExportCompany").Any())
                     {
                         ManagerHelp.ExportCompany = sysdic.FirstOrDefault(c => c.key == "ExportCompany").value;
@@ -98,15 +94,9 @@ namespace SmartWeb.ProtoBuffer.Init
                     {
                         ManagerHelp.DepartureTime = Convert.ToInt32(sysdic.FirstOrDefault(c => c.key == "DepartureTime").value);
                     }
-                    if (sysdic.Where(c => c.key == "PublisherIP").Any())
-                    {
-                        ManagerHelp.PublisherIP = sysdic.FirstOrDefault(c => c.key == "PublisherIP").value;
-                    }
-                    //if (sysdic.Where(c => c.key == "IsShipPort").Any())
-                    //{
-                    //    ManagerHelp.IsShipPort = sysdic.FirstOrDefault(c => c.key == "IsShipPort").value == "true" ? true : false;
-                    //}
                 }
+                var algo = context.Algorithm.Where(c => c.Type == AlgorithmType.CAPTURE).ToList();
+                if (algo.Count >0) ManagerHelp.LiveTime=DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             }
         }
 
@@ -319,7 +309,7 @@ namespace SmartWeb.ProtoBuffer.Init
             Task.Factory.StartNew(state =>
             {
                 //获取间隔时间
-                int departureTime = ManagerHelp.DepartureTime;
+                int departureTime = ManagerHelp.DepartureTime;              
                 while (true)
                 {
                     using (var context = new MyContext())
@@ -328,31 +318,36 @@ namespace SmartWeb.ProtoBuffer.Init
                         var ship = context.Ship.FirstOrDefault();
                         if (ship == null) continue;
                         DateTime dt = DateTime.Now;
+                        bool flag = false;
+                        if (ManagerHelp.LiveTime != "") {
+                            if ((dt - Convert.ToDateTime(ManagerHelp.LiveTime)).Minutes >= departureTime) {
+                                flag = true;
+                            }
+                        }
                         //ManagerHelp.atWorks 考勤人数的集合
-                        if (ship.Flag && ManagerHelp.atWorks != null && ManagerHelp.atWorks.Count <= 0)
+                        if (ship.Flag && ManagerHelp.atWorks.Count <= 0&&flag)
                         {
-                            var algo = context.Algorithm.Where(c => c.Type == AlgorithmType.CAPTURE);
-                            if (algo.Count() > 0)
+                            var algo = context.Algorithm.Where(c => c.Type == AlgorithmType.CAPTURE).ToList();
+                            if (algo.Count == 0) continue;
+                            var camares = context.Camera.Where(c => algo.Select(a => a.Cid).Contains(c.Id)).ToList();
+                            foreach (var item in camares)
                             {
-                                var camares = context.Camera.Where(c => algo.Select(a => a.Cid).Contains(c.Id)).ToList();
-                                foreach (var item in camares)
+                                var device = context.Device.FirstOrDefault(c => c.Id == item.DeviceId);
+                                if (device == null) continue;
+                                var component = context.Component.FirstOrDefault(c => c.Type == ManagerHelp.GetComponentType((int)device.factory));
+                                if (component == null) continue;
+                                CaptureInfo captureInfo = new CaptureInfo()
                                 {
-                                    var device = context.Device.FirstOrDefault(c => c.Id == item.DeviceId);
-                                    if (device == null) continue;
-                                    var component = context.Component.FirstOrDefault(c => c.Type == ManagerHelp.GetComponentType((int)device.factory));
-                                    if (component == null) continue;
-                                    CaptureInfo captureInfo = new CaptureInfo()
-                                    {
-                                        cid = item.Id,
-                                        did = item.DeviceId,
-                                        idx = item.Index
-                                    };
-                                    assembly.SendCapture(captureInfo, component.Id);
-                                }
+                                    cid = item.Id,
+                                    did = item.DeviceId,
+                                    idx = item.Index
+                                };
+                                assembly.SendCapture(captureInfo, component.Id);
+                                ManagerHelp.LiveTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                             }
                         }
                     }
-                    Thread.Sleep(departureTime * 1000 * 60);//单位毫秒
+                    Thread.Sleep(1000);//单位毫秒
                 }
             }, TaskCreationOptions.LongRunning);
         }

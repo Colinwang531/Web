@@ -10,6 +10,9 @@ namespace SmartWeb.Models
     /// </summary>
     public class Attendance
     {
+        public Attendance() {
+            this.CreateTime = DateTime.Now;
+        }
         public string Id { get; set; }
         /// <summary>
         /// 船员表主键id
@@ -31,6 +34,10 @@ namespace SmartWeb.Models
         /// 船表主键id
         /// </summary>
         public string ShipId { get; set; }
+        /// <summary>
+        /// 入库时间
+        /// </summary>
+        public DateTime CreateTime { get; set; }
         public List<AttendancePicture> attendancePictures { get; set; }
     }
 }
