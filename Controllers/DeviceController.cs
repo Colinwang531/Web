@@ -78,7 +78,7 @@ namespace SmartWeb.Controllers
                 {
                     while (ManagerHelp.ComponentReponse == "" && flag)
                     {
-                        Thread.Sleep(100);
+                        Thread.Sleep(1000);
                     }
                     if (ManagerHelp.ComponentReponse != "")
                     {

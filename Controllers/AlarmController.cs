@@ -48,14 +48,14 @@ namespace SmartWeb.Controllers
                 ViewBag.IsLandHome = false;
                 ViewBag.ShipName = base.user.ShipName;
                 ViewBag.sleep = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.SLEEP&&c.ShipId== shipId).Count();
-                ViewBag.fight = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.FIGHT && c.ShipId == shipId).Count();
+                ViewBag.fight = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.CAPTURE && c.ShipId == shipId).Count();
                 ViewBag.helmet = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.HELMET && c.ShipId == shipId).Count();
                 ViewBag.phone = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.PHONE && c.ShipId == shipId).Count();
             }
             else
             {
                 ViewBag.sleep = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.SLEEP).Count();
-                ViewBag.fight = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.FIGHT).Count();
+                ViewBag.fight = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.CAPTURE).Count();
                 ViewBag.helmet = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.HELMET).Count();
                 ViewBag.phone = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.PHONE).Count();
             }
@@ -64,7 +64,7 @@ namespace SmartWeb.Controllers
         }
         public IActionResult AlarmList(string type,bool flag=false,bool isShip=false) 
         {
-            string name = "打架";
+            string name = "缺岗";
             if (type == "1") name = "安全帽";
             else if (type == "2") name = "打电话";
             else if (type == "3") name = "睡觉";

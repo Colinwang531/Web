@@ -843,36 +843,43 @@ namespace SmartWeb.ProtoBuffer
         /// <param name="cid"></param>
         public void AlarmAdd(AlarmInfo alarmInfo, string xmq = "")
         {
-            if (alarmInfo != null)
+            try
             {
-                string shipId = "";
-                string cid = "";
-                string cname = "";//摄像机名称
-                GetData(xmq, ref alarmInfo, ref shipId, ref cid, ref cname);
-                if (cid == ""|| shipId=="") return;
-                if (alarmInfo.type == AlarmInfo.Type.ATTENDANCE_IN || alarmInfo.type == AlarmInfo.Type.ATTENDANCE_OUT)
+                if (alarmInfo != null)
                 {
-                    //考勤信息入库
-                    AddAttendance(alarmInfo,shipId, cid);
-                }
-                else
-                {
-                    // 报警信息入库                       
-                    AddAlarm(alarmInfo, shipId, cid, cname);
-                    if (ManagerHelp.IsShipPort)
+                    string shipId = "";
+                    string cid = "";
+                    string cname = "";//摄像机名称
+                    GetData(xmq, ref alarmInfo, ref shipId, ref cid, ref cname);
+                    if (cid == "" || shipId == "") return;
+                    if (alarmInfo.type == AlarmInfo.Type.ATTENDANCE_IN || alarmInfo.type == AlarmInfo.Type.ATTENDANCE_OUT)
                     {
-                        alarmInfo.cid = cid + ":" + cname;
-                        //向陆地端推送报警信息
-                        sendData.SendAlarm("upload", alarmInfo);
+                        //考勤信息入库
+                        AddAttendance(alarmInfo, shipId, cid);
                     }
-                    //当船舶端报警类型为睡觉时播放报警提示，在船舶端主页面播放
-                    else if (alarmInfo.type == AlarmInfo.Type.SLEEP && ManagerHelp.IsShipPort)
+                    else
                     {
-                        string cidkey = cache.Get("shipOnlineKey")?.ToString();
-                        if (!string.IsNullOrEmpty(cidkey))
-                            hubContext.Clients.Client(cidkey).SendAsync("ReceiveAlarmVoice", 200, new { code = 1, type = "bonvoyageSleep", });
+                        // 报警信息入库                       
+                        AddAlarm(alarmInfo, shipId, cid, cname);
+                        if (ManagerHelp.IsShipPort)
+                        {
+                            alarmInfo.cid = cid + ":" + cname;
+                            //向陆地端推送报警信息
+                            sendData.SendAlarm("upload", alarmInfo);
+                        }
+                        //当船舶端报警类型为睡觉时播放报警提示，在船舶端主页面播放
+                        else if (alarmInfo.type == AlarmInfo.Type.SLEEP && ManagerHelp.IsShipPort)
+                        {
+                            string cidkey = cache.Get("shipOnlineKey")?.ToString();
+                            if (!string.IsNullOrEmpty(cidkey))
+                                hubContext.Clients.Client(cidkey).SendAsync("ReceiveAlarmVoice", 200, new { code = 1, type = "bonvoyageSleep", });
+                        }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                ProtoBDManager.AddReceiveLog<AlarmInfo>("Exception", alarmInfo, ex.Message);
             }
         }
         /// <summary>
@@ -971,8 +978,8 @@ namespace SmartWeb.ProtoBuffer
             var times = alarmInfo.time.Split(",");
             if (times.Length > 1)
             {
-                DateTime dt = Convert.ToDateTime(times[0]);
-                var timezone = Convert.ToInt32(times[1]);
+                DateTime dt = Convert.ToDateTime(times[0]+" "+times[1]);
+                var timezone = Convert.ToInt32(times[2]);
                 DateTime dtime = dt.AddHours(timezone);
                 alarmInfo.time = dtime.ToString("yyyy-MM-dd HH:mm:ss");
             }
@@ -1045,17 +1052,27 @@ namespace SmartWeb.ProtoBuffer
                 #region 发送考勤给IPad
                 if (crew != null)
                 {
-                    PublisherService service = new PublisherService();
-                    //考勤类型
-                    int Behavior = (alarmInfo.type == AlarmInfo.Type.ATTENDANCE_IN) ? 0 : 1;
-                    //考勤时间
-                    string SignInTime = alarmInfo.time;
-                    //考勤人员
-                    string EmployeeName = crew.Name;
-                    //考勤图片
-                    string PhotosBuffer = Convert.ToBase64String(alarmInfo.picture);
-                    string data = Behavior + "," + SignInTime + "," + EmployeeName + "," + PhotosBuffer;
-                    service.Send(data);
+                    try
+                    {
+                        ProtoBDManager.AddReceiveLog("IpadStart", "记录日志开始", "连接地址:" + ManagerHelp.PublisherIP);
+                        PublisherService service = new PublisherService();
+                        ProtoBDManager.AddReceiveLog("Ipadcontinue", "连接成功", "连接地址:" + ManagerHelp.PublisherIP);
+                        //考勤类型
+                        int Behavior = (alarmInfo.type == AlarmInfo.Type.ATTENDANCE_IN) ? 0 : 1;
+                        //考勤时间
+                        string SignInTime = alarmInfo.time;
+                        //考勤人员
+                        string EmployeeName = crew.Name;
+                        //考勤图片
+                        string PhotosBuffer = Convert.ToBase64String(alarmInfo.picture);
+                        string data = Behavior + "," + SignInTime + "," + EmployeeName + "," + PhotosBuffer;
+                        service.Send(data);
+                        ProtoBDManager.AddReceiveLog("IpadEnd", "记录日志结束");
+                    }
+                    catch (Exception ex)
+                    {
+                        ProtoBDManager.AddReceiveLog("Ipad", "记录日志异常", "错误：" + ex.Message);
+                    }
                 }
 
                 #endregion
@@ -1163,6 +1180,35 @@ namespace SmartWeb.ProtoBuffer
             }
         }
         /// <summary>
+        /// 添加protobuf接收日志
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="key"></param>
+        /// <param name="t"></param>
+        public static void AddReceiveLog(string key,string values="",string errMsg="")
+        {
+            try
+            {
+                using (var context = new MyContext())
+                {
+                    ReceiveLog log = new ReceiveLog()
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        Key = key,
+                        Values = values,
+                        Exception = errMsg,
+                        Time = DateTime.Now
+                    };
+                    context.ReceiveLog.Add(log);
+                    context.SaveChanges();
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+        }
+        /// <summary>
         /// 将缺岗数据插入报警表
         /// </summary>
         /// <param name="captureInfo"></param>
@@ -1175,10 +1221,12 @@ namespace SmartWeb.ProtoBuffer
                     using (var context = new MyContext())
                     {
                         var ship = context.Ship.FirstOrDefault();
+                        var camera = context.Camera.FirstOrDefault(c => c.Id == captureInfo.cid);
                         SmartWeb.Models.Alarm alarm = new SmartWeb.Models.Alarm()
                         {
                             Type = SmartWeb.Models.Alarm.AlarmType.CAPTURE,
                             Cid = captureInfo.cid,
+                            Cname = camera != null ? camera.NickName : "",
                             Id = Guid.NewGuid().ToString(),
                             Picture = Convert.FromBase64String(captureInfo.picture),
                             ShipId = ship == null ? "" : ship.Id,

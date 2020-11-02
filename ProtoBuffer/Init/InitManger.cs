@@ -59,6 +59,7 @@ namespace SmartWeb.ProtoBuffer.Init
                 {
                     ManagerHelp.ComponentId = Guid.NewGuid().ToString();
                 }
+                //CaptureTest();
                 ////组件注册
                 InitData();
                 //船舶端需要发送缺岗通知
@@ -143,7 +144,7 @@ namespace SmartWeb.ProtoBuffer.Init
                             //发送船员信息
                             InitCrew();
                             ManagerHelp.isInit = false;
-                            ManagerHelp.DeviceReponse = "";
+                            ManagerHelp.DeviceResult = "";
                         }, TaskCreationOptions.LongRunning);
                     }
                 }, TaskCreationOptions.LongRunning);
@@ -312,40 +313,49 @@ namespace SmartWeb.ProtoBuffer.Init
                 int departureTime = ManagerHelp.DepartureTime;              
                 while (true)
                 {
-                    using (var context = new MyContext())
+                    try
                     {
-                        //获取船的航行状态
-                        var ship = context.Ship.FirstOrDefault();
-                        if (ship == null) continue;
-                        DateTime dt = DateTime.Now;
-                        bool flag = false;
-                        if (ManagerHelp.LiveTime != "") {
-                            if ((dt - Convert.ToDateTime(ManagerHelp.LiveTime)).Minutes >= departureTime) {
-                                flag = true;
-                            }
-                        }
-                        //ManagerHelp.atWorks 考勤人数的集合
-                        if (ship.Flag && ManagerHelp.atWorks.Count <= 0&&flag)
+                        using (var context = new MyContext())
                         {
-                            var algo = context.Algorithm.Where(c => c.Type == AlgorithmType.CAPTURE).ToList();
-                            if (algo.Count == 0) continue;
-                            var camares = context.Camera.Where(c => algo.Select(a => a.Cid).Contains(c.Id)).ToList();
-                            foreach (var item in camares)
+                            //获取船的航行状态
+                            var ship = context.Ship.FirstOrDefault();
+                            if (ship == null) continue;
+                            DateTime dt = DateTime.Now;
+                            bool flag = false;
+                            if (ManagerHelp.LiveTime != "")
                             {
-                                var device = context.Device.FirstOrDefault(c => c.Id == item.DeviceId);
-                                if (device == null) continue;
-                                var component = context.Component.FirstOrDefault(c => c.Type == ManagerHelp.GetComponentType((int)device.factory));
-                                if (component == null) continue;
-                                CaptureInfo captureInfo = new CaptureInfo()
+                                if ((dt - Convert.ToDateTime(ManagerHelp.LiveTime)).Minutes >= departureTime)
                                 {
-                                    cid = item.Id,
-                                    did = item.DeviceId,
-                                    idx = item.Index
-                                };
-                                assembly.SendCapture(captureInfo, component.Id);
-                                ManagerHelp.LiveTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                                    flag = true;
+                                }
+                            }
+                            //ManagerHelp.atWorks 考勤人数的集合
+                            if (ship.Flag && ManagerHelp.atWorks.Count <= 0 && flag)
+                            {
+                                var algo = context.Algorithm.Where(c => c.Type == AlgorithmType.CAPTURE).ToList();
+                                if (algo.Count == 0) continue;
+                                var camares = context.Camera.Where(c => algo.Select(a => a.Cid).Contains(c.Id)).ToList();
+                                foreach (var item in camares)
+                                {
+                                    var device = context.Device.FirstOrDefault(c => c.Id == item.DeviceId);
+                                    if (device == null) continue;
+                                    var component = context.Component.FirstOrDefault(c => c.Type == ManagerHelp.GetComponentType((int)device.factory));
+                                    if (component == null) continue;
+                                    CaptureInfo captureInfo = new CaptureInfo()
+                                    {
+                                        cid = item.Id+"\0",//C++ 字符串是以\0结尾的
+                                        did = item.DeviceId + "\0",
+                                        idx = item.Index
+                                    };
+                                    assembly.SendCapture(captureInfo, component.Cid);
+                                    ManagerHelp.LiveTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                                }
                             }
                         }
+                    }
+                    catch (Exception ex)
+                    {
+                        ProtoBDManager.AddReceiveLog("ExceptionCapture","", ex.Message);
                     }
                     Thread.Sleep(1000);//单位毫秒
                 }
@@ -365,6 +375,29 @@ namespace SmartWeb.ProtoBuffer.Init
                     Thread.Sleep(30 * 1000);
                 }
             }, TaskCreationOptions.LongRunning);
+        }
+
+        public void CaptureTest() 
+        {
+            while (true)
+            {
+                using (var context = new MyContext())
+                {
+                    PublisherService service = new PublisherService();
+                    //考勤类型
+                    int Behavior = 1;
+                    //考勤时间
+                    string SignInTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    //考勤人员
+                    string EmployeeName = "张三";
+                    //考勤图片
+                    string PhotosBuffer = "12346";
+                    string data = Behavior + "," + SignInTime + "," + EmployeeName + "," + PhotosBuffer;
+                    service.Send(data);
+                }
+                Thread.Sleep(10000);
+            }
+           
         }
     }
 }

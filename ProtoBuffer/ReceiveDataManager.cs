@@ -34,43 +34,50 @@ namespace SmartWeb.ProtoBuffer
             //添加日志
             ProtoBDManager.AddReceiveLog<SmartWeb.ProtoBuffer.Models.Component>("Component/" + Enum.GetName(typeof(Models.Component.Command), Convert.ToInt32(component.command)), component);
             ManagerHelp.ComponentReponse = "";
-            switch (component.command)
+            try
             {
-                case Models.Component.Command.SIGNIN_REQ:
-                    break;
-                case Models.Component.Command.SIGNIN_REP:
-                    if (component.componentresponse != null && component.componentresponse.result == 0)
-                    {
-                        //if (ManagerHelp.Cid == "")
-                        //{
+                switch (component.command)
+                {
+                    case Models.Component.Command.SIGNIN_REQ:
+                        break;
+                    case Models.Component.Command.SIGNIN_REP:
+                        if (component.componentresponse != null && component.componentresponse.result == 0)
+                        {
+                            //if (ManagerHelp.Cid == "")
+                            //{
                             ProtoBDManager.ComponentAdd(component.componentresponse.cid);
-                        //}
-                    }
-                    if (component.componentresponse.result != 0) ManagerHelp.ComponentReponse = component.componentresponse.result.ToString();
-                    //心跳是否有响应
-                    if (ManagerHelp.SendCount>0)ManagerHelp.SendCount--;
-                    break;
-                case Models.Component.Command.SIGNOUT_REQ:
-                    break;
-                case Models.Component.Command.SIGNOUT_REP:
-                    break;
-                case Models.Component.Command.QUERY_REQ:
-                    break;
-                case Models.Component.Command.QUERY_REP:
-                    List<ComponentInfo> infos = new List<ComponentInfo>();
-                    if (component.componentresponse != null && component.componentresponse.result == 0)
-                    {
-                        ProtoBDManager.ComponentUpdateRange(component.componentresponse.componentinfos);
-                        infos = component.componentresponse.componentinfos;
-                    }
-                    //陆地端查询组件时返回已在线船舶（XMQ陆地端的船舶）
-                    if (!infos.Where(c=>c.type==ComponentInfo.Type.XMQ).Any())
-                    {
-                        ManagerHelp.ComponentReponse = JsonConvert.SerializeObject(component.componentresponse);
-                    } 
-                    break;
-                default:
-                    break;
+                            //}
+                        }
+                        if (component.componentresponse.result != 0) ManagerHelp.ComponentReponse = component.componentresponse.result.ToString();
+                        //心跳是否有响应
+                        if (ManagerHelp.SendCount > 0) ManagerHelp.SendCount--;
+                        break;
+                    case Models.Component.Command.SIGNOUT_REQ:
+                        break;
+                    case Models.Component.Command.SIGNOUT_REP:
+                        break;
+                    case Models.Component.Command.QUERY_REQ:
+                        break;
+                    case Models.Component.Command.QUERY_REP:
+                        List<ComponentInfo> infos = new List<ComponentInfo>();
+                        if (component.componentresponse != null && component.componentresponse.result == 0)
+                        {
+                            ProtoBDManager.ComponentUpdateRange(component.componentresponse.componentinfos);
+                            infos = component.componentresponse.componentinfos;
+                        }
+                        //陆地端查询组件时返回已在线船舶（XMQ陆地端的船舶）
+                        if (!infos.Where(c => c.type == ComponentInfo.Type.XMQ).Any())
+                        {
+                            ManagerHelp.ComponentReponse = JsonConvert.SerializeObject(component.componentresponse);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                ProtoBDManager.AddReceiveLog<SmartWeb.ProtoBuffer.Models.Component>("ExceptionComponent", component, ex.Message);
             }
         }
         /// <summary>

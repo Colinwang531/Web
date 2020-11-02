@@ -315,7 +315,7 @@ namespace SmartWeb.Controllers
             var components = _context.Component.Where(c => c.Type == ComponentType.AI).ToList();
             foreach (var item in components)
             {
-                assembly.SendStatusSet(ship, StatusRequest.Type.SAIL, item.Id);
+                assembly.SendStatusSet(ship, StatusRequest.Type.SAIL, item.Cid);
             }
         }
         /// <summary>

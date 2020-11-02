@@ -504,7 +504,7 @@ namespace SmartWeb.ProtoBuffer
             }
             else if (type==StatusRequest.Type.SAIL)
             {
-                request.flag = (int)ship.type;
+                request.flag =ship.Flag?0:1;
             }
             MSG msg = new MSG()
             {
