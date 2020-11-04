@@ -148,25 +148,40 @@ namespace SmartWeb.Tool
         /// <returns></returns>
         public static byte[] ConvertBase64(string imgCode)
         {
-            Regex reg = new Regex(@"data:(image.+);base64,(.+)");
-            if (reg.IsMatch(imgCode))
+            try
             {
-                var matchs = reg.Match(imgCode);
-                imgCode = matchs.Groups[2].Value;
+                if (imgCode.LastIndexOf("=") != -1)
+                {
+                    imgCode = imgCode.Substring(0, imgCode.LastIndexOf("=") + 1);
+                }
+                else if (imgCode.LastIndexOf("//") != -1)
+                {
+                    imgCode = imgCode.Substring(0, imgCode.LastIndexOf("//") + 2);
+                }
+                Regex reg = new Regex(@"data:(image.+);base64,(.+)");
+                if (reg.IsMatch(imgCode))
+                {
+                    var matchs = reg.Match(imgCode);
+                    imgCode = matchs.Groups[2].Value;
+                }
+                //过滤图片中携带的数据
+                int len = imgCode.IndexOf("?");
+                if (len > 0)
+                {
+                    imgCode = imgCode.Substring(0, len);
+                }
+                imgCode = imgCode.Trim().Replace("%", "").Replace(",", "").Replace(" ", "+");
+                if (imgCode.Length % 4 > 0)
+                {
+                    imgCode = imgCode.PadRight(imgCode.Length + 4 - imgCode.Length % 4, '=');
+                }
+                byte[] bytes = Convert.FromBase64String(imgCode);
+                return bytes;
             }
-            //过滤图片中携带的数据
-            int len = imgCode.IndexOf("?");
-            if (len > 0)
+            catch (Exception ex)
             {
-                imgCode = imgCode.Substring(0, len);
+                return null;
             }
-            imgCode = imgCode.Trim().Replace("%", "").Replace(",", "").Replace(" ", "+");
-            if (imgCode.Length % 4 > 0)
-            {
-                imgCode = imgCode.PadRight(imgCode.Length + 4 - imgCode.Length % 4, '=');
-            }
-            byte[] bytes = Convert.FromBase64String(imgCode);
-            return bytes;
         }
         /// <summary>
         /// 组合Html

@@ -95,24 +95,36 @@ namespace SmartWeb.ProtoBuffer
                 {
                     manager.ComponentData(revmsg.component);
                 }
+                if (revmsg.type == MSG.Type.ALARM)
+                {
+                    if (revmsg.alarm.alarminfo != null)
+                    {
+                        string xmq = "";
+                        if (mQFrames[2].ConvertToString() == "upload")
+                        {
+                            xmq = fromId;
+                        }
+                        var ss = new ProtoBDManager(hubContext);
+                        ss.AlarmAdd(revmsg.alarm.alarminfo, xmq);
+                    }
+                }
+                else if (revmsg.type == MSG.Type.EVENT)
+                {
+                    if (revmsg.evt != null)
+                    {
+                        string xmqId = "";
+                        if (mQFrames[2].ConvertToString() == "upload")
+                        {
+                            xmqId = fromId;
+                        }
+                        manager.CaptureData(revmsg.evt, xmqId);
+                    }
+                }
                 Task.Factory.StartNew(st =>
                 {
                     try
                     {
-                        if (revmsg.type == MSG.Type.ALARM)
-                        {
-                            if (revmsg.alarm.alarminfo != null)
-                            {
-                                string xmq = "";
-                                if (mQFrames[2].ConvertToString() == "upload")
-                                {
-                                    xmq = fromId;
-                                }
-                                var ss = new ProtoBDManager(hubContext);
-                                ss.AlarmAdd(revmsg.alarm.alarminfo, xmq);
-                            }
-                        }
-                        else if (revmsg.type == MSG.Type.ALGORITHM)
+                        if (revmsg.type == MSG.Type.ALGORITHM)
                         {
                             manager.AlgorithmData(revmsg.algorithm, fromId);
                         }
@@ -127,11 +139,7 @@ namespace SmartWeb.ProtoBuffer
                         else if (revmsg.type == MSG.Type.STATUS)
                         {
                             manager.StatusData(revmsg.status);
-                        }
-                        else if (revmsg.type == MSG.Type.EVENT)
-                        {
-                            manager.CaptureData(revmsg.evt);
-                        }
+                        }                       
                     }
                     catch (Exception ex)
                     {

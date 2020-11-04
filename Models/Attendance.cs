@@ -12,6 +12,9 @@ namespace SmartWeb.Models
     {
         public Attendance() {
             this.CreateTime = DateTime.Now;
+            this.CameraName = "";
+            this.CrewJob = "";
+            this.CameraName = "";
         }
         public string Id { get; set; }
         /// <summary>
@@ -19,9 +22,21 @@ namespace SmartWeb.Models
         /// </summary>
         public int CrewId { get; set; }
         /// <summary>
+        /// 船员名称
+        /// </summary>
+        public string CrewName { get; set; }
+        /// <summary>
+        /// 船员工作内容
+        /// </summary>
+        public string CrewJob { get; set; }
+        /// <summary>
         /// 摄像机主键id
         /// </summary>
         public string CameraId { get; set; }
+        /// <summary>
+        /// 摄像机名称
+        /// </summary>
+        public string CameraName { get; set; }
         /// <summary>s
         /// 行为时间，签入或签出的时间
         /// </summary>

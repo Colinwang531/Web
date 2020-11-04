@@ -851,30 +851,37 @@ namespace SmartWeb.ProtoBuffer
                     string cid = "";
                     string cname = "";//摄像机名称
                     GetData(xmq, ref alarmInfo, ref shipId, ref cid, ref cname);
-                    if (cid == "" || shipId == "") return;
+                    if (cid == "" || shipId == ""||alarmInfo.picture==null) return;
                     if (alarmInfo.type == AlarmInfo.Type.ATTENDANCE_IN || alarmInfo.type == AlarmInfo.Type.ATTENDANCE_OUT)
                     {
                         //考勤信息入库
-                        AddAttendance(alarmInfo, shipId, cid);
+                        bool flag=AddAttendance(alarmInfo, shipId, cid,cname);
+                        if (flag && ManagerHelp.IsShipPort)
+                        {
+                            alarmInfo.cid = cid + ":" + cname;
+                            //向陆地端推送报警信息
+                            sendData.SendAlarm("upload", alarmInfo);
+                        }
                     }
                     else
                     {
                         // 报警信息入库                       
-                        AddAlarm(alarmInfo, shipId, cid, cname);
+                        AddAlarm(alarmInfo, shipId, cid, cname);                       
+                        //当船舶端报警类型为睡觉时播放报警提示，在船舶端主页面播放
+                        if (alarmInfo.type == AlarmInfo.Type.SLEEP && ManagerHelp.IsShipPort)
+                        {
+                            string cidkey = cache.Get("shipOnlineKey")?.ToString();
+                            if (!string.IsNullOrEmpty(cidkey))
+                                hubContext.Clients.Client(cidkey).SendAsync("ReceiveAlarmVoice", 200, new { code = 1, type = "bonvoyageSleep", });
+                        }
                         if (ManagerHelp.IsShipPort)
                         {
                             alarmInfo.cid = cid + ":" + cname;
                             //向陆地端推送报警信息
                             sendData.SendAlarm("upload", alarmInfo);
                         }
-                        //当船舶端报警类型为睡觉时播放报警提示，在船舶端主页面播放
-                        else if (alarmInfo.type == AlarmInfo.Type.SLEEP && ManagerHelp.IsShipPort)
-                        {
-                            string cidkey = cache.Get("shipOnlineKey")?.ToString();
-                            if (!string.IsNullOrEmpty(cidkey))
-                                hubContext.Clients.Client(cidkey).SendAsync("ReceiveAlarmVoice", 200, new { code = 1, type = "bonvoyageSleep", });
-                        }
                     }
+                    
                 }
             }
             catch (Exception ex)
@@ -973,15 +980,22 @@ namespace SmartWeb.ProtoBuffer
                     alarmInfo.picture = alarmInfo.picture;
                 }
             }
-            
+
             //时间处理
-            var times = alarmInfo.time.Split(",");
-            if (times.Length > 1)
+            if (alarmInfo.time!="")
             {
-                DateTime dt = Convert.ToDateTime(times[0]+" "+times[1]);
-                var timezone = Convert.ToInt32(times[2]);
-                DateTime dtime = dt.AddHours(timezone);
-                alarmInfo.time = dtime.ToString("yyyy-MM-dd HH:mm:ss");
+                var times = alarmInfo.time.Split(",");
+                if ( times.Length > 1)
+                {
+                    DateTime dt = Convert.ToDateTime(times[0] + " " + times[1]);
+                    var timezone = Convert.ToInt32(times[2]);
+                    DateTime dtime = dt.AddHours(timezone);
+                    alarmInfo.time = dtime.ToString("yyyy-MM-dd HH:mm:ss");
+                }
+            }
+            else
+            {
+                alarmInfo.time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             }
         }
 
@@ -994,101 +1008,137 @@ namespace SmartWeb.ProtoBuffer
         /// <param name="identity"></param>
         /// <param name="cid"></param>
         /// <param name="picture"></param>
-        private static void AddAttendance(AlarmInfo alarmInfo, string shipId, string cid)
+        private static bool AddAttendance(AlarmInfo alarmInfo, string shipId, string cid,string cname)
         {
+            bool flag = false;//是否向陆地端推送
             if (alarmInfo.uid != "")
             {
-                byte[] array = new byte[1];
-                array = System.Text.Encoding.ASCII.GetBytes(alarmInfo.uid);
-                //得到船员ID
-                int uid = (short)(array[0]);
+                int uid = 0;
                 string identity = Guid.NewGuid().ToString();
                 SmartWeb.Models.Crew crew = new SmartWeb.Models.Crew();
                 using (var context = new MyContext())
                 {
                     #region 考勤信息入库
-                    //查询传入的船员ID是否存在
-                    crew = context.Crew.FirstOrDefault(c => c.Id == uid);
-                    if (crew == null) return;
-                    //重复打卡只取最后一次
-                    var attes = context.Attendance.Where(c => c.CameraId == cid && c.CrewId == uid).ToList();
-                    if (attes.Count()>0)
+                    if (ManagerHelp.IsShipPort)
                     {
-                        DateTime dtNow = DateTime.Now;
-                        var atte = attes.LastOrDefault();
-                        //5分钟内重复打卡不记入数据库
-                        if ((atte.Time - dtNow).Minutes >= 5)
+                        if (alarmInfo.uid == "0")
                         {
-                            AttendanceAdd(alarmInfo, shipId, cid, uid);
+                            if (alarmInfo.alarmposition != null && alarmInfo.alarmposition.Count > 0)
+                            {
+                                uid = alarmInfo.alarmposition[0].w;
+                            }
+                        }
+                        else
+                        {
+                            byte[] array = new byte[1];
+                            array = System.Text.Encoding.ASCII.GetBytes(alarmInfo.uid);
+                            //得到船员ID
+                            uid = (short)(array[0]);
+                        }
+                        //查询传入的船员ID是否存在
+                        crew = context.Crew.FirstOrDefault(c => c.Id == uid);
+                        if (crew == null) return flag;
+                        alarmInfo.uid = uid + ":" + crew.Name + ":" + crew.Job;
+                        //重复打卡只取最后一次
+                        int behavior = alarmInfo.type == ProtoBuffer.Models.AlarmInfo.Type.ATTENDANCE_IN ? 0 : 1;
+                        var attes = context.Attendance.Where(c => c.CameraId == cid && c.CrewId == uid&&c.Behavior== behavior).OrderByDescending(c=>c.CreateTime).Take(1).ToList();
+                        if (attes.Count() > 0)
+                        {
+                            DateTime dtNow = DateTime.Now;
+                            var atte = attes[0];
+                            //5分钟内重复打卡不记入数据库
+                            if ((dtNow - atte.CreateTime).Minutes >= 5)
+                            {
+                                AttendanceAdd(alarmInfo, shipId, cid, cname);
+                                flag = true;
+                            }
+                        }
+                        else
+                        {
+                            AttendanceAdd(alarmInfo, shipId, cid, cname);
+                            flag = true;
                         }
                     }
-                    else
+                    else if(alarmInfo.uid != "0")
                     {
-                        AttendanceAdd(alarmInfo, shipId, cid, uid);
+                        AttendanceAdd(alarmInfo, shipId, cid,cname);
                     }
                     #endregion
                 }
-                #region 将考勤数据存入内存中
-                if (alarmInfo.type == AlarmInfo.Type.ATTENDANCE_IN && (!ManagerHelp.atWorks.Where(c => c.Uid == uid).Any()))
+                if (ManagerHelp.IsShipPort)
                 {
-                    ManagerHelp.atWorks.Add(new AtWork()
+                    #region 将考勤数据存入内存中
+                    if (alarmInfo.type == AlarmInfo.Type.ATTENDANCE_IN && (!ManagerHelp.atWorks.Where(c => c.Uid == uid).Any()))
                     {
-                        Uid = uid,
-                        Line = 1
-                    });
-                    if (ManagerHelp.atWorks.Count > 0)
-                    {
-                        ManagerHelp.LiveTime ="";
+                        ManagerHelp.atWorks.Add(new AtWork()
+                        {
+                            Uid = uid,
+                            Line = 1
+                        });
+                        if (ManagerHelp.atWorks.Count > 0)
+                        {
+                            ManagerHelp.LiveTime = "";
+                        }
                     }
-                }
-                else if (alarmInfo.type == AlarmInfo.Type.ATTENDANCE_OUT && ManagerHelp.atWorks.Where(c => c.Uid == uid).Any())
-                {
-                    var atwork = ManagerHelp.atWorks.FirstOrDefault(c => c.Uid == uid);
-                    ManagerHelp.atWorks.Remove(atwork);
-                }
-                if (ManagerHelp.atWorks.Count == 0)ManagerHelp.LiveTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                #endregion
+                    else if (alarmInfo.type == AlarmInfo.Type.ATTENDANCE_OUT && ManagerHelp.atWorks.Where(c => c.Uid == uid).Any())
+                    {
+                        var atwork = ManagerHelp.atWorks.FirstOrDefault(c => c.Uid == uid);
+                        ManagerHelp.atWorks.Remove(atwork);
+                    }
+                    if (ManagerHelp.atWorks.Count == 0) ManagerHelp.LiveTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    #endregion
 
-                #region 发送考勤给IPad
-                if (crew != null)
-                {
-                    try
+                    #region 发送考勤给IPad
+                    if (crew != null)
                     {
-                        ProtoBDManager.AddReceiveLog("IpadStart", "记录日志开始", "连接地址:" + ManagerHelp.PublisherIP);
-                        PublisherService service = new PublisherService();
-                        ProtoBDManager.AddReceiveLog("Ipadcontinue", "连接成功", "连接地址:" + ManagerHelp.PublisherIP);
-                        //考勤类型
-                        int Behavior = (alarmInfo.type == AlarmInfo.Type.ATTENDANCE_IN) ? 0 : 1;
-                        //考勤时间
-                        string SignInTime = alarmInfo.time;
-                        //考勤人员
-                        string EmployeeName = crew.Name;
-                        //考勤图片
-                        string PhotosBuffer = Convert.ToBase64String(alarmInfo.picture);
-                        string data = Behavior + "," + SignInTime + "," + EmployeeName + "," + PhotosBuffer;
-                        service.Send(data);
-                        ProtoBDManager.AddReceiveLog("IpadEnd", "记录日志结束");
+                        try
+                        {
+                            ProtoBDManager.AddReceiveLog("IpadStart", "记录日志开始", "连接地址:" + ManagerHelp.PublisherIP);
+                            PublisherService service = new PublisherService();
+                            //考勤类型
+                            int Behavior = (alarmInfo.type == AlarmInfo.Type.ATTENDANCE_IN) ? 0 : 1;
+                            //考勤时间
+                            string SignInTime = alarmInfo.time;
+                            //考勤人员
+                            string EmployeeName = string.IsNullOrEmpty(crew.Name) ? crew.Id.ToString() : crew.Name;
+                            //考勤图片
+                            string PhotosBuffer = Convert.ToBase64String(alarmInfo.picture);
+                            string data = Behavior + "," + SignInTime + "," + EmployeeName + "," + PhotosBuffer;
+                            service.Send(data);
+                            ProtoBDManager.AddReceiveLog("IpadEnd", "记录日志结束");
+                        }
+                        catch (Exception ex)
+                        {
+                            ProtoBDManager.AddReceiveLog("Ipad", "记录日志异常", "错误：" + ex.Message);
+                        }
                     }
-                    catch (Exception ex)
-                    {
-                        ProtoBDManager.AddReceiveLog("Ipad", "记录日志异常", "错误：" + ex.Message);
-                    }
-                }
 
-                #endregion
+                    #endregion
+                }
             }
+            return flag;
         }
 
-        private static void AttendanceAdd(AlarmInfo alarmInfo, string shipId, string cid, int uid)
+        private static void AttendanceAdd(AlarmInfo alarmInfo, string shipId, string cid,string cname)
         {
+            if (alarmInfo.time == "") {
+                alarmInfo.time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            }
             string identity = Guid.NewGuid().ToString();
             using (var context = new MyContext())
             {
+                var date = alarmInfo.uid.Split(":");
+                int uid =Convert.ToInt32(date[0]);
+                string crewName = date[1];
+                string crewJob = date[2];
                 SmartWeb.Models.Attendance attendance = new Attendance()
                 {
                     Behavior = alarmInfo.type == ProtoBuffer.Models.AlarmInfo.Type.ATTENDANCE_IN ? 0 : 1,
                     Id = identity,
                     CameraId = cid,
+                    CameraName=cname,
+                    CrewName=crewName,
+                    CrewJob=crewJob,
                     ShipId = shipId,
                     Time = Convert.ToDateTime(alarmInfo.time),
                     CrewId = uid,
@@ -1212,7 +1262,7 @@ namespace SmartWeb.ProtoBuffer
         /// 将缺岗数据插入报警表
         /// </summary>
         /// <param name="captureInfo"></param>
-        public static void CaptureAdd(CaptureInfo captureInfo)
+        public void CaptureAdd(CaptureInfo captureInfo,string xmq)
         {
             try
             {
@@ -1220,20 +1270,50 @@ namespace SmartWeb.ProtoBuffer
                 {
                     using (var context = new MyContext())
                     {
-                        var ship = context.Ship.FirstOrDefault();
-                        var camera = context.Camera.FirstOrDefault(c => c.Id == captureInfo.cid);
+                        string shipId = "";
+                        string cname = "";
+                        string cid = "";
+                        if (ManagerHelp.IsShipPort)
+                        {
+                            cid=captureInfo.cid;
+                            var ship = context.Ship.FirstOrDefault();
+                            shipId=ship!=null?ship.Id:"";
+                            var camera = context.Camera.FirstOrDefault(c => c.Id == captureInfo.cid);
+                            if (camera!=null)cname = camera.NickName;
+                        }
+                        else
+                        {
+                            var comp = context.Component.FirstOrDefault(c => c.Cid == xmq);
+                            if (comp != null)
+                            {
+                                shipId = comp.ShipId;
+                            }
+                            var ids= captureInfo.cid.Split(":");
+                            if (ids.Length == 2)
+                            {
+                                cid = ids[0];
+                                cname = ids[1];
+                            }
+                        }
+                        if (cid == "") return;
                         SmartWeb.Models.Alarm alarm = new SmartWeb.Models.Alarm()
                         {
                             Type = SmartWeb.Models.Alarm.AlarmType.CAPTURE,
-                            Cid = captureInfo.cid,
-                            Cname = camera != null ? camera.NickName : "",
+                            Cid = cid,
+                            Cname = cname,
                             Id = Guid.NewGuid().ToString(),
                             Picture = Convert.FromBase64String(captureInfo.picture),
-                            ShipId = ship == null ? "" : ship.Id,
+                            ShipId =shipId,
                             Time = DateTime.Now
                         };
                         context.Alarm.Add(alarm);
                         context.SaveChanges();
+                        if (ManagerHelp.IsShipPort)
+                        {
+                            captureInfo.cid = alarm.Cid + ":" + alarm.Cname;
+                            //向陆地端推送报警信息
+                            sendData.SendCapture(captureInfo,"", "upload");
+                        }
                     }
                 }
             }

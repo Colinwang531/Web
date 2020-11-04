@@ -87,11 +87,11 @@
     function ShowData(dt, count) {
         var html = "";
         for (var i = 0; i < dt.length; i++) {
-            var typename = "打架";
+            var typename = "缺岗";
             if (dt[i].type == 1) typename = "安全帽";
             else if (dt[i].type == "2") typename = "打电话";
             else if (dt[i].type == "3") typename = "睡觉";
-            else if (dt[i].type == "7") typename == "缺岗";
+            else if (dt[i].type == "7") typename ="缺岗";
             var imgId = "img" + i;
             html += '<div class="layui-card card">';
             html += '       <div style="float:left;margin: 24px;">';

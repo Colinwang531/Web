@@ -345,7 +345,7 @@ namespace SmartWeb.ProtoBuffer
         /// </summary>
         /// <param name="captureInfo"></param>
         /// <param name="identity"></param>
-        public void SendCapture(CaptureInfo captureInfo, string identity)
+        public void SendCapture(CaptureInfo captureInfo, string identity,string head="request")
         {
             MSG msg = new MSG()
             {
@@ -354,11 +354,11 @@ namespace SmartWeb.ProtoBuffer
                 timestamp = ProtoBufHelp.TimeSpan(),
                 evt = new Event()
                 {
-                    command = Event.Command.CAPTURE_JPEG_REQ,
+                    command =head== "request"?Event.Command.CAPTURE_JPEG_REQ:Event.Command.CAPTURE_JPEG_REP,
                     captureinfo = captureInfo
                 }
             };
-            dealer.Send(msg, identity);
+            dealer.Send(msg, identity,head);
         }
         /// <summary>
         /// 发送设备增加请求

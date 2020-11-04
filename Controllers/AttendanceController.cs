@@ -116,23 +116,20 @@ namespace SmartWeb.Controllers
             {
                 int dehav = Convert.ToInt32(search.Behavior);
                 arrWhere = arrWhere.Where(c => c.Behavior == dehav);
-            }
-            var attdata = arrWhere.ToList();
-            var crewWhere = _context.Crew.Where(c => attdata.Select(c => c.CrewId).Contains(c.Id));           
+            }             
             if (!string.IsNullOrEmpty(search.Name))
             {
-                crewWhere = crewWhere.Where(c => c.Name.Contains(search.Name));
+                arrWhere = arrWhere.Where(c => c.CrewName.Contains(search.Name));
             }
             if (!string.IsNullOrEmpty(search.Job))
             {
-                crewWhere = crewWhere.Where(c => c.Job.Contains(search.Job));
+                arrWhere = arrWhere.Where(c => c.CrewJob.Contains(search.Job));
             }
-            var crewdata = crewWhere.ToList();
-            total = crewdata.Count;
+            var attdata = arrWhere.ToList();
+            total = attdata.Count;
             var pices = _context.AttendancePicture.Where(c => attdata.Select(c => c.Id).Contains(c.AttendanceId)).ToList();
             List<AttendanceViewModel> list = new List<AttendanceViewModel>();          
             var pageData = (from a in attdata
-                            join b in crewdata on a.CrewId equals b.Id
                             select new
                             { 
                                 a.Id,
@@ -140,8 +137,8 @@ namespace SmartWeb.Controllers
                                 a.Behavior,
                                 a.CreateTime,
                                 a.Time,
-                                b.Job,
-                                b.Name
+                                Job=a.CrewJob,
+                                Name=a.CrewName
                             }).OrderByDescending(c=>c.CreateTime).Skip((pageIndex - 1) * pageSize).Take(pageSize);
             foreach (var item in pageData)
             {

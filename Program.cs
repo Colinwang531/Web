@@ -43,7 +43,7 @@ namespace SmartWeb
             //登陆陆地端的端口
             var port3 = configuration["port3"];
             ManagerHelp.IP = "tcp://" +ip + ":" + port1;
-            ManagerHelp.PublisherIP = "tcp://*:" + port2; 
+            ManagerHelp.PublisherIP = "tcp://*:" + port2; //tcp://*:5556
             //7708为陆地端
             if (port3== "7708") {
                 ManagerHelp.IsShipPort = false;

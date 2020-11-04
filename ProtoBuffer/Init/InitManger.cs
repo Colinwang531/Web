@@ -66,6 +66,7 @@ namespace SmartWeb.ProtoBuffer.Init
                 if (ManagerHelp.IsShipPort)
                 {
                     LoadNotice();
+                    PublisherService service = new PublisherService();
                 }
                 //定时获取组件信息
                 QueryComponent();
@@ -329,6 +330,7 @@ namespace SmartWeb.ProtoBuffer.Init
                                     flag = true;
                                 }
                             }
+                            //Console.WriteLine("考勤人数" + ManagerHelp.atWorks.Count + " 当前时间:" + dt + " 离岗时间：" + ManagerHelp.LiveTime);
                             //ManagerHelp.atWorks 考勤人数的集合
                             if (ship.Flag && ManagerHelp.atWorks.Count <= 0 && flag)
                             {
@@ -348,6 +350,7 @@ namespace SmartWeb.ProtoBuffer.Init
                                         idx = item.Index
                                     };
                                     assembly.SendCapture(captureInfo, component.Cid);
+                                    Console.WriteLine("发送缺岗请求成功，时间"+dt.ToString("yyyy-MM-dd HH:mm:ss"));
                                     ManagerHelp.LiveTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                                 }
                             }

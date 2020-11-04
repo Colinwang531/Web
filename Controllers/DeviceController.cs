@@ -529,7 +529,7 @@ namespace SmartWeb.Controllers
                     {
                         Thread.Sleep(1000);
                     }
-                }).Wait(timeout);
+                }).Wait(10000);//等待10秒
                 flag = false;
                 if (!string.IsNullOrEmpty(ManagerHelp.DeviceResult))
                 {

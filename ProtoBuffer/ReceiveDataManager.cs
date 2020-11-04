@@ -175,14 +175,15 @@ namespace SmartWeb.ProtoBuffer
         /// 缺岗信息
         /// </summary>
         /// <param name="captureInfo"></param>
-        public void CaptureData(Event evt) 
+        public void CaptureData(Event evt,string xmpId)
         {
+            var bDManager = new ProtoBDManager(hubContext);
             switch (evt.command)
             {
                 case Event.Command.CAPTURE_JPEG_REQ:
                     break;
                 case Event.Command.CAPTURE_JPEG_REP:
-                    ProtoBDManager.CaptureAdd(evt.captureinfo);
+                    bDManager.CaptureAdd(evt.captureinfo,xmpId);
                     break;
                 default:
                     break;
