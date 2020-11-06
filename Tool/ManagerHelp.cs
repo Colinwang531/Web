@@ -106,6 +106,10 @@ namespace SmartWeb.Tool
         /// </summary>
         public static bool isLandHert = false;
         /// <summary>
+        /// 是否是设置的是人脸
+        /// </summary>
+        public static bool isFaceAlgorithm = false;
+        /// <summary>
         /// 未做转换的字节流
         /// </summary>
         /// <param name="bytes"></param>

@@ -1338,10 +1338,14 @@ namespace SmartWeb.ProtoBuffer
                     using (var context = new MyContext())
                     {
                         var ship = context.Ship.FirstOrDefault();
-                        if (ship == null) return;
-                        ship.Flag = ais.status == 0 ? true : false;
-                        context.Update(ship);
-                        context.SaveChanges();
+                        bool flag= ais.status == 0 ? true : false;
+                        //当航行状态为自动时才将AIS的状态保存到数据库中
+                        if (ship != null && ship.type == 0&&ship.Flag!=flag)
+                        {
+                            ship.Flag = flag;
+                            context.Update(ship);
+                            context.SaveChanges();
+                        }
                     }
                 }
                 catch (Exception ex)

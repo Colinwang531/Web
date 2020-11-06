@@ -250,6 +250,11 @@ namespace SmartWeb.Controllers
                             {
                                 string cid = camera.DeviceId + ":" + camera.Id + ":" + camera.Index;
                                 ProtoBuffer.Models.AlgorithmInfo algorithm = GetProtoAlgorithm(viewModel, cid);
+                                ManagerHelp.isFaceAlgorithm = false;
+                                if (viewModel.Type==(int)AlgorithmType.ATTENDANCE_IN||viewModel.Type==(int)AlgorithmType.ATTENDANCE_OUT)
+                                {
+                                    ManagerHelp.isFaceAlgorithm = true;
+                                }
                                 code = SendData(algorithm, identity);
                                 if (code == 0)
                                 {

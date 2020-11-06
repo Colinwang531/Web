@@ -153,7 +153,7 @@ namespace SmartWeb.ProtoBuffer.Init
         {
             using (var con = new MyContext())
             {
-                var components = con.Component.Where(c => c.Type == ComponentType.AI).ToList();
+                var components = con.Component.Where(c => c.Type == ComponentType.AI&&c.Line==0).ToList();
                 if (components.Count > 0)
                 {
                     var ship = con.Ship.FirstOrDefault();
@@ -175,7 +175,7 @@ namespace SmartWeb.ProtoBuffer.Init
             List<SmartWeb.Models.Component> list = new List<SmartWeb.Models.Component>();
             using (var con = new MyContext())
             {
-                list = con.Component.Where(c => c.Type != ComponentType.WEB).ToList();
+                list = con.Component.Where(c => c.Type != ComponentType.WEB&&c.Line==0).ToList();
             }
             if (list.Count > 0)
             {
@@ -207,7 +207,7 @@ namespace SmartWeb.ProtoBuffer.Init
         {
             using (var con = new MyContext())
             {
-                var components = con.Component.Where(c => c.Type == ComponentType.AI).ToList();
+                var components = con.Component.Where(c => c.Type == ComponentType.AI&&c.Line==0).ToList();
                 if (components.Count > 0)
                 {
                     var algorithmInfos = ProtoBDManager.AlgorithmQuery();
@@ -239,7 +239,7 @@ namespace SmartWeb.ProtoBuffer.Init
         {
             using (var con = new MyContext())
             {
-                var component = con.Component.FirstOrDefault(c => c.Type != ComponentType.AI && c.Name == ManagerHelp.FaceName);
+                var component = con.Component.FirstOrDefault(c => c.Type != ComponentType.AI && c.Name == ManagerHelp.FaceName&&c.Line==0);
                 if (component != null)
                 {
 

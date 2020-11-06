@@ -109,9 +109,14 @@ namespace SmartWeb.ProtoBuffer
                             string name = Enum.GetName(typeof(AlgorithmType), request.algorithminfo.type);
                             string identity = ManagerHelp.GetShipToId(ComponentType.AI, name);
                             if (identity != "")
-                            {
+                            {                               
                                 //向算法组件注册时只需要传入设备ID和摄像机通道
                                 request.algorithminfo.cid = devcid[0]+":"+devcid[1]+":"+devcid[2];
+                                ManagerHelp.isFaceAlgorithm = false;
+                                if (request.algorithminfo.type == AlgorithmInfo.Type.ATTENDANCE_IN || request.algorithminfo.type == AlgorithmInfo.Type.ATTENDANCE_OUT)
+                                {
+                                    ManagerHelp.isFaceAlgorithm = true;
+                                }
                                 manager.SendAlgorithmSet(request.algorithminfo, identity);
                                 ManagerHelp.UpSend.Add("Algorithm");
                             }
@@ -157,18 +162,8 @@ namespace SmartWeb.ProtoBuffer
                         if (algorithm.algorithmresponse.result == 0)
                         {
                             var ship = ProtoBDManager.StatusQuery();
-                            manager.SendStatusSet(ship, StatusRequest.Type.SAIL, fromId);
-                            //等待15秒后发送底库数据
-                            Thread.Sleep(15 * 1000);
-                            string identity = ManagerHelp.GetShipToId(ComponentType.AI, ManagerHelp.FaceName);
-                            if (identity != "")
-                            {
-                                var crew = ProtoBDManager.CrewQuery();
-                                foreach (var item in crew)
-                                {
-                                    manager.SendCrewAdd(item, identity);
-                                }
-                            }
+                            manager.SendStatusSet(ship, StatusRequest.Type.SAIL, fromId);                           
+                            SendCrew();
                         }
                     }
                     break;
@@ -182,18 +177,38 @@ namespace SmartWeb.ProtoBuffer
                     break;
             }      
         }
+
+        private void SendCrew()
+        {
+            if (ManagerHelp.isFaceAlgorithm&&ManagerHelp.isInit==false)
+            { 
+                string identity = ManagerHelp.GetShipToId(ComponentType.AI, ManagerHelp.FaceName);
+                if (identity != "")
+                {
+                    //等待15秒后发送底库数据
+                    Thread.Sleep(15 * 1000);
+                    var crew = ProtoBDManager.CrewQuery();
+                    foreach (var item in crew)
+                    {
+                        manager.SendCrewAdd(item, identity);
+                    }
+                    ManagerHelp.isFaceAlgorithm = false;
+                }
+            }
+        }
+
         /// <summary>
-        /// 缺岗信息
+        /// 事件信息
         /// </summary>
         /// <param name="captureInfo"></param>
-        public void CaptureData(Event evt,string xmpId)
+        public void EventData(Event evt,string xmpId)
         {
             var dBManager = new ProtoBDManager();
             switch (evt.command)
             {
                 case Event.Command.CAPTURE_JPEG_REQ:
                     break;
-                case Event.Command.CAPTURE_JPEG_REP:
+                case Event.Command.CAPTURE_JPEG_REP://缺岗
                     dBManager.CaptureAdd(evt.captureinfo,xmpId);
                     break;
                 case Event.Command.SYNC_AIS:

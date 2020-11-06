@@ -21,7 +21,7 @@ namespace SmartWeb.ProtoBuffer
         private static DealerSocket dealer = null;
         private static object dealer_Lock = new object(); //锁同步
 
-        //public static List<Task> taskList = new List<Task>();
+        public static List<Task> taskList = new List<Task>();
         public DealerService()
         {
             lock (dealer_Lock)
@@ -116,7 +116,7 @@ namespace SmartWeb.ProtoBuffer
                             {
                                 xmqId = fromId;
                             }
-                            manager.CaptureData(revmsg.evt, xmqId);
+                            manager.EventData(revmsg.evt, xmqId);
                         }
                     }
                     Task.Factory.StartNew(st =>
