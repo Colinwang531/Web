@@ -13,7 +13,7 @@ namespace SmartWeb.ProtoBuffer.Models
     public class Ais
     {
         /// <summary>
-        /// 航海定位状态
+        /// 航海定位状态0:航行 1—15是停港
         /// </summary>
         [ProtoMember(1)]
         public int status { get; set; }

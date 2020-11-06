@@ -21,10 +21,8 @@ namespace SmartWeb.Controllers
     {
         MyContext _context;
         int timeout = 3000;
-        private readonly IHubContext<AlarmVoiceHub> hubContext;
-        public ComponentController(MyContext context, IHubContext<AlarmVoiceHub> _hubContext) {
+        public ComponentController(MyContext context) {
             _context = context;
-            hubContext = _hubContext;
         }
         public IActionResult Index()
         {
@@ -39,7 +37,7 @@ namespace SmartWeb.Controllers
                 identity = base.user.ShipId;
             }
             List<Models.Component> components = new List<Models.Component>();
-            SendDataMsg assembly = new SendDataMsg(hubContext);
+            SendDataMsg assembly = new SendDataMsg();
             assembly.SendComponentQuery(identity);
             ProtoBuffer.Models.ComponentResponse response = new ProtoBuffer.Models.ComponentResponse();
             //Task.WhenAny();

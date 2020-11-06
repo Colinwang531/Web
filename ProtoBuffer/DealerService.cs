@@ -20,13 +20,10 @@ namespace SmartWeb.ProtoBuffer
     {
         private static DealerSocket dealer = null;
         private static object dealer_Lock = new object(); //锁同步
-        private readonly IHubContext<AlarmVoiceHub> hubContext;
 
         //public static List<Task> taskList = new List<Task>();
-        public DealerService(IHubContext<AlarmVoiceHub> _hubContext)
+        public DealerService()
         {
-            this.hubContext = _hubContext;
-
             lock (dealer_Lock)
             {
                 if (dealer == null)
@@ -72,81 +69,90 @@ namespace SmartWeb.ProtoBuffer
 
         public void Receive()
         {
-            ReceiveDataManager manager = new ReceiveDataManager(hubContext);
+            ReceiveDataManager manager = new ReceiveDataManager();
             while (true)
             {
                 var mQFrames = dealer.ReceiveMultipartMessage(6);
-                byte[] mory = mQFrames.Last.ToByteArray();
-                MSG revmsg = ProtoBufHelp.DeSerialize<MSG>(mory);
-                //消息来源
-                var fromId = mQFrames[3].ConvertToString();
-                var toId = mQFrames[4].ConvertToString();
-                if (revmsg == null) continue;
-                if (revmsg.type == MSG.Type.ALGORITHM || revmsg.type == MSG.Type.DEVICE || revmsg.type == MSG.Type.STATUS || revmsg.type == MSG.Type.CREW)
+                try
                 {
-                    var component = ProtoBDManager.GetComponentById(fromId);
-                    if (component == null)
+                    byte[] mory = mQFrames.Last.ToByteArray();
+                    MSG revmsg = ProtoBufHelp.DeSerialize<MSG>(mory);
+                    //消息来源
+                    var fromId = mQFrames[3].ConvertToString();
+                    var toId = mQFrames[4].ConvertToString();
+                    if (revmsg == null) continue;
+                    if (revmsg.type == MSG.Type.ALGORITHM || revmsg.type == MSG.Type.DEVICE || revmsg.type == MSG.Type.STATUS || revmsg.type == MSG.Type.CREW)
                     {
-                        //记录从陆地端传过来的ID，船舶端发送时做为上级ID传值
-                        ManagerHelp.UpToId = fromId;
+                        var component = ProtoBDManager.GetComponentById(fromId);
+                        if (component == null)
+                        {
+                            //记录从陆地端传过来的ID，船舶端发送时做为上级ID传值
+                            ManagerHelp.UpToId = fromId;
+                        }
                     }
-                }
-                if (revmsg.type == MSG.Type.COMPONENT)
-                {
-                    manager.ComponentData(revmsg.component);
-                }
-                if (revmsg.type == MSG.Type.ALARM)
-                {
-                    if (revmsg.alarm.alarminfo != null)
+                    if (revmsg.type == MSG.Type.COMPONENT)
                     {
-                        string xmq = "";
-                        if (mQFrames[2].ConvertToString() == "upload")
-                        {
-                            xmq = fromId;
-                        }
-                        var ss = new ProtoBDManager(hubContext);
-                        ss.AlarmAdd(revmsg.alarm.alarminfo, xmq);
+                        manager.ComponentData(revmsg.component);
                     }
-                }
-                else if (revmsg.type == MSG.Type.EVENT)
-                {
-                    if (revmsg.evt != null)
+                    if (revmsg.type == MSG.Type.ALARM)
                     {
-                        string xmqId = "";
-                        if (mQFrames[2].ConvertToString() == "upload")
+                        if (revmsg.alarm.alarminfo != null)
                         {
-                            xmqId = fromId;
+                            string xmq = "";
+                            if (mQFrames[2].ConvertToString() == "upload")
+                            {
+                                xmq = fromId;
+                            }
+                            var ss = new ProtoBDManager();
+                            ss.AlarmAdd(revmsg.alarm.alarminfo, xmq);
                         }
-                        manager.CaptureData(revmsg.evt, xmqId);
                     }
-                }
-                Task.Factory.StartNew(st =>
-                {
-                    try
+                    else if (revmsg.type == MSG.Type.EVENT)
                     {
-                        if (revmsg.type == MSG.Type.ALGORITHM)
+                        if (revmsg.evt != null)
                         {
-                            manager.AlgorithmData(revmsg.algorithm, fromId);
+                            string xmqId = "";
+                            if (mQFrames[2].ConvertToString() == "upload")
+                            {
+                                xmqId = fromId;
+                            }
+                            manager.CaptureData(revmsg.evt, xmqId);
                         }
-                        else if (revmsg.type == MSG.Type.CREW)
-                        {
-                            manager.CrewData(revmsg.crew);
-                        }
-                        else if (revmsg.type == MSG.Type.DEVICE)
-                        {
-                            manager.DeviceData(revmsg.device);
-                        }
-                        else if (revmsg.type == MSG.Type.STATUS)
-                        {
-                            manager.StatusData(revmsg.status);
-                        }                       
                     }
-                    catch (Exception ex)
+                    Task.Factory.StartNew(st =>
                     {
+                        try
+                        {
+                            if (revmsg.type == MSG.Type.ALGORITHM)
+                            {
+                                manager.AlgorithmData(revmsg.algorithm, fromId);
+                            }
+                            else if (revmsg.type == MSG.Type.CREW)
+                            {
+                                manager.CrewData(revmsg.crew);
+                            }
+                            else if (revmsg.type == MSG.Type.DEVICE)
+                            {
+                                manager.DeviceData(revmsg.device);
+                            }
+                            else if (revmsg.type == MSG.Type.STATUS)
+                            {
+                                manager.StatusData(revmsg.status);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
                         //异常日志入库
                         ProtoBDManager.AddReceiveLog<MSG>("Exception", revmsg, ex.Message);
-                    }
-                }, TaskCreationOptions.LongRunning);
+                        }
+                    }, TaskCreationOptions.LongRunning);
+                }
+                catch (Exception ex)
+                {
+                    //异常日志入库
+                    ProtoBDManager.AddReceiveLog("Exception", "数据处理异常", ex.Message);
+                    continue;
+                }
                 Thread.Sleep(100);
             }
         }

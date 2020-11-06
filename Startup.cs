@@ -32,7 +32,7 @@ namespace SmartWeb
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSignalR();
+            //services.AddSignalR();
             services.AddControllersWithViews();
             services.AddDistributedMemoryCache();
             //获取配置的session丢失时间
@@ -91,7 +91,7 @@ namespace SmartWeb
             app.UseSession();
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapHub<AlarmVoiceHub>("/chatHub");
+                //endpoints.MapHub<AlarmVoiceHub>("/chatHub");
                 endpoints.MapControllerRoute(
                     name: "default",
                     pattern: "{controller=Login}/{action=Index}/{id?}");

@@ -28,14 +28,11 @@ namespace SmartWeb.Controllers
         private readonly MyContext _context;
         private int timeout = 8000;//等待时间
         private ILogger<DeviceController> _logger;
-        private SendDataMsg assembly = null;
-        private readonly IHubContext<AlarmVoiceHub> hubContext;
-        public DeviceController(MyContext context, ILogger<DeviceController> logger, IHubContext<AlarmVoiceHub> _hubContext)
+        private SendDataMsg assembly = new SendDataMsg();
+        public DeviceController(MyContext context, ILogger<DeviceController> logger)
         {
             _context = context;
-            this.hubContext = _hubContext;
             _logger = logger;
-            assembly = new SendDataMsg(hubContext);
         }
 
         /// <summary>
@@ -355,7 +352,7 @@ namespace SmartWeb.Controllers
                         Device emb = new Device
                         {
                             Id = did,
-                            Enable=false,
+                            Enable=true,
                             CameraModelList = new List<Camera>() {
                                 new Camera() {
                                     NickName = nickName,
@@ -494,15 +491,15 @@ namespace SmartWeb.Controllers
                         return new JsonResult(new { code = 1, msg = Enum.GetName(typeof(Device.Factory), Convert.ToInt32(factory)) + "组件未启动" });
                     }
                     assembly.SendDeveiceDelete(identity, device.Id);
-                    if (GetResult() == 0)
+                    code = GetResult();
+                    if (code == 0|| code==-5)
                     {
                         _context.SaveChanges();
                         code = 0;
                     }
                 }
                 if (code == 2) msg = "请求超时。。。";
-                else if (code == 101) msg = "重复添加";
-                else if (code != 0) msg = "请配置正确的设备参数";
+                else if (code != 0) msg = "删除失败";
                 return new JsonResult(new { code = code, msg = msg });
             }
             catch (Exception ex)

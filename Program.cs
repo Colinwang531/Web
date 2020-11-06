@@ -29,7 +29,7 @@ namespace SmartWeb
                 {"ipaddr","192.168.0.13" },
                 {"port1","61001" },//netmqu的端口
                 {"port2","5556" },//pub的端口
-                {"port3","7709" }//web的端口
+                {"port3","7709" }//web的端口 7708 为陆地端
             };
             var builder = new ConfigurationBuilder()
                 .AddInMemoryCollection(settings)
@@ -42,8 +42,12 @@ namespace SmartWeb
             var port2 = configuration["port2"];
             //登陆陆地端的端口
             var port3 = configuration["port3"];
+            //向组件发送消息
             ManagerHelp.IP = "tcp://" +ip + ":" + port1;
+            //给IPad发送消息
             ManagerHelp.PublisherIP = "tcp://*:" + port2; //tcp://*:5556
+            //给播放器放送消息
+            ManagerHelp.PlayerIP = "tcp://*:5555";
             //7708为陆地端
             if (port3== "7708") {
                 ManagerHelp.IsShipPort = false;

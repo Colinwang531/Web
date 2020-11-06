@@ -15,12 +15,6 @@ namespace SmartWeb.Controllers
 {
     public class BaseController : Controller
     {
-        //public readonly IHubContext<AlarmVoiceHub> hubContextsss;
-        //public BaseController(IHubContext<AlarmVoiceHub> _hubContext)
-        //{
-        //    this.hubContextsss = _hubContext;
-
-        //}
 
         public UserToken user;
 
@@ -39,14 +33,6 @@ namespace SmartWeb.Controllers
             string urlstr = HttpContext.Session.GetString(browsertoken);
             user = JsonConvert.DeserializeObject<UserToken>(urlstr);
             base.OnActionExecuting(filterContext);
-            //byte[] result;
-            //filterContext.HttpContext.Session.TryGetValue("uid", out result);
-            //if (result == null)
-            //{
-            //    filterContext.Result = new RedirectResult("/Login/Index");
-            //    return;
-            //}
-            //base.OnActionExecuting(filterContext);
         }
     }
 }

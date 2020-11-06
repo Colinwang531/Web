@@ -13,18 +13,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Metadata.Ecma335;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SmartWeb.ProtoBuffer
 {
     public class ReceiveDataManager
     {
-        private SendDataMsg manager=null;
-        private readonly IHubContext<AlarmVoiceHub> hubContext;
-        public ReceiveDataManager(IHubContext<AlarmVoiceHub> _hubContext) {
-            this.hubContext = _hubContext;
-            manager = new SendDataMsg(hubContext);
-        }
+        private SendDataMsg manager= new SendDataMsg();
+        
         /// <summary>
         /// 组件处理
         /// </summary>
@@ -154,11 +151,25 @@ namespace SmartWeb.ProtoBuffer
                     {
                         ManagerHelp.AlgorithmResult = algorithm.algorithmresponse.result.ToString();
                     }
-                    //算法配置成功后把船状态推送给当前算法
-                    if (algorithm.algorithmresponse.result == 0)
+                    if (ManagerHelp.IsShipPort)
                     {
-                        var ship = ProtoBDManager.StatusQuery();
-                        manager.SendStatusSet(ship, StatusRequest.Type.SAIL,fromId);
+                        //算法配置成功后把船状态推送给当前算法
+                        if (algorithm.algorithmresponse.result == 0)
+                        {
+                            var ship = ProtoBDManager.StatusQuery();
+                            manager.SendStatusSet(ship, StatusRequest.Type.SAIL, fromId);
+                            //等待15秒后发送底库数据
+                            Thread.Sleep(15 * 1000);
+                            string identity = ManagerHelp.GetShipToId(ComponentType.AI, ManagerHelp.FaceName);
+                            if (identity != "")
+                            {
+                                var crew = ProtoBDManager.CrewQuery();
+                                foreach (var item in crew)
+                                {
+                                    manager.SendCrewAdd(item, identity);
+                                }
+                            }
+                        }
                     }
                     break;
                 case Models.Algorithm.Command.QUERY_REP:
@@ -177,13 +188,16 @@ namespace SmartWeb.ProtoBuffer
         /// <param name="captureInfo"></param>
         public void CaptureData(Event evt,string xmpId)
         {
-            var bDManager = new ProtoBDManager(hubContext);
+            var dBManager = new ProtoBDManager();
             switch (evt.command)
             {
                 case Event.Command.CAPTURE_JPEG_REQ:
                     break;
                 case Event.Command.CAPTURE_JPEG_REP:
-                    bDManager.CaptureAdd(evt.captureinfo,xmpId);
+                    dBManager.CaptureAdd(evt.captureinfo,xmpId);
+                    break;
+                case Event.Command.SYNC_AIS:
+                    dBManager.AisAdd(evt.ais);
                     break;
                 default:
                     break;

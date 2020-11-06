@@ -32,15 +32,13 @@ namespace SmartWeb.Controllers
     {
         private readonly MyContext _context;      
         public static Dictionary<string, byte[]> picBytes;
-        private readonly IHubContext<AlarmVoiceHub> hubContext;
         private SendDataMsg assembly = null;
         private static List<CrewViewModel> crewVMList;
         int timeout = 5000;
-        public CrewController(MyContext context, IHubContext<AlarmVoiceHub> _hubContext)
+        public CrewController(MyContext context)
         {
             _context = context;
-            hubContext = _hubContext;
-            assembly = new SendDataMsg(hubContext);
+            assembly = new SendDataMsg();
         }
 
         // GET: Employees

@@ -29,16 +29,8 @@ namespace SmartWeb.ProtoBuffer.Init
 {
     public class InitManger
     {
-        private readonly IHubContext<AlarmVoiceHub> hubContext;
-        private SendDataMsg assembly = null;
-        public InitManger(IHubContext<AlarmVoiceHub> _hubContext)
-        {
-            //获取数据库默认值
-            LoadDBValue();
-            this.hubContext = _hubContext;
-            assembly = new SendDataMsg(hubContext);
-        }
-
+        private SendDataMsg assembly = new SendDataMsg();
+      
         /// <summary>
         /// 初使化
         /// </summary>
@@ -59,22 +51,22 @@ namespace SmartWeb.ProtoBuffer.Init
                 {
                     ManagerHelp.ComponentId = Guid.NewGuid().ToString();
                 }
-                //CaptureTest();
-                ////组件注册
+                //获取数据库默认值
+                LoadDBValue();
+                //组件注册
                 InitData();
                 //船舶端需要发送缺岗通知
                 if (ManagerHelp.IsShipPort)
                 {
                     LoadNotice();
+                    //向IPad推送消息
                     PublisherService service = new PublisherService();
+                    //向声音播放推送消息
+                    PlayerService player = new PlayerService();
+                   
                 }
                 //定时获取组件信息
                 QueryComponent();
-
-                //if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-                //    MusicPlay.WindowPlaySleepMusic();
-                //else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-                //    MusicPlay.LinuxPlaySleepMusic();
             }
         }
         /// <summary>
@@ -349,7 +341,7 @@ namespace SmartWeb.ProtoBuffer.Init
                                         did = item.DeviceId + "\0",
                                         idx = item.Index
                                     };
-                                    assembly.SendCapture(captureInfo, component.Cid);
+                                    assembly.SendCapture(captureInfo,Event.Command.CAPTURE_JPEG_REQ,component.Cid);
                                     Console.WriteLine("发送缺岗请求成功，时间"+dt.ToString("yyyy-MM-dd HH:mm:ss"));
                                     ManagerHelp.LiveTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
                                 }
@@ -380,27 +372,5 @@ namespace SmartWeb.ProtoBuffer.Init
             }, TaskCreationOptions.LongRunning);
         }
 
-        public void CaptureTest() 
-        {
-            while (true)
-            {
-                using (var context = new MyContext())
-                {
-                    PublisherService service = new PublisherService();
-                    //考勤类型
-                    int Behavior = 1;
-                    //考勤时间
-                    string SignInTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-                    //考勤人员
-                    string EmployeeName = "张三";
-                    //考勤图片
-                    string PhotosBuffer = "12346";
-                    string data = Behavior + "," + SignInTime + "," + EmployeeName + "," + PhotosBuffer;
-                    service.Send(data);
-                }
-                Thread.Sleep(10000);
-            }
-           
-        }
     }
 }

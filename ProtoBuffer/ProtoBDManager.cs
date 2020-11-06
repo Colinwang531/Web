@@ -26,13 +26,9 @@ namespace SmartWeb.ProtoBuffer
     public class ProtoBDManager
     {
         private readonly MemoryCacheHelper cache = new MemoryCacheHelper();
-        private readonly IHubContext<AlarmVoiceHub> hubContext;
-        SendDataMsg sendData = null;
-        public ProtoBDManager(IHubContext<AlarmVoiceHub> _hubContext)
-        {
-            this.hubContext = _hubContext;
-            sendData = new SendDataMsg(hubContext);
-        }
+      
+        SendDataMsg sendData = new SendDataMsg();
+      
 
         /// <summary>
         /// 查询所有设备
@@ -870,9 +866,8 @@ namespace SmartWeb.ProtoBuffer
                         //当船舶端报警类型为睡觉时播放报警提示，在船舶端主页面播放
                         if (alarmInfo.type == AlarmInfo.Type.SLEEP && ManagerHelp.IsShipPort)
                         {
-                            string cidkey = cache.Get("shipOnlineKey")?.ToString();
-                            if (!string.IsNullOrEmpty(cidkey))
-                                hubContext.Clients.Client(cidkey).SendAsync("ReceiveAlarmVoice", 200, new { code = 1, type = "bonvoyageSleep", });
+                            PlayerService player = new PlayerService();
+                            player.Send("sleep");
                         }
                         if (ManagerHelp.IsShipPort)
                         {
@@ -1030,10 +1025,17 @@ namespace SmartWeb.ProtoBuffer
                         }
                         else
                         {
-                            byte[] array = new byte[1];
-                            array = System.Text.Encoding.ASCII.GetBytes(alarmInfo.uid);
                             //得到船员ID
-                            uid = (short)(array[0]);
+                            try
+                            {
+                                uid = Convert.ToInt32(alarmInfo.uid);
+                            }
+                            catch (Exception)
+                            {
+                                byte[] array = new byte[1];
+                                array = System.Text.Encoding.ASCII.GetBytes(alarmInfo.uid);
+                                uid = array[0];
+                            }
                         }
                         //查询传入的船员ID是否存在
                         crew = context.Crew.FirstOrDefault(c => c.Id == uid);
@@ -1089,7 +1091,7 @@ namespace SmartWeb.ProtoBuffer
                     #endregion
 
                     #region 发送考勤给IPad
-                    if (crew != null)
+                    if (crew != null&& flag)
                     {
                         try
                         {
@@ -1312,7 +1314,7 @@ namespace SmartWeb.ProtoBuffer
                         {
                             captureInfo.cid = alarm.Cid + ":" + alarm.Cname;
                             //向陆地端推送报警信息
-                            sendData.SendCapture(captureInfo,"", "upload");
+                            sendData.SendCapture(captureInfo,Event.Command.CAPTURE_JPEG_REP,"", "upload");
                         }
                     }
                 }
@@ -1320,6 +1322,32 @@ namespace SmartWeb.ProtoBuffer
             catch (Exception)
             {
 
+            }
+        }
+
+        /// <summary>
+        /// AIS数据
+        /// </summary>
+        /// <param name="ais"></param>
+        public void AisAdd(Ais ais) 
+        {
+            if (ais!=null)
+            {
+                try
+                {
+                    using (var context = new MyContext())
+                    {
+                        var ship = context.Ship.FirstOrDefault();
+                        if (ship == null) return;
+                        ship.Flag = ais.status == 0 ? true : false;
+                        context.Update(ship);
+                        context.SaveChanges();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    AddReceiveLog("AIS", "", "写入数据失败!" + ex.Message);
+                }
             }
         }
 

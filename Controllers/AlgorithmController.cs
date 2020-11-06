@@ -22,16 +22,13 @@ namespace SmartWeb.Controllers
     {
         private MyContext _context;
         private int timeout = 5000;//超时时间
-        SendDataMsg assembly = null;
-        private readonly IHubContext<AlarmVoiceHub> hubContext;
+        SendDataMsg assembly = new SendDataMsg ();
         private ILogger<AlgorithmController> _logger;
         //缓存船舶端的设备信息
         private static List<ProtoBuffer.Models.DeviceInfo> boatDevices = new List<ProtoBuffer.Models.DeviceInfo>();
         private static  List<Camera> cameras;
-        public AlgorithmController(MyContext context, ILogger<AlgorithmController> logger, IHubContext<AlarmVoiceHub> _hubContext) 
+        public AlgorithmController(MyContext context, ILogger<AlgorithmController> logger) 
         {
-            hubContext = _hubContext;
-            assembly = new SendDataMsg(hubContext);
             _context = context;
             _logger = logger;
         }

@@ -15,13 +15,8 @@ namespace SmartWeb.ProtoBuffer
 {
     public class SendDataMsg
     {
-        private readonly IHubContext<AlarmVoiceHub> hubContext;
-        DealerService dealer = null;
-        public SendDataMsg(IHubContext<AlarmVoiceHub> _hubContext)
-        {
-            hubContext = _hubContext;
-            dealer = new DealerService(hubContext);
-        }
+        DealerService dealer = new DealerService();
+       
 
 
 
@@ -345,7 +340,7 @@ namespace SmartWeb.ProtoBuffer
         /// </summary>
         /// <param name="captureInfo"></param>
         /// <param name="identity"></param>
-        public void SendCapture(CaptureInfo captureInfo, string identity,string head="request")
+        public void SendCapture(CaptureInfo captureInfo, Event.Command command, string identity,string head="request")
         {
             MSG msg = new MSG()
             {
@@ -354,7 +349,7 @@ namespace SmartWeb.ProtoBuffer
                 timestamp = ProtoBufHelp.TimeSpan(),
                 evt = new Event()
                 {
-                    command =head== "request"?Event.Command.CAPTURE_JPEG_REQ:Event.Command.CAPTURE_JPEG_REP,
+                    command = command,
                     captureinfo = captureInfo
                 }
             };
@@ -458,7 +453,10 @@ namespace SmartWeb.ProtoBuffer
                     command = Models.Device.Command.DELETE_REQ,
                     devicerequest = new DeviceRequest()
                     {
-                        did = did
+                        deviceinfo=new DeviceInfo() { 
+                             did=did,
+                             enable=true
+                        }
                     }
                 }
             };

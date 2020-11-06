@@ -29,14 +29,12 @@ namespace SmartWeb.Controllers
         private ILogger<ShipController> _logger;
         private SendDataMsg assembly = null;
 
-        private readonly IHubContext<AlarmVoiceHub> hubContext;
 
-        public ShipController(MyContext context, ILogger<ShipController> logger, IHubContext<AlarmVoiceHub> _hubContext)
+        public ShipController(MyContext context, ILogger<ShipController> logger)
         {
             _context = context;
             _logger = logger;
-            this.hubContext = _hubContext;
-            assembly = new SendDataMsg(hubContext);
+            assembly = new SendDataMsg();
         }
         public IActionResult Edit(bool isShow = false)
         {

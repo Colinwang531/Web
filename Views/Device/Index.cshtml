@@ -116,8 +116,6 @@
                     btn: ["确定", "取消"],
                     btnAlign: 'c', //按钮居中
                     yes: function (index) {
-                        obj.del();
-                        layer.close(index);
                         $.ajax({
                             url: "/Device/Delete",
                             type: "get",
@@ -125,11 +123,11 @@
                             data: { id: data.id, factory:data.factory },
                             contentType: "application/json;chartset=utf-8",
                             success: function (res) {
-                                if (res.code == 1) {
-                                    layer.msg(res.msg, { icon: 2 });
-                                } else {
+                                if (res.code == 0) {
                                     layer.msg("删除成功");
                                     tableIns.reload();
+                                } else {
+                                    layer.msg(res.msg, { icon: 2 });
                                 }
                             }
                         });

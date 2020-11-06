@@ -27,20 +27,14 @@ namespace SmartWeb.Controllers
         private readonly MyContext _context;
 
         private readonly MemoryCacheHelper cache = new MemoryCacheHelper();
-        private readonly IHubContext<AlarmVoiceHub> hubContext;
 
-        public VideoController(MyContext context, IHubContext<AlarmVoiceHub> _hubContext)
+        public VideoController(MyContext context)
         {
             _context = context;
-            hubContext = _hubContext;
         }
 
         public ActionResult Index()
         {
-            string cidkey = cache.Get("shipOnlineKey")?.ToString();
-            if (!string.IsNullOrEmpty(cidkey))
-                hubContext.Clients.Client(cidkey).SendAsync("ReceiveAlarmVoice", 200, new { code = 1, type = "bonvoyageSleep", });
-
             var temp = DapperContext.Query<Models.Device>($"SELECT * FROM Device").FirstOrDefault();
             if (temp != null)
             {

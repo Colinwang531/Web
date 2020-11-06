@@ -40,6 +40,10 @@ namespace SmartWeb.Tool
         /// </summary>
         public static string PublisherIP = "";
         /// <summary>
+        ///播放声音的连接IP
+        /// </summary>
+        public static string PlayerIP = "";
+        /// <summary>
         /// 是否是船舶端
         /// </summary>
         public static bool IsShipPort = true;
@@ -153,10 +157,6 @@ namespace SmartWeb.Tool
                 if (imgCode.LastIndexOf("=") != -1)
                 {
                     imgCode = imgCode.Substring(0, imgCode.LastIndexOf("=") + 1);
-                }
-                else if (imgCode.LastIndexOf("//") != -1)
-                {
-                    imgCode = imgCode.Substring(0, imgCode.LastIndexOf("//") + 2);
                 }
                 Regex reg = new Regex(@"data:(image.+);base64,(.+)");
                 if (reg.IsMatch(imgCode))

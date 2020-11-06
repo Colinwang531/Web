@@ -12,13 +12,7 @@ namespace SmartWeb.ProtoBuffer.Init
 {
     public class HeartService:BackgroundService
     {
-        InitManger manger = null;
-        private readonly IHubContext<AlarmVoiceHub> hubContext;
-        public HeartService(IHubContext<AlarmVoiceHub> _hubContext) {
-
-            this.hubContext = _hubContext;
-            manger = new InitManger(hubContext);
-        }
+        InitManger manger = new InitManger();
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             manger.Init();
