@@ -27,12 +27,18 @@ namespace SmartWeb.Controllers
             string browsertoken = HttpContext.Request.Cookies["token"];
             if (browsertoken == null || HttpContext.Session.Get(browsertoken) == null)
             {
-                filterContext.Result = new RedirectResult("/Login/Index");
+                //var result = RedirectToAction("Index", "Login", new { temp = "redi" });
+                RedirectResult result = new RedirectResult("/Login/NeedLogin");    /////这个控制器是为了实现跳转 
+                filterContext.Result = result;
+                base.OnActionExecuting(filterContext);
                 return;
             }
-            string urlstr = HttpContext.Session.GetString(browsertoken);
-            user = JsonConvert.DeserializeObject<UserToken>(urlstr);
-            base.OnActionExecuting(filterContext);
+            else
+            {
+                string urlstr = HttpContext.Session.GetString(browsertoken);
+                user = JsonConvert.DeserializeObject<UserToken>(urlstr);
+                base.OnActionExecuting(filterContext);
+            }
         }
     }
 }

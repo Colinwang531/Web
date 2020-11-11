@@ -30,7 +30,8 @@ namespace SmartWeb.ProtoBuffer.Init
     public class InitManger
     {
         private SendDataMsg assembly = new SendDataMsg();
-      
+        private AlarmService alarmService = new AlarmService();
+
         /// <summary>
         /// 初使化
         /// </summary>
@@ -63,11 +64,15 @@ namespace SmartWeb.ProtoBuffer.Init
                     PublisherService service = new PublisherService();
                     //向声音播放推送消息
                     PlayerService player = new PlayerService();
-                   
+                    alarmService.SyncAlarm();
+                    alarmService.SyncAttendance();
                 }
                 //定时获取组件信息
-                QueryComponent();
+                 QueryComponent();
+                //每隔2秒获取报警结果
+                alarmService.ReviceAlarm();
             }
+          
         }
         /// <summary>
         /// 获取数据库默认值
@@ -75,22 +80,47 @@ namespace SmartWeb.ProtoBuffer.Init
         /// <param name="context"></param>
         private static void LoadDBValue()
         {
-            using (var context = new MyContext())
+            try
             {
-                var sysdic = context.SysDictionary.ToList();
-                if (sysdic.Count() > 0)
+                using (var context = new MyContext())
                 {
-                    if (sysdic.Where(c => c.key == "ExportCompany").Any())
+                    var sysdic = context.SysDictionary.ToList();
+                    if (sysdic.Count() > 0)
                     {
-                        ManagerHelp.ExportCompany = sysdic.FirstOrDefault(c => c.key == "ExportCompany").value;
+                        if (sysdic.Where(c => c.key == "ExportCompany").Any())
+                        {
+                            ManagerHelp.ExportCompany = sysdic.FirstOrDefault(c => c.key == "ExportCompany").value;
+                        }
+                        if (sysdic.Where(c => c.key == "DepartureTime").Any())
+                        {
+                            ManagerHelp.DepartureTime = Convert.ToInt32(sysdic.FirstOrDefault(c => c.key == "DepartureTime").value);
+                        }
                     }
-                    if (sysdic.Where(c => c.key == "DepartureTime").Any())
+                    var algo = context.Algorithm.Where(c => c.Type == AlgorithmType.CAPTURE).ToList();
+                    if (algo.Count > 0) ManagerHelp.LiveTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                    if (ManagerHelp.IsShipPort)
                     {
-                        ManagerHelp.DepartureTime = Convert.ToInt32(sysdic.FirstOrDefault(c => c.key == "DepartureTime").value);
+                        var ship = context.Ship.FirstOrDefault();
+                        if (ship == null)
+                        {
+                            ship = new Ship()
+                            {
+                                Coordinate = "",
+                                CrewNum = 0,
+                                Flag = false,
+                                Id = Guid.NewGuid().ToString(),
+                                Name = "Boat",
+                                type = Ship.Type.AUTO
+                            };
+                            context.Ship.Add(ship);
+                            context.SaveChanges();
+                        }
+                        ManagerHelp.ShipId = ship.Id;
                     }
                 }
-                var algo = context.Algorithm.Where(c => c.Type == AlgorithmType.CAPTURE).ToList();
-                if (algo.Count >0) ManagerHelp.LiveTime=DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            }
+            catch (Exception)
+            {
             }
         }
 
@@ -170,7 +200,7 @@ namespace SmartWeb.ProtoBuffer.Init
         /// <summary>
         /// 初使化设备
         /// </summary>
-        public void InitDevice()
+        public bool InitDevice()
         {
             List<SmartWeb.Models.Component> list = new List<SmartWeb.Models.Component>();
             using (var con = new MyContext())
@@ -192,43 +222,50 @@ namespace SmartWeb.ProtoBuffer.Init
                     if (toId == "") continue;
                     assembly.SendDeveiceAdd(item, toId);
                 }
+                return true;
             }
             else
             {
                 ManagerHelp.isInit = false;
+                return false;
             }
-
         }
 
         /// <summary>
         /// 算法请求
         /// </summary>
-        public void InitAlgorithm()
+        public void InitAlgorithm(string typeName="")
         {
-            using (var con = new MyContext())
+            try
             {
-                var components = con.Component.Where(c => c.Type == ComponentType.AI&&c.Line==0).ToList();
-                if (components.Count > 0)
+                using (var con = new MyContext())
                 {
-                    var algorithmInfos = ProtoBDManager.AlgorithmQuery();
-                    foreach (var item in algorithmInfos)
+                    var components = con.Component.Where(c => c.Type == ComponentType.AI && c.Line == 0).ToList();
+                    if (components.Count > 0)
                     {
-                        //配置的是缺岗类型则传入设备的通讯ID
-                        if (item.type != AlgorithmInfo.Type.CAPTURE)
+                        var algorithmInfos = ProtoBDManager.AlgorithmQuery(false, typeName);
+                        foreach (var item in algorithmInfos)
                         {
-                            string name = Enum.GetName(typeof(AlgorithmType), Convert.ToInt32(item.type));
-                            if (name == "ATTENDANCE_IN" || name == "ATTENDANCE_OUT")
+                            //配置的是缺岗类型则传入设备的通讯ID
+                            if (item.type != AlgorithmInfo.Type.CAPTURE)
                             {
-                                name = ManagerHelp.FaceName.ToUpper();
-                            }
-                            if (components.Where(c => c.Name.ToUpper() == name).Any())
-                            {
-                                string identity = components.FirstOrDefault(c => c.Name.ToUpper() == name).Cid;
-                                assembly.SendAlgorithmSet(item, identity);
+                                string name = Enum.GetName(typeof(AlgorithmType), Convert.ToInt32(item.type));
+                                if (name == "ATTENDANCE_IN" || name == "ATTENDANCE_OUT")
+                                {
+                                    name = ManagerHelp.FaceName.ToUpper();
+                                }
+                                if (components.Where(c => c.Name.ToUpper() == name).Any())
+                                {
+                                    string identity = components.FirstOrDefault(c => c.Name.ToUpper() == name).Cid;
+                                    assembly.SendAlgorithmSet(item, identity);
+                                }
                             }
                         }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
             }
         }
         /// <summary>
@@ -285,7 +322,7 @@ namespace SmartWeb.ProtoBuffer.Init
                     //重新注册
                     ManagerHelp.Cid = "";
                     assembly.SendComponentSign("WEB", "");
-                }
+            }
             //}
         }
         /// <summary>
@@ -371,6 +408,7 @@ namespace SmartWeb.ProtoBuffer.Init
                 }
             }, TaskCreationOptions.LongRunning);
         }
+
 
     }
 }

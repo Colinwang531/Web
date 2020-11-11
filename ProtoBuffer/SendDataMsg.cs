@@ -539,7 +539,7 @@ namespace SmartWeb.ProtoBuffer
         /// 获取报警消息
         /// </summary>
         /// <param name="head"></param>
-        public void SendAlarm(string head = "upload", AlarmInfo info = null)
+        public void SendAlarm(string head = "upload", AlarmInfo info = null,string toId="")
         {
             MSG msg = new MSG()
             {
@@ -552,7 +552,7 @@ namespace SmartWeb.ProtoBuffer
                     alarminfo=info
                 }
             };
-            dealer.Send(msg, "", head);
+            dealer.Send(msg, toId, head);
         }
     }
 }

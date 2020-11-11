@@ -24,7 +24,6 @@ namespace SmartWeb.Controllers
         {
             _context = context;
         }
-
         public IActionResult LandHome()
         {
             ViewBag.IsSetShip = base.user.EnableConfigure;

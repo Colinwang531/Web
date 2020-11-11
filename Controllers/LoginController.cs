@@ -28,19 +28,27 @@ namespace SmartWeb.Controllers
         /// 登陆页面
         /// </summary>
         /// <returns></returns>
-        public IActionResult Index()
+        public IActionResult Index(string temp=null)
         {
             HttpContext.Response.Cookies.Delete("token");
             HttpContext.Session.Clear();
+            if (!string.IsNullOrEmpty(temp))
+            {
+               return  RedirectToAction("Index", "Login");
+            }
             return View();
         }
 
+        public IActionResult NeedLogin()
+        {
+            return View();
+        }
         /// <summary>
         /// 登陆
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
-        public IActionResult UserLogin(string name,string password)
+        public IActionResult UserLogin(string name, string password)
         {
             if (string.IsNullOrEmpty(ManagerHelp.Cid))
             {
@@ -84,7 +92,7 @@ namespace SmartWeb.Controllers
                         _context.SaveChanges();
                     }
                 }
-                
+
                 //缓存用户数据
                 UserToken ut = new UserToken()
                 {
@@ -92,9 +100,9 @@ namespace SmartWeb.Controllers
                     Name = usersModel.Name,
                     EnableConfigure = usersModel.EnableConfigure,
                     Enablequery = usersModel.Enablequery,
-                    ShipName=shipName,
+                    ShipName = shipName,
                     ShipId = shipId,
-                    IsLandHome= ManagerHelp.IsShipPort?false:true
+                    IsLandHome = ManagerHelp.IsShipPort ? false : true
                 };
                 string userStr = JsonConvert.SerializeObject(ut);
                 string browsertoken = HttpContext.Request.Cookies["token"];

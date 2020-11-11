@@ -45,6 +45,7 @@
     <PackageReference Include="protobuf-net" Version="2.4.6" />
     <PackageReference Include="System.Drawing.Common" Version="4.7.0" />
     <PackageReference Include="System.Drawing.Primitives" Version="4.3.0" />
+    <PackageReference Include="TimedJob" Version="2.0.0" />
   </ItemGroup>
 
   <ItemGroup>

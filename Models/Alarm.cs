@@ -12,6 +12,7 @@ namespace SmartWeb.Models
     {
         public Alarm() {
             CreatDate = DateTime.Now;
+            this.IsSyncSucces = false;
         }
         public enum AlarmType
         {
@@ -81,6 +82,10 @@ namespace SmartWeb.Models
         /// 入库时间
         /// </summary>
         public DateTime CreatDate { get; set; }
+        /// <summary>
+        /// 是否同步完成
+        /// </summary>
+        public bool IsSyncSucces { get; set; }
         public List<AlarmPosition> alarmPositions { get; set; }
     }
 }

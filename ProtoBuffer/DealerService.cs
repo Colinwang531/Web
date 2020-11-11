@@ -20,8 +20,6 @@ namespace SmartWeb.ProtoBuffer
     {
         private static DealerSocket dealer = null;
         private static object dealer_Lock = new object(); //锁同步
-
-        public static List<Task> taskList = new List<Task>();
         public DealerService()
         {
             lock (dealer_Lock)
@@ -71,10 +69,10 @@ namespace SmartWeb.ProtoBuffer
         {
             ReceiveDataManager manager = new ReceiveDataManager();
             while (true)
-            {
-                var mQFrames = dealer.ReceiveMultipartMessage(6);
+            {               
                 try
                 {
+                    var mQFrames = dealer.ReceiveMultipartMessage(6);
                     byte[] mory = mQFrames.Last.ToByteArray();
                     MSG revmsg = ProtoBufHelp.DeSerialize<MSG>(mory);
                     //消息来源
@@ -99,12 +97,15 @@ namespace SmartWeb.ProtoBuffer
                         if (revmsg.alarm.alarminfo != null)
                         {
                             string xmq = "";
-                            if (mQFrames[2].ConvertToString() == "upload")
+                            //陆地端收到船舶推送的报警数据带有upload标识
+                            //船舶端收到陆地端的响应带有request标识
+                            if (mQFrames[2].ConvertToString() == "upload"|| mQFrames[2].ConvertToString() == "request")
                             {
-                                xmq = fromId;
+                                xmq = fromId;                               
                             }
-                            var ss = new ProtoBDManager();
-                            ss.AlarmAdd(revmsg.alarm.alarminfo, xmq);
+                            manager.AlarmData(xmq, revmsg.alarm.alarminfo);
+                            //var ss = new ProtoBDManager();
+                            //ss.AlarmAdd(revmsg.alarm.alarminfo, xmq);
                         }
                     }
                     else if (revmsg.type == MSG.Type.EVENT)

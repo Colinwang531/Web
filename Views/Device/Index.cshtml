@@ -55,10 +55,10 @@
                         else if (e.type == 3) return "IPC";
                     }
                 },
-                { field: 'name', title: '设备登陆名称', align: 'center' },
-                { field: 'password', title: '设备登陆密码', align: 'center' },
-                { field: 'ip', title: '设备登陆IP', align: 'center' },
-                { field: 'port', title: '设备登陆端口', align: 'center' },
+                { field: 'name', title: '设备登录名称', align: 'center' },
+                { field: 'password', title: '设备登录密码', align: 'center' },
+                { field: 'ip', title: '设备登录IP', align: 'center' },
+                { field: 'port', title: '设备登录端口', align: 'center' },
                 {
                     field: 'enable', title: '设备状态', align: 'center', templet: function (e) {
                         return e.enable ? "开启" : "关闭";
@@ -243,7 +243,7 @@
         //表单提交
         form.on("submit(doSubmit)", function (frm) {
             if (!CheckData(frm)) {
-                layer.msg("设备厂商、设备类型、登陆IP数据不能重复");
+                layer.msg("设备厂商、设备类型、登录IP数据不能重复");
                 return false;
             }
             $('#btnSubmit').attr('disabled', 'disabled').addClass(DISABLED);
@@ -449,13 +449,13 @@
         </div>
         <div class="layui-form-item">
             <div class="layui-inline">
-                <label class="layui-form-label">登陆名称：</label>
+                <label class="layui-form-label">登录名称：</label>
                 <div class="layui-input-inline">
                     <input type="text" name="name" id="txtName" maxlength="100" lay-verify="required" autocomplete="off" class="layui-input">
                 </div>
             </div>
             <div class="layui-inline">
-                <label class="layui-form-label">登陆密码：</label>
+                <label class="layui-form-label">登录密码：</label>
                 <div class="layui-input-inline">
                     <input type="text" name="password" id="txtPwd" maxlength="100" lay-verify="required" autocomplete="off" class="layui-input">
                 </div>
@@ -463,14 +463,14 @@
         </div>
         <div class="layui-form-item">
             <div class="layui-inline">
-                <label class="layui-form-label">登陆IP：</label>
+                <label class="layui-form-label">登录IP：</label>
                 <div class="layui-input-inline">
                     <input type="text" name="ip" id="txtIp" maxlength="20" lay-verify="ip" autocomplete="off" class="layui-input">
                 </div>
             </div>
 
             <div class="layui-inline">
-                <label class="layui-form-label">登陆端口：</label>
+                <label class="layui-form-label">登录端口：</label>
                 <div class="layui-input-inline">
                     <input type="text" name="port" id="txtPort" lay-verify="port" autocomplete="off" class="layui-input">
                 </div>

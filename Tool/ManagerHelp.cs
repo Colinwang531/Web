@@ -48,6 +48,10 @@ namespace SmartWeb.Tool
         /// </summary>
         public static bool IsShipPort = true;
         /// <summary>
+        /// 船舶端的船ID
+        /// </summary>
+        public static string ShipId = "";
+        /// <summary>
         /// 是否向上发送
         /// </summary>
         public static List<string> UpSend =null;
@@ -63,6 +67,15 @@ namespace SmartWeb.Tool
         /// 导出时显示的公司名称
         /// </summary>
         public static string ExportCompany = "";
+        public static bool IsWriteDBSucces = true;
+        /// <summary>
+        /// 存放船舶和陆地接收到的报警
+        /// </summary>
+        public static List<ProtoBuffer.Models.MeterAsyncQueue> ReviceAlarms = new List<ProtoBuffer.Models.MeterAsyncQueue>();
+        /// <summary>
+        /// 存放陆地端响应结果
+        /// </summary>
+        public static List<ProtoBuffer.Models.AlarmInfo> LandResponse = new List<ProtoBuffer.Models.AlarmInfo>();
         /// <summary>
         /// 缺岗执行时间单位分名钟
         /// </summary>

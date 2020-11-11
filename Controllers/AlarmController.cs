@@ -47,10 +47,10 @@ namespace SmartWeb.Controllers
                 ViewBag.layuithis = "alarm";
                 ViewBag.IsLandHome = false;
                 ViewBag.ShipName = base.user.ShipName;
-                ViewBag.sleep = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.SLEEP&&c.ShipId== shipId).Count();
-                ViewBag.fight = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.CAPTURE && c.ShipId == shipId).Count();
-                ViewBag.helmet = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.HELMET && c.ShipId == shipId).Count();
-                ViewBag.phone = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.PHONE && c.ShipId == shipId).Count();
+                ViewBag.sleep = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.SLEEP).Count();
+                ViewBag.fight = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.CAPTURE).Count();
+                ViewBag.helmet = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.HELMET).Count();
+                ViewBag.phone = _context.Alarm.Where(c => c.Type == Alarm.AlarmType.PHONE).Count();
             }
             else
             {

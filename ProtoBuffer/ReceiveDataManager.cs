@@ -21,7 +21,6 @@ namespace SmartWeb.ProtoBuffer
     public class ReceiveDataManager
     {
         private SendDataMsg manager= new SendDataMsg();
-        
         /// <summary>
         /// 组件处理
         /// </summary>
@@ -76,7 +75,7 @@ namespace SmartWeb.ProtoBuffer
             {
                 ProtoBDManager.AddReceiveLog<SmartWeb.ProtoBuffer.Models.Component>("ExceptionComponent", component, ex.Message);
             }
-        }
+        }       
         /// <summary>
         /// 算法处理
         /// </summary>
@@ -274,9 +273,10 @@ namespace SmartWeb.ProtoBuffer
                     #region 陆地端编辑设备请求
                     if (device.devicerequest != null && !string.IsNullOrEmpty(device.devicerequest.did))
                     {
+                        bool isSend = false;
                         //修改船舶端数据库信息
-                        var model=ProtoBDManager.DeviceUpdate(device.devicerequest.did, device.devicerequest.deviceinfo);
-                        if (model!=null)
+                        var model=ProtoBDManager.DeviceUpdate(device.devicerequest.did, device.devicerequest.deviceinfo,ref isSend);
+                        if (model!=null&&isSend)
                         {
                             //获取设置的组件ID
                             string identity =ManagerHelp.GetShipToId(ManagerHelp.GetComponentType((int)model.factory));
@@ -292,7 +292,7 @@ namespace SmartWeb.ProtoBuffer
                         }
                         else
                         {
-                            manager.SendDeviceRN(Models.Device.Command.MODIFY_REP, "", null, 1);
+                            manager.SendDeviceRN(Models.Device.Command.MODIFY_REP, "", null, isSend?0:1);
                         }
                     }
                     else
@@ -327,6 +327,10 @@ namespace SmartWeb.ProtoBuffer
                     else
                     {
                         ManagerHelp.DeviceResult = device.deviceresponse.result.ToString();
+                        if (device.deviceresponse.result!=0&& device.deviceresponse.result!=-2)
+                        {
+                            ProtoBDManager.DeviceDelete(did);
+                        }
                     }
                     break;
                    #endregion
@@ -547,5 +551,44 @@ namespace SmartWeb.ProtoBuffer
             }
         }
 
+        /// <summary>
+        /// 保存数据
+        /// </summary>
+        /// <param name="xml"></param>
+        /// <param name="alarm"></param>
+        public void AlarmData(string xml,AlarmInfo alarm) 
+        {
+            try
+            {
+                string shipId = xml;
+                if (ManagerHelp.IsShipPort)
+                {
+                    shipId = ManagerHelp.ShipId;
+                    //船舶端接收到的是陆地端的响应
+                    if (xml != "")
+                    {
+                        ManagerHelp.LandResponse.Add(alarm);
+                        return;
+                    }
+                }
+                var dic = ManagerHelp.ReviceAlarms.FirstOrDefault(c => c.Id == shipId);
+                if (dic == null)
+                {
+                    ManagerHelp.ReviceAlarms = new List<MeterAsyncQueue>();
+                    List<AlarmInfo> list = new List<AlarmInfo>();
+                    list.Add(alarm);
+                    ManagerHelp.ReviceAlarms.Add(new MeterAsyncQueue() { Id = shipId, alarmInfos = list });
+                }
+                else
+                {
+                    List<AlarmInfo> list = dic.alarmInfos;
+                    list.Add(alarm);
+                    dic.alarmInfos = list;
+                }
+            }
+            catch (Exception ex)
+            {
+            }
+        }
     }
 }

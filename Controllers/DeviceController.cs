@@ -394,11 +394,14 @@ namespace SmartWeb.Controllers
                                         Id = id
                                     }
                                 }
-                            };
-                            _context.Update(camera);
-                            _context.SaveChangesAsync();
+                            };                            
                             assembly.SendDeveiceUpdate(emb, identity, embModel.Id);
                             code = GetResult();
+                            if (code==0)
+                            {
+                                _context.Update(camera);
+                                _context.SaveChangesAsync();
+                            }
                         };
                     }
                     if (code == 2) msg = "请求超时。。。";

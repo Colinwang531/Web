@@ -15,6 +15,7 @@ namespace SmartWeb.Models
             this.CameraName = "";
             this.CrewJob = "";
             this.CameraName = "";
+            this.IsSyncSucces = false;
         }
         public string Id { get; set; }
         /// <summary>
@@ -53,6 +54,10 @@ namespace SmartWeb.Models
         /// 入库时间
         /// </summary>
         public DateTime CreateTime { get; set; }
+        /// <summary>
+        /// 是否同步完成
+        /// </summary>
+        public bool IsSyncSucces { get; set; }
         public List<AttendancePicture> attendancePictures { get; set; }
     }
 }
