@@ -575,15 +575,37 @@ namespace SmartWeb.ProtoBuffer
                 if (dic == null)
                 {
                     ManagerHelp.ReviceAlarms = new List<MeterAsyncQueue>();
-                    List<AlarmInfo> list = new List<AlarmInfo>();
-                    list.Add(alarm);
-                    ManagerHelp.ReviceAlarms.Add(new MeterAsyncQueue() { Id = shipId, alarmInfos = list });
+                    List<AlarmCache> list = new List<AlarmCache>() {
+                         new AlarmCache (){
+                             alarmInfos=alarm
+                         }
+                    };
+                    ManagerHelp.ReviceAlarms.Add(new MeterAsyncQueue() { Id = shipId, alarmCaches=list });
                 }
                 else
                 {
-                    List<AlarmInfo> list = dic.alarmInfos;
-                    list.Add(alarm);
-                    dic.alarmInfos = list;
+                    List<AlarmCache> list = dic.alarmCaches;
+                    if (ManagerHelp.IsShipPort)
+                    {
+                        AlarmCache cache = new AlarmCache()
+                        {
+                            alarmInfos = alarm
+                        };
+                        list.Add(cache);
+                        dic.alarmCaches = list;
+                    }
+                    else
+                    {
+                        if (list.Where(c => c.alarmInfos.uid != alarm.uid).Any())
+                        {
+                            AlarmCache cache = new AlarmCache()
+                            {
+                                alarmInfos = alarm
+                            };
+                            list.Add(cache);
+                            dic.alarmCaches = list;
+                        }
+                    }
                 }
             }
             catch (Exception ex)

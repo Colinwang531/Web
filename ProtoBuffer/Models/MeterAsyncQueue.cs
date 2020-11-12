@@ -8,6 +8,6 @@ namespace SmartWeb.ProtoBuffer.Models
     public class MeterAsyncQueue
     {
         public string Id { get; set; }
-        public List<Models.AlarmInfo> alarmInfos { get; set; }
+        public List<AlarmCache> alarmCaches { get; set; }
     }
 }

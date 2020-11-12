@@ -13,6 +13,7 @@ namespace SmartWeb.Models
         public Alarm() {
             CreatDate = DateTime.Now;
             this.IsSyncSucces = false;
+            this.ShipAlarmId = "";
         }
         public enum AlarmType
         {
@@ -86,6 +87,10 @@ namespace SmartWeb.Models
         /// 是否同步完成
         /// </summary>
         public bool IsSyncSucces { get; set; }
+        /// <summary>
+        /// 陆地端此值有效（存的是船舶端报警表的主键ID）
+        /// </summary>
+        public string ShipAlarmId { get; set; }
         public List<AlarmPosition> alarmPositions { get; set; }
     }
 }

@@ -12,96 +12,254 @@ using System.Threading.Tasks;
 
 namespace SmartWeb.ProtoBuffer
 {
-    public class AlarmService:Job
+    public class SyncAlarmJob:Job
     {
-        private SendDataMsg assembly = new SendDataMsg();
 
+        private SendDataMsg assembly = new SendDataMsg();
         /// <summary>
-        /// 接收报警数据并入库
-        /// </summary>
-        [Invoke(Interval = 2000, SkipWhileExecuting = true)]
-        public void ReviceAlarm()
+        /// 向陆地端推送报警数据
+        /// </summary>         
+        [Invoke(Interval = 1000 * 60 * 1, SkipWhileExecuting = true)]
+        public void SyncAlarmData()
         {
+            //陆地端不执行同步数据
+            if (!ManagerHelp.IsShipPort) return; 
             try
             {
-                var alarmList = ManagerHelp.ReviceAlarms;
-                for (int i = 0; i < alarmList.Count; i++)
-                {
-                    var alarm = alarmList[i];
-                    string cid = "";
-                    string cname = "";//摄像机名称
-                    string shipId = GetShipId(alarm.Id);
-                    string webId = "";//陆地端返回船舶的ID
-                    List<AlarmCache> list = alarm.alarmCaches;
-                    if (!ManagerHelp.IsWriteDBSucces) continue;
-                    for (int j = 0; j < list.Count; j++)
-                    {
-                        try
-                        {
-                            ManagerHelp.IsWriteDBSucces = false;
-                            if (!string.IsNullOrEmpty(list[j].ShipAlarmId)) continue;
-                            var alarmInfo = list[j].alarmInfos;
-                            //陆地端首次收到消息时判断当条数据是否已经在数据库存在，如果不存在则执行添加，存
-                            if (i == 0 && j == 0 && ManagerHelp.IsShipPort == false)
-                            {
-                                //判断数据是否存在
-                                var result = CheckDBAlarm(shipId, alarmInfo);
-                                //数据存在直接响应船舶端
-                                if (result)
-                                {
-                                    webId = alarmInfo.cid.Split(',').Last();
-                                    SendResponseShip(alarmInfo, alarm.Id + ":" + webId);
-                                    continue;
-                                }
-                            }
-                            GetData(ref alarmInfo, ref cid, ref cname, ref webId);
-                            if (cid == "" || shipId == "" || alarmInfo.picture == null) continue;
-                            bool flag = false;
-                            if (alarmInfo.type == Models.AlarmInfo.Type.ATTENDANCE_IN || alarmInfo.type == Models.AlarmInfo.Type.ATTENDANCE_OUT)
-                            {
-                                //考勤信息入库
-                                flag = AddAttendance(alarmInfo, shipId, cid, cname);
-                            }
-                            else
-                            {
-                                // 报警信息入库                       
-                                AddAlarm(alarmInfo, shipId, cid, cname);
-                                flag = true;
-                                //当船舶端报警类型为睡觉时播放报警提示，在船舶端主页面播放
-                                if (alarmInfo.type == Models.AlarmInfo.Type.SLEEP && ManagerHelp.IsShipPort)
-                                {
-                                    PlayerService player = new PlayerService();
-                                    player.Send("sleep");
-                                }
-                            }
-                            if (flag)
-                            {
-                                //陆地端响应船舶请求
-                                if (!ManagerHelp.IsShipPort)
-                                {
-                                    list[j].ShipAlarmId = alarmInfo.uid;
-                                    SendResponseShip(alarmInfo, alarm.Id + ":" + webId);
-                                }
-                                else
-                                {
-                                    //船舶端清空缓存
-                                    alarm.alarmCaches.Remove(list[j]);
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            continue;
-                        }
-                    }
-                    ManagerHelp.IsWriteDBSucces = true;
-                }
+                SyncAlarm();
+                SyncAttendance();
             }
             catch (Exception ex)
             {
             }
         }
-        
+
+        private void SyncAlarm()
+        {
+            List<SmartWeb.Models.Alarm> alarms = new List<SmartWeb.Models.Alarm>();
+            List<SmartWeb.Models.AlarmPosition> alarmPos = new List<SmartWeb.Models.AlarmPosition>();
+            using (var context = new MyContext())
+            {
+                alarms = context.Alarm.Where(c => c.IsSyncSucces == false).OrderBy(s => s.Time).ToList();
+                alarmPos = context.AlarmPosition.Where(c => alarms.Select(a => a.Id).Contains(c.AlarmId)).ToList();
+            }
+            foreach (var item in alarms)
+            {
+                try
+                {
+                    //组合发送数据
+                    AlarmInfo alarmInfo = GetAlarmInfo(alarmPos, item);
+                    ShipPushAlarm(item, alarmInfo);
+                }
+                catch (Exception)
+                {
+                    continue;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 向陆地端推送数据
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="alarmInfo"></param>
+        private void ShipPushAlarm(SmartWeb.Models.Alarm item, AlarmInfo alarmInfo)
+        {
+            List<SmartWeb.Models.Alarm> recordAlarm = new List<SmartWeb.Models.Alarm>();
+            assembly.SendAlarm("upload", alarmInfo);
+            recordAlarm.Add(item);
+            bool flag = true;
+            new TaskFactory().StartNew(() => {
+                while (recordAlarm.Count != 0)
+                {
+                    if (ManagerHelp.LandResponse.Count > 0)
+                    {
+                        flag = false;
+                        //修改同步状态
+                        UpdateAlarmSyncStatus(recordAlarm);
+                        Thread.Sleep(1000);
+                    }
+                }
+            }).Wait(3000);
+            if (flag)
+            {
+                ShipPushAlarm(item, alarmInfo);
+            }
+        }
+
+        /// <summary>
+        /// 向陆地端推送考勤数据
+        /// </summary>
+        private void SyncAttendance()
+        {
+            if (!ManagerHelp.IsShipPort) return;
+            List<Attendance> attendances = new List<Attendance>();
+            List<AttendancePicture> attendPic = new List<AttendancePicture>();
+            using (var context = new MyContext())
+            {
+                attendances = context.Attendance.Where(c => c.IsSyncSucces == false).OrderBy(c => c.Time).ToList();
+                attendPic = context.AttendancePicture.Where(c => attendances.Select(a => a.Id).Contains(c.AttendanceId)).ToList();
+            }
+            foreach (var item in attendances)
+            {
+                try
+                {
+                    //获取考勤数据
+                    AlarmInfo alarmInfo = GetAttendanceInfo(attendPic, item);
+                    ShipPushAttend(item, alarmInfo);
+                }
+                catch (Exception ex)
+                {
+                    continue;
+                }
+            }
+        }
+        /// <summary>
+        /// 向陆地端推送考勤数据
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="alarmInfo"></param>
+        private void ShipPushAttend(Attendance item, AlarmInfo alarmInfo)
+        {
+            List<Attendance> recordAtt = new List<Attendance>();
+            assembly.SendAlarm("upload", alarmInfo);
+            recordAtt.Add(item);
+            bool flag = true;
+            new TaskFactory().StartNew(() =>
+            {
+                while (recordAtt.Count != 0)
+                {
+                    if (ManagerHelp.LandResponse.Count > 0)
+                    {
+                        flag = false;
+                        //修改同步状态
+                        UpdateAttendSyncStatus(recordAtt);
+                        Thread.Sleep(1000);
+                    }
+                }
+            }).Wait(10000);
+            if (flag)
+            {
+                ShipPushAttend(item, alarmInfo);
+            }
+        }
+        /// <summary>
+        /// 修改同步状态
+        /// </summary>
+        /// <param name="record"></param>
+        private static void UpdateAlarmSyncStatus(List<SmartWeb.Models.Alarm> record)
+        {
+            var response = ManagerHelp.LandResponse;
+            for (int i = 0; i < response.Count; i++)
+            {
+                try
+                {
+                    var alarm = response[i];
+                    if (record.Where(c => c.Id == alarm.uid).Any())
+                    {
+                        using (var context = new MyContext())
+                        {
+                            var remalarm = record.FirstOrDefault(c => c.Id == alarm.uid);
+                            if (remalarm == null) continue;
+                            //修改状态为已同步
+                            remalarm.IsSyncSucces = true;
+                            context.Alarm.Update(remalarm);
+                            context.SaveChanges();
+                            ManagerHelp.LandResponse.Remove(alarm);
+                            record.Remove(remalarm);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                }
+            }
+        }
+        /// <summary>
+        /// 组合protobuf的报警信息
+        /// </summary>
+        /// <param name="alarmPos"></param>
+        /// <param name="item"></param>
+        /// <returns></returns>
+        private static AlarmInfo GetAlarmInfo(List<SmartWeb.Models.AlarmPosition> alarmPos, SmartWeb.Models.Alarm item)
+        {
+            Models.AlarmInfo alarmInfo = new Models.AlarmInfo()
+            {
+                cid = item.Cid + ":" + item.Cname + ":" + ManagerHelp.ComponentId,
+                picture = item.Picture,
+                time = item.Time.ToString("yyyy-MM-dd HH:mm:ss"),
+                type = (Models.AlarmInfo.Type)item.Type,
+                uid = item.Id,
+                alarmposition = new List<Models.AlarmPosition>()
+            };
+            if (alarmPos == null) return alarmInfo;
+            var positions = alarmPos.Where(c => c.AlarmId == item.Id).ToList();
+            foreach (var pos in positions)
+            {
+                alarmInfo.alarmposition.Add(new Models.AlarmPosition()
+                {
+                    h = pos.H,
+                    w = pos.W,
+                    x = pos.X,
+                    y = pos.Y
+                });
+            }
+
+            return alarmInfo;
+        }
+        /// <summary>
+        /// 修改考勤的同步状态
+        /// </summary>
+        /// <param name="record"></param>
+        private static void UpdateAttendSyncStatus(List<Attendance> record)
+        {
+            var response = ManagerHelp.LandResponse;
+            for (int i = 0; i < response.Count; i++)
+            {
+                var atten = response[i];
+                if (record.Where(c => c.Id == atten.uid).Any())
+                {
+                    using (var context = new MyContext())
+                    {
+                        var remalarm = record.FirstOrDefault(c => c.Id == atten.uid);
+                        if (remalarm == null) continue;
+                        remalarm.IsSyncSucces = true;
+                        context.Attendance.Update(remalarm);
+                        context.SaveChanges();
+                        ManagerHelp.LandResponse.Remove(atten);
+                        record.Remove(remalarm);
+                    }
+                }
+            }
+        }
+        /// <summary>
+        /// 组合protobuf考勤信息
+        /// </summary>
+        /// <param name="attendPic"></param>
+        /// <param name="item"></param>
+        /// <returns></returns>
+        private static AlarmInfo GetAttendanceInfo(List<AttendancePicture> attendPic, Attendance item)
+        {
+            var picture = attendPic.FirstOrDefault(c => c.AttendanceId == item.Id);
+            Models.AlarmInfo alarmInfo = new Models.AlarmInfo()
+            {
+                cid = item.CameraId + ":" + item.CameraName + ":" + ManagerHelp.ComponentId,
+                time = item.Time.ToString("yyyy-MM-dd HH:mm:ss"),
+                type = item.Behavior == 0 ? Models.AlarmInfo.Type.ATTENDANCE_IN : Models.AlarmInfo.Type.ATTENDANCE_OUT,
+                uid = item.CrewId + ":" + item.CrewName + ":" + item.CrewJob + ":" + item.Id,
+                picture = picture.Picture,
+                alarmposition = new List<Models.AlarmPosition>() {
+                                     new Models.AlarmPosition(){
+                                         x=1,
+                                         h=2,
+                                         y=3,
+                                         w=4
+                                     }
+                                 }
+            };
+            return alarmInfo;
+        }
+
         /// <summary>
         /// 数据转操作
         /// </summary>
@@ -110,7 +268,7 @@ namespace SmartWeb.ProtoBuffer
         /// <param name="shipId">船ID</param>
         /// <param name="cid">摄像机ID</param>
         /// <param name="cname">摄像机名称</param>
-        private void GetData(ref Models.AlarmInfo alarmInfo,ref string cid, ref string cname,ref string webId)
+        private void GetData(ref Models.AlarmInfo alarmInfo, ref string cid, ref string cname, ref string webId)
         {
             var ids = alarmInfo.cid.Split(':');
             using (var context = new MyContext())
@@ -162,7 +320,7 @@ namespace SmartWeb.ProtoBuffer
         /// 获取船I在
         /// </summary>
         /// <returns></returns>
-        private string GetShipId(string xmq) 
+        private string GetShipId(string xmq)
         {
             string shipId = ManagerHelp.ShipId;
             //陆地端获取相应的船ID

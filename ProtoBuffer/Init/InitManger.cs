@@ -30,8 +30,6 @@ namespace SmartWeb.ProtoBuffer.Init
     public class InitManger
     {
         private SendDataMsg assembly = new SendDataMsg();
-        private AlarmService alarmService = new AlarmService();
-
         /// <summary>
         /// 初使化
         /// </summary>
@@ -62,15 +60,10 @@ namespace SmartWeb.ProtoBuffer.Init
                     LoadNotice();
                     //向IPad推送消息
                     PublisherService service = new PublisherService();
-                    //向声音播放推送消息
                     PlayerService player = new PlayerService();
-                    alarmService.SyncAlarm();
-                    alarmService.SyncAttendance();
                 }
                 //定时获取组件信息
                  QueryComponent();
-                //每隔2秒获取报警结果
-                alarmService.ReviceAlarm();
             }
           
         }
