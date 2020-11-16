@@ -33,7 +33,7 @@ namespace SmartWeb.ProtoBuffer.Models
 		public Type type = Type.SAIL;
 
 		/// <summary>
-		/// 当类型为SAIL 1:航行 2:停港
+		/// 当类型为SAIL 0:航行 1:停港
 		/// </summary>
 		[ProtoMember(2)]
 		public int flag { get; set; }

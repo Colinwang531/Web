@@ -56,7 +56,7 @@ namespace SmartWeb.ProtoBuffer
                     case Models.Component.Command.QUERY_REQ:
                         break;
                     case Models.Component.Command.QUERY_REP:
-                        List<ComponentInfo> infos = new List<ComponentInfo>();
+                        List<ComponentInfo> infos = component.componentresponse.componentinfos;
                         //陆地端查询组件时返回已在线船舶（XMQ陆地端的船舶）
                         if (!infos.Where(c => c.type == ComponentInfo.Type.XMQ).Any())
                         {
@@ -65,7 +65,6 @@ namespace SmartWeb.ProtoBuffer
                         if (component.componentresponse != null && component.componentresponse.result == 0)
                         {
                             ProtoBDManager.ComponentUpdateRange(component.componentresponse.componentinfos);
-                            infos = component.componentresponse.componentinfos;
                         }
                         
                         break;
