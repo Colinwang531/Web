@@ -45,8 +45,8 @@ namespace SmartWeb.Controllers
                 return LandLoad();
             }
             string shipId = base.user.ShipId;
-            var algor = _context.Algorithm.Where(c => c.ShipId == shipId).ToList();
-            var camera = _context.Camera.Where(c => c.ShipId == shipId).ToList();
+            var algor = _context.Algorithm.ToList();
+            var camera = _context.Camera.ToList();
             var data = from a in algor
                        join b in camera on a.Cid equals b.Id
                        select new
@@ -224,7 +224,6 @@ namespace SmartWeb.Controllers
                         algo.DectectFirst = viewModel.DectectFirst;
                         algo.DectectSecond = viewModel.DectectSecond;
                         algo.Track = viewModel.Track;
-                        algo.ShipId = base.user.ShipId;
                         if (!string.IsNullOrEmpty(viewModel.Id))
                         {
                             algo.Id = viewModel.Id;
@@ -354,7 +353,7 @@ namespace SmartWeb.Controllers
             int agotype = string.IsNullOrEmpty(type) ? 0 : Convert.ToInt32(type);
             var data = from a in _context.Algorithm
                        join b in _context.Camera on a.Cid equals b.Id
-                       where a.ShipId==shipId&&(agotype>0 ? a.Type == (AlgorithmType)agotype:1==1) &&(!string.IsNullOrEmpty(cid)? a.Cid == cid:1==1) 
+                       where (agotype>0 ? a.Type == (AlgorithmType)agotype:1==1) &&(!string.IsNullOrEmpty(cid)? a.Cid == cid:1==1) 
                        select new
                        {
                            a.Id,

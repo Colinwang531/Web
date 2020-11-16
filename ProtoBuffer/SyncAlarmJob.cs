@@ -12,26 +12,34 @@ using System.Threading.Tasks;
 
 namespace SmartWeb.ProtoBuffer
 {
-    public class SyncAlarmJob:Job
+    public class SyncAlarmJob
     {
 
         private SendDataMsg assembly = new SendDataMsg();
         /// <summary>
         /// 向陆地端推送报警数据
         /// </summary>         
-        [Invoke(Interval = 1000 * 60 * 1, SkipWhileExecuting = true)]
         public void SyncAlarmData()
         {
             //陆地端不执行同步数据
-            if (!ManagerHelp.IsShipPort) return; 
-            try
+            if (!ManagerHelp.IsShipPort) return;
+            Task.Factory.StartNew(state =>
             {
-                SyncAlarm();
-                SyncAttendance();
-            }
-            catch (Exception ex)
-            {
-            }
+                while (true)
+                {
+                    try
+                    {
+                        SyncAlarm();
+                        SyncAttendance();
+                    }
+                    catch (Exception ex)
+                    {
+                    }
+                    Thread.Sleep(1000 * 60 * 1);
+                }
+
+            }, TaskCreationOptions.LongRunning);
+            
         }
 
         private void SyncAlarm()
@@ -67,6 +75,7 @@ namespace SmartWeb.ProtoBuffer
         {
             List<SmartWeb.Models.Alarm> recordAlarm = new List<SmartWeb.Models.Alarm>();
             assembly.SendAlarm("upload", alarmInfo);
+            Console.WriteLine("已推送数据" + alarmInfo.uid);
             recordAlarm.Add(item);
             bool flag = true;
             new TaskFactory().StartNew(() => {
@@ -77,8 +86,8 @@ namespace SmartWeb.ProtoBuffer
                         flag = false;
                         //修改同步状态
                         UpdateAlarmSyncStatus(recordAlarm);
-                        Thread.Sleep(1000);
                     }
+                    Thread.Sleep(1000);
                 }
             }).Wait(3000);
             if (flag)
@@ -123,6 +132,7 @@ namespace SmartWeb.ProtoBuffer
         {
             List<Attendance> recordAtt = new List<Attendance>();
             assembly.SendAlarm("upload", alarmInfo);
+            Console.WriteLine("已推送数据" + alarmInfo.uid);
             recordAtt.Add(item);
             bool flag = true;
             new TaskFactory().StartNew(() =>
@@ -134,8 +144,8 @@ namespace SmartWeb.ProtoBuffer
                         flag = false;
                         //修改同步状态
                         UpdateAttendSyncStatus(recordAtt);
-                        Thread.Sleep(1000);
                     }
+                    Thread.Sleep(1000);
                 }
             }).Wait(10000);
             if (flag)
@@ -316,27 +326,7 @@ namespace SmartWeb.ProtoBuffer
                 alarmInfo.time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             }
         }
-        /// <summary>
-        /// 获取船I在
-        /// </summary>
-        /// <returns></returns>
-        private string GetShipId(string xmq)
-        {
-            string shipId = ManagerHelp.ShipId;
-            //陆地端获取相应的船ID
-            if (!ManagerHelp.IsShipPort)
-            {
-                using (var context = new MyContext())
-                {
-                    var comp = context.Component.FirstOrDefault(c => c.Cid == xmq);
-                    if (comp != null)
-                    {
-                        shipId = comp.ShipId;
-                    }
-                }
-            }
-            return shipId;
-        }
+        
 
         /// <summary>
         /// 添加考勤信息
@@ -572,26 +562,6 @@ namespace SmartWeb.ProtoBuffer
                 w = 1
             });
             assembly.SendAlarm("request", alarmInfo, toId);
-        }
-        /// <summary>
-        /// 判断数据是否存在
-        /// </summary>
-        /// <param name="shipId"></param>
-        /// <param name="alarmInfo"></param>
-        /// <returns></returns>
-        private static bool CheckDBAlarm(string shipId, AlarmInfo alarmInfo)
-        {
-            bool flag = false;
-            string shipAlarmId = alarmInfo.uid;
-            if (alarmInfo.type == Models.AlarmInfo.Type.ATTENDANCE_IN || alarmInfo.type == Models.AlarmInfo.Type.ATTENDANCE_OUT)
-            {
-                shipAlarmId = alarmInfo.uid.Split(',').Last();
-            }
-            using (var context = new MyContext())
-            {
-                flag = context.Alarm.Where(c => c.ShipId == shipId && c.ShipAlarmId == shipAlarmId).Any();
-            }
-            return flag;
         }
     }
 }

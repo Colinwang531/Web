@@ -50,7 +50,7 @@ namespace SmartWeb.Tool
         /// <summary>
         /// 船舶端的船ID
         /// </summary>
-        public static string ShipId = "";
+        //public static string ShipId = "";
         /// <summary>
         /// 是否向上发送
         /// </summary>

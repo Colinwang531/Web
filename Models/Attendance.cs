@@ -16,6 +16,7 @@ namespace SmartWeb.Models
             this.CrewJob = "";
             this.CameraName = "";
             this.IsSyncSucces = false;
+            this.ShipAttendanceId = "";
         }
         public string Id { get; set; }
         /// <summary>
@@ -58,6 +59,10 @@ namespace SmartWeb.Models
         /// 是否同步完成
         /// </summary>
         public bool IsSyncSucces { get; set; }
+        /// <summary>
+        /// 陆地端时此值有效 存的是船舶端报警表的主键ID
+        /// </summary>
+        public string ShipAttendanceId { get; set; }
         public List<AttendancePicture> attendancePictures { get; set; }
     }
 }

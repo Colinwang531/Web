@@ -11,6 +11,9 @@ namespace SmartWeb.Models
     /// </summary>
     public class Device
     {
+        public Device() {
+            this.ShipId = "";
+        }
         public enum Factory
         {
             [Display(Name = "海康")]

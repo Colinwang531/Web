@@ -69,7 +69,7 @@ namespace SmartWeb.Controllers
         public IActionResult Search(string name, int pageIndex, int pageSize)
         {
             string shipId = base.user.ShipId;
-            var datacrew = _context.Crew.Where(c => c.ShipId == shipId && string.IsNullOrEmpty(name) ? 1 == 1 : c.Name.Contains(name)).ToList();
+            var datacrew = _context.Crew.Where(c =>  string.IsNullOrEmpty(name) ? 1 == 1 : c.Name.Contains(name)).ToList();
             int count = datacrew.Count();
             var data = datacrew.Skip((pageIndex - 1) * pageSize).Take(pageSize);
             var Pics = _context.CrewPicture.ToList();
@@ -326,8 +326,7 @@ namespace SmartWeb.Controllers
                     {
                         CrewId = employee.Id,
                         Id = pic.Key,
-                        Picture = pic.Value,
-                        ShipId = base.user.ShipId
+                        Picture = pic.Value
                     };
                     employee.employeePictures.Add(ep);
                 }
@@ -348,7 +347,6 @@ namespace SmartWeb.Controllers
             if (id > 0) _context.Crew.Update(employee);
             else
             {
-                employee.ShipId = base.user.ShipId;
                 _context.Crew.Add(employee);
             }
             //清除已经上传了的图片

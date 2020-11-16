@@ -11,7 +11,9 @@ namespace SmartWeb.Models
     /// </summary>
     public class Component
     {
-
+        public Component() {
+            ShipId = "";
+        }
         /// <summary>
         /// ID
         /// </summary>

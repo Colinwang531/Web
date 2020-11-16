@@ -61,9 +61,13 @@ namespace SmartWeb.ProtoBuffer.Init
                     //向IPad推送消息
                     PublisherService service = new PublisherService();
                     PlayerService player = new PlayerService();
+                    SyncAlarmJob sync = new SyncAlarmJob();
+                    sync.SyncAlarmData();
                 }
                 //定时获取组件信息
-                 QueryComponent();
+                QueryComponent();
+                AlarmService alarmService = new AlarmService();
+                alarmService.ReviceAlarm();
             }
           
         }
@@ -108,7 +112,6 @@ namespace SmartWeb.ProtoBuffer.Init
                             context.Ship.Add(ship);
                             context.SaveChanges();
                         }
-                        ManagerHelp.ShipId = ship.Id;
                     }
                 }
             }

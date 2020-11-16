@@ -130,7 +130,7 @@ namespace SmartWeb.Controllers
             var crews = _context.Crew;
             foreach (var item in result)
             {
-                item.CrewNum = crews.Where(s => s.ShipId.Equals(item.Id)).Count();
+                item.CrewNum = crews.Count();
             }
             return Json(result);
         }

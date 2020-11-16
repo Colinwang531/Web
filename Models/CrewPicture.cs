@@ -11,6 +11,9 @@ namespace SmartWeb.Models
     /// </summary>
     public class CrewPicture
     {
+        public CrewPicture() {
+            this.ShipId = "";
+        }
       public string Id { get; set; }
         /// <summary>
         /// 船员图片

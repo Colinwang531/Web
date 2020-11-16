@@ -12,6 +12,7 @@ RUN mv /etc/apt/sources.list /etc/apt/sources.list.bak && mv sources.list /etc/a
 EXPOSE 80
 EXPOSE 443
 EXPOSE 5556
+EXPOSE 5555
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1-buster AS build
 
 WORKDIR /src

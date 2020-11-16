@@ -42,9 +42,9 @@
         form.on("submit(query)", function (obj) {
             page = 1;
             var data = {
-                shipId: obj.field.ship,
+                shipId: obj.field.ship == undefined ? "" : obj.field.ship,
                 name: obj.field.name,
-                type: $("#slType").val(),
+                type: $("#slType").val() == "" ? 0 : parseInt($("#slType").val()),
                 startTime: obj.field.startTime,
                 endTime: obj.field.endTime
             }
@@ -73,13 +73,12 @@
                             slHtml += '<option value="' + sl[i].id + '">' + sl[i].name + '</option>'
                         }
                         $("#slShip").html(slHtml);
-                        $("#slType").val($("#hidtype").val());
-                        layui.use('form', function () {
-                            var form = layui.form;
-                            form.render();
-                        });
                     }
-
+                    $("#slType").val($("#hidtype").val());
+                    layui.use('form', function () {
+                        var form = layui.form;
+                        form.render();
+                    });
                 }
             }
         });

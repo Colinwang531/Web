@@ -114,12 +114,10 @@ namespace SmartWeb.Controllers
             {
                 return LandLoad();
             }
-            //船舶的ID
-            string shipId = base.user.ShipId;
-            var data = _context.Device.Where(c => c.ShipId == shipId).ToList();
+            var data = _context.Device.ToList();
             var ids = string.Join(',', data.Select(c => c.Id));
             //查询设备下的摄像机
-            var cameras = _context.Camera.Where(c => c.ShipId == shipId && ids.Contains(c.DeviceId)).ToList();
+            var cameras = _context.Camera.Where(c => ids.Contains(c.DeviceId)).ToList();
             foreach (var item in data)
             {
                 var cams = cameras.Where(c => c.DeviceId == item.Id);
@@ -133,8 +131,7 @@ namespace SmartWeb.Controllers
                         Id = it.Id,
                         Enable = it.Enable,
                         IP = it.IP,
-                        NickName = it.NickName,
-                        ShipId = it.ShipId
+                        NickName = it.NickName
                     };
                     item.CameraModelList.Add(cam);
                 }
@@ -143,7 +140,7 @@ namespace SmartWeb.Controllers
             {
                 code = 0,
                 data = data,
-                isSet = !string.IsNullOrEmpty(shipId) ? base.user.EnableConfigure : false
+                isSet =  base.user.EnableConfigure 
             };
             return new JsonResult(result);
         }
@@ -293,7 +290,6 @@ namespace SmartWeb.Controllers
                     if (string.IsNullOrEmpty(model.Id))
                     {
                         device.Id = Guid.NewGuid().ToString();
-                        device.ShipId = shipId;
                         _context.Device.Add(device);
                         _context.SaveChanges();
                         model.Id = device.Id;
@@ -527,7 +523,7 @@ namespace SmartWeb.Controllers
                 {
                     while (ManagerHelp.DeviceResult == "" && flag)
                     {
-                        Thread.Sleep(1000);
+                        Thread.Sleep(10);
                     }
                 }).Wait(10000);//等待10秒
                 flag = false;

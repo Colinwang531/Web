@@ -11,6 +11,9 @@ namespace SmartWeb.Models
     /// </summary>
     public class Camera
     {
+        public Camera() {
+            this.ShipId = "";
+        }
         /// <summary>
         /// 摄像机表
         /// </summary>

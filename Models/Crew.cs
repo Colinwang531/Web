@@ -10,6 +10,9 @@ namespace SmartWeb.Models
     /// </summary>
     public class Crew
     {
+        public Crew() {
+            this.ShipId = "";
+        }
         /// <summary>
         /// 自增长ID
         /// </summary>

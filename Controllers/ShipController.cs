@@ -148,9 +148,11 @@ namespace SmartWeb.Controllers
                     };
                     list.Add(model);
                 }
-                var comLine = compents.Where(c => c.Line == 0);
+                var comLine = compents.Where(c => c.Line == 0).ToList();
+                Console.WriteLine("异步执行开始:"+DateTime.Now);
                 new TaskFactory().StartNew(() =>
                 {
+                    Console.WriteLine("异步执行方法:" + DateTime.Now);
                     foreach (var item in comLine)
                     {
                         //根据当前XMQ的ID
@@ -158,7 +160,7 @@ namespace SmartWeb.Controllers
                         Task.Factory.StartNew(state => {
                             while (ManagerHelp.ComponentReponse=="")
                             {
-                                Thread.Sleep(1000);
+                                Thread.Sleep(10);
                             }
                             var webcom= JsonConvert.DeserializeObject<ProtoBuffer.Models.ComponentResponse>(ManagerHelp.ComponentReponse);
                             string webId = "";
@@ -173,7 +175,7 @@ namespace SmartWeb.Controllers
                                 Task.Factory.StartNew(ss => {
                                     while (ManagerHelp.StatusReponse=="")
                                     {
-                                        Thread.Sleep(1000);
+                                        Thread.Sleep(10);
                                     }
                                     var response = JsonConvert.DeserializeObject<StatusResponse>(ManagerHelp.StatusReponse);
                                     if (response != null)
@@ -185,7 +187,9 @@ namespace SmartWeb.Controllers
                             }
                         }, TaskCreationOptions.LongRunning);
                     }
-                }).Wait(3000);
+                    Console.WriteLine("结束:" + DateTime.Now);
+                }).Wait(5000);
+                Console.WriteLine("完成:" + DateTime.Now);
                 var result = new
                 {
                     code = 0,

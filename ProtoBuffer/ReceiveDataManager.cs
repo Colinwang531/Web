@@ -13,6 +13,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection.Metadata.Ecma335;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -56,16 +57,17 @@ namespace SmartWeb.ProtoBuffer
                         break;
                     case Models.Component.Command.QUERY_REP:
                         List<ComponentInfo> infos = new List<ComponentInfo>();
-                        if (component.componentresponse != null && component.componentresponse.result == 0)
-                        {
-                            ProtoBDManager.ComponentUpdateRange(component.componentresponse.componentinfos);
-                            infos = component.componentresponse.componentinfos;
-                        }
                         //陆地端查询组件时返回已在线船舶（XMQ陆地端的船舶）
                         if (!infos.Where(c => c.type == ComponentInfo.Type.XMQ).Any())
                         {
                             ManagerHelp.ComponentReponse = JsonConvert.SerializeObject(component.componentresponse);
                         }
+                        if (component.componentresponse != null && component.componentresponse.result == 0)
+                        {
+                            ProtoBDManager.ComponentUpdateRange(component.componentresponse.componentinfos);
+                            infos = component.componentresponse.componentinfos;
+                        }
+                        
                         break;
                     default:
                         break;
@@ -257,11 +259,11 @@ namespace SmartWeb.ProtoBuffer
                 #endregion
                 case Models.Device.Command.DELETE_REQ:
                     #region 陆地端删除设备请求
-                    if (device.devicerequest != null && !string.IsNullOrEmpty(device.devicerequest.did))
+                    if (device.devicerequest != null && !string.IsNullOrEmpty(device.devicerequest.deviceinfo.did))
                     {
                         //删除船舶端数据
-                        var result=ProtoBDManager.DeviceDelete(device.devicerequest.did);
-                        manager.SendDeviceRN(Models.Device.Command.DELETE_REP, device.devicerequest.did, null,result);
+                        var result = ProtoBDManager.DeviceDelete(device.devicerequest.deviceinfo.did);
+                        manager.SendDeviceRN(Models.Device.Command.DELETE_REP, device.devicerequest.deviceinfo.did, null, result);
                     }
                     else
                     {
@@ -329,7 +331,10 @@ namespace SmartWeb.ProtoBuffer
                         ManagerHelp.DeviceResult = device.deviceresponse.result.ToString();
                         if (device.deviceresponse.result!=0&& device.deviceresponse.result!=-2)
                         {
-                            ProtoBDManager.DeviceDelete(did);
+                            if (device.deviceresponse != null && device.deviceresponse.deviceinfos != null && device.deviceresponse.deviceinfos.Count > 0) {
+                                did = device.deviceresponse.deviceinfos[0].did;
+                                ProtoBDManager.DeviceDelete(did);
+                            }
                         }
                     }
                     break;
@@ -563,7 +568,7 @@ namespace SmartWeb.ProtoBuffer
                 string shipId = xml;
                 if (ManagerHelp.IsShipPort)
                 {
-                    shipId = ManagerHelp.ShipId;
+                    shipId = ProtoBDManager.StatusQuery().Id;
                     //船舶端接收到的是陆地端的响应
                     if (xml != "")
                     {
@@ -604,6 +609,27 @@ namespace SmartWeb.ProtoBuffer
                             };
                             list.Add(cache);
                             dic.alarmCaches = list;
+                        }
+                        else
+                        {
+                            //响应船舶
+                            string webId = alarm.cid.Split(':')[2];
+                            string toId = shipId+":"+webId;
+                            alarm.picture = Encoding.UTF8.GetBytes("1");
+                            if ((int)alarm.type == 7)
+                            {
+                                alarm.type = AlarmInfo.Type.HELMET;
+                            }
+                            alarm.cid = "sss";
+                            alarm.alarmposition = new List<Models.AlarmPosition>();
+                            alarm.alarmposition.Add(new Models.AlarmPosition()
+                            {
+                                h = 1,
+                                x = 1,
+                                y = 1,
+                                w = 1
+                            });
+                            manager.SendAlarm("request", alarm, toId);
                         }
                     }
                 }

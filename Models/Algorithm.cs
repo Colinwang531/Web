@@ -7,6 +7,9 @@ namespace SmartWeb.Models
 {
     public class Algorithm
     {
+        public Algorithm() {
+            this.ShipId = "";
+        }
         /// <summary>
         /// 主键ID
         /// </summary>

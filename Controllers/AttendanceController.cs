@@ -95,7 +95,9 @@ namespace SmartWeb.Controllers
             {
                 search = new SearchAttendance();
             }
-            var arrWhere = _context.Attendance.Where(c=>1==1);
+            string shipId = base.user.ShipId;
+            if (ManagerHelp.IsShipPort) shipId = "";
+            var arrWhere = _context.Attendance.Where(c=>c.ShipId==shipId);
             if (!(string.IsNullOrEmpty(search.StartTime)) && !(string.IsNullOrEmpty(search.EndTime)))
             {
                 DateTime dtStart = DateTime.Parse(search.StartTime);

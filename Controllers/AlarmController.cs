@@ -22,6 +22,7 @@ using DinkToPdf;
 using DinkToPdf.Contracts;
 using SmartWeb.Interface;
 using Newtonsoft.Json.Schema;
+using System.Security;
 
 namespace SmartWeb.Controllers
 {
@@ -91,7 +92,7 @@ namespace SmartWeb.Controllers
                 {
                     code = 0,
                     data = list,
-                    ship = _context.Ship.ToList(),
+                    ship = GetShips(),
                     pageIndex = pageIndex,
                     pageSize = pageSize,
                     count = total
@@ -167,6 +168,28 @@ namespace SmartWeb.Controllers
             return new JsonResult(result);
 
         }
+        public List<Ship> GetShips()
+        {
+            List<Ship> List = new List<Ship>();
+            if (!ManagerHelp.IsShipPort)
+            {
+                var components = _context.Component.Where(c => c.Type == ComponentType.XMQ).ToList();
+                var ships = _context.Ship.ToList();
+                foreach (var item in components)
+                {
+                    if (ships.Where(c => c.Id == item.ShipId).Any())
+                    {
+                        var sh = ships.FirstOrDefault(c => c.Id == item.ShipId);
+                        List.Add(new Ship()
+                        {
+                            Id = item.Cid,
+                            Name = sh.Name
+                        });
+                    }
+                }
+            }
+            return List;
+        }
         private List<AlarmViewModel> GetDate(SearchAlarmViewModel model, int pageIndex, int pageSize, out int total)
         {
             List<AlarmViewModel> list = new List<AlarmViewModel>();
@@ -176,8 +199,23 @@ namespace SmartWeb.Controllers
                 model = new SearchAlarmViewModel();
             }
             //查询船信息
-            var ship = _context.Ship.Where(c => (string.IsNullOrEmpty(model.ShipId) ? 1 == 1 : c.Id == model.ShipId)).ToList();
-            var shipIds = string.Join(',', ship.Select(c => c.Id));
+            List<Ship> shipList = new List<Ship>();
+            string shipName = "";
+            string shipIds = "";
+            if (!ManagerHelp.IsShipPort)
+            {
+                shipList = GetShips();
+                if (!string.IsNullOrEmpty(model.ShipId))
+                {
+                    shipList = shipList.Where(c => c.Id == model.ShipId).ToList();
+                }
+                shipIds = string.Join(',', shipList.Select(c => c.Id));
+            }
+            else
+            {
+                shipName = _context.Ship.FirstOrDefault().Name;
+            }
+
             var alarmData = _context.Alarm.Where(c => shipIds.Contains(c.ShipId) && (c.Type != Alarm.AlarmType.ATTENDANCE_IN && c.Type != Alarm.AlarmType.ATTENDANCE_OUT) && (model.Type == 0 ? 1 == 1 : c.Type == (Alarm.AlarmType)model.Type));
 
             if (!(string.IsNullOrEmpty(model.StartTime)) && !(string.IsNullOrEmpty(model.EndTime)))
@@ -196,20 +234,18 @@ namespace SmartWeb.Controllers
                 DateTime dtEnd = DateTime.Parse(model.EndTime);
                 alarmData = alarmData.Where(c => c.Time <= dtEnd);
             }
-            else if (!string.IsNullOrEmpty(model.Name)) 
+            else if (!string.IsNullOrEmpty(model.Name))
             {
                 alarmData = alarmData.Where(c => c.Cname.Contains(model.Name));
             }
-            var alarm = alarmData.OrderByDescending(c=>c.CreatDate).ToList();
+            var alarm = alarmData.OrderByDescending(c => c.CreatDate).ToList();
             //组合数据
             var data = from a in alarm
-                       join d in ship on a.ShipId equals d.Id
                        select new
                        {
                            a.Time,
                            a.Id,
-                           d.Name,
-                           NickName=a.Cname,
+                           NickName = a.Cname,
                            a.Type,
                            a.Picture
                        };
@@ -220,19 +256,24 @@ namespace SmartWeb.Controllers
             var pics = _context.AlarmPosition.Where(c => ids.Contains(c.AlarmId)).ToList();
             foreach (var item in datapage)
             {
-                string picture =  Convert.ToBase64String(item.Picture);
+                string picture = Convert.ToBase64String(item.Picture);
+                if (!ManagerHelp.IsShipPort)
+                {
+                    var ship = shipList.FirstOrDefault(c => c.Id == item.Id);
+                    shipName = ship != null ? ship.Name : "";
+                }
                 AlarmViewModel avm = new AlarmViewModel()
                 {
                     Id = item.Id,
-                    Name = item.Name,
+                    Name = shipName,
                     NickName = item.NickName,
                     Picture = picture,
                     Type = (int)item.Type,
                     Time = item.Time.ToString("yyyy-MM-dd HH:mm:ss"),
                 };
-                if (pics!=null&&pics.Count>0)
+                if (pics != null && pics.Count > 0)
                 {
-                    if (pics.Where(c=>c.AlarmId==item.Id).Any())
+                    if (pics.Where(c => c.AlarmId == item.Id).Any())
                     {
                         var pic = pics.FirstOrDefault(c => c.AlarmId == item.Id);
                         avm.H = pic.H;
