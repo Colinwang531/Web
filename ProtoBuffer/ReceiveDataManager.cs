@@ -328,7 +328,8 @@ namespace SmartWeb.ProtoBuffer
                     else
                     {
                         ManagerHelp.DeviceResult = device.deviceresponse.result.ToString();
-                        if (device.deviceresponse.result!=0&& device.deviceresponse.result!=-2)
+                        //-101设备已经存在 -2设备未添加就执行了修改
+                        if (device.deviceresponse.result!=0&& device.deviceresponse.result!=-2 && device.deviceresponse.result!=-101)
                         {
                             if (device.deviceresponse != null && device.deviceresponse.deviceinfos != null && device.deviceresponse.deviceinfos.Count > 0) {
                                 did = device.deviceresponse.deviceinfos[0].did;
