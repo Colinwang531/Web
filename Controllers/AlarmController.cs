@@ -151,7 +151,7 @@ namespace SmartWeb.Controllers
         public IActionResult SearchAlarm(string searchModel, int pageIndex, int pageSize)
         {
             var model = JsonConvert.DeserializeObject<SearchAlarmViewModel>(searchModel);
-            if (!base.user.IsLandHome)
+            if (!ManagerHelp.IsShipPort)
             {
                 model.ShipId = base.user.ShipId;
             }
@@ -234,7 +234,7 @@ namespace SmartWeb.Controllers
                 DateTime dtEnd = DateTime.Parse(model.EndTime);
                 alarmData = alarmData.Where(c => c.Time <= dtEnd);
             }
-            else if (!string.IsNullOrEmpty(model.Name))
+             if (!string.IsNullOrEmpty(model.Name))
             {
                 alarmData = alarmData.Where(c => c.Cname.Contains(model.Name));
             }
